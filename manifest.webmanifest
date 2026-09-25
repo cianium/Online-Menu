@@ -1,0 +1,15 @@
+{
+  "name": "ROMANO Digital Menu",
+  "short_name": "ROMANO",
+  "description": "رومانو | منوی دیجیتال رستوران",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d0b09",
+  "theme_color": "#0d0b09",
+  "icons": [
+    {"src":"assets/images/logo/logo.png","sizes":"1254x1254","type":"image/png","purpose":"any maskable"}
+  ]
+}

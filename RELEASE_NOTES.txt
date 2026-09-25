@@ -1,0 +1,8 @@
+ROMANO Rv4.6.2 — Production Foundation
+
+Canonical baseline: Rv4.6 translated UI preserved.
+Server-backed foundation: PostgreSQL, Fastify, Argon2id, HttpOnly sessions, CSRF, rate limiting, tenant-aware RBAC, public menu API, admin CRUD/snapshot APIs and audit logs.
+Customer menu: API-first with offline/local fallback.
+Admin: server authentication in HTTP deployments; no production localStorage auth gate.
+Validation: static audit 0 failures / 0 warnings; JavaScript syntax checks pass.
+Browser E2E: not claimed because the environment did not provide a working headless browser runtime.

@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
+
+    <meta
+        name="theme-color"
+        content="#090807"
+    >
+
+    <meta
+        name="description"
+        content="پنل مدیریت منوی دیجیتال ROMANO"
+    >
+
+    <title>ROMANO | Admin Panel</title>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="icon" type="image/png" href="../assets/images/logo/logo.png">
+
+    <link
+        rel="stylesheet"
+        href="admin.css"
+    >
+
+    <link rel="stylesheet" href="rv4-admin-plus.css">
+
+    <!--
+        Google Identity Services — powers the "Sign in with
+        Google" button on the access gate. Marked defer (not
+        async) so it's guaranteed to finish loading before
+        DOMContentLoaded fires, i.e. before admin.js tries to
+        use it — see initializeAccessGate() in admin.js.
+    -->
+
+    <script
+        defer
+        src="https://accounts.google.com/gsi/client"
+    ></script>
+
+</head>
+
+
+<body>
+
+<div class="admin-app">
+
+
+    <!-- =========================================
+         SIDEBAR
+    ========================================== -->
+
+    <aside
+        class="sidebar"
+        id="sidebar"
+        aria-label="منوی مدیریت"
+    >
+
+        <div class="sidebar-header">
+
+            <a
+                class="admin-brand"
+                href="#"
+                aria-label="ROMANO Admin"
+                data-page-target="dashboard"
+            >
+
+                <span class="admin-brand-name">
+                    ROMANO
+                </span>
+
+                <span class="admin-brand-label">
+                    ADMIN
+                </span>
+
+            </a>
+
+
+            <button
+                class="sidebar-close"
+                id="sidebar-close"
+                type="button"
+                aria-label="بستن منو"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <nav
+            class="sidebar-navigation"
+            aria-label="ناوبری پنل"
+        >
+
+            <button
+                class="nav-item is-active"
+                data-page="dashboard"
+                type="button"
+                aria-current="page"
+            >
+                <span class="nav-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"></rect><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"></rect><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"></rect><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"></rect></svg>
+                </span>
+                <span>داشبورد</span>
+            </button>
+
+            <button
+                class="nav-item"
+                data-page="products"
+                type="button"
+            >
+                <span class="nav-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 19.5H5A1.5 1.5 0 0 1 3.5 18V6A1.5 1.5 0 0 1 5 4.5Z"></path><path d="M8 9h8M8 13h5"></path></svg>
+                </span>
+                <span>محصولات</span>
+            </button>
+
+            <button
+                class="nav-item"
+                data-page="categories"
+                type="button"
+            >
+                <span class="nav-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M4.5 6.5h15v4h-15zM4.5 13h15v4h-15z"></path><path d="M7.5 10.5v2.5M16.5 10.5v2.5"></path></svg>
+                </span>
+                <span>دسته‌بندی‌ها</span>
+            </button>
+
+            <button
+                class="nav-item"
+                data-page="settings"
+                type="button"
+            >
+                <span class="nav-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z"></path><path d="m19.5 13.2 1.1 1.1-1.8 3.1-1.5-.45a7.3 7.3 0 0 1-1.7.98l-.35 1.55h-3.6l-.35-1.55a7.3 7.3 0 0 1-1.7-.98l-1.5.45-1.8-3.1 1.1-1.1A7.7 7.7 0 0 1 5.4 12c0-.42.04-.83.1-1.23l-1.1-1.1 1.8-3.1 1.5.45a7.3 7.3 0 0 1 1.7-.98l.35-1.55h3.6l.35 1.55a7.3 7.3 0 0 1 1.7.98l1.5-.45 1.8 3.1-1.1 1.1c.07.4.1.81.1 1.23s-.03.82-.1 1.2Z"></path></svg>
+                </span>
+                <span>تنظیمات رستوران</span>
+            </button>
+
+        </nav>
+
+
+        <div class="sidebar-footer">
+
+            <a
+                href="../index.html"
+                class="view-menu"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                مشاهده منوی مشتری
+            </a>
+
+            <span>
+                ROMANO ADMIN v1.0
+            </span>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =========================================
+         OVERLAY
+    ========================================== -->
+
+    <div
+        class="sidebar-overlay"
+        id="sidebar-overlay"
+        aria-hidden="true"
+    ></div>
+
+
+    <!-- =========================================
+         MAIN
+    ========================================== -->
+
+    <main class="admin-main">
+
+
+        <!-- =====================================
+             HEADER
+        ====================================== -->
+
+        <header class="admin-header">
+
+            <button
+                class="mobile-menu-button"
+                id="mobile-menu-button"
+                type="button"
+                aria-label="باز کردن منو"
+                aria-controls="sidebar"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+
+
+            <div class="header-title">
+
+                <span>
+                    مدیریت
+                </span>
+
+                <strong id="current-page-title">
+                    داشبورد
+                </strong>
+
+            </div>
+
+
+            <div class="header-actions">
+
+                <button class="admin-header-link" id="admin-language-toggle" type="button" aria-label="تغییر زبان" title="فارسی">🌐 <span id="admin-language-label">FA</span></button>
+
+                <a class="admin-header-link" href="../index.html" target="_blank" rel="noopener noreferrer" aria-label="پیش‌نمایش منوی مشتری">
+                    <span aria-hidden="true">↗</span><span>پیش‌نمایش منو</span>
+                </a>
+
+                <button class="admin-header-action" id="admin-add-product-shortcut" type="button" aria-label="افزودن محصول جدید">
+                    <span aria-hidden="true">＋</span><span>محصول جدید</span>
+                </button>
+
+                <div class="admin-status-chip" title="سیستم فعال است">
+                    <span class="status-indicator" aria-hidden="true"></span>
+                    <span class="admin-status-copy">سیستم آماده</span>
+                </div>
+
+                <div class="admin-user-chip" aria-label="حساب مدیر">
+                    <span class="admin-user-avatar" aria-hidden="true">م</span>
+                    <span class="admin-user">مدیر</span>
+                </div>
+
+                <button class="admin-logout-button" id="admin-logout-button" type="button" title="خروج از پنل">
+                    <span aria-hidden="true">↪</span>
+                    <span>خروج</span>
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- =====================================
+             CONTENT
+        ====================================== -->
+
+        <div class="admin-content">
+
+
+            <!-- ===================================
+                 DASHBOARD
+            ==================================== -->
+
+            <section
+                class="admin-page is-active"
+                id="page-dashboard"
+                aria-labelledby="dashboard-title"
+            >
+
+                <div class="page-heading">
+
+                    <div>
+
+                        <span class="page-eyebrow">
+                            OVERVIEW
+                        </span>
+
+                        <h1 id="dashboard-title">
+                            داشبورد
+                        </h1>
+
+                        <p>
+                            وضعیت فعلی منوی ROMANO را مدیریت کنید.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="admin-welcome-strip">
+                    <div>
+                        <span class="welcome-kicker">ROMANO · CONTROL CENTER</span>
+                        <p>از اینجا منو، محصولات و اطلاعات نمایشی رستوران را مدیریت کنید.</p>
+                    </div>
+                    <div class="welcome-date" id="admin-current-date" aria-live="off">—</div>
+                </div>
+
+                <div class="stats-grid">
+
+                    <article class="stat-card">
+
+                        <span class="stat-label">
+                            محصولات
+                        </span>
+
+                        <strong
+                            id="stat-products"
+                            class="stat-value"
+                        >
+                            0
+                        </strong>
+
+                    </article>
+
+
+                    <article class="stat-card">
+
+                        <span class="stat-label">
+                            دسته‌بندی‌ها
+                        </span>
+
+                        <strong
+                            id="stat-categories"
+                            class="stat-value"
+                        >
+                            0
+                        </strong>
+
+                    </article>
+
+
+                    <article class="stat-card">
+
+                        <span class="stat-label">
+                            انتخاب ویژه
+                        </span>
+
+                        <strong
+                            id="stat-featured"
+                            class="stat-value"
+                        >
+                            0
+                        </strong>
+
+                    </article>
+
+
+                    <article class="stat-card">
+
+                        <span class="stat-label">
+                            محصولات فعال
+                        </span>
+
+                        <strong
+                            id="stat-active"
+                            class="stat-value"
+                        >
+                            0
+                        </strong>
+
+                    </article>
+
+                </div>
+
+
+                <section class="admin-integrity-panel" aria-labelledby="admin-integrity-title">
+                    <div class="integrity-heading">
+                        <div><span class="panel-eyebrow">MENU HEALTH</span><h2 id="admin-integrity-title">نمای کلی وضعیت منو</h2></div>
+                        <span class="integrity-note">بر اساس اطلاعات ذخیره‌شده در همین مرورگر</span>
+                    </div>
+                    <div class="integrity-items">
+                        <div><span class="integrity-marker" aria-hidden="true"></span><span>محصولات غیرفعال</span><strong id="stat-inactive">—</strong></div>
+                        <div><span class="integrity-marker" aria-hidden="true"></span><span>محصولات بدون دسته‌بندی معتبر</span><strong id="stat-orphan-products">—</strong></div>
+                        <div><span class="integrity-marker" aria-hidden="true"></span><span>اطلاعات تماس ثبت‌شده</span><strong id="stat-contact-status">—</strong></div>
+                    </div>
+                </section>
+
+                <div class="admin-quick-actions" aria-label="دسترسی سریع">
+                    <button type="button" data-page-target="products" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">＋</span><span><strong>مدیریت محصولات</strong><small>افزودن یا ویرایش آیتم‌های منو</small></span><span class="quick-action-arrow" aria-hidden="true">←</span></button>
+                    <button type="button" data-page-target="categories" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">▤</span><span><strong>دسته‌بندی‌ها</strong><small>مرتب‌سازی ساختار منو</small></span><span class="quick-action-arrow" aria-hidden="true">←</span></button>
+                    <button type="button" data-page-target="settings" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">⚙</span><span><strong>تنظیمات رستوران</strong><small>اطلاعات و راه‌های ارتباطی</small></span><span class="quick-action-arrow" aria-hidden="true">←</span></button>
+                </div>
+
+                <div class="dashboard-grid">
+
+                    <article class="panel">
+
+                        <div class="panel-header">
+
+                            <div>
+
+                                <span class="panel-eyebrow">
+                                    RESTAURANT
+                                </span>
+
+                                <h2>
+                                    اطلاعات رستوران
+                                </h2>
+
+                            </div>
+
+                            <button
+                                class="text-button"
+                                data-page-target="settings"
+                                type="button"
+                            >
+                                ویرایش
+                            </button>
+
+                        </div>
+
+
+                        <div
+                            class="restaurant-summary"
+                            id="restaurant-summary"
+                        ></div>
+
+                    </article>
+
+
+                    <article class="panel">
+
+                        <div class="panel-header">
+
+                            <div>
+
+                                <span class="panel-eyebrow">
+                                    RECENT
+                                </span>
+
+                                <h2>
+                                    محصولات اخیر
+                                </h2>
+
+                            </div>
+
+                            <button
+                                class="text-button"
+                                data-page-target="products"
+                                type="button"
+                            >
+                                مشاهده همه
+                            </button>
+
+                        </div>
+
+
+                        <div
+                            class="recent-products"
+                            id="recent-products"
+                        ></div>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+
+            <!-- ===================================
+                 PRODUCTS
+            ==================================== -->
+
+            <section
+                class="admin-page"
+                id="page-products"
+                aria-labelledby="products-title"
+            >
+
+                <div class="page-heading page-heading-row">
+
+                    <div>
+
+                        <span class="page-eyebrow">
+                            MENU MANAGEMENT
+                        </span>
+
+                        <h1 id="products-title">
+                            محصولات
+                        </h1>
+
+                        <p>
+                            محصولات منوی رستوران را مدیریت کنید.
+                        </p>
+
+                    </div>
+
+
+                    <button
+                        class="primary-button"
+                        id="add-product-button"
+                        type="button"
+                    >
+                        + افزودن محصول
+                    </button>
+
+                </div>
+
+
+                <div class="toolbar">
+
+                    <label
+                        class="sr-only"
+                        for="product-search"
+                    >
+                        جستجوی محصول
+                    </label>
+
+                    <input
+                        type="search"
+                        id="product-search"
+                        placeholder="جستجوی محصول..."
+                        autocomplete="off"
+                    >
+
+
+                    <label
+                        class="sr-only"
+                        for="product-category-filter"
+                    >
+                        فیلتر دسته‌بندی
+                    </label>
+
+                    <select id="product-category-filter">
+
+                        <option value="all">
+                            همه دسته‌بندی‌ها
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="admin-list-summary" id="product-list-summary" aria-live="polite">
+                    <span>در حال بارگذاری محصولات…</span>
+                </div>
+
+                <div
+                    class="products-admin-list"
+                    id="products-admin-list"
+                ></div>
+
+            </section>
+
+
+            <!-- ===================================
+                 CATEGORIES
+            ==================================== -->
+
+            <section
+                class="admin-page"
+                id="page-categories"
+                aria-labelledby="categories-title"
+            >
+
+                <div class="page-heading page-heading-row">
+
+                    <div>
+
+                        <span class="page-eyebrow">
+                            MENU STRUCTURE
+                        </span>
+
+                        <h1 id="categories-title">
+                            دسته‌بندی‌ها
+                        </h1>
+
+                        <p>
+                            ساختار دسته‌بندی‌های منو را مدیریت کنید.
+                        </p>
+
+                    </div>
+
+
+                    <button
+                        class="primary-button"
+                        id="add-category-button"
+                        type="button"
+                    >
+                        + افزودن دسته‌بندی
+                    </button>
+
+                </div>
+
+
+                <div class="admin-section-toolbar" id="category-management-toolbar">
+                    <label class="admin-inline-search">
+                        <span class="sr-only">جستجوی دسته‌بندی</span>
+                        <input id="rv4-category-search" type="search" placeholder="جستجوی دسته‌بندی…" autocomplete="off">
+                    </label>
+                    <select id="rv4-category-sort" aria-label="مرتب‌سازی دسته‌بندی‌ها">
+                        <option value="order">ترتیب منو</option>
+                        <option value="name">نام (الفبا)</option>
+                        <option value="count-desc">تعداد محصول (بیشتر)</option>
+                        <option value="count-asc">تعداد محصول (کمتر)</option>
+                    </select>
+                    <span class="admin-list-summary" id="category-list-summary" aria-live="polite">—</span>
+                </div>
+
+                <div
+                    class="categories-admin-list"
+                    id="categories-admin-list"
+                ></div>
+
+            </section>
+
+
+            <!-- ===================================
+                 SETTINGS
+            ==================================== -->
+
+            <section
+                class="admin-page"
+                id="page-settings"
+                aria-labelledby="settings-title"
+            >
+
+                <div class="page-heading">
+
+                    <div>
+
+                        <span class="page-eyebrow">
+                            RESTAURANT CONFIGURATION
+                        </span>
+
+                        <h1 id="settings-title">
+                            تنظیمات رستوران
+                        </h1>
+
+                        <p>
+                            اطلاعاتی که در منوی مشتری نمایش داده می‌شوند.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <form
+                    class="settings-form"
+                    id="restaurant-settings-form"
+                >
+
+                    <div class="form-grid">
+
+                        <label class="form-field">
+
+                            <span>
+                                نام رستوران
+                            </span>
+
+                            <input
+                                type="text"
+                                name="name"
+                                autocomplete="organization"
+                                required
+                            >
+
+                        </label>
+
+
+                        <label class="form-field">
+
+                            <span>
+                                شعار
+                            </span>
+
+                            <input
+                                type="text"
+                                name="tagline"
+                            >
+
+                        </label>
+
+
+                        <label class="form-field full">
+
+                            <span>
+                                توضیحات
+                            </span>
+
+                            <textarea
+                                name="description"
+                                rows="4"
+                            ></textarea>
+
+                        </label>
+
+
+                        <label class="form-field">
+
+                            <span>
+                                شماره تلفن
+                            </span>
+
+                            <input
+                                type="tel"
+                                name="phone"
+                                autocomplete="tel"
+                            >
+
+                        </label>
+
+
+                        <label class="form-field">
+
+                            <span>
+                                Instagram
+                            </span>
+
+                            <input
+                                type="url"
+                                name="instagram"
+                                placeholder="https://instagram.com/..."
+                                inputmode="url"
+                            >
+
+                        </label>
+
+
+                        <label class="form-field full">
+
+                            <span>
+                                آدرس
+                            </span>
+
+                            <textarea
+                                name="address"
+                                rows="3"
+                                autocomplete="street-address"
+                            ></textarea>
+
+                        </label>
+
+                    </div>
+
+
+                    <div class="form-actions">
+
+                        <button
+                            type="submit"
+                            class="primary-button"
+                        >
+                            ذخیره تغییرات
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+        </div>
+
+        <footer class="admin-footer">
+            <div class="admin-footer-brand"><strong>ROMANO</strong><span>ADMIN CONSOLE</span></div>
+            <p>مدیریت منوی دیجیتال رستوران</p>
+            <div class="admin-footer-meta"><span data-admin-i18n="نسخه 4.6">نسخه 4.6</span><span class="footer-separator" aria-hidden="true">·</span><span data-admin-i18n="ذخیره‌سازی محلی مرورگر">ذخیره‌سازی محلی مرورگر</span></div>
+        </footer>
+
+    </main>
+
+</div>
+
+
+<!-- =============================================
+     PRODUCT MODAL
+============================================= -->
+
+<div
+    class="admin-modal"
+    id="product-modal"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="product-modal-title"
+>
+
+    <div
+        class="admin-modal-backdrop"
+        data-close-modal
+    ></div>
+
+
+    <div
+        class="admin-modal-container"
+        role="document"
+    >
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="page-eyebrow">
+                    PRODUCT
+                </span>
+
+                <h2 id="product-modal-title">
+                    افزودن محصول
+                </h2>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="modal-close"
+                data-close-modal
+                aria-label="بستن پنجره"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form
+            id="product-form"
+            class="modal-form"
+        >
+
+            <input
+                type="hidden"
+                name="id"
+            >
+
+
+            <label class="form-field">
+
+                <span>
+                    نام محصول
+                </span>
+
+                <input
+                    type="text"
+                    name="name"
+                    required
+                    autocomplete="off"
+                >
+
+            </label>
+
+
+            <label class="form-field">
+
+                <span>
+                    دسته‌بندی
+                </span>
+
+                <select
+                    name="category"
+                    id="product-form-category"
+                    required
+                ></select>
+
+            </label>
+
+
+            <label class="form-field">
+
+                <span>
+                    قیمت
+                </span>
+
+                <input
+                    type="number"
+                    name="price"
+                    min="0"
+                    step="1000"
+                    inputmode="numeric"
+                    placeholder="مثلاً 250000"
+                >
+
+            </label>
+
+
+            <div class="form-field full image-upload-field">
+
+                <span>
+                    تصویر
+                </span>
+
+                <div class="image-upload-control">
+
+                    <img
+                        class="image-upload-preview"
+                        id="product-image-preview"
+                        alt=""
+                        hidden
+                    >
+
+                    <div
+                        class="image-upload-placeholder"
+                        id="product-image-placeholder"
+                    >
+                        بدون تصویر
+                    </div>
+
+                    <div class="image-upload-actions">
+
+                        <label class="secondary-button image-upload-button">
+                            انتخاب عکس
+                            <input
+                                type="file"
+                                accept="image/*"
+                                id="product-image-file"
+                                hidden
+                            >
+                        </label>
+
+                        <button
+                            type="button"
+                            class="image-upload-remove"
+                            id="product-image-remove"
+                            hidden
+                        >
+                            حذف عکس
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <input
+                    type="hidden"
+                    name="image"
+                    id="product-image-value"
+                >
+
+                <p class="image-upload-hint">
+                    JPG یا PNG — قبل از ذخیره خودکار فشرده می‌شود.
+                </p>
+
+            </div>
+
+
+            <label class="form-field full">
+
+                <span>
+                    توضیحات
+                </span>
+
+                <textarea
+                    name="description"
+                    rows="4"
+                ></textarea>
+
+            </label>
+
+
+            <label class="form-field">
+
+                <span>
+                    Badge
+                </span>
+
+                <select name="badge">
+
+                    <option value="">
+                        بدون Badge
+                    </option>
+
+                    <option value="پرفروش">
+                        پرفروش
+                    </option>
+
+                    <option value="ویژه">
+                        ویژه
+                    </option>
+
+                    <option value="جدید">
+                        جدید
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <label class="form-field">
+
+                <span>
+                    امتیاز
+                </span>
+
+                <select name="rating">
+
+                    <option value="★★★★★">
+                        ★★★★★
+                    </option>
+
+                    <option value="★★★★☆">
+                        ★★★★☆
+                    </option>
+
+                    <option value="★★★☆☆">
+                        ★★★☆☆
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <div class="checkbox-row">
+
+                <label class="checkbox-field">
+
+                    <input
+                        type="checkbox"
+                        name="featured"
+                    >
+
+                    <span>
+                        نمایش در انتخاب ویژه
+                    </span>
+
+                </label>
+
+
+                <label class="checkbox-field">
+
+                    <input
+                        type="checkbox"
+                        name="active"
+                        checked
+                    >
+
+                    <span>
+                        محصول فعال باشد
+                    </span>
+
+                </label>
+
+            </div>
+
+
+            <div class="form-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    data-close-modal
+                >
+                    انصراف
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+                    ذخیره محصول
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =============================================
+     CATEGORY MODAL
+============================================= -->
+
+<div
+    class="admin-modal"
+    id="category-modal"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="category-modal-title"
+>
+
+    <div
+        class="admin-modal-backdrop"
+        data-close-category-modal
+    ></div>
+
+
+    <div
+        class="admin-modal-container"
+        role="document"
+    >
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="page-eyebrow">
+                    CATEGORY
+                </span>
+
+                <h2 id="category-modal-title">
+                    افزودن دسته‌بندی
+                </h2>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="modal-close"
+                data-close-category-modal
+                aria-label="بستن پنجره"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form
+            id="category-form"
+            class="modal-form"
+        >
+
+            <input
+                type="hidden"
+                name="id"
+            >
+
+
+            <label class="form-field">
+
+                <span>
+                    نام دسته‌بندی
+                </span>
+
+                <input
+                    type="text"
+                    name="name"
+                    required
+                    autocomplete="off"
+                >
+
+            </label>
+
+
+            <div class="form-field full image-upload-field">
+
+                <span>
+                    تصویر
+                </span>
+
+                <div class="image-upload-control">
+
+                    <img
+                        class="image-upload-preview"
+                        id="category-image-preview"
+                        alt=""
+                        hidden
+                    >
+
+                    <div
+                        class="image-upload-placeholder"
+                        id="category-image-placeholder"
+                    >
+                        بدون تصویر
+                    </div>
+
+                    <div class="image-upload-actions">
+
+                        <label class="secondary-button image-upload-button">
+                            انتخاب عکس
+                            <input
+                                type="file"
+                                accept="image/*"
+                                id="category-image-file"
+                                hidden
+                            >
+                        </label>
+
+                        <button
+                            type="button"
+                            class="image-upload-remove"
+                            id="category-image-remove"
+                            hidden
+                        >
+                            حذف عکس
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <input
+                    type="hidden"
+                    name="image"
+                    id="category-image-value"
+                >
+
+                <p class="image-upload-hint">
+                    JPG یا PNG — قبل از ذخیره خودکار فشرده می‌شود.
+                </p>
+
+            </div>
+
+
+            <div class="form-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    data-close-category-modal
+                >
+                    انصراف
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+                    ذخیره دسته‌بندی
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =============================================
+     ADMIN ACCESS GATE
+============================================= -->
+
+<div
+    class="admin-gate"
+    id="admin-gate"
+    aria-hidden="true"
+>
+
+    <div class="admin-gate-ambient admin-gate-ambient-one" aria-hidden="true"></div>
+    <div class="admin-gate-ambient admin-gate-ambient-two" aria-hidden="true"></div>
+    <div class="admin-gate-grain" aria-hidden="true"></div>
+
+    <div
+        class="admin-gate-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-gate-title"
+    >
+
+        <div class="admin-gate-brand">
+
+            <div class="admin-gate-logo-shell">
+                <img
+                    src="../assets/images/logo/logo.png"
+                    alt="ROMANO"
+                    class="admin-gate-logo"
+                >
+            </div>
+
+            <div class="admin-gate-wordmark">
+                <span class="admin-gate-brand-name">ROMANO</span>
+                <span class="admin-gate-brand-label">ADMIN CONSOLE</span>
+            </div>
+
+        </div>
+
+        <div class="admin-gate-heading">
+            <span class="admin-gate-eyebrow">PRIVATE ADMIN ACCESS</span>
+
+            <h1 id="admin-gate-title">
+                خوش آمدید
+            </h1>
+
+            <p>
+                برای ورود امن به پنل مدیریت، با حساب مجاز خود وارد شوید.
+            </p>
+        </div>
+
+        <div class="admin-gate-auth">
+
+            <div
+                id="google-signin-button"
+                class="admin-gate-google"
+                aria-label="ورود امن به پنل مدیریت"
+            ></div>
+
+            <div class="admin-gate-secure-line" aria-hidden="true">
+                <span class="admin-gate-secure-dot"></span>
+                <span>SECURE SERVER AUTHENTICATION</span>
+                <span class="admin-gate-secure-dot"></span>
+            </div>
+
+        </div>
+
+        <p
+            class="admin-gate-error"
+            id="admin-gate-error"
+            hidden
+            role="alert"
+        ></p>
+
+        <div class="admin-gate-footer">
+            <span>ROMANO DIGITAL MENU</span>
+            <span aria-hidden="true">•</span>
+            <span>AUTHORIZED USERS ONLY</span>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="../js/data.js"></script>
+<script src="admin-i18n.js"></script>
+<script src="api.js"></script>
+<script src="admin.js"></script>
+<script src="rv4-admin-plus.js"></script>
+
+</body>
+
+</html>

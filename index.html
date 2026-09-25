@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
+
+    <meta
+        name="description"
+        content="منوی دیجیتال رستوران رمانو"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0d0b09"
+    >
+
+    <meta name="color-scheme" content="dark">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="icon" type="image/png" href="assets/images/logo/logo.png">
+    <link rel="apple-touch-icon" href="assets/images/logo/logo.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="preload" as="image" href="assets/images/hero/hero.jpg" fetchpriority="high">
+
+    <title>رمانو | منوی دیجیتال</title>
+
+    <meta property="og:type" content="restaurant">
+    <meta property="og:site_name" content="ROMANO">
+    <meta property="og:title" content="ROMANO | Digital Menu">
+    <meta property="og:description" content="منوی دیجیتال رستوران رمانو">
+    <meta property="og:image" content="assets/images/hero/hero.jpg">
+
+    <!-- =========================
+         FONTS
+    ========================== -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- =========================
+         STYLES
+    ========================== -->
+
+        <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/romano.css">
+</head>
+
+
+<body>
+
+    <!-- =====================================================
+         SPLASH SCREEN
+    ====================================================== -->
+
+    <div
+        class="splash-screen"
+        id="splash-screen"
+        role="status"
+        aria-live="polite"
+    >
+
+        <img
+            class="splash-logo"
+            src="assets/images/logo/logo.png"
+            alt="لوگوی رمانو"
+        >
+
+        <span class="splash-line"></span>
+
+        <span class="sr-only">
+            در حال بارگذاری رمانو
+        </span>
+
+    </div>
+
+
+    <!-- =====================================================
+         PAGE WRAPPER
+    ====================================================== -->
+
+    <div class="site-wrapper">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <header
+            class="site-header"
+            id="site-header"
+        >
+
+            <div class="header-container">
+
+
+                <!-- ==============================
+                     BRAND
+                =============================== -->
+
+                <a
+                    href="#home"
+                    class="brand"
+                    aria-label="صفحه اصلی رمانو"
+                >
+
+                    <span class="brand-logo">
+                        <img
+                            src="assets/images/logo/logo.png"
+                            alt="لوگوی رمانو"
+                        >
+                    </span>
+
+                    <span class="brand-content">
+
+                        <span class="brand-name">
+                            رمانو
+                        </span>
+
+                        <span class="brand-tagline">
+                            رستوران و کافه
+                        </span>
+
+                    </span>
+
+                </a>
+
+
+                <!-- ==============================
+                     MENU BUTTON
+                =============================== -->
+
+                <button
+                    class="language-toggle"
+                    id="romano-language-toggle"
+                    type="button"
+                    aria-label="Language: فارسی. Click to change."
+                    title="فارسی"
+                >
+                    <span class="language-toggle-icon" aria-hidden="true">文</span>
+                    <span id="romano-language-label">FA</span>
+                </button>
+
+
+                <button
+                    class="menu-toggle"
+                    id="menu-toggle"
+                    type="button"
+                    aria-label="باز کردن منوی اصلی"
+                    aria-expanded="false"
+                    aria-controls="main-navigation"
+                >
+
+                    <span></span>
+                    <span></span>
+                    <span></span>
+
+                </button>
+
+
+            </div>
+
+
+
+
+        </header>
+
+
+        <!-- =============================================
+             NAVIGATION DRAWER
+        ============================================== -->
+
+            <nav
+                class="main-navigation"
+                id="main-navigation"
+                aria-label="ناوبری اصلی رمانو"
+                aria-hidden="true"
+            >
+
+                <div class="navigation-inner">
+
+                    <div class="navigation-header">
+
+                        <div>
+                            <span class="navigation-kicker">
+                                ROMANO
+                            </span>
+                            <span class="navigation-label">
+                                منوی اصلی
+                            </span>
+                        </div>
+
+                        <button
+                            class="navigation-close"
+                            id="navigation-close"
+                            type="button"
+                            aria-label="بستن منوی اصلی"
+                        >
+                            <span aria-hidden="true"></span>
+                            <span aria-hidden="true"></span>
+                        </button>
+
+                    </div>
+
+                    <div class="navigation-main-links">
+                        <span class="navigation-section-label">مسیرهای سریع</span>
+                        <ul class="navigation-list">
+                            <li><a href="#home"><span>خانه</span><small>01</small></a></li>
+                            <li><a href="#menu"><span>منوی رمانو</span><small>02</small></a></li>
+                            <li><a href="#featured"><span>انتخاب ویژه</span><small>03</small></a></li>
+                            <li><a href="#story"><span>درباره رمانو</span><small>04</small></a></li>
+                            <li><a href="#contact"><span>تماس با رمانو</span><small>05</small></a></li>
+                        </ul>
+                    </div>
+
+                    <div class="navigation-categories">
+                        <div class="navigation-section-row">
+                            <span class="navigation-section-label">دسته‌بندی‌های منو</span>
+                            <span class="navigation-section-note">انتخاب سریع</span>
+                        </div>
+                        <ul class="navigation-category-list" aria-label="دسته‌بندی‌های منو"></ul>
+                    </div>
+
+                    <div class="navigation-footer">
+                        <span>ROMANO · RESTAURANT &amp; CAFE</span>
+                        <button type="button" class="navigation-menu-cta" data-navigation-menu-cta>مشاهده منو</button>
+                    </div>
+
+                </div>
+
+            </nav>
+
+
+        <!-- =================================================
+             MAIN
+        ================================================== -->
+
+        <main id="main-content">
+
+
+            <!-- =================================================
+                 HERO
+            ================================================== -->
+
+            <section
+                class="hero-section"
+                id="home"
+            >
+
+                <div class="hero-background"></div>
+
+                <div class="hero-overlay"></div>
+
+
+                <div class="hero-content">
+
+                    <span class="hero-eyebrow">
+                        
+                    </span>
+
+
+                    <h1 class="hero-title">
+
+                        <span>
+                            غذای خوب.
+                        </span>
+
+                        <span>
+                            حال خوب
+                        </span>
+
+                    </h1>
+
+
+                    <p class="hero-description">
+                        طعم‌هایی که برای ماندن در خاطره ساخته شده‌اند.
+                    </p>
+
+
+                    <a
+                        href="#menu"
+                        class="hero-button"
+                    >
+
+                        <span>
+                            مشاهده منو
+                        </span>
+
+                        <span
+                            class="hero-button-icon"
+                            aria-hidden="true"
+                        >
+                            ↓
+                        </span>
+
+                    </a>
+
+                </div>
+
+
+                <div
+                    class="hero-scroll-indicator"
+                    aria-hidden="true"
+                >
+
+                    <span>
+                        اسکرول کنید
+                    </span>
+
+                    <span class="hero-scroll-line"></span>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 CATEGORIES
+            ================================================== -->
+
+            <section
+                class="categories-section section"
+                id="categories"
+            >
+
+                <div class="container">
+
+
+                    <header class="section-header section-header-centered">
+
+                        <span class="section-eyebrow">
+                        </span>
+
+                        <h2 class="section-title">
+                            انتخاب <em>شما</em>
+                        </h2>
+
+                        <p class="section-description">
+                            یک دسته را انتخاب کنید تا مستقیماً به بخش محصولات آن بروید.
+                        </p>
+
+                    </header>
+
+
+                    <!-- Categories will be rendered by JavaScript -->
+
+                    <div
+                        class="categories-grid"
+                        id="categories-grid"
+                    ></div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 FEATURED PRODUCTS
+            ================================================== -->
+
+            <section
+                class="featured-section section"
+                id="featured"
+            >
+
+                <div class="container">
+
+
+                    <header class="section-header">
+
+                        <div class="section-header-meta">
+
+                            <span class="section-number">
+                                01
+                            </span>
+
+                            <span class="section-eyebrow">
+                            </span>
+
+                        </div>
+
+
+                        <h2 class="section-title">
+                            انتخاب <em>ویژه.</em>
+                        </h2>
+
+                    </header>
+
+
+                    <!-- Signature dish is populated from the first featured product. -->
+                    <div id="signature-dish" class="romano-signature-dish" hidden></div>
+
+                    <!-- Horizontal product grid -->
+
+                    <div
+                        class="products-grid products-grid-horizontal"
+                        id="featured-products"
+                    ></div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 MENU
+            ================================================== -->
+
+            <section
+                class="menu-section"
+                id="menu"
+            >
+
+                <!--
+                    Product categories are rendered here
+                    dynamically from data.js.
+                -->
+
+                <div
+                    id="menu-categories"
+                    class="menu-categories"
+                ></div>
+
+            </section>
+
+
+            <!-- =================================================
+                 STORY
+            ================================================== -->
+
+            <section
+                class="story-section section"
+                id="story"
+            >
+
+                <div class="container">
+
+                    <div class="story-content">
+
+                        <span class="section-eyebrow">
+                            داستان رمانو
+                        </span>
+
+
+                        <h2 class="section-title">
+
+                            ساده <em>نیست</em>
+
+                            <br>
+
+                            <span>
+                                خاص است
+                            </span>
+
+                        </h2>
+
+
+                        <p class="story-description">
+                            رمانو جایی برای غذاهای آشنا با نگاهی متفاوت است؛
+                            از مواد اولیه تا آخرین جزئیات تجربه شما.
+                        </p>
+
+                        <div class="romano-story-grid" aria-label="ارزش‌های رمانو">
+                            <div class="romano-story-point">
+                                <span>01</span>
+                                <strong>مواد اولیه</strong>
+                            </div>
+                            <div class="romano-story-point">
+                                <span>02</span>
+                                <strong>دقت در جزئیات</strong>
+                            </div>
+                            <div class="romano-story-point">
+                                <span>03</span>
+                                <strong>تجربه‌ی ماندگار</strong>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 CONTACT
+            ================================================== -->
+
+            <section
+                class="contact-section section"
+                id="contact"
+            >
+
+                <div class="container">
+
+                    <div class="contact-content">
+
+                        <span class="section-eyebrow">
+                            آدرس رمانو
+                        </span>
+
+
+                        <h2 class="section-title">
+                            منتظر <em>شما</em> هستیم.
+                        </h2>
+
+
+                        <div class="contact-details">
+
+                            <div class="contact-item">
+
+                                <span class="contact-label">
+                                    آدرس
+                                </span>
+
+                                <p data-restaurant-address>
+                                    اصفهان میدان انقلاب، ابتدای چهارباغ عباسی بر چهارباغ عباسی کافه رستوران رمانو
+                                </p>
+
+                            </div>
+
+
+                            <div class="contact-item">
+
+                                <span class="contact-label">
+                                    تلفن
+                                </span>
+
+                                <a href="tel:+983100000000" data-restaurant-phone>
+                                    +98 31 0000 0000
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                        <div class="romano-contact-actions">
+                            <a class="romano-contact-action romano-contact-action--primary" href="#menu">مشاهده منو</a>
+                            <a class="romano-contact-action" href="tel:+983100000000" data-restaurant-phone>تماس با رمانو</a>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+        </main>
+
+
+        <!-- =================================================
+             PRODUCT MODAL
+        ================================================== -->
+
+        <div
+            class="product-modal"
+            id="product-modal"
+            aria-hidden="true"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-product-title"
+        >
+
+            <div
+                class="modal-backdrop"
+                data-modal-close
+            ></div>
+
+
+            <div class="modal-container">
+
+
+                <button
+                    class="modal-close"
+                    type="button"
+                    aria-label="بستن"
+                    data-modal-close
+                >
+                    ×
+                </button>
+
+
+                <div class="modal-image-wrapper">
+
+                    <img
+                        id="modal-product-image"
+                        src=""
+                        alt=""
+                    >
+
+                </div>
+
+
+                <div class="modal-content">
+
+                    <span
+                        class="modal-category"
+                        id="modal-product-category"
+                    ></span>
+
+
+                    <h2
+                        class="modal-title"
+                        id="modal-product-title"
+                    ></h2>
+
+
+                    <p
+                        class="modal-description"
+                        id="modal-product-description"
+                    ></p>
+
+
+                    <div
+                        class="modal-meta"
+                        id="modal-product-meta"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+        <footer
+            class="site-footer"
+            id="footer"
+        >
+
+            <div class="container">
+
+                <div class="footer-main">
+
+
+                    <!-- Brand -->
+
+                    <div class="footer-brand">
+
+                        <a
+                            href="#home"
+                            class="footer-logo"
+                        >
+                            رمانو
+                        </a>
+
+                        <p>
+                        کافه و رستوران
+                        </p>
+
+                    </div>
+
+
+                    <!-- Contact -->
+
+                    <div class="footer-column">
+
+                        <span class="footer-heading">
+                            ارتباط با ما
+                        </span>
+
+                        <a href="tel:+983100000000" data-restaurant-phone>
+                            +98 31 0000 0000
+                        </a>
+
+                        <span data-restaurant-address>
+                            آدرس رستوران
+                        </span>
+
+                    </div>
+
+
+                    <!-- Social -->
+
+                    <div class="footer-column">
+
+                        <span class="footer-heading">
+                            ما را دنبال کنید
+                        </span>
+
+
+                        <a
+                            href=""
+                            class="social-link"
+                            data-restaurant-instagram
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="اینستاگرام رمانو"
+                        >
+
+                            <svg
+                                viewBox="0 0 24 24"
+                                aria-hidden="true"
+                                focusable="false"
+                            >
+
+                                <rect
+                                    x="3"
+                                    y="3"
+                                    width="18"
+                                    height="18"
+                                    rx="5"
+                                    ry="5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                ></rect>
+
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                ></circle>
+
+                                <circle
+                                    cx="17.5"
+                                    cy="6.5"
+                                    r="1"
+                                    fill="currentColor"
+                                ></circle>
+
+                            </svg>
+
+                            <span>
+                                Instagram
+                            </span>
+
+                        </a>
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- Footer bottom -->
+
+                <div class="footer-bottom">
+
+                    <span>
+                        © 2026 رمانو
+                    </span>
+
+
+                    <a
+                        href="https://kiankhayat.me"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Designed by Cian Khayat
+                    </a>
+
+                </div>
+
+            </div>
+
+        </footer>
+
+
+    </div>
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+    <script src="js/data.js"></script>
+    <script src="js/public-api.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>
