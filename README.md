@@ -22,3 +22,4 @@ ROMANO now includes a server-backed production foundation under `backend/`: Post
 6. Open `/` for the customer menu and `/admin/` for the secure admin console.
 
 Do not use the demo bootstrap password in production. Put secrets in the deployment secret manager.
+# Online-Menu
