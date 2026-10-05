@@ -6,7 +6,7 @@
 
 Persian · English · Turkish · Arabic &nbsp;|&nbsp; RTL / LTR &nbsp;|&nbsp; Mobile-first &nbsp;|&nbsp; PWA
 
-[فارسی](README.fa.md)
+
 
 </div>
 
