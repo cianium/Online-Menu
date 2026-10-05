@@ -9,6 +9,15 @@
     const LANGS = ["fa", "en", "tr", "ar"];
 
     const T = {
+      "ایمیل": ["Email","E-posta","البريد الإلكتروني"],
+      "رمز عبور": ["Password","Şifre","كلمة المرور"],
+      "ورود به پنل": ["Sign in","Panele giriş yap","الدخول إلى اللوحة"],
+      "در حال ورود…": ["Signing in…","Giriş yapılıyor…","جارٍ تسجيل الدخول…"],
+      "ایمیل یا رمز عبور نادرست است.": ["Email or password is incorrect.","E-posta veya şifre hatalı.","البريد الإلكتروني أو كلمة المرور غير صحيحة."],
+      "ایمیل و رمز عبور را وارد کنید.": ["Enter your email and password.","E-posta ve şifrenizi girin.","أدخل البريد الإلكتروني وكلمة المرور."],
+      "تعداد تلاش‌ها زیاد است. کمی بعد دوباره تلاش کنید.": ["Too many attempts. Please try again shortly.","Çok fazla deneme. Lütfen biraz sonra tekrar deneyin.","محاولات كثيرة. حاول مرة أخرى بعد قليل."],
+      "ورود انجام نشد. اتصال را بررسی کنید و دوباره تلاش کنید.": ["Sign-in failed. Check your connection and try again.","Giriş başarısız. Bağlantınızı kontrol edip tekrar deneyin.","تعذر تسجيل الدخول. تحقق من الاتصال وحاول مرة أخرى."],
+      "حالت آزمایشی محلی: تغییرات فقط در همین مرورگر ذخیره می‌شود و با سرور همگام نمی‌شود.": ["Local demo mode: changes are saved only in this browser and are not synced to a server.","Yerel demo modu: değişiklikler yalnızca bu tarayıcıda saklanır ve sunucuyla eşitlenmez.","وضع تجريبي محلي: تُحفظ التغييرات في هذا المتصفح فقط ولا تتم مزامنتها مع الخادم."],
       "باز کردن منو": ["Open menu","Menüyü aç","فتح القائمة"],
       "بستن منو": ["Close menu","Menüyü kapat","إغلاق القائمة"],
       "افزودن محصول جدید": ["Add new product","Yeni ürün ekle","إضافة منتج جديد"],
@@ -198,6 +207,7 @@
 
     function dynamic(text) {
         const trim = text.trim();
+        if (reverse.has(trim)) return null;
         let m;
         const words = {
             active: ["فعال", "Active", "Aktif", "نشط"],
@@ -234,7 +244,9 @@
                 return `${out} ${rest}`;
             }
         }
-        if ((m = trim.match(/^(.+?)\s+(?: · )?(?:ویژه|Featured|Özel|مميز)$/))) return `${m[1]} · ${get("ویژه")}`;
+        // Product-card status line, e.g. "فعال · ویژه". The explicit " · " separator is
+        // required so standalone labels such as "انتخاب ویژه" are not split.
+        if ((m = trim.match(/^(.+?)\s+·\s+(?:ویژه|Featured|Özel|مميز)$/))) return `${translate(m[1])} · ${get("ویژه")}`;
         if ((m = trim.match(/^آیا دسته «(.+)» حذف شود؟$|^Delete category “(.+)”\?$|^“(.+)” kategorisi silinsin mi\?$|^هل تريد حذف التصنيف «(.+)»؟$/))) {
             const name=m.slice(1).find(Boolean)||"";
             return ({fa:`آیا دسته «${name}» حذف شود؟`,en:`Delete category “${name}”?`,tr:`“${name}” kategorisi silinsin mi?`,ar:`هل تريد حذف التصنيف «${name}»؟`})[lang];

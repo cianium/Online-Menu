@@ -243,7 +243,95 @@ const DOM = {
 ========================================================= */
 
 
-// Google sign-in is intentionally server-owned in production.
+/*
+ * Authentication is server-owned (Argon2id + HttpOnly session + CSRF).
+ * The gate below is only a login form; it never decides authorization.
+ * Without a backend (static hosting / file://) the panel runs in a clearly
+ * labelled local demo mode that only touches this browser's localStorage.
+ */
+
+function setGateOpen(open) {
+    const gate = document.querySelector("#admin-gate");
+    if (!gate) return;
+    gate.classList.toggle("is-open", open);
+    gate.setAttribute("aria-hidden", open ? "false" : "true");
+    document.body.classList.toggle("admin-gate-locked", open);
+    if (open) requestAnimationFrame(() => document.querySelector("#admin-gate-email")?.focus());
+}
+
+function showGateError(message) {
+    const el = document.querySelector("#admin-gate-error");
+    if (!el) return;
+    el.textContent = window.ROMANO_ADMIN_I18N?.translate?.(message) || message;
+    el.hidden = !message;
+    el.classList.toggle("is-visible", Boolean(message));
+}
+
+let adminInitialized = false;
+
+async function startAdmin() {
+    if (adminInitialized) return;
+    adminInitialized = true;
+    await initializeAdmin();
+}
+
+function initializeAccessGate() {
+    const form = document.querySelector("#admin-gate-form");
+    if (!form) return;
+    form.addEventListener("submit", async event => {
+        event.preventDefault();
+        const email = String(form.elements.email.value || "").trim();
+        const password = String(form.elements.password.value || "");
+        const button = form.querySelector("#admin-gate-submit");
+        showGateError("");
+        if (!email || !password) { showGateError("ایمیل و رمز عبور را وارد کنید."); return; }
+
+        const idle = button.textContent;
+        button.disabled = true;
+        button.textContent = window.ROMANO_ADMIN_I18N?.translate?.("در حال ورود…") || "…";
+        try {
+            await window.RomanoAPI.login(email, password);
+            form.reset();
+            setGateOpen(false);
+            await startAdmin();
+        } catch (error) {
+            showGateError(
+                error?.status === 401 ? "ایمیل یا رمز عبور نادرست است." :
+                error?.status === 429 ? "تعداد تلاش‌ها زیاد است. کمی بعد دوباره تلاش کنید." :
+                "ورود انجام نشد. اتصال را بررسی کنید و دوباره تلاش کنید."
+            );
+        } finally {
+            button.disabled = false;
+            button.textContent = idle;
+        }
+    });
+}
+
+async function bootAdmin() {
+    initializeAccessGate();
+
+    const { available, session } = await window.RomanoAPI.detect();
+
+    if (!available) {
+        const banner = document.querySelector("#admin-mode-banner");
+        if (banner) banner.hidden = false;
+        await startAdmin();
+        return;
+    }
+
+    if (!session?.user) {
+        setGateOpen(true);
+        return;
+    }
+
+    await startAdmin();
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootAdmin, { once: true });
+} else {
+    bootAdmin();
+}
 
 
 /* =========================================================
@@ -252,7 +340,10 @@ const DOM = {
 
 async function initializeAdmin() {
 
-    await loadState();
+    if (await loadState() === false) {
+        adminInitialized = false;
+        return;
+    }
 
     initializeNavigation();
 
@@ -291,7 +382,7 @@ async function loadState() {
             if (Array.isArray(remote?.products) && remote.products.length) productsState = remote.products;
             RomanoStorage.transaction([[STORAGE_KEYS.restaurant, restaurant], [STORAGE_KEYS.categories, categoriesState], [STORAGE_KEYS.products, productsState]]);
         } catch (error) {
-            if (error?.status === 401) { logoutAdmin(); return; }
+            if (error?.status === 401) { setGateOpen(true); return false; }
             console.warn("Remote admin data unavailable; keeping local mirror.", error);
         }
     }
@@ -308,6 +399,8 @@ async function loadState() {
     if (window.RomanoAPI?.enabled && state.categories.length && state.products.length && !state.restaurant.__remoteBootstrapped) {
         try { await syncRemoteSnapshot(); } catch (error) { console.warn("Initial remote bootstrap deferred:", error); }
     }
+
+    return true;
 }
 
 function normalizeProducts() {
@@ -381,14 +474,36 @@ async function saveStateBundle({ restaurant = state.restaurant, categories = sta
     return true;
 }
 
+/**
+ * The server only accepts http(s)/asset image URLs. Images picked in the admin are base64 data URLs,
+ * so they are uploaded first and replaced by the returned /uploads/... path.
+ */
+async function ensureHostedImage(value) {
+    const image = String(value || "");
+    if (!image.startsWith("data:image/")) return image;
+    const uploaded = await window.RomanoAPI.uploadImage(image);
+    return uploaded?.url || "";
+}
+
 async function syncRemoteSnapshot(snapshot = {}) {
     if (!window.RomanoAPI?.enabled) return true;
     const categoriesValue = snapshot.categories || state.categories;
     const productsValue = snapshot.products || state.products;
+    const withTranslations = item => (item.translations && typeof item.translations === "object" ? { translations: item.translations } : {});
+    const categories = [];
+    for (const [index, c] of categoriesValue.entries()) {
+        categories.push({ id: String(c.id || `category-${index}`), name: String(c.name || "").trim(), image: await ensureHostedImage(c.image), sortOrder: Number(c.sortOrder ?? index) || 0, active: c.active !== false, ...withTranslations(c) });
+    }
+    const products = [];
+    for (const [index, p] of productsValue.entries()) {
+        products.push({ id: String(p.id || `product-${index}`), name: String(p.name || "").trim(), category: String(p.category || ""), image: await ensureHostedImage(p.image), description: String(p.description || ""), price: Math.max(0, Number(p.price) || 0), rating: typeof p.rating === "number" ? p.rating : String(p.rating || "").replace(/[^0-9.]/g, "").slice(0, 3) || 0, badge: String(p.badge || ""), featured: p.featured === true, active: p.active !== false, sortOrder: Number(p.sortOrder ?? index) || 0, ...withTranslations(p) });
+    }
     const payload = {
-        restaurant: (() => { const r = snapshot.restaurant || state.restaurant || {}; return { name: r.name || "ROMANO", tagline: r.tagline || "", description: r.description || "", phone: r.phone || "", address: r.address || "", instagram: r.instagram === "#" ? "" : (r.instagram || ""), currency: r.currency || undefined }; })(),
-        categories: categoriesValue.map((c, index) => ({ id: String(c.id || `category-${index}`), name: String(c.name || "").trim(), image: String(c.image || ""), sortOrder: Number(c.sortOrder ?? index) || 0, active: c.active !== false })),
-        products: productsValue.map((p, index) => ({ id: String(p.id || `product-${index}`), name: String(p.name || "").trim(), category: String(p.category || ""), image: String(p.image || ""), description: String(p.description || ""), price: Math.max(0, Number(p.price) || 0), rating: typeof p.rating === "number" ? p.rating : String(p.rating || "").replace(/[^0-9.]/g, "").slice(0,3) || 0, badge: String(p.badge || ""), featured: p.featured === true, active: p.active !== false, sortOrder: Number(p.sortOrder ?? index) || 0 }))
+        // "replace": the admin state is authoritative, so deleted items are deleted on the server too.
+        mode: "replace",
+        restaurant: (() => { const r = snapshot.restaurant || state.restaurant || {}; return { name: r.name || "ROMANO", tagline: r.tagline || "", description: r.description || "", phone: r.phone || "", address: r.address || "", instagram: r.instagram === "#" ? "" : (r.instagram || ""), currency: r.currency || undefined, ...withTranslations(r) }; })(),
+        categories,
+        products
     };
     const result = await window.RomanoAPI.saveSnapshot(payload);
     if (result?.data) {

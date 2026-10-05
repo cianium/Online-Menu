@@ -318,7 +318,7 @@ body {
 
 .view-menu:hover {
     color: var(--admin-text-1);
-    transform: translateX(-2px);
+    transform: translateX(calc(-2px * var(--dir-sign, 1)));
 }
 
 /* -------------------- Header -------------------- */
@@ -963,7 +963,7 @@ textarea { min-height: 112px; line-height: 1.9; }
 }
 
 @media (min-width: 1000px) {
-    .admin-main { margin-right: 282px; }
+    .admin-main { margin-inline-start: 282px; }
 }
 
 @media (max-width: 999px) {
@@ -1071,7 +1071,7 @@ textarea { min-height: 112px; line-height: 1.9; }
 .admin-quick-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:0 0 24px; }
 .quick-action-card {
     min-width:0; display:flex; align-items:center; gap:13px; padding:16px;
-    border:1px solid rgba(255,255,255,.07); border-radius:14px; background:#12100e; color:#eee6db; text-align:right;
+    border:1px solid rgba(255,255,255,.07); border-radius:14px; background:#12100e; color:#eee6db; text-align:start;
     transition:transform .2s ease,border-color .2s ease,background .2s ease;
 }
 .quick-action-card:hover { transform:translateY(-2px); border-color:rgba(201,164,106,.3); background:#17130f; }
@@ -1225,4 +1225,26 @@ textarea { min-height: 112px; line-height: 1.9; }
 }
 @media (prefers-reduced-motion: reduce) {
     .admin-logout-button { transition:none; }
+}
+
+
+/* =========================================================
+   ADMIN HEADER — SINGLE-ROW MOBILE LAYOUT (final override)
+   Keeps title + the three primary actions on one line.
+========================================================= */
+@media (max-width: 699px) {
+    .admin-header { height: auto; min-height: 64px; flex-wrap: nowrap; gap: 8px; padding-block: 8px; }
+    .header-title { min-width: 0; flex: 1 1 auto; }
+    .header-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .header-actions { flex: 0 0 auto; flex-wrap: nowrap; gap: 6px; }
+    .admin-command-trigger,
+    .admin-header-link:not(#admin-language-toggle),
+    .admin-status-chip,
+    .admin-user-chip { display: none; }
+    .admin-header-link,
+    .admin-header-action,
+    .admin-logout-button { width: 40px; min-width: 40px; min-height: 40px; padding: 0; }
+    .admin-header-action span:last-child,
+    .admin-logout-button span:last-child { display: none; }
+    #admin-language-label { font-size: 10px; }
 }

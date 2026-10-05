@@ -217,7 +217,9 @@ function normalizeApplicationData() {
             rating: product.rating || "★★★★★",
             image: getSafeImageSource(product.image),
             description: String(product.description || "").trim(),
-            categoryName: getCategoryName(product.category, product.categoryName)
+            categoryName: getCategoryName(product.category, product.categoryName),
+            // Lets the language layer show the category in any language without a second lookup.
+            categoryTranslations: menuCategories.find(item => item.id === String(product.category || "").trim())?.translations
         }))
         .filter(product => product.id && product.name && product.category);
 }
@@ -424,6 +426,9 @@ async function initializeApplication() {
         enhanceHorizontalScrollers();
         initializeCategoryObserver();
         initializePrimaryNavigationObserver();
+        if (DOM.productModal?.classList.contains("is-open") && window.RomanoActiveProduct?.id) {
+            openProductModal(window.RomanoActiveProduct.id);
+        }
         window.dispatchEvent(new CustomEvent("romano:data-updated"));
     });
 
@@ -1514,10 +1519,15 @@ function initializeModal() {
 
 function openProductModal(productId) {
 
-    const product =
+    const rawProduct =
         getProductById(
             productId
         );
+
+    const product =
+        rawProduct
+            ? (window.ROMANO_I18N?.localizeProduct?.(rawProduct) || rawProduct)
+            : rawProduct;
 
 
     if (
@@ -1981,7 +1991,7 @@ function renderNavigation() {
                 getProductsByCategory(category.id).length > 0
         );
 
-    availableCategories.forEach(category => {
+    availableCategories.map(category => window.ROMANO_I18N?.localizeCategory?.(category) || category).forEach(category => {
         const item = document.createElement("li");
         item.dataset.categoryLink = "true";
         item.innerHTML = `
@@ -2634,16 +2644,16 @@ window.addEventListener(
             resultsInner.innerHTML = matches.length ? matches.map(product => {
                 product = window.ROMANO_I18N?.localizeProduct(product) || product;
                 return `
-                <button class="rv4-result" type="button" data-product-id="${escapeAttr(product.id)}">
-                    <img src="${escapeAttr(product.image || "")}" alt="" loading="lazy">
+                <button class="rv4-result" type="button" data-product-id="${escapeAttribute(product.id)}">
+                    <img src="${escapeAttribute(product.image || "")}" alt="" loading="lazy">
                     <span>
-                        <span class="rv4-result__name">${escapeHtml(product.name)}</span>
-                        <span class="rv4-result__meta">${escapeHtml(product.categoryName || "")}</span>
+                        <span class="rv4-result__name">${escapeHTML(product.name)}</span>
+                        <span class="rv4-result__meta">${escapeHTML(product.categoryName || "")}</span>
                     </span>
                     <span class="rv4-result__price">${formatPrice(product.price)}</span>
                 </button>
             `;
-            }).join("") : `<div class="rv4-result-empty">${window.ROMANO_I18N?.language === "en" ? `No results found for “${escapeHtml(query)}”.` : window.ROMANO_I18N?.language === "tr" ? `“${escapeHtml(query)}” için sonuç bulunamadı.` : window.ROMANO_I18N?.language === "ar" ? `لم يتم العثور على نتائج لـ «${escapeHtml(query)}».` : `نتیجه‌ای برای «${escapeHtml(query)}» پیدا نشد.`}</div>`;
+            }).join("") : `<div class="rv4-result-empty">${window.ROMANO_I18N?.language === "en" ? `No results found for “${escapeHTML(query)}”.` : window.ROMANO_I18N?.language === "tr" ? `“${escapeHTML(query)}” için sonuç bulunamadı.` : window.ROMANO_I18N?.language === "ar" ? `لم يتم العثور على نتائج لـ «${escapeHTML(query)}».` : `نتیجه‌ای برای «${escapeHTML(query)}» پیدا نشد.`}</div>`;
             openResults();
         };
 
@@ -2677,8 +2687,8 @@ window.addEventListener(
             return acc;
         }, {});
         navRail.innerHTML = cats.filter(c => counts[c.id]).map(c => `
-            <a href="#category-${escapeAttr(c.id)}" data-rail-id="${escapeAttr(c.id)}">
-                ${escapeHtml(c.name)} <span class="count">${counts[c.id]}</span>
+            <a href="#category-${escapeAttribute(c.id)}" data-rail-id="${escapeAttribute(c.id)}">
+                ${escapeHTML(c.name)} <span class="count">${counts[c.id]}</span>
             </a>
         `).join("");
 
@@ -2717,16 +2727,19 @@ window.addEventListener(
             observeSections();
             if (lastQuery) renderResults(lastQuery);
         });
-    }
 
         document.addEventListener("romano:language-changed", () => {
-            const lang = window.ROMANO_I18N?.language || "fa";
             input.placeholder = window.ROMANO_I18N?.ui?.("search") || "جستجو در منوی رمانو…";
             toolbar.querySelector("label")?.replaceChildren(document.createTextNode(window.ROMANO_I18N?.ui?.("searchSr") || "جستجوی منو"));
             rail.setAttribute("aria-label", window.ROMANO_I18N?.ui?.("categories") || "دسته‌بندی‌های منو");
             results.setAttribute("aria-label", window.ROMANO_I18N?.ui?.("results") || "نتایج جستجوی منو");
+            navRail.innerHTML = getCategories()
+                .filter(category => getProducts().some(product => product?.active !== false && product.category === category.id))
+                .map(category => `<a href="#category-${escapeAttribute(category.id)}" data-rail-id="${escapeAttribute(category.id)}">${escapeHTML(category.name)} <span class="count">${getProducts().filter(product => product?.active !== false && product.category === category.id).length}</span></a>`)
+                .join("");
             if (lastQuery) renderResults(lastQuery);
         });
+    }
 
     function initCategoryRail() {
         const rail = document.querySelector("#rv4-category-rail");
@@ -2785,10 +2798,21 @@ window.addEventListener(
         const actions = document.createElement("div");
         actions.className = "rv4-modal-actions";
         actions.innerHTML = `
-            <button class="rv4-modal-action" type="button" data-rv4-share>${window.ROMANO_I18N?.ui?.("share") || "اشتراک‌گذاری"}</button>
-            <button class="rv4-modal-action" type="button" data-rv4-copy>${window.ROMANO_I18N?.ui?.("copyLink") || "کپی لینک"}</button>
+            <button class="rv4-modal-action" type="button" data-rv4-share></button>
+            <button class="rv4-modal-action" type="button" data-rv4-copy></button>
         `;
         content.appendChild(actions);
+
+        // Labels are written from the current language, and rewritten whenever it changes
+        // (the buttons are created once, so they must not capture the language at creation time).
+        const labelShare = actions.querySelector("[data-rv4-share]");
+        const labelCopy = actions.querySelector("[data-rv4-copy]");
+        const applyActionLabels = () => {
+            labelShare.textContent = window.ROMANO_I18N?.ui?.("share") || "اشتراک‌گذاری";
+            labelCopy.textContent = window.ROMANO_I18N?.ui?.("copyLink") || "کپی لینک";
+        };
+        applyActionLabels();
+        document.addEventListener("romano:language-changed", applyActionLabels);
         const getActiveProduct = () => {
             const product = window.RomanoActiveProduct;
             return product && product.id ? product : null;
@@ -2817,9 +2841,8 @@ window.addEventListener(
             if (!product) return;
             const button = actions.querySelector("[data-rv4-copy]");
             if (!(await copyText(productUrl(product)))) return;
-            const old = button.textContent;
             button.textContent = window.ROMANO_I18N?.ui?.("copied") || "کپی شد ✓";
-            setTimeout(() => { button.textContent = old; }, 1400);
+            setTimeout(applyActionLabels, 1400);
         });
 
         async function copyText(text) {
@@ -2888,12 +2911,12 @@ window.addEventListener(
                 ${product.image ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy">` : `<div class="image-fallback" aria-hidden="true">ROMANO</div>`}
             </div>
             <div class="romano-signature-dish__copy">
-                <span class="romano-signature-dish__eyebrow">${escapeHtml(window.ROMANO_I18N?.ui?.("signatureEyebrow", product.categoryName || "ROMANO") || `SIGNATURE DISH · ${product.categoryName || "ROMANO"}`)}</span>
-                <h3 class="romano-signature-dish__title">${escapeHtml(product.name)}</h3>
-                <p class="romano-signature-dish__desc">${escapeHtml(product.description || (window.ROMANO_I18N?.ui?.("signatureFallback") || "انتخاب ویژه‌ی امروز رمانو."))}</p>
+                <span class="romano-signature-dish__eyebrow">${escapeHTML(window.ROMANO_I18N?.ui?.("signatureEyebrow", product.categoryName || "ROMANO") || `SIGNATURE DISH · ${product.categoryName || "ROMANO"}`)}</span>
+                <h3 class="romano-signature-dish__title">${escapeHTML(product.name)}</h3>
+                <p class="romano-signature-dish__desc">${escapeHTML(product.description || (window.ROMANO_I18N?.ui?.("signatureFallback") || "انتخاب ویژه‌ی امروز رمانو."))}</p>
                 <div class="romano-signature-dish__footer">
-                    <span class="romano-signature-dish__price">${escapeHtml(formatPrice(product.price))}</span>
-                    <button class="romano-signature-dish__button" type="button" data-signature-product="${escapeHtml(product.id)}">${window.ROMANO_I18N?.ui?.("signatureButton") || "مشاهده جزئیات"}</button>
+                    <span class="romano-signature-dish__price">${escapeHTML(formatPrice(product.price))}</span>
+                    <button class="romano-signature-dish__button" type="button" data-signature-product="${escapeHTML(product.id)}">${window.ROMANO_I18N?.ui?.("signatureButton") || "مشاهده جزئیات"}</button>
                 </div>
             </div>
         `;

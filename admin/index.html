@@ -47,19 +47,6 @@
 
     <link rel="stylesheet" href="rv4-admin-plus.css">
 
-    <!--
-        Google Identity Services — powers the "Sign in with
-        Google" button on the access gate. Marked defer (not
-        async) so it's guaranteed to finish loading before
-        DOMContentLoaded fires, i.e. before admin.js tries to
-        use it — see initializeAccessGate() in admin.js.
-    -->
-
-    <script
-        defer
-        src="https://accounts.google.com/gsi/client"
-    ></script>
-
 </head>
 
 
@@ -199,6 +186,10 @@
     ========================================== -->
 
     <main class="admin-main">
+
+        <div class="admin-mode-banner" id="admin-mode-banner" role="status" hidden>
+            حالت آزمایشی محلی: تغییرات فقط در همین مرورگر ذخیره می‌شود و با سرور همگام نمی‌شود.
+        </div>
 
 
         <!-- =====================================
@@ -1294,11 +1285,21 @@
 
         <div class="admin-gate-auth">
 
-            <div
-                id="google-signin-button"
-                class="admin-gate-google"
-                aria-label="ورود امن به پنل مدیریت"
-            ></div>
+            <form class="admin-gate-form" id="admin-gate-form" novalidate>
+
+                <label class="admin-gate-field" for="admin-gate-email">
+                    <span>ایمیل</span>
+                    <input id="admin-gate-email" name="email" type="email" inputmode="email" autocomplete="username" dir="ltr" required maxlength="254">
+                </label>
+
+                <label class="admin-gate-field" for="admin-gate-password">
+                    <span>رمز عبور</span>
+                    <input id="admin-gate-password" name="password" type="password" autocomplete="current-password" dir="ltr" required minlength="8" maxlength="128">
+                </label>
+
+                <button class="admin-gate-submit" id="admin-gate-submit" type="submit">ورود به پنل</button>
+
+            </form>
 
             <div class="admin-gate-secure-line" aria-hidden="true">
                 <span class="admin-gate-secure-dot"></span>

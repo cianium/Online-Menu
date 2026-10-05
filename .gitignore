@@ -3,3 +3,9 @@ backend/.env
 backend/node_modules/
 node_modules/
 *.log
+
+# runtime data
+backend/uploads/
+uploads/
+*.log
+.DS_Store

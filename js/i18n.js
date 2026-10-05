@@ -84,7 +84,7 @@
         "margherita-pizza": { name: { fa: "پیتزا مارگاریتا", en: "Margherita Pizza", tr: "Margherita Pizza", ar: "بيتزا مارغريتا" }, description: { fa: "سس گوجه، موزارلا، ریحان تازه و روغن زیتون.", en: "Tomato sauce, mozzarella, fresh basil and olive oil.", tr: "Domates sosu, mozzarella, taze fesleğen ve zeytinyağı.", ar: "صلصة طماطم، موزاريلا، ريحان طازج وزيت زيتون." } },
         "chicken-pizza": { name: { fa: "پیتزا مرغ", en: "Chicken Pizza", tr: "Tavuklu Pizza", ar: "بيتزا الدجاج" }, description: { fa: "مرغ گریل‌شده، قارچ، موزارلا و سس مخصوص.", en: "Grilled chicken, mushrooms, mozzarella and signature sauce.", tr: "Izgara tavuk, mantar, mozzarella ve özel sos.", ar: "دجاج مشوي، فطر، موزاريلا وصلصة خاصة." }, badge: { fa: "ویژه", en: "Special", tr: "Özel", ar: "مميز" } },
         "chicken-sandwich": { name: { fa: "ساندویچ مرغ", en: "Chicken Sandwich", tr: "Tavuklu Sandviç", ar: "ساندويتش الدجاج" }, description: { fa: "مرغ گریل‌شده، سبزیجات تازه و سس مخصوص در نان تازه.", en: "Grilled chicken, fresh vegetables and signature sauce in fresh bread.", tr: "Taze ekmekte ızgara tavuk, taze sebzeler ve özel sos.", ar: "دجاج مشوي، خضروات طازجة وصلصة خاصة داخل خبز طازج." }, badge: { fa: "پرفروش", en: "Best Seller", tr: "Çok Satan", ar: "الأكثر مبيعًا" } },
-        "steak-sandwich": { name: { fa: "ساندویچ استیک", en: "Steak Sandwich", tr: "Steak Sandviç", ar: "ساندويتش ستيك" }, description: { fa: "استیک گریل‌شده، پیاز کاراملی و سس مخصوص در نان تازه.", en: "Grilled steak, caramelized onion and signature sauce in fresh bread.", tr: "Taze ekmekte ızgara biftek, karamelize soğan ve özel sos.", ar: "ستيك مشوي، بصل مكرمل وصلصة خاصة داخل خبز طازج." } },
+        "steak-sandwich": { name: { fa: "ساندویچ استیک", en: "Steak Sandwich", tr: "Steak Sandviç", ar: "ساندويتش ستيك" }, description: { fa: "استیک گریل‌شده، پیاز کاراملی و سس مخصوص در نان تازه.", en: "Grilled steak, caramelized onion and signature sauce in fresh bread.", tr: "Taze ekmekte ızgara biftek, karamelize soğan ve özel sos.", ar: "ستيك مشوي، بصل مكرمل وصلصة خاصة داخل خبز طازج." }, badge: { fa: "ویژه", en: "Special", tr: "Özel", ar: "مميز" } },
         "vegetable-sandwich": { name: { fa: "ساندویچ سبزیجات", en: "Vegetable Sandwich", tr: "Sebzeli Sandviç", ar: "ساندويتش الخضار" }, description: { fa: "سبزیجات تازه، پنیر و سس مخصوص در نان تازه.", en: "Fresh vegetables, cheese and ROMANO signature sauce in fresh bread.", tr: "Taze sebzeler, peynir ve ROMANO özel sosundan oluşan sandviç.", ar: "خضروات طازجة، جبن وصلصة رومانو الخاصة داخل خبز طازج." } },
         "caesar-salad": { name: { fa: "سالاد سزار", en: "Caesar Salad", tr: "Sezar Salata", ar: "سلطة سيزر" }, description: { fa: "کاهوی تازه، مرغ گریل‌شده، پارمزان، کروتان و سس سزار.", en: "Fresh lettuce, grilled chicken, parmesan, croutons and Caesar dressing.", tr: "Taze marul, ızgara tavuk, parmesan, kruton ve Sezar sosu.", ar: "خس طازج، دجاج مشوي، بارميزان، خبز محمص وصلصة سيزر." }, badge: { fa: "پرفروش", en: "Best Seller", tr: "Çok Satan", ar: "الأكثر مبيعًا" } },
         "garden-salad": { name: { fa: "سالاد باغ", en: "Garden Salad", tr: "Bahçe Salatası", ar: "سلطة الحديقة" }, description: { fa: "ترکیبی تازه از سبزیجات فصل با سس مخصوص.", en: "A fresh mix of seasonal vegetables with signature dressing.", tr: "Özel sosla servis edilen taze mevsim sebzeleri karışımı.", ar: "مزيج طازج من الخضروات الموسمية مع صلصة خاصة." } },
@@ -104,7 +104,7 @@
         name: { fa: "رمانو", en: "ROMANO", tr: "ROMANO", ar: "رومانو" },
         tagline: { fa: "کافه و رستوران", en: "Cafe & Restaurant", tr: "Kafe & Restoran", ar: "مقهى ومطعم" },
         description: { fa: "طعم‌هایی که برای ماندن در خاطره ساخته شده‌اند.", en: "Flavors made to stay in your memory.", tr: "Hafızanızda kalmak için yaratılmış lezzetler.", ar: "نكهات صُنعت لتبقى في الذاكرة." },
-        address: { fa: "اصفهان، میدان انقلاب، بر گذر چهارباغ عباسی، بعد از مادی نیاصرم، کافه رستوران رمانو", en: "ROMANO Cafe & Restaurant, Chaharbagh Abbasi, Enghelab Square, Isfahan, Iran", tr: "ROMANO Kafe & Restoran, Chaharbagh Abbasi, Enghelab Meydanı, Isfahan, İran", ar: "مقهى ومطعم رومانو، چهارباغ عباسي، ميدان انقلاب، أصفهان، إيران" }
+        address: { fa: "اصفهان، میدان انقلاب، بر گذر چهارباغ عباسی، بعد از مادی نیاصرم، کافه رستوران رمانو", en: "ROMANO Cafe & Restaurant, Chaharbagh Abbasi, Enghelab Square, Isfahan, Iran", tr: "ROMANO Kafe & Restoran, Chaharbagh Abbasi, Enghelab Meydanı, Isfahan, İran", ar: "مقهى ومطعم رومانو، شارع تشهارباغ عباسي، ميدان الثورة، أصفهان، إيران" }
     };
 
     const dynamicText = {
@@ -115,6 +115,7 @@
             next: () => "مشاهده موارد بعدی",
             productView: v => `مشاهده ${v}`,
             skipToMenu: () => "رفتن به منو",
+            logoAlt: () => "لوگوی رمانو",
             backToTop: () => "بازگشت به بالای صفحه",
             share: () => "اشتراک‌گذاری",
             copyLink: () => "کپی لینک",
@@ -137,6 +138,7 @@
             next: () => "View next items",
             productView: v => `View ${v}`,
             skipToMenu: () => "Skip to menu",
+            logoAlt: () => "ROMANO logo",
             backToTop: () => "Back to top",
             share: () => "Share",
             copyLink: () => "Copy link",
@@ -159,6 +161,7 @@
             next: () => "Sonraki öğeleri görüntüle",
             productView: v => `${v} görüntüle`,
             skipToMenu: () => "Menüye geç",
+            logoAlt: () => "ROMANO logosu",
             backToTop: () => "Yukarı dön",
             share: () => "Paylaş",
             copyLink: () => "Bağlantıyı kopyala",
@@ -181,6 +184,7 @@
             next: () => "عرض العناصر التالية",
             productView: v => `عرض ${v}`,
             skipToMenu: () => "الانتقال إلى القائمة",
+            logoAlt: () => "شعار رومانو",
             backToTop: () => "العودة إلى الأعلى",
             share: () => "مشاركة",
             copyLink: () => "نسخ الرابط",
@@ -197,6 +201,22 @@
             currency: () => " تومان"
         }
     };
+
+    // Badges are a small closed vocabulary, so they are translated once here
+    // instead of per product. Also covers products created later in the admin.
+    const badgeText = {
+        "پرفروش": { fa: "پرفروش", en: "Best Seller", tr: "Çok Satan", ar: "الأكثر مبيعًا" },
+        "ویژه": { fa: "ویژه", en: "Special", tr: "Özel", ar: "مميز" }
+    };
+
+    // Content translations that travel with the entity (API / admin data).
+    // Accepts { en: { name, description, badge } } or [{ language, name, description, badge }].
+    function entityTranslation(entity, lang) {
+        const source = entity?.translations;
+        if (!source) return null;
+        if (Array.isArray(source)) return source.find(item => item?.language === lang) || null;
+        return typeof source === "object" ? (source[lang] || null) : null;
+    }
 
     let current = localStorage.getItem(STORAGE_KEY);
     if (!LANGUAGES.includes(current)) current = "fa";
@@ -227,7 +247,9 @@
     function localizeRestaurant(config) {
         if (!config) return config;
         const fields = {};
+        const own = entityTranslation(config, current) || {};
         ["name", "tagline", "description", "address"].forEach(key => {
+            if (own[key]) { fields[key] = own[key]; return; }
             const value = config[key] ?? "";
             const seed = restaurant[key]?.fa ?? "";
             fields[key] = seedValue(value, seed, restaurant[key]?.[current]);
@@ -237,6 +259,9 @@
 
     function localizeCategory(category) {
         if (!category) return category;
+        const own = entityTranslation(category, current);
+        if (own?.name) return { ...category, name: own.name };
+        if (current === "fa") return category;
         const seed = findSeedCategory(category.id);
         const seedName = seed?.name ?? category.name;
         return { ...category, name: seedValue(category.name, seedName, categoryText[category.id]?.[current]) };
@@ -244,15 +269,25 @@
 
     function localizeProduct(product) {
         if (!product) return product;
+        const own = entityTranslation(product, current) || {};
+        const ownCategory = entityTranslation({ translations: product.categoryTranslations }, current);
+        // Server-provided text wins over whatever language the API resolved the base fields in.
+        if (current === "fa") {
+            return own.name || ownCategory?.name
+                ? { ...product, name: own.name || product.name, description: own.description ?? product.description, badge: own.badge ?? product.badge, categoryName: ownCategory?.name || product.categoryName }
+                : product;
+        }
         const translation = products[product.id] || {};
         const seed = findSeedProduct(product.id);
         const seedCategory = findSeedCategory(product.category);
         return {
             ...product,
-            name: seedValue(product.name, seed?.name ?? product.name, translation.name?.[current]),
-            description: seedValue(product.description, seed?.description ?? product.description, translation.description?.[current]),
-            categoryName: seedValue(product.categoryName, seed?.categoryName ?? seedCategory?.name ?? product.categoryName, categoryText[product.category]?.[current]),
-            badge: product.badge ? seedValue(product.badge, seed?.badge ?? product.badge, translation.badge?.[current]) : ""
+            name: own.name || seedValue(product.name, seed?.name ?? product.name, translation.name?.[current]),
+            description: own.description || seedValue(product.description, seed?.description ?? product.description, translation.description?.[current]),
+            categoryName: ownCategory?.name || seedValue(product.categoryName, seed?.categoryName ?? seedCategory?.name ?? product.categoryName, categoryText[product.category]?.[current]),
+            badge: product.badge
+                ? (own.badge || badgeText[product.badge]?.[current] || seedValue(product.badge, seed?.badge ?? product.badge, translation.badge?.[current]))
+                : ""
         };
     }
 
@@ -276,6 +311,14 @@
 
         set(".hero-description", pick(restaurant.description));
         set(".hero-button span:first-child", ui("skipToMenu"));
+
+        // Elements created once by app.js: they cannot capture the language at creation time,
+        // so their labels are (re)written here on every language change.
+        document.querySelectorAll(".rv4-skip-link").forEach(el => { el.textContent = ui("skipToMenu"); });
+        document.querySelectorAll(".products-scroll-btn--prev").forEach(el => el.setAttribute("aria-label", ui("previous")));
+        document.querySelectorAll(".products-scroll-btn--next").forEach(el => el.setAttribute("aria-label", ui("next")));
+        document.querySelectorAll(".rv4-back-top").forEach(el => el.setAttribute("aria-label", ui("backToTop")));
+        document.querySelectorAll(".brand-logo img, .splash-logo").forEach(el => el.setAttribute("alt", ui("logoAlt")));
         set(".hero-scroll-indicator span:first-child", t("اسکرول کنید"));
 
         set("#categories .section-title", current === "fa" ? "انتخاب <em>شما</em>" : current === "en" ? "<em>Your</em> Choice" : current === "tr" ? "<em>Sizin</em> Seçiminiz" : "<em>اختيارك</em>", true);
