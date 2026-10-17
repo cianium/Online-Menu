@@ -1,0 +1,10 @@
+4.9.1: Mobile form actions and readable inputs; numeric/unrated ratings; snapshot role checks; CSRF recovery; empty-catalog saves; preserve unchanged translation origin; offline image fallback; localized creator credit. See docs/REVIEW_4.9.1_FA.md for verification limits.
+
+ROMANO 4.9.0 — Customer Menu + Admin Workspace
+
+Includes the 4.8.0 admin release. Read docs/CUSTOMER_4.9.0_FA.md.
+Responsive customer catalog, four-language search/filters, favorites and sorting.
+Safer public data loading, recent offline snapshots, product availability and deep links.
+Verification: static/syntax checks, 22 unit tests, 13 customer browser scenarios,
+16 admin browser scenarios. Browser API responses are mocked; no real database
+integration or deployment performed. Service workers blocked in browser suites.

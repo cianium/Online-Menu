@@ -1,0 +1,122 @@
+{
+  "baseline": "4.9.0 (both input copies identical)",
+  "release": "4.9.1",
+  "files": [
+    {
+      "path": "README.md",
+      "status": "modified"
+    },
+    {
+      "path": "RELEASE_NOTES.txt",
+      "status": "modified"
+    },
+    {
+      "path": "admin/admin-i18n.js",
+      "status": "modified"
+    },
+    {
+      "path": "admin/admin.js",
+      "status": "modified"
+    },
+    {
+      "path": "admin/index.html",
+      "status": "modified"
+    },
+    {
+      "path": "admin/workspace.css",
+      "status": "modified"
+    },
+    {
+      "path": "backend/lib/snapshot-policy.mjs",
+      "status": "added"
+    },
+    {
+      "path": "backend/package.json",
+      "status": "modified"
+    },
+    {
+      "path": "backend/server.mjs",
+      "status": "modified"
+    },
+    {
+      "path": "backend/test/service-worker.test.mjs",
+      "status": "added"
+    },
+    {
+      "path": "backend/test/snapshot-policy.test.mjs",
+      "status": "added"
+    },
+    {
+      "path": "css/menu-experience.css",
+      "status": "modified"
+    },
+    {
+      "path": "docs/PRODUCTION_STATUS.md",
+      "status": "modified"
+    },
+    {
+      "path": "docs/REVIEW_4.9.1_FA.md",
+      "status": "added"
+    },
+    {
+      "path": "docs/qa/admin-browser-results.json",
+      "status": "modified"
+    },
+    {
+      "path": "docs/qa/admin-desktop-ar.png",
+      "status": "modified"
+    },
+    {
+      "path": "docs/qa/admin-desktop-en.png",
+      "status": "modified"
+    },
+    {
+      "path": "docs/qa/admin-mobile-edit-320.png",
+      "status": "added"
+    },
+    {
+      "path": "docs/qa/admin-mobile-fa.png",
+      "status": "modified"
+    },
+    {
+      "path": "docs/qa/admin-mobile-tr.png",
+      "status": "modified"
+    },
+    {
+      "path": "docs/qa/customer-ar-390.png",
+      "status": "modified"
+    },
+    {
+      "path": "docs/qa/customer-en-1440.png",
+      "status": "modified"
+    },
+    {
+      "path": "docs/qa/customer-fa-390.png",
+      "status": "modified"
+    },
+    {
+      "path": "docs/qa/customer-tr-390.png",
+      "status": "modified"
+    },
+    {
+      "path": "js/i18n.js",
+      "status": "modified"
+    },
+    {
+      "path": "package.json",
+      "status": "modified"
+    },
+    {
+      "path": "qa/admin-browser.test.cjs",
+      "status": "modified"
+    },
+    {
+      "path": "qa/static-audit.mjs",
+      "status": "modified"
+    },
+    {
+      "path": "sw.js",
+      "status": "modified"
+    }
+  ]
+}

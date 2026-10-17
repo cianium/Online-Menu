@@ -1,0 +1,25 @@
+{
+  "passed": 18,
+  "cases": [
+    "Local demo boot and seed catalog",
+    "4 languages × 3 widths × 4 admin pages: direction and horizontal overflow",
+    "Create product with decimal price and persist after reload",
+    "Zero and decimal ratings survive product edits and reload",
+    "Mobile product form has readable inputs and reachable sticky save",
+    "Content review opens a correctly scoped filter",
+    "Duplicate opens an inactive unsaved copy; dirty close can cancel or discard",
+    "Confirm followed by Escape never confirms the second action",
+    "Failed local write rolls back state and keeps form input",
+    "Bulk status change persists and scopes selection to visible products",
+    "Settings dirty status clears only after successful save",
+    "Backup import awaits failed storage and restores previous state",
+    "Category create, rename and delete; product delete persists",
+    "Empty server catalog never restores local demo data or auto-writes",
+    "Server failure keeps category form and rolls back state; retry saves once",
+    "Media upload happens once and persisted URLs replace inline images",
+    "Service outage is blocked instead of writable demo fallback",
+    "Final screenshots and no uncaught runtime errors"
+  ],
+  "errors": [],
+  "notes": "Chromium only. Server flows use a mocked HTTP contract; no real PostgreSQL test."
+}

@@ -1,0 +1,20 @@
+{
+  "name": "romano-digital-menu",
+  "version": "4.9.1",
+  "private": true,
+  "description": "ROMANO multilingual digital restaurant menu and admin workspace",
+  "scripts": {
+    "qa:static": "node qa/static-audit.mjs",
+    "qa:syntax": "node --check js/app.js && node --check js/i18n.js && node --check js/public-api.js && node --check admin/admin.js && node --check admin/api.js && node --check admin/admin-i18n.js && node --check admin/rv4-admin-plus.js && node --check sw.js && node --check backend/server.mjs && node --check backend/seed.mjs && node --check backend/migrate.mjs && node --check admin/workspace.js && node --check js/menu-experience.js",
+    "backend:install": "npm --prefix backend install",
+    "backend:dev": "npm --prefix backend run dev",
+    "backend:start": "npm --prefix backend run start",
+    "backend:seed": "npm --prefix backend run seed",
+    "test": "node --test backend/test/*.test.mjs",
+    "qa": "npm run qa:syntax && npm run qa:static && npm test",
+    "backend:migrate": "npm --prefix backend run migrate",
+    "qa:browser": "node qa/admin-browser.test.cjs",
+    "qa:customer": "node qa/customer-browser.test.cjs",
+    "qa:production": "node qa/production-preflight.mjs"
+  }
+}

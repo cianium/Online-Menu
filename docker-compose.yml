@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: romano
+      POSTGRES_USER: romano
+      POSTGRES_PASSWORD: change-me-in-dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - romano_pgdata:/var/lib/postgresql/data
+
+volumes:
+  romano_pgdata:

@@ -1,0 +1,20 @@
+{
+  "passed": 13,
+  "cases": [
+    "Static demo boots with 21 products",
+    "Search, category, price order and reset",
+    "Favorites persist, filter and clear",
+    "Modal focus, inert background, Escape and URL restoration",
+    "Four languages at 320, 390 and 1440px: direction, overflow and modal",
+    "Demo cross-tab changes remove unavailable open product",
+    "Delayed public deep link preserves query; hidden items excluded and HTML escaped",
+    "Admin storage cannot overwrite public menu",
+    "Server failure uses recent public cache only for same restaurant",
+    "Expired cache and JSON 404 fail closed",
+    "Empty public catalog never restores seed products",
+    "Blocked storage still permits browsing and session favorites",
+    "No uncaught browser errors"
+  ],
+  "errors": [],
+  "notes": "Chromium, static preview and mocked public API. Service workers blocked. No real PostgreSQL or production test."
+}
