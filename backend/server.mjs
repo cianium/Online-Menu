@@ -301,19 +301,22 @@ await app.register(helmet, {
 });
 await app.register(rateLimit, { max: 100, timeWindow: '1 minute', keyGenerator: request => request.ip });
 
-// Only these folders/files are public. The project root (backend/, docs/, qa/, package files) is never served.
-await app.register(fastifyStatic, { root: path.join(root, 'assets'), prefix: '/assets/', maxAge: '7d' });
-await app.register(fastifyStatic, { root: path.join(root, 'css'), prefix: '/css/', decorateReply: false });
-await app.register(fastifyStatic, { root: path.join(root, 'js'), prefix: '/js/', decorateReply: false });
-await app.register(fastifyStatic, { root: path.join(root, 'admin'), prefix: '/admin/', index: ['index.html'], decorateReply: false });
-await fs.mkdir(UPLOAD_DIR, { recursive: true });
-await app.register(fastifyStatic, { root: UPLOAD_DIR, prefix: '/uploads/', maxAge: '30d', immutable: true, decorateReply: false });
-
-app.get('/', (_request, reply) => reply.sendFile('index.html', root));
-app.get('/index.html', (_request, reply) => reply.sendFile('index.html', root));
-app.get('/sw.js', (_request, reply) => reply.header('Cache-Control', 'no-cache').sendFile('sw.js', root));
-app.get('/manifest.webmanifest', (_request, reply) => reply.type('application/manifest+json').sendFile('manifest.webmanifest', root));
-app.get('/admin', (_request, reply) => reply.redirect('/admin/'));
+// The Vercel deployment uses backend/ as its root and only serves API routes.
+// Static customer/admin files are deployed independently by romano-web.
+if (!IS_VERCEL) {
+  // Only these folders/files are public. Never serve the repository root.
+  await app.register(fastifyStatic, { root: path.join(root, 'assets'), prefix: '/assets/', maxAge: '7d' });
+  await app.register(fastifyStatic, { root: path.join(root, 'css'), prefix: '/css/', decorateReply: false });
+  await app.register(fastifyStatic, { root: path.join(root, 'js'), prefix: '/js/', decorateReply: false });
+  await app.register(fastifyStatic, { root: path.join(root, 'admin'), prefix: '/admin/', index: ['index.html'], decorateReply: false });
+  await fs.mkdir(UPLOAD_DIR, { recursive: true });
+  await app.register(fastifyStatic, { root: UPLOAD_DIR, prefix: '/uploads/', maxAge: '30d', immutable: true, decorateReply: false });
+  app.get('/', (_request, reply) => reply.sendFile('index.html', root));
+  app.get('/index.html', (_request, reply) => reply.sendFile('index.html', root));
+  app.get('/sw.js', (_request, reply) => reply.header('Cache-Control', 'no-cache').sendFile('sw.js', root));
+  app.get('/manifest.webmanifest', (_request, reply) => reply.type('application/manifest+json').sendFile('manifest.webmanifest', root));
+  app.get('/admin', (_request, reply) => reply.redirect('/admin/'));
+}
 
 app.setErrorHandler(sendError);
 app.setNotFoundHandler((request, reply) => {
