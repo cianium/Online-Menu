@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/v1/public/:path*",
+      "destination": "https://tjrzeourqvahtocwnzwd.supabase.co/functions/v1/romano-public/public/:path*"
+    }
+  ]
+}
