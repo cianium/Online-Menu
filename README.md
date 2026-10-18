@@ -1,8 +1,8 @@
-# ROMANO 4.9.1 — Mobile editing and correctness fixes
+# ROMANO 2.0 — Mobile editing and correctness fixes
 
 See [the current Persian review and roadmap](docs/REVIEW_4.9.1_FA.md) for the three-package comparison, changes, verification scope and production blockers. Existing restaurant-menu functionality is preserved. This is not a production certification.
 
-# ROMANO 4.9.0 — Customer menu update
+# ROMANO 2.0 — Customer menu update
 
 Improved multilingual customer browsing, responsive product grids, favorites, search and price sorting. Public loading now keeps server data separate from local demo data and labels recent offline snapshots. Includes the complete 4.8.0 admin update.
 
