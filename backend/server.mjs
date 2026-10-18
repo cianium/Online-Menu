@@ -26,7 +26,8 @@ assertProductionConfig(process.env);
 const { Pool } = pg;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
-const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || path.join(root, 'uploads'));
+const IS_VERCEL = Boolean(process.env.VERCEL);
+const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || (IS_VERCEL ? '/tmp/romano-uploads' : path.join(root, 'uploads')));
 const PORT = Number(process.env.PORT || 3000);
 const SESSION_TTL = Number(process.env.SESSION_TTL_SECONDS || 604800);
 const MAX_SESSIONS_PER_USER = 5;
@@ -896,6 +897,7 @@ async function routes(api) {
   /* --- admin: image upload --- */
 
   adminRoute('post', '/media', 'editor', async ({ request, reply, session, membership }) => {
+    if (IS_VERCEL) throw httpError(503, 'Media uploads require persistent object storage.', 'MEDIA_STORAGE_UNAVAILABLE');
     const { dataUrl } = mediaSchema.parse(request.body);
     const { buffer, mime, ext } = parseImageDataUrl(dataUrl);
     const count = await db('select count(*)::int as count from media_assets where restaurant_id = $1', [membership.restaurant_id]);
@@ -920,15 +922,20 @@ await app.register(async legacy => {
 
 app.addHook('onClose', async () => { await pool.end(); });
 
-for (const signal of ['SIGINT', 'SIGTERM']) {
-  process.on(signal, () => { app.close().finally(() => process.exit(0)); });
-}
+// Export Fastify for Vercel while retaining standalone startup outside Vercel.
+export default app;
 
-try {
-  await app.listen({ host: process.env.HOST || '0.0.0.0', port: PORT });
-  app.log.info({ autoTranslation: autoTranslate.enabled }, autoTranslate.enabled ? 'automatic translation is ON' : 'automatic translation is OFF (set ANTHROPIC_API_KEY to enable)');
-  sweepUntranslated().catch(error => app.log.warn({ reason: error?.message }, 'translation sweep skipped'));
-} catch (error) {
-  app.log.error(error);
-  process.exit(1);
+if (!IS_VERCEL) {
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.on(signal, () => { app.close().finally(() => process.exit(0)); });
+  }
+
+  try {
+    await app.listen({ host: process.env.HOST || '0.0.0.0', port: PORT });
+    app.log.info({ autoTranslation: autoTranslate.enabled }, autoTranslate.enabled ? 'automatic translation is ON' : 'automatic translation is OFF (set ANTHROPIC_API_KEY to enable)');
+    sweepUntranslated().catch(error => app.log.warn({ reason: error?.message }, 'translation sweep skipped'));
+  } catch (error) {
+    app.log.error(error);
+    process.exit(1);
+  }
 }
