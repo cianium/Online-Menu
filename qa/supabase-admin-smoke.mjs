@@ -25,4 +25,8 @@ const crossOrigin=await check("/auth/logout",403,{method:"POST",headers:{"Origin
 assert.equal(crossOrigin.obj.error?.code,"CSRF_INVALID");
 const noWrite=await check("/admin/snapshot",403,{method:"PUT",headers:{"Content-Type":"application/json"},body:"{}"});
 assert.equal(noWrite.obj.error?.code,"CSRF_INVALID");
+const secureHeaders = { Origin: "https://food.kiankhayat.me", Cookie: cookie, "X-CSRF-Token": csrf.obj.data.csrfToken, "Content-Type": "application/json" };
+assert.equal((await check("/admin/snapshot",401,{method:"PUT",headers:secureHeaders,body:JSON.stringify({mode:"merge",categories:[],products:[]})})).obj.error?.code,"UNAUTHENTICATED");
+assert.equal((await check("/admin/media",401,{method:"POST",headers:secureHeaders,body:JSON.stringify({dataUrl:"invalid"})})).obj.error?.code,"UNAUTHENTICATED");
+assert.equal((await check("/admin/me",401)).obj.error?.code,"UNAUTHENTICATED");
 console.log("ROMANO Admin auth smoke passed: anonymous denied; cookie, CSRF and credentials enforced.");
