@@ -157,6 +157,93 @@ async function tenantData(member: Member) {
     }, categories, products
   };
 }
+function normalizeSlug(raw: unknown) {
+  // Keep legacy backend semantics for stable English slugs.
+  return String(raw ?? "").toLowerCase().trim().normalize("NFKD")
+    .replace(/[^a-z0-9\s-]/g,"").replace(/[\s_-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,80);
+}
+function validateSnapshot(body: unknown) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return null;
+  const source = body as Record<string,unknown>;
+  if (!Array.isArray(source.categories) || !Array.isArray(source.products) ||
+      source.categories.length>500 || source.products.length>2000 ||
+      (source.mode!==undefined && source.mode!=="merge" && source.mode!=="replace")) return null;
+  const categories = new Map<string,string>();
+  const catItems: Record<string,unknown>[] = [];
+  for (const item of source.categories) {
+    if (!item || typeof item!=="object" || Array.isArray(item)) return null;
+    const x = item as Record<string,unknown>;
+    const name = x.name;
+    const id = typeof x.id === "string" ? normalizeSlug(x.id) : "";
+    if (!id || typeof name!=="string" || !name.trim() || name.length>120 || categories.has(String(x.id))) return null;
+    categories.set(String(x.id),id);
+    catItems.push({...x,id});
+  }
+  if (new Set(categories.values()).size !== categories.size) return null;
+  const seenProducts = new Set<string>();
+  const productItems: Record<string,unknown>[] = [];
+  for (const item of source.products) {
+    if (!item || typeof item!=="object" || Array.isArray(item)) return null;
+    const x = item as Record<string,unknown>;
+    const id = typeof x.id === "string" ? normalizeSlug(x.id) : "";
+    if (!id || seenProducts.has(id) || !categories.has(String(x.category)) ||
+      typeof x.name!=="string" || !x.name.trim() || x.name.length>160 ||
+      typeof x.price!=="number" || !Number.isFinite(x.price) || x.price<0 || x.price>100000000000) return null;
+    seenProducts.add(id);
+    productItems.push({...x,id,category:categories.get(String(x.category))});
+  }
+  if (source.restaurant!==undefined && (!source.restaurant || typeof source.restaurant!=="object" || Array.isArray(source.restaurant))) return null;
+  return {...source,mode:source.mode||"merge",categories:catItems,products:productItems};
+}
+async function readBody(req: Request, limit: number) {
+  if (Number(req.headers.get("content-length")||0)>limit) return null;
+  const raw = await req.text();
+  if (raw.length>limit) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+function decodeImage(input: unknown) {
+  if (typeof input!=="string" || input.length>3_000_000) return null;
+  const match = input.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/);
+  if (!match) return null;
+  let raw: string;
+  try { raw=atob(match[2]); } catch { return null; }
+  if (raw.length===0 || raw.length>2_097_152) return null;
+  const bytes = Uint8Array.from(raw, c=>c.charCodeAt(0));
+  const ext = match[1]==="jpeg"?"jpg":match[1];
+  const jpeg=bytes.length>3 && bytes[0]===255 && bytes[1]===216 && bytes[2]===255;
+  const png=bytes.length>8 && [137,80,78,71,13,10,26,10].every((n,i)=>bytes[i]===n);
+  const webp=bytes.length>12 && String.fromCharCode(...bytes.slice(0,4))==="RIFF" &&
+        String.fromCharCode(...bytes.slice(8,12))==="WEBP";
+  if ((ext==="jpg"&&!jpeg)||(ext==="png"&&!png)||(ext==="webp"&&!webp)) return null;
+  return {bytes,ext,mime:"image/"+match[1]};
+}
+async function saveMedia(body: unknown, member: Member, actor: string) {
+  const input = body && typeof body==="object" ? (body as Record<string,unknown>).dataUrl : null;
+  const image = decodeImage(input);
+  if (!image) return {code:"INVALID_MEDIA",status:422} as const;
+  const { count,error: countError }=await service.from("media_assets").select("id",{count:"exact",head:true}).eq("restaurant_id",member.restaurant_id);
+  if (countError) throw countError;
+  if ((count||0)>=2000) return {code:"MEDIA_QUOTA",status:409} as const;
+  const fileName=crypto.randomUUID()+"."+image.ext;
+  const storagePath=member.restaurant_id+"/"+fileName;
+  const {error:uploadError}=await service.storage.from("romano-media").upload(storagePath,image.bytes,{contentType:image.mime,upsert:false,cacheControl:"3600"});
+  if (uploadError) throw uploadError;
+  const {error:databaseError}=await service.from("media_assets").insert({
+    restaurant_id:member.restaurant_id,uploaded_by:actor,file_name:fileName,mime_type:image.mime,byte_size:image.bytes.length
+  });
+  if (databaseError) {
+    await service.storage.from("romano-media").remove([storagePath]);
+    throw databaseError;
+  }
+  const {data}=service.storage.from("romano-media").getPublicUrl(storagePath);
+  // Auditing is best effort, like the legacy service.
+  await service.from("audit_logs").insert({
+    restaurant_id:member.restaurant_id,actor_user_id:actor,
+    action:"media.uploaded",entity_type:"media",metadata:{bytes:image.bytes.length,mime:image.mime}
+  }).then(({error})=>{if(error)console.error("media audit failed",error.message)});
+  return {url:data.publicUrl,mime:image.mime,bytes:image.bytes.length} as const;
+}
+
 Deno.serve(async req => {
   const id = crypto.randomUUID();
   const jar = cookies(req);
@@ -213,7 +300,29 @@ Deno.serve(async req => {
       const m = resolveMember(p,match[1],match[2]==="data"?"viewer":"editor");
       if (!m) return failure("FORBIDDEN","Restaurant access denied.",id,403,newCookies);
       if (match[2]==="data" && req.method==="GET") return reply(await tenantData(m),id,200,newCookies);
-      return failure("NOT_IMPLEMENTED","Admin write operations are not enabled in this deployment.",id,501,newCookies);
+      if (match[2]==="snapshot" && req.method==="PUT") {
+        const raw=await readBody(req,1_048_576);
+        const payload=validateSnapshot(raw);
+        if (!payload) return failure("VALIDATION_ERROR","Invalid menu snapshot.",id,422,newCookies);
+        const {error}=await service.rpc("romano_apply_snapshot",{
+          p_actor:p.id,p_restaurant:m.restaurant_id,p_payload:payload
+        });
+        if (error) {
+          const denied=error.code==="42501";
+          const invalid=error.code==="22023" || error.message?.includes("INVALID_");
+          if (denied) return failure("FORBIDDEN","Insufficient permissions.",id,403,newCookies);
+          if (invalid) return failure("VALIDATION_ERROR","Invalid menu snapshot.",id,422,newCookies);
+          throw error;
+        }
+        return reply({saved:true,data:await tenantData(m)},id,200,newCookies);
+      }
+      if (match[2]==="media" && req.method==="POST") {
+        const body=await readBody(req,3_100_000);
+        const upload=await saveMedia(body,m,p.id);
+        if ("code" in upload) return failure(upload.code,"Invalid image or media quota exceeded.",id,upload.status,newCookies);
+        return reply(upload,id,201,newCookies);
+      }
+      return failure("METHOD_NOT_ALLOWED","Method not allowed.",id,405,newCookies);
     }
     return failure("NOT_FOUND","Route not found.",id,404,newCookies);
   } catch (error) {
