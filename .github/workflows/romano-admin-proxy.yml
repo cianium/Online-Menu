@@ -1,0 +1,41 @@
+name: ROMANO admin same-domain proxy verification
+
+on:
+  pull_request:
+    paths:
+      - vercel.json
+      - qa/supabase-admin-proxy-smoke.mjs
+      - .github/workflows/romano-admin-proxy.yml
+  push:
+    branches: [main]
+    paths:
+      - vercel.json
+      - qa/supabase-admin-proxy-smoke.mjs
+      - .github/workflows/romano-admin-proxy.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  admin-proxy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate direct Supabase auth security on pull requests
+        if: github.event_name == 'pull_request'
+        env:
+          ROMANO_ADMIN_TEST_BASE: https://tjrzeourqvahtocwnzwd.supabase.co/functions/v1/romano-admin
+        run: node qa/supabase-admin-proxy-smoke.mjs
+      - name: Wait for deployment to reach production domain
+        if: github.event_name != 'pull_request'
+        run: sleep 20
+      - name: Validate cookies and auth proxy on production domain
+        if: github.event_name != 'pull_request'
+        env:
+          ROMANO_ADMIN_TEST_BASE: https://food.kiankhayat.me/api/v1
+        run: node qa/supabase-admin-proxy-smoke.mjs
