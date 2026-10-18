@@ -1,0 +1,29 @@
+name: ROMANO Supabase admin security
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/romano-admin/**"
+      - "qa/supabase-admin-smoke.mjs"
+      - ".github/workflows/supabase-admin.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  admin-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Type-check admin Edge Function
+        run: deno check supabase/functions/romano-admin/index.ts
+      - name: Test live Supabase admin API security
+        run: node qa/supabase-admin-smoke.mjs
