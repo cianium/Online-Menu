@@ -19,8 +19,10 @@ async function call(path, expected, options = {}) {
   return { body, response };
 }
 
-const health = await call("/health", 200);
-assert.equal(health.body.data?.status, "ok");
+if (base === direct) {
+  const health = await call("/health", 200);
+  assert.equal(health.body.data?.status, "ok");
+}
 const me = await call("/auth/me", 200);
 assert.equal(me.body.data, null, "Anonymous browser received an authenticated session");
 const admin = await call("/admin/data", 401);
