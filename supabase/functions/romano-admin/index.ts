@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 
 /**
  * ROMANO Admin — Supabase Auth broker and tenant-scoped read service.
@@ -319,7 +319,7 @@ Deno.serve(async req => {
       if (match[2]==="media" && req.method==="POST") {
         const body=await readBody(req,3_100_000);
         const upload=await saveMedia(body,m,p.id);
-        if ("code" in upload) return failure(upload.code,"Invalid image or media quota exceeded.",id,upload.status,newCookies);
+        if ("code" in upload && typeof upload.code === "string") return failure(upload.code,"Invalid image or media quota exceeded.",id,upload.status ?? 422,newCookies);
         return reply(upload,id,201,newCookies);
       }
       return failure("METHOD_NOT_ALLOWED","Method not allowed.",id,405,newCookies);
