@@ -31,6 +31,11 @@ jobs:
         env:
           ROMANO_ADMIN_TEST_BASE: https://tjrzeourqvahtocwnzwd.supabase.co/functions/v1/romano-admin
         run: node qa/supabase-admin-proxy-smoke.mjs
+      - name: Verify live production proxy during pull request
+        if: github.event_name == 'pull_request'
+        env:
+          ROMANO_ADMIN_TEST_BASE: https://food.kiankhayat.me/api/v1
+        run: node qa/supabase-admin-proxy-smoke.mjs
       - name: Wait for deployment to reach production domain
         if: github.event_name != 'pull_request'
         run: sleep 20
