@@ -24,6 +24,6 @@ jobs:
         with:
           node-version: "22"
       - name: Type-check admin Edge Function
-        run: deno check supabase/functions/romano-admin/index.ts
+        run: deno check --config supabase/functions/romano-admin/deno.json supabase/functions/romano-admin/index.ts
       - name: Test live Supabase admin API security
         run: node qa/supabase-admin-smoke.mjs
