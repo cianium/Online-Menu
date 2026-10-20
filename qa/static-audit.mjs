@@ -9,7 +9,7 @@ const required = [
   "index.html", "js/app.js", "js/i18n.js", "js/money.js", "js/data.js", "js/commerce.js", "css/commerce.css",
   "css/style.css", "css/romano.css", "manifest.webmanifest", "sw.js",
   "admin/index.html", "admin/api.js", "admin/admin.js", "admin/admin-i18n.js", "admin/rv4-admin-plus.js",
-  "admin/admin.css", "admin/rv4-admin-plus.css", "admin/orders.js", "admin/orders.css"
+  "admin/admin.css", "admin/rv4-admin-plus.css", "admin/orders.js", "admin/orders.css", "admin/vendor/qrcode.min.js", "admin/vendor/QRCODE_LICENSE.txt"
 ];
 
 function read(rel) { return fs.readFileSync(path.join(ROOT, rel), "utf8"); }
@@ -57,7 +57,7 @@ check(read("admin/index.html").includes("RAMEN | Admin Panel"), "Admin HTML bran
 check(read("js/menu-experience.js").includes('<span class="section-eyebrow">RAMEN</span>'), "Customer menu still shows legacy platform heading.");
 check(read("sw.js").includes('url.pathname.includes("/admin/")'), "Service worker does not explicitly exclude admin.");
 
-const syntaxTargets = ["js/app.js", "js/menu-experience.js", "js/commerce.js", "js/i18n.js", "js/money.js", "admin/admin.js", "admin/admin-i18n.js", "admin/rv4-admin-plus.js", "admin/workspace.js", "admin/orders.js", "sw.js", "qa/static-audit.mjs", "admin/api.js", "js/public-api.js", "backend/server.mjs", "backend/seed.mjs", "backend/migrate.mjs", "supabase/functions/romano-public/index.ts", "supabase/functions/romano-admin/index.ts", "supabase/functions/romano-order/core.ts", "supabase/functions/romano-order/index.ts", "supabase/functions/romano-payment/index.ts"];
+const syntaxTargets = ["js/app.js", "js/menu-experience.js", "js/commerce.js", "js/i18n.js", "js/money.js", "admin/admin.js", "admin/admin-i18n.js", "admin/rv4-admin-plus.js", "admin/workspace.js", "admin/orders.js", "admin/vendor/qrcode.min.js", "sw.js", "qa/static-audit.mjs", "admin/api.js", "js/public-api.js", "backend/server.mjs", "backend/seed.mjs", "backend/migrate.mjs", "supabase/functions/romano-public/index.ts", "supabase/functions/romano-admin/index.ts", "supabase/functions/romano-order/core.ts", "supabase/functions/romano-order/index.ts", "supabase/functions/romano-payment/index.ts"];
 for (const rel of syntaxTargets) {
   const r = spawnSync(process.execPath, rel.endsWith(".ts") ? ["--experimental-strip-types", "--check", path.join(ROOT, rel)] : ["--check", path.join(ROOT, rel)], { encoding: "utf8" });
   if (r.status !== 0) failures.push(`Syntax error in ${rel}: ${r.stderr.trim()}`);
