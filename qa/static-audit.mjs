@@ -59,7 +59,7 @@ check(read("sw.js").includes('url.pathname.includes("/admin/")'), "Service worke
 
 const syntaxTargets = ["js/app.js", "js/menu-experience.js", "js/commerce.js", "js/i18n.js", "js/money.js", "admin/admin.js", "admin/admin-i18n.js", "admin/rv4-admin-plus.js", "admin/workspace.js", "admin/orders.js", "sw.js", "qa/static-audit.mjs", "admin/api.js", "js/public-api.js", "backend/server.mjs", "backend/seed.mjs", "backend/migrate.mjs", "supabase/functions/romano-public/index.ts", "supabase/functions/romano-admin/index.ts", "supabase/functions/romano-order/core.ts", "supabase/functions/romano-order/index.ts", "supabase/functions/romano-payment/index.ts"];
 for (const rel of syntaxTargets) {
-  const r = spawnSync(process.execPath, ["--check", path.join(ROOT, rel)], { encoding: "utf8" });
+  const r = spawnSync(process.execPath, rel.endsWith(".ts") ? ["--experimental-strip-types", "--check", path.join(ROOT, rel)] : ["--check", path.join(ROOT, rel)], { encoding: "utf8" });
   if (r.status !== 0) failures.push(`Syntax error in ${rel}: ${r.stderr.trim()}`);
 }
 
