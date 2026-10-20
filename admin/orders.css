@@ -33,3 +33,6 @@
   #ops-tables .ops-qr-result input,#ops-tables .ops-qr-buttons{display:none!important}
   #ops-tables .ops-qr-image img{display:block!important}
 }
+
+.orders-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+@media(max-width:700px){.orders-toolbar{width:100%}.orders-toolbar button{flex:1 1 165px}}
