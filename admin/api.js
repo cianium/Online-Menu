@@ -82,6 +82,12 @@
     tables: branchId => request(`/admin/branches/${encodeURIComponent(branchId)}/tables`),
     createTable: (branchId, value) => request(`/admin/branches/${encodeURIComponent(branchId)}/tables`, { method:"POST", body:JSON.stringify(value) }),
     tableQr: (branchId, tableId) => request(`/admin/branches/${encodeURIComponent(branchId)}/tables/${encodeURIComponent(tableId)}/qr`),
+    setTableActive: (branchId, tableId, active) => request(`/admin/branches/${encodeURIComponent(branchId)}/tables/${encodeURIComponent(tableId)}/status`, {
+      method:"PUT", body:JSON.stringify({ active })
+    }),
+    rotateTableQr: (branchId, tableId) => request(`/admin/branches/${encodeURIComponent(branchId)}/tables/${encodeURIComponent(tableId)}/rotate`, {
+      method:"POST", body:JSON.stringify({})
+    }),
     saveGateway: (branchId, gateway) => request(`/admin/branches/${encodeURIComponent(branchId)}/gateway`, {
       method: "PUT", body: JSON.stringify(gateway)
     })
