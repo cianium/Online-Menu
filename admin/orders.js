@@ -5,6 +5,46 @@
   let branches = [];
   let filter = "active";
   let timer = 0;
+  let audioContext = null;
+  let soundEnabled = false;
+  let orderBaselineReady = false;
+
+  function updateSoundButton() {
+    const button=document.querySelector("#orders-sound");
+    if(!button) return;
+    button.textContent=t(soundEnabled?"قطع اعلان صوتی":"فعال‌سازی اعلان صوتی");
+    button.setAttribute("aria-pressed",String(soundEnabled));
+  }
+
+  async function toggleSound() {
+    if(soundEnabled){soundEnabled=false;updateSoundButton();return;}
+    const AudioConstructor=window.AudioContext || window.webkitAudioContext;
+    if(!AudioConstructor){window.alert(t("اعلان صوتی در این مرورگر پشتیبانی نمی‌شود."));return;}
+    try{
+      audioContext=audioContext || new AudioConstructor();
+      await audioContext.resume();
+      soundEnabled=audioContext.state==="running";
+      updateSoundButton();
+    }catch{soundEnabled=false;updateSoundButton();}
+  }
+
+  function alertNewOrder() {
+    if(!soundEnabled || !audioContext || audioContext.state!=="running") return;
+    const now=audioContext.currentTime;
+    for(const offset of [0,.23]){
+      const oscillator=audioContext.createOscillator();
+      const volume=audioContext.createGain();
+      oscillator.type="sine";
+      oscillator.frequency.setValueAtTime(880,now+offset);
+      volume.gain.setValueAtTime(0.001,now+offset);
+      volume.gain.exponentialRampToValueAtTime(0.16,now+offset+.025);
+      volume.gain.exponentialRampToValueAtTime(0.001,now+offset+.16);
+      oscillator.connect(volume);volume.connect(audioContext.destination);
+      oscillator.start(now+offset);
+      oscillator.stop(now+offset+.17);
+    }
+  }
+
   const t = (key) => window.ROMANO_ADMIN_I18N?.get(key) || key;
   const locale = () => window.ROMANO_ADMIN_I18N?.language || "fa";
   const number = (value) => Number(value || 0).toLocaleString(locale() === "fa" ? "fa-IR" : locale());
@@ -65,7 +105,11 @@
     }
     try {
       const data = await window.RomanoAPI.orders();
-      orders = Array.isArray(data?.orders) ? data.orders : [];
+      const previous=new Set(orders.map(item=>item.id));
+      const incoming=Array.isArray(data?.orders) ? data.orders : [];
+      if(orderBaselineReady && incoming.some(item=>item.status==="submitted" && !previous.has(item.id)))alertNewOrder();
+      orders=incoming;
+      orderBaselineReady=true;
       render();
     } catch (error) {
       if (!silent) document.querySelector("#orders-board").innerHTML = `<div class="orders-empty">${safe(t("دریافت سفارش‌ها ناموفق بود."))}</div>`;
@@ -143,6 +187,43 @@
     refreshTables();
   }
 
+  function renderQrResult(parent, table, url) {
+    document.querySelectorAll("#ops-tables .ops-qr-result").forEach(node => node.remove());
+    if(typeof window.QRCode!=="function") throw new Error("QR_RENDERER_UNAVAILABLE");
+    const container=document.createElement("div");
+    container.className="ops-qr-result";
+    const heading=document.createElement("h3");
+    heading.textContent=`${t("QR میز")} · ${table.display_name}`;
+    const note=document.createElement("p");
+    note.textContent=t("برای دیدن منو و ثبت سفارش اسکن کنید.");
+    const qr=document.createElement("div");
+    qr.className="ops-qr-image";
+    const input=document.createElement("input");
+    input.type="url";input.dir="ltr";input.readOnly=true;input.value=url;
+    input.setAttribute("aria-label",t("لینک سفارش میز"));
+    const buttons=document.createElement("div");
+    buttons.className="ops-qr-buttons";
+    const copy=document.createElement("button");
+    copy.type="button";copy.textContent=t("کپی لینک");
+    copy.addEventListener("click",async()=>{
+      try { await navigator.clipboard.writeText(url);opsMessage("لینک کپی شد."); }
+      catch { input.focus();input.select();opsMessage("برای کپی، لینک را انتخاب کنید."); }
+    });
+    const print=document.createElement("button");
+    print.type="button";print.textContent=t("چاپ QR");
+    print.addEventListener("click",()=>window.print());
+    buttons.append(copy,print);
+    container.append(heading,note,qr,input,buttons);
+    parent.append(container);
+    try {
+      new window.QRCode(qr,{
+        text:url,width:240,height:240,
+        colorDark:"#142B2A",colorLight:"#FFFFFF",
+        correctLevel:window.QRCode.CorrectLevel.M
+      });
+    }catch(error){container.remove();throw error;}
+  }
+
   async function refreshTables() {
     const select=document.querySelector("#ops-branch");
     const host=document.querySelector("#ops-tables");
@@ -156,28 +237,44 @@
       if(!tables.length){host.textContent=t("میزی ثبت نشده است.");return;}
       host.innerHTML=tables.map((table)=>`
         <div class="ops-table">
-          <div><strong>${safe(table.display_name)}</strong><small> · ${safe(table.code)}</small></div>
-          <button type="button" data-table-qr="${safe(table.id)}" ${table.active?"":"disabled"}>${safe(t("دریافت لینک QR"))}</button>
+          <div class="ops-table-info"><strong>${safe(table.display_name)}</strong>
+            <small> · ${safe(table.code)} · ${safe(t(table.active?"میز فعال":"میز غیرفعال"))}</small>
+          </div>
+          <div class="ops-table-actions">
+            <button type="button" data-table-qr="${safe(table.id)}" ${table.active?"":"disabled"}>${safe(t("دریافت لینک QR"))}</button>
+            <button type="button" data-table-status="${safe(table.id)}" data-active="${table.active?"true":"false"}">${safe(t(table.active?"غیرفعال‌کردن میز":"فعال‌کردن میز"))}</button>
+            <button type="button" data-table-rotate="${safe(table.id)}">${safe(t("باطل‌کردن QR قبلی"))}</button>
+          </div>
         </div>`).join("");
-      host.querySelectorAll("[data-table-qr]").forEach((button)=>button.addEventListener("click",async()=>{
-        button.disabled=true;
-        opsMessage("");
+      const byId=new Map(tables.map(table=>[table.id,table]));
+      host.querySelectorAll("[data-table-qr]").forEach(button=>button.addEventListener("click",async()=>{
+        button.disabled=true;opsMessage("");
         try {
           const output=await window.RomanoAPI.tableQr(selected,button.dataset.tableQr);
-          const parent=button.closest(".ops-table");
-          parent.querySelector(".ops-qr-result")?.remove();
-          const container=document.createElement("div");
-          container.className="ops-qr-result";
-          const input=document.createElement("input");
-          input.type="url";input.readOnly=true;input.value=output.qrUrl;input.dir="ltr";
-          const copy=document.createElement("button");
-          copy.type="button";copy.textContent=t("کپی لینک");
-          copy.addEventListener("click",async()=>{
-            try{await navigator.clipboard.writeText(input.value);opsMessage("لینک کپی شد.");}
-            catch{input.focus();input.select();}
-          });
-          container.append(input,copy);parent.append(container);
-        }catch{opsMessage("عملیات انجام نشد.");}
+          if(select.value!==selected) return;
+          const table=byId.get(button.dataset.tableQr);
+          if(!table || typeof output?.qrUrl!=="string") throw new Error("INVALID_QR_RESPONSE");
+          renderQrResult(button.closest(".ops-table"),table,output.qrUrl);
+        }catch{opsMessage("ساخت QR انجام نشد.");}
+        finally{button.disabled=false;}
+      }));
+      host.querySelectorAll("[data-table-status]").forEach(button=>button.addEventListener("click",async()=>{
+        const active=button.dataset.active!=="true";
+        if(!active && !window.confirm(t("غیرفعال‌کردن میز، سفارش‌گیری از این میز را متوقف می‌کند. ادامه می‌دهید؟"))) return;
+        button.disabled=true;opsMessage("");
+        try{
+          await window.RomanoAPI.setTableActive(selected,button.dataset.tableStatus,active);
+          if(select.value===selected){await refreshTables();opsMessage("وضعیت میز ذخیره شد.");}
+        }catch{opsMessage("تغییر وضعیت میز انجام نشد.");}
+        finally{button.disabled=false;}
+      }));
+      host.querySelectorAll("[data-table-rotate]").forEach(button=>button.addEventListener("click",async()=>{
+        if(!window.confirm(t("QR قبلی و نشست‌های فعال این میز باطل می‌شوند. ادامه می‌دهید؟")))return;
+        button.disabled=true;opsMessage("");
+        try{
+          await window.RomanoAPI.rotateTableQr(selected,button.dataset.tableRotate);
+          if(select.value===selected){await refreshTables();opsMessage("QR قبلی باطل شد. کد جدید را چاپ کنید.");}
+        }catch{opsMessage("باطل‌کردن QR انجام نشد.");}
         finally{button.disabled=false;}
       }));
     } catch { host.textContent=t("عملیات انجام نشد."); }
@@ -236,13 +333,15 @@
 
   function init() {
     document.querySelector("#orders-refresh")?.addEventListener("click", () => refresh());
+    document.querySelector("#orders-sound")?.addEventListener("click", toggleSound);
+    updateSoundButton();
     document.querySelector('[data-page="orders"]')?.addEventListener("click", () => refresh());
     document.querySelectorAll("[data-order-filter]").forEach((button) => button.addEventListener("click", () => {
       filter = button.dataset.orderFilter;
       document.querySelectorAll("[data-order-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
       render();
     }));
-    document.addEventListener("romano:language-changed", () => { render(); syncBranchManagement(); });
+    document.addEventListener("romano:language-changed", () => { render(); syncBranchManagement(); updateSoundButton(); });
     document.querySelector("#ops-branch")?.addEventListener("change", syncBranchManagement);
     document.querySelector("#create-branch-form")?.addEventListener("submit", addBranch);
     document.querySelector("#create-table-form")?.addEventListener("submit", addTable);

@@ -49,9 +49,12 @@ docker exec "$qa_container" sh -c '
     /migrations/20261019152757_romano_order_core.sql \
     /migrations/20261019160240_romano_order_create.sql \
     /migrations/20261019175840_romano_commerce_ops.sql \
-    /migrations/20261020120708_harden_payment_invariants.sql
+    /migrations/20261020120708_harden_payment_invariants.sql \
+    /migrations/20261020164000_romano_qr_signing_material.sql \
+    /migrations/20261020210500_romano_table_lifecycle.sql
   do
     psql -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -f "$migration" >/dev/null
   done
   psql -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -f /qa/commerce-smoke.sql
+  psql -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -f /qa/table-ops-smoke.sql
 '

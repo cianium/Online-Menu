@@ -493,7 +493,10 @@
                         <h1 id="orders-title">سفارش‌ها و آشپزخانه</h1>
                         <p>سفارش‌های QR را از پذیرش تا سرو، زنده مدیریت کنید.</p>
                     </div>
-                    <button class="secondary-button" id="orders-refresh" type="button">به‌روزرسانی</button>
+                    <div class="orders-toolbar">
+                      <button class="secondary-button" id="orders-sound" type="button" aria-pressed="false" data-admin-i18n="فعال‌سازی اعلان صوتی">فعال‌سازی اعلان صوتی</button>
+                      <button class="secondary-button" id="orders-refresh" type="button">به‌روزرسانی</button>
+                    </div>
                 </div>
                 <div class="orders-summary" id="orders-summary" role="status"></div>
                 <div class="orders-filters" role="group" aria-label="فیلتر وضعیت سفارش">
@@ -1413,6 +1416,7 @@
 <script src="admin.js"></script>
 <script src="rv4-admin-plus.js"></script>
 <script src="workspace.js"></script>
+<script src="vendor/qrcode.min.js"></script>
 <script src="orders.js"></script>
 
 </body>

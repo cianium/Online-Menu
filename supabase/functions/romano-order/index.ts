@@ -49,6 +49,7 @@ async function qrSigningKey(): Promise<string> {
       method: "POST",
       headers: {
         apikey: secretKey!,
+        authorization: `Bearer ${secretKey}`,
         "content-type": "application/json",
         accept: "application/json",
       },
@@ -149,6 +150,7 @@ async function rpc(
     method: "POST",
     headers: {
       "apikey": secretKey,
+      "authorization": `Bearer ${secretKey}`,
       "content-type": "application/json",
       "accept": "application/json",
     },
