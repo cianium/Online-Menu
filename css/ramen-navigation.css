@@ -1,0 +1,37 @@
+/* RAMEN customer navigation — scoped; keeps the existing menu design and branding. */
+.ramen-header-cart{position:relative;display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;border:1px solid rgba(214,174,112,.35);border-radius:16px;background:rgba(255,255,255,.055);color:#f5eee6;cursor:pointer}
+.ramen-header-cart svg{width:23px;height:23px}
+.ramen-header-cart-count,.ramen-bottom-cart-count{position:absolute;display:grid;place-items:center;min-width:19px;height:19px;padding-inline:4px;border-radius:999px;background:#ed4d4f;color:#fff;font-size:11px;font-weight:800;line-height:1}
+.ramen-header-cart-count{inset-block-start:-5px;inset-inline-end:-6px}
+.ramen-header-cart-count[hidden],.ramen-bottom-cart-count[hidden]{display:none}
+.ramen-header-cart:focus-visible,.ramen-bottom-link:focus-visible{outline:3px solid #eac18b;outline-offset:3px}
+.ramen-bottom-nav{position:fixed;z-index:78;inset-inline:12px;inset-block-end:calc(10px + env(safe-area-inset-bottom));display:none;align-items:center;justify-content:space-between;gap:2px;max-width:530px;margin-inline:auto;padding:7px 8px;border:1px solid rgba(214,174,112,.3);border-radius:26px;background:rgba(22,19,17,.96);color:#f5eee6;box-shadow:0 14px 38px rgba(0,0,0,.38);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.ramen-bottom-link{position:relative;min-width:0;flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:59px;padding:7px 2px;border:0;border-radius:19px;background:transparent;color:#bfb6ac;text-decoration:none;font:inherit;font-size:10px;line-height:1.25;cursor:pointer}
+.ramen-bottom-link svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.ramen-bottom-link.is-current,.ramen-bottom-link[aria-current="page"]{background:rgba(214,174,112,.15);color:#f0cb8c;font-weight:700}
+.ramen-bottom-icon-wrap{position:relative;display:inline-grid;place-items:center}
+.ramen-bottom-cart-count{inset-block-start:-9px;inset-inline-end:-11px}
+body.commerce-open .ramen-bottom-nav{visibility:hidden;pointer-events:none}
+#commerce-cart-bar{display:none!important}
+@media(max-width:720px){
+ .ramen-bottom-nav{display:flex}
+ .site-footer{padding-bottom:calc(115px + env(safe-area-inset-bottom))}
+ .header-container{gap:8px}
+ .header-container .brand{margin-inline-end:auto;min-width:0}
+ .header-container .brand-content{min-width:0}
+ .header-container .brand-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .header-container .language-toggle{flex-shrink:0}
+ .header-container .menu-toggle{flex:0 0 44px}
+ .commerce-session{inset-block-start:calc(76px + env(safe-area-inset-top))}
+}
+@media(max-width:375px){
+ .header-container .brand-tagline{display:none}
+ .header-container .brand-logo{width:40px;height:40px;flex-basis:40px}
+ .ramen-header-cart{flex-basis:42px;width:42px;height:42px}
+ .ramen-bottom-nav{inset-inline:7px;padding:6px 4px}
+ .ramen-bottom-link{font-size:9px}
+}
+@media(min-width:721px){
+ .ramen-header-cart{margin-inline-start:auto;margin-inline-end:14px}
+}
+@media(prefers-reduced-motion:reduce){.ramen-bottom-nav{scroll-behavior:auto}}
