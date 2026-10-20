@@ -74,7 +74,11 @@ async function readJson(request: Request) {
   if (Number(request.headers.get("content-length") || 0) > 16_384) throw new Error("INVALID_PAYMENT_REQUEST");
   const raw = await request.text();
   if (raw.length > 16_384) throw new Error("INVALID_PAYMENT_REQUEST");
-  try { return JSON.parse(raw) as Record<string, unknown>; } catch { throw new Error("INVALID_PAYMENT_REQUEST"); }
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("INVALID_PAYMENT_REQUEST");
+    return value as Record<string, unknown>;
+  } catch { throw new Error("INVALID_PAYMENT_REQUEST"); }
 }
 
 async function zarinpalRequest(base: string, path: string, body: Record<string, unknown>) {
