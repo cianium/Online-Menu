@@ -9,6 +9,9 @@
     const LANGS = ["fa", "en", "tr", "ar"];
 
     const T = {
+      "فعال‌سازی اعلان صوتی": ["Enable sound alerts","Sesli bildirimleri aç","تفعيل التنبيهات الصوتية"],
+      "قطع اعلان صوتی": ["Mute sound alerts","Sesli bildirimleri kapat","كتم التنبيهات الصوتية"],
+      "اعلان صوتی در این مرورگر پشتیبانی نمی‌شود.": ["Sound alerts are not supported in this browser.","Bu tarayıcı sesli bildirimi desteklemiyor.","هذا المتصفح لا يدعم التنبيهات الصوتية."],
       "QR میز": ["Table QR","Masa QR kodu","رمز QR للطاولة"],
       "برای دیدن منو و ثبت سفارش اسکن کنید.": ["Scan to view the menu and place an order.","Menüyü görmek ve sipariş vermek için tarayın.","امسح لعرض القائمة وتقديم الطلب."],
       "لینک سفارش میز": ["Table ordering link","Masa sipariş bağlantısı","رابط طلب الطاولة"],
