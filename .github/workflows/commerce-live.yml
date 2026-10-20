@@ -1,0 +1,23 @@
+name: RAMEN commerce live smoke
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/romano-order/**"
+      - "supabase/functions/romano-payment/**"
+      - "supabase/functions/romano-admin/**"
+      - "qa/commerce-live-smoke.mjs"
+      - ".github/workflows/commerce-live.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify live health and admin authentication boundary
+        run: node qa/commerce-live-smoke.mjs
