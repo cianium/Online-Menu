@@ -199,7 +199,7 @@ export function parseCookie(header: string | null, name: string) {
     const index = part.indexOf("=");
     if (index < 0) continue;
     if (part.slice(0, index).trim() === name) {
-      return decodeURIComponent(part.slice(index + 1).trim());
+      try { return decodeURIComponent(part.slice(index + 1).trim()); } catch { return null; }
     }
   }
   return null;
