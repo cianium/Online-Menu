@@ -76,7 +76,7 @@
           <label class="commerce-note"><span>${safe(t("note"))}</span><textarea id="commerce-notes" maxlength="1000" rows="2" placeholder="${safe(t("noteHint"))}"></textarea></label>
           <fieldset class="commerce-pay-method"><legend>${safe(t("total"))}</legend>
             <label><input type="radio" name="commerce-payment" value="later" checked> <span>${safe(t("later"))}</span></label>
-            <label><input type="radio" name="commerce-payment" value="online"> <span>${safe(t("online"))}</span></label>
+            <label hidden><input type="radio" name="commerce-payment" value="online" disabled> <span>${safe(t("online"))}</span></label>
           </fieldset>
           <div class="commerce-total-row"><span>${safe(t("total"))}</span><strong id="commerce-total"></strong></div>
           <p class="commerce-message" id="commerce-message" role="alert"></p>
@@ -163,11 +163,22 @@
     renderSession();
   }
 
+  function renderPaymentMethods() {
+    const online=document.querySelector('input[name="commerce-payment"][value="online"]');
+    const later=document.querySelector('input[name="commerce-payment"][value="later"]');
+    if(!online) return;
+    const enabled=tableSession?.paymentOnlineEnabled===true;
+    online.disabled=!enabled;
+    if(online.closest("label")) online.closest("label").hidden=!enabled;
+    if(!enabled && online.checked && later) later.checked=true;
+  }
+
   function renderSession() {
     const badge = document.querySelector("#commerce-session");
     if (!badge) return;
     badge.hidden = !tableSession;
     badge.textContent = tableSession ? `${t("table")} · ${tableSession.table?.name || tableSession.table?.code || ""}` : "";
+    renderPaymentMethods();
   }
   function renderStatus() {
     const host = document.querySelector("#commerce-order-status");
