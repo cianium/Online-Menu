@@ -168,6 +168,32 @@ async function rpc(
   return payload;
 }
 
+async function onlinePaymentsEnabled(branchId: string): Promise<boolean> {
+  if (!isUuid(branchId)) return false;
+  try {
+    // Only a real, enabled (non-sandbox) gateway may be offered to guests.
+    // Service-role credentials stay in this Edge Function; the response is a boolean.
+    const query = new URLSearchParams({
+      select:"branch_id",
+      branch_id:`eq.${branchId}`,
+      provider:"eq.zarinpal",
+      active:"eq.true",
+      sandbox:"eq.false",
+      limit:"1"
+    });
+    const result=await fetch(`${supabaseUrl}/rest/v1/branch_payment_gateways?${query}`,{
+      headers:{
+        apikey:secretKey!,
+        authorization:`Bearer ${secretKey}`,
+        accept:"application/json"
+      }
+    });
+    if(!result.ok) return false;
+    const rows:unknown=await result.json();
+    return Array.isArray(rows) && rows.length===1;
+  } catch { return false; }
+}
+
 function sessionFromRequest(request: Request) {
   const token = parseCookie(request.headers.get("cookie"), COOKIE_NAME);
   if (!isSessionToken(token)) throw new Error("TABLE_SESSION_REQUIRED");
@@ -305,7 +331,8 @@ Deno.serve(async (request) => {
       const cookie = `${COOKIE_NAME}=${
         encodeURIComponent(sessionToken)
       }; Path=/api/v1; Max-Age=${SESSION_TTL_SECONDS}; HttpOnly; Secure; SameSite=Lax`;
-      return json(request, ok(data, requestId), 201, {
+      const paymentOnlineEnabled=await onlinePaymentsEnabled(qr.branchId);
+      return json(request, ok({...data,paymentOnlineEnabled}, requestId), 201, {
         "set-cookie": cookie,
       });
     }
