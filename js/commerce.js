@@ -55,6 +55,48 @@
     if (live) live.textContent = message;
   }
 
+  const navTranslations={
+    fa:{home:"خانه",menu:"منو",featured:"ویژه‌ها",contact:"ارتباط",cart:"سبد"},
+    en:{home:"Home",menu:"Menu",featured:"Featured",contact:"Contact",cart:"Cart"},
+    tr:{home:"Ana Sayfa",menu:"Menü",featured:"Öne çıkanlar",contact:"İletişim",cart:"Sepet"},
+    ar:{home:"الرئيسية",menu:"القائمة",featured:"المميز",contact:"اتصل بنا",cart:"السلة"}
+  };
+  function updateCustomerNavigation() {
+    const words=navTranslations[lang()] || navTranslations.fa;
+    document.querySelectorAll("[data-ramen-label]").forEach(el=>{
+      const value=words[el.dataset.ramenLabel];
+      if(value) el.textContent=value;
+    });
+    const amount=count();
+    for(const selector of [".ramen-header-cart-count",".ramen-bottom-cart-count"]){
+      const badge=document.querySelector(selector);
+      if(!badge) continue;
+      badge.textContent=amount>99?"99+":String(amount);
+      badge.hidden=amount===0;
+    }
+    const accessible=amount ? `${t("cart")}، ${amount}` : t("cart");
+    for(const id of ["ramen-header-cart","ramen-bottom-cart"]){
+      const button=document.getElementById(id);
+      if(button) button.setAttribute("aria-label",accessible);
+    }
+  }
+  function initializeCustomerNavigation(){
+    for(const id of ["ramen-header-cart","ramen-bottom-cart"]){
+      document.getElementById(id)?.addEventListener("click",openDrawer);
+    }
+    document.querySelectorAll(".ramen-bottom-link[href]").forEach(link=>{
+      link.addEventListener("click",()=>{
+        document.querySelectorAll(".ramen-bottom-link[href]").forEach(item=>{
+          const active=item===link;
+          item.classList.toggle("is-current",active);
+          if(active)item.setAttribute("aria-current","page");
+          else item.removeAttribute("aria-current");
+        });
+      });
+    });
+    updateCustomerNavigation();
+  }
+
   function buildShell() {
     if (document.querySelector("#commerce-cart-bar")) return;
     document.body.insertAdjacentHTML("beforeend", `
@@ -102,6 +144,7 @@
     requestAnimationFrame(() => backdrop.classList.add("is-open"));
     document.body.classList.add("commerce-open");
     document.querySelector("#commerce-cart-bar").setAttribute("aria-expanded", "true");
+    for(const id of ["ramen-header-cart","ramen-bottom-cart"])document.getElementById(id)?.setAttribute("aria-expanded","true");
     drawer.querySelector(".commerce-close")?.focus();
   }
   function closeDrawer() {
@@ -115,6 +158,7 @@
     window.setTimeout(() => { if (backdrop) backdrop.hidden = true; }, 220);
     document.body.classList.remove("commerce-open");
     document.querySelector("#commerce-cart-bar").setAttribute("aria-expanded", "false");
+    for(const id of ["ramen-header-cart","ramen-bottom-cart"])document.getElementById(id)?.setAttribute("aria-expanded","false");
   }
 
   function add(id) {
@@ -135,7 +179,8 @@
     const bar = document.querySelector("#commerce-cart-bar");
     if (!bar) return;
     const amount = count();
-    bar.hidden = amount === 0 && !activeOrder;
+    updateCustomerNavigation();
+    bar.hidden = true;
     bar.querySelector(".commerce-cart-count").textContent = String(amount);
     bar.querySelector(".commerce-cart-label").textContent = activeOrder && amount === 0 ? t("view") : t("cart");
     bar.querySelector(".commerce-cart-total").textContent = amount ? money(total()) : `#${activeOrder?.orderNumber || ""}`;
@@ -341,13 +386,13 @@
   }
 
   function init() {
-    buildShell(); render(); enhanceProducts(); openQrSession(); paymentReturn();
+    buildShell(); initializeCustomerNavigation(); render(); enhanceProducts(); openQrSession(); paymentReturn();
     if (activeOrder?.id && !["completed", "rejected", "cancelled"].includes(activeOrder.status)) startPolling();
     document.addEventListener("click", (event) => {
       if (event.target.closest(".product-card-button,[data-signature-product]")) window.setTimeout(enhanceProducts, 20);
     });
     window.addEventListener("romano:data-updated", () => { enhanceProducts(); render(); });
-    document.addEventListener("romano:language-changed", () => window.setTimeout(() => { document.querySelector("#commerce-cart-bar")?.remove(); document.querySelector("#commerce-drawer")?.remove(); document.querySelector(".commerce-backdrop")?.remove(); document.querySelector("#commerce-session")?.remove(); document.querySelector("#commerce-live")?.remove(); document.querySelector("#commerce-payment-toast")?.remove(); buildShell(); enhanceProducts(); render(); }, 0));
+    document.addEventListener("romano:language-changed", () => window.setTimeout(() => { document.querySelector("#commerce-cart-bar")?.remove(); document.querySelector("#commerce-drawer")?.remove(); document.querySelector(".commerce-backdrop")?.remove(); document.querySelector("#commerce-session")?.remove(); document.querySelector("#commerce-live")?.remove(); document.querySelector("#commerce-payment-toast")?.remove(); buildShell(); updateCustomerNavigation(); enhanceProducts(); render(); }, 0));
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
   window.RomanoCommerce = Object.freeze({ add, open: openDrawer });
