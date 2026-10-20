@@ -100,7 +100,7 @@
         const section = document.querySelector('#menu');
         const controls = document.createElement('div');
         controls.className='menu-browser';
-        controls.innerHTML = `<div class="menu-browser-heading"><div><span class="section-eyebrow">ROMANO</span><h2 id="browse-title"></h2><p id="browse-hint"></p></div></div>
+        controls.innerHTML = `<div class="menu-browser-heading"><div><span class="section-eyebrow">RAMEN</span><h2 id="browse-title"></h2><p id="browse-hint"></p></div></div>
           <div id="menu-data-status" class="menu-data-status" role="status"><span></span><button type="button"></button></div>
           <div class="menu-controls"><div class="menu-search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><label class="sr-only" for="rv4-menu-search"></label><input id="rv4-menu-search" type="search" autocomplete="off" aria-controls="menu-categories"></div><button id="menu-favorites-toggle" type="button" aria-pressed="false"></button></div>
           <div id="rv4-category-rail" class="browse-category-rail"></div>
