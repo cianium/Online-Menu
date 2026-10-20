@@ -506,6 +506,44 @@ Deno.serve(async req => {
       if(error) throw error;
       return reply({tables:data||[]},id,200,newCookies);
     }
+    const tableActionMatch=path.match(/^\/admin\/branches\/([0-9a-f-]{36})\/tables\/([0-9a-f-]{36})\/(status|rotate)$/i);
+    if(tableActionMatch &&
+       ((tableActionMatch[3]==="status" && req.method==="PUT") ||
+        (tableActionMatch[3]==="rotate" && req.method==="POST"))) {
+      const m=resolveMember(p,undefined,"manager");
+      if(!m) return failure("FORBIDDEN","Manager access required.",id,403,newCookies);
+      const branch=await ownedBranch(m,tableActionMatch[1]);
+      if(!branch) return failure("NOT_FOUND","Branch not found.",id,404,newCookies);
+      let active: boolean|null=null;
+      const rotate=tableActionMatch[3]==="rotate";
+      if(!rotate) {
+        const input=record(await readBody(req,4096));
+        if(!input || typeof input.active!=="boolean")
+          return failure("VALIDATION_ERROR","Invalid table status.",id,422,newCookies);
+        active=input.active;
+      }
+      const {data,error}=await service.rpc("romano_configure_table",{
+        p_restaurant:m.restaurant_id,
+        p_branch:branch.id,
+        p_table:tableActionMatch[2],
+        p_active:active,
+        p_rotate:rotate
+      });
+      if(error) {
+        if(error.code==="P0002") return failure("NOT_FOUND","Table not found.",id,404,newCookies);
+        if(error.code==="22023" || error.code==="22003")
+          return failure("VALIDATION_ERROR","Invalid QR table configuration.",id,422,newCookies);
+        throw error;
+      }
+      const {error:auditError}=await service.from("audit_logs").insert({
+        restaurant_id:m.restaurant_id,actor_user_id:p.id,
+        action:rotate?"table.qr.rotated":"table.status.updated",
+        entity_type:"restaurant_table",entity_id:tableActionMatch[2],
+        metadata:rotate?{qrVersion:data.qrVersion,revokedSessions:data.revokedSessions}:{active:data.active,revokedSessions:data.revokedSessions}
+      });
+      if(auditError) console.error("QR table audit logging failed",{requestId:id});
+      return reply({table:data},id,200,newCookies);
+    }
     const tableQrMatch=path.match(/^\/admin\/branches\/([0-9a-f-]{36})\/tables\/([0-9a-f-]{36})\/qr$/i);
     if(tableQrMatch && req.method==="GET") {
       const m=resolveMember(p,undefined,"manager");
