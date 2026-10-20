@@ -63,6 +63,7 @@
     <link rel="stylesheet" href="css/romano.css">
     <link rel="stylesheet" href="css/menu-experience.css">
     <link rel="stylesheet" href="css/commerce.css">
+    <link rel="stylesheet" href="css/ramen-navigation.css">
 </head>
 
 
@@ -160,6 +161,15 @@
                     <span id="romano-language-label">FA</span>
                 </button>
 
+
+                <button class="ramen-header-cart" id="ramen-header-cart" type="button"
+                    aria-controls="commerce-drawer" aria-expanded="false" aria-label="سبد سفارش">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                        <path d="M1 1h4l2.8 13.3a2 2 0 0 0 2 1.7h9.8a2 2 0 0 0 2-1.7L23 6H6"/>
+                    </svg>
+                    <span class="ramen-header-cart-count" aria-hidden="true" hidden>0</span>
+                </button>
 
                 <button
                     class="menu-toggle"
@@ -787,6 +797,33 @@
 
     </div>
 
+
+        <nav class="ramen-bottom-nav" aria-label="ناوبری سریع">
+            <a href="#home" class="ramen-bottom-link is-current" data-ramen-nav="home" aria-current="page">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>
+                <span data-ramen-label="home">خانه</span>
+            </a>
+            <a href="#menu" class="ramen-bottom-link" data-ramen-nav="menu">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+                <span data-ramen-label="menu">منو</span>
+            </a>
+            <a href="#featured" class="ramen-bottom-link" data-ramen-nav="featured">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.8 6.3L22 9l-5.3 4.7 1.6 7.3L12 17.2 5.7 21l1.6-7.3L2 9l7.2-.7z"/></svg>
+                <span data-ramen-label="featured">ویژه‌ها</span>
+            </a>
+            <a href="#contact" class="ramen-bottom-link" data-ramen-nav="contact">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8.5 8.5 0 0 1-8.5 8.5H4l1.6-4A8.5 8.5 0 1 1 20 11.5z"/></svg>
+                <span data-ramen-label="contact">ارتباط</span>
+            </a>
+            <button class="ramen-bottom-link ramen-bottom-cart" id="ramen-bottom-cart" type="button"
+                aria-controls="commerce-drawer" aria-expanded="false" aria-label="سبد سفارش">
+                <span class="ramen-bottom-icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.8 13.3a2 2 0 0 0 2 1.7h9.8a2 2 0 0 0 2-1.7L23 6H6"/></svg>
+                    <span class="ramen-bottom-cart-count" aria-hidden="true" hidden>0</span>
+                </span>
+                <span data-ramen-label="cart">سبد</span>
+            </button>
+        </nav>
 
     <!-- =====================================================
          JAVASCRIPT
