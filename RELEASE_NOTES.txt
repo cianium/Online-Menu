@@ -1,3 +1,5 @@
+RAMEN (formerly ROMANO) — historical engineering notes. Existing GitHub release tags do not match source version 4.9.1. See docs/RELEASES.md.
+
 4.9.1: Mobile form actions and readable inputs; numeric/unrated ratings; snapshot role checks; CSRF recovery; empty-catalog saves; preserve unchanged translation origin; offline image fallback; localized creator credit. See docs/REVIEW_4.9.1_FA.md for verification limits.
 
 ROMANO 4.9.0 — Customer Menu + Admin Workspace
