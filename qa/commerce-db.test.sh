@@ -26,7 +26,10 @@ docker run --rm -d \
 ready=0
 attempt=1
 while [ "$attempt" -le 30 ]; do
-  # pg_isready can succeed against the temporary initdb server just before it shuts down.\n  # Wait for the Docker entrypoint to finish initialization and verify a SQL connection.\n  if docker logs "$qa_container" 2>&1 | grep -q "PostgreSQL init process complete" &&\n     docker exec "$qa_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -tAc "select 1" >/dev/null 2>&1; then
+  # pg_isready can succeed against the temporary initdb server just before it shuts down.
+  # Wait for the Docker entrypoint to finish initialization and verify a SQL connection.
+  if docker logs "$qa_container" 2>&1 | grep -q "PostgreSQL init process complete" &&
+     docker exec "$qa_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -tAc "select 1" >/dev/null 2>&1; then
     ready=1
     break
   fi
