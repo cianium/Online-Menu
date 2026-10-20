@@ -102,6 +102,10 @@ See [the current application review](docs/REVIEW_4.9.1_FA.md), [architecture not
 
 The broader RAMEN vision may grow beyond menus into restaurant operations, QR ordering, and a food-focused discovery/order/delivery experience with customer, merchant, and courier roles. These are **roadmap concepts**; this repository should not be interpreted as proof that those systems are currently built or available.
 
+## GitHub release history
+
+The existing GitHub releases (`v1.0`, `v1.2` and `v1`) are historical snapshots, not versions of the current `4.9.1` source package. See the [release metadata audit and publishing policy](docs/RELEASES.md). A branding change by itself is not an application release.
+
 ## Contributing and project status
 
 This is an evolving personal engineering project. Issues and proposals are welcome. Please open an issue describing the problem and the expected behavior before making large changes.

@@ -50,6 +50,9 @@ check(!/handleProductSubmit[\s\S]{0,500}const instagram\s*=/.test(read("admin/ad
 check(read("js/app.js").includes("getSafeExternalUrl"), "Customer external URL sanitizer is missing.");
 check(read("admin/rv4-admin-plus.js").includes('payload.schema !== "romano.menu-backup"'), "Backup restore is not strict-schema validated.");
 check(read("manifest.webmanifest").includes('"display": "standalone"'), "PWA manifest is incomplete.");
+check(read("manifest.webmanifest").includes('"short_name": "RAMEN"'), "PWA still uses legacy brand.");
+check(read("admin/index.html").includes("RAMEN | Admin Panel"), "Admin HTML brand was not updated.");
+check(read("js/menu-experience.js").includes('<span class="section-eyebrow">RAMEN</span>'), "Customer menu still shows legacy platform heading.");
 check(read("sw.js").includes('url.pathname.includes("/admin/")'), "Service worker does not explicitly exclude admin.");
 
 const syntaxTargets = ["js/app.js", "js/menu-experience.js", "js/i18n.js", "admin/admin.js", "admin/admin-i18n.js", "admin/rv4-admin-plus.js", "admin/workspace.js", "sw.js", "qa/static-audit.mjs", "admin/api.js", "js/public-api.js", "backend/server.mjs", "backend/seed.mjs", "backend/migrate.mjs"];
@@ -102,7 +105,7 @@ for (const icon of ["icon-192.png", "icon-512.png", "icon-maskable-512.png", "ap
 }
 check(read("admin/api.js").includes("HttpOnly") || read("backend/server.mjs").includes("romano_session"), "Production auth adapter is missing session integration.");
 
-console.log("ROMANO static audit");
+console.log("RAMEN static audit");
 console.log(`Root: ${ROOT}`);
 console.log(`Failures: ${failures.length}`);
 for (const item of failures) console.log(`FAIL  ${item}`);
