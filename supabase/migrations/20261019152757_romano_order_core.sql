@@ -1,4 +1,18 @@
 -- ROMANO MVP order core.
+-- Tenant-bound timestamp trigger. The live Supabase schema does not include
+-- the legacy Fastify-only public.set_updated_at() helper.
+create or replace function public.romano_orders_touch_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $
+begin
+  new.updated_at := now();
+  return new;
+end;
+$;
+revoke all on function public.romano_orders_touch_updated_at() from public, anon, authenticated;
+
 --
 -- This migration deliberately does not seed a branch or enable QR ordering.
 -- Production currently stores IRR while the UI labels prices as Toman; every
@@ -290,23 +304,23 @@ create index integration_outbox_tenant_branch_idx
 
 create trigger branches_updated_at
 before update on public.branches
-for each row execute function public.set_updated_at();
+for each row execute function public.romano_orders_touch_updated_at();
 
 create trigger branch_staff_memberships_updated_at
 before update on public.branch_staff_memberships
-for each row execute function public.set_updated_at();
+for each row execute function public.romano_orders_touch_updated_at();
 
 create trigger restaurant_tables_updated_at
 before update on public.restaurant_tables
-for each row execute function public.set_updated_at();
+for each row execute function public.romano_orders_touch_updated_at();
 
 create trigger order_items_updated_at
 before update on public.order_items
-for each row execute function public.set_updated_at();
+for each row execute function public.romano_orders_touch_updated_at();
 
 create trigger orders_updated_at
 before update on public.orders
-for each row execute function public.set_updated_at();
+for each row execute function public.romano_orders_touch_updated_at();
 
 create or replace function public.romano_reject_order_event_mutation()
 returns trigger
