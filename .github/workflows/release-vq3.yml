@@ -1,0 +1,32 @@
+name: Publish Online-Menu-vq.3
+
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Create immutable vq.3 release once
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if gh release view vq.3 >/dev/null 2>&1; then
+            echo "Release vq.3 already exists; leaving it unchanged."
+            exit 0
+          fi
+          gh release create vq.3 \
+            --target "$RELEASE_SHA" \
+            --title "Online-Menu-vq.3" \
+            --notes-file docs/releases/ONLINE_MENU_VQ3_FA.md

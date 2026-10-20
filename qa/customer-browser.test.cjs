@@ -8,12 +8,29 @@ const results=[],errors=[];let browser;
 async function check(name,fn){await fn();results.push(name);console.log('PASS',name)}
 async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode!=='loading');await p.locator('#splash-screen').waitFor({state:'detached'});}
 (async()=>{
- browser=await pw.chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE_PATH||undefined,args:['--no-sandbox','--disable-dev-shm-usage']});
+ browser=await pw.chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox','--disable-dev-shm-usage']});
  const ctx=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
  ctx.on('page',p=>p.on('pageerror',e=>errors.push(String(e))));
  const p=await ctx.newPage();await p.goto(base);await ready(p);
  const cards=p.locator('#menu .product-card');
  await check('Static demo boots with 21 products',async()=>{assert.equal(await cards.count(),21);assert.equal(await p.evaluate(()=>menuDataMode),'demo')});
+ await check('Image-first card CTA and favorite remain accessible',async()=>{
+  const card=cards.first(),button=card.locator('.product-card-button'),favorite=card.locator('[data-favorite-product]');
+  await card.scrollIntoViewIfNeeded();
+  assert.ok((await button.textContent()).trim());assert.equal(await button.isVisible(),true);
+  const geometry=await card.evaluate(node=>{const card=node.getBoundingClientRect(),image=node.querySelector('.product-image-wrapper').getBoundingClientRect(),cta=node.querySelector('.product-card-button').getBoundingClientRect(),heart=node.querySelector('[data-favorite-product]').getBoundingClientRect(),hit=document.elementFromPoint(heart.left+heart.width/2,heart.top+heart.height/2);return{card:{width:card.width,height:card.height},image:{width:image.width,height:image.height},ctaWidth:cta.width,heartHit:Boolean(hit&&hit.closest('[data-favorite-product]'))}});
+  assert.ok(Math.abs(geometry.card.width-geometry.image.width)<1&&Math.abs(geometry.card.height-geometry.image.height)<1);assert.ok(geometry.ctaWidth>geometry.card.width*.35);assert.equal(geometry.heartHit,true);
+  await button.click();await p.waitForTimeout(450);const modal=await p.locator('.product-modal .modal-container').boundingBox();assert.ok(modal);assert.ok(Math.abs((modal.y+modal.height/2)-844/2)<2,JSON.stringify(modal));await p.keyboard.press('Escape');
+ });
+ await check('Cart supports add, quantity and QR-gated checkout',async()=>{
+  const add=cards.first().locator('.commerce-card-add');assert.equal(await add.isVisible(),true);await add.click();
+  const bar=p.locator('#commerce-cart-bar');assert.equal(await bar.isVisible(),true);assert.equal(await bar.locator('.commerce-cart-count').textContent(),'1');
+  await bar.click();assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'false');
+  await p.locator('.commerce-quantity button[data-cart-change="1"]').click();assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
+  await p.locator('#commerce-submit').click();assert.ok((await p.locator('#commerce-message').textContent()).trim());
+  await p.locator('[data-cart-remove]').click();
+  await p.locator('[data-commerce-close]').last().click();
+ });
  await check('Search, category, price order and reset',async()=>{
   await p.evaluate(()=>ROMANO_I18N.setLanguage('en'));
   await p.locator('#rv4-menu-search').fill('pizza');assert.equal(await cards.count(),3);

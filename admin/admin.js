@@ -628,6 +628,7 @@ function navigateTo(page) {
     const validPages = [
 
         "dashboard",
+        "orders",
         "products",
         "categories",
         "settings"
@@ -671,6 +672,9 @@ function navigateTo(page) {
 
         dashboard:
             "داشبورد",
+
+        orders:
+            "سفارش‌ها و آشپزخانه",
 
         products:
             "محصولات",

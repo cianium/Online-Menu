@@ -71,6 +71,14 @@
     logout: async () => { try { return await request("/auth/logout", { method: "POST", body: JSON.stringify({}) }); } finally { csrfToken = null; } },
     uploadImage: dataUrl => request("/admin/media", { method: "POST", body: JSON.stringify({ dataUrl }) }),
     adminData: () => request("/admin/data"),
-    saveSnapshot: snapshot => request("/admin/snapshot", { method: "PUT", body: JSON.stringify(snapshot) })
+    saveSnapshot: snapshot => request("/admin/snapshot", { method: "PUT", body: JSON.stringify(snapshot) }),
+    orders: () => request("/admin/orders"),
+    transitionOrder: (orderId, version, status, reason = null) => request(`/admin/orders/${encodeURIComponent(orderId)}/transition`, {
+      method: "POST", body: JSON.stringify({ version, status, reason })
+    }),
+    branches: () => request("/admin/branches"),
+    saveGateway: (branchId, gateway) => request(`/admin/branches/${encodeURIComponent(branchId)}/gateway`, {
+      method: "PUT", body: JSON.stringify(gateway)
+    })
   });
 })();

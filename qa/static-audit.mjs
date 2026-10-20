@@ -6,10 +6,10 @@ const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
 const failures = [];
 const warnings = [];
 const required = [
-  "index.html", "js/app.js", "js/i18n.js", "js/data.js",
+  "index.html", "js/app.js", "js/i18n.js", "js/money.js", "js/data.js", "js/commerce.js", "css/commerce.css",
   "css/style.css", "css/romano.css", "manifest.webmanifest", "sw.js",
   "admin/index.html", "admin/api.js", "admin/admin.js", "admin/admin-i18n.js", "admin/rv4-admin-plus.js",
-  "admin/admin.css", "admin/rv4-admin-plus.css"
+  "admin/admin.css", "admin/rv4-admin-plus.css", "admin/orders.js", "admin/orders.css"
 ];
 
 function read(rel) { return fs.readFileSync(path.join(ROOT, rel), "utf8"); }
@@ -42,8 +42,10 @@ check((adminI18n.match(/"دسترسی سریع"\s*:/g) || []).length === 1, "Adm
 check((adminI18n.match(/"نام \(الفبا\)"\s*:/g) || []).length === 1, "Admin i18n: duplicate Name sort key.");
 for (const lang of ["fa", "en", "tr", "ar"]) check(adminI18n.includes(lang), `Admin i18n does not declare ${lang}.`);
 check(read("js/i18n.js").includes('const LANGUAGES = ["fa", "en", "tr", "ar"]'), "Customer i18n language set is incomplete.");
+check(read("index.html").indexOf('js/money.js') < read("index.html").indexOf('js/app.js'), "Money formatter must load before customer app code.");
+check(read("admin/index.html").includes('../js/money.js'), "Admin does not load the shared money formatter.");
 check(read("admin/index.html").includes("admin-language-toggle"), "Admin language toggle is missing.");
-check(read("admin/index.html").includes("نسخه 4.9.1"), "Admin footer version is not 4.9.1.");
+check(read("admin/index.html").includes("نسخه vq.3"), "Admin footer version is not vq.3.");
 check(!/const Storage\s*=/.test(read("admin/admin.js")), "Admin custom storage object still shadows the browser Storage type.");
 check(read("admin/admin.js").includes('const instagram ='), "Admin settings Instagram field is not declared.");
 check(!/handleProductSubmit[\s\S]{0,500}const instagram\s*=/.test(read("admin/admin.js")), "Instagram validation leaked into the product-submit handler.");
@@ -55,7 +57,7 @@ check(read("admin/index.html").includes("RAMEN | Admin Panel"), "Admin HTML bran
 check(read("js/menu-experience.js").includes('<span class="section-eyebrow">RAMEN</span>'), "Customer menu still shows legacy platform heading.");
 check(read("sw.js").includes('url.pathname.includes("/admin/")'), "Service worker does not explicitly exclude admin.");
 
-const syntaxTargets = ["js/app.js", "js/menu-experience.js", "js/i18n.js", "admin/admin.js", "admin/admin-i18n.js", "admin/rv4-admin-plus.js", "admin/workspace.js", "sw.js", "qa/static-audit.mjs", "admin/api.js", "js/public-api.js", "backend/server.mjs", "backend/seed.mjs", "backend/migrate.mjs"];
+const syntaxTargets = ["js/app.js", "js/menu-experience.js", "js/commerce.js", "js/i18n.js", "js/money.js", "admin/admin.js", "admin/admin-i18n.js", "admin/rv4-admin-plus.js", "admin/workspace.js", "admin/orders.js", "sw.js", "qa/static-audit.mjs", "admin/api.js", "js/public-api.js", "backend/server.mjs", "backend/seed.mjs", "backend/migrate.mjs", "supabase/functions/romano-public/index.ts", "supabase/functions/romano-admin/index.ts", "supabase/functions/romano-order/core.ts", "supabase/functions/romano-order/index.ts", "supabase/functions/romano-payment/index.ts"];
 for (const rel of syntaxTargets) {
   const r = spawnSync(process.execPath, ["--check", path.join(ROOT, rel)], { encoding: "utf8" });
   if (r.status !== 0) failures.push(`Syntax error in ${rel}: ${r.stderr.trim()}`);
@@ -71,6 +73,15 @@ const serverSource = read("backend/server.mjs");
 check(!/fastifyStatic,\s*\{\s*root\s*,/.test(serverSource), "Backend must never serve the whole project root as static files.");
 check(!/trustProxy:\s*true/.test(serverSource), "trustProxy must be configurable, not hard-coded to true.");
 check(!/contentSecurityPolicy:\s*false/.test(serverSource), "Content-Security-Policy must not be disabled.");
+const vercel = JSON.parse(read("vercel.json"));
+const deployedHeaders = new Map((vercel.headers?.flatMap(rule => rule.headers || []) || []).map(header => [header.key.toLowerCase(), header.value]));
+for (const header of ["content-security-policy", "permissions-policy", "referrer-policy", "strict-transport-security", "x-content-type-options", "x-frame-options"]) {
+  check(deployedHeaders.has(header), `Vercel security header is missing: ${header}.`);
+}
+const csp = deployedHeaders.get("content-security-policy") || "";
+for (const directive of ["default-src 'self'", "frame-ancestors 'none'", "object-src 'none'", "script-src 'self'"]) {
+  check(csp.includes(directive), `Vercel CSP is missing: ${directive}.`);
+}
 for (const htmlRel of ["index.html", "admin/index.html"]) {
   const html = read(htmlRel);
   check(!/<script(?![^>]*\bsrc=)[^>]*>/i.test(html), `${htmlRel}: inline <script> is incompatible with the CSP.`);
@@ -104,6 +115,16 @@ for (const icon of ["icon-192.png", "icon-512.png", "icon-maskable-512.png", "ap
   }
 }
 check(read("admin/api.js").includes("HttpOnly") || read("backend/server.mjs").includes("romano_session"), "Production auth adapter is missing session integration.");
+check(exists("supabase/functions/romano-public/index.ts"), "The deployed public Supabase function is not versioned.");
+check(read("supabase/functions/romano-public/index.ts").includes("@supabase/supabase-js@2.118.0"), "Public Supabase function dependency is not pinned.");
+check(read("supabase/functions/romano-admin/index.ts").includes("@supabase/supabase-js@2.118.0"), "Admin Supabase function dependency is not pinned.");
+check(exists("supabase/config.toml") && read("supabase/config.toml").includes("[functions.romano-order]"), "Public order function config is missing.");
+check(vercel.rewrites?.some(rule => rule.source === "/api/v1/orders/:path*" && rule.destination.includes("/romano-order/")), "Vercel order API rewrite is missing.");
+check(read("supabase/functions/romano-order/index.ts").includes("HttpOnly; Secure; SameSite=Lax"), "Order session cookie is not hardened.");
+check(vercel.rewrites?.some(rule => rule.source === "/api/v1/payments/:path*" && rule.destination.includes("/romano-payment/")), "Vercel payment API rewrite is missing.");
+check(read("supabase/functions/romano-payment/index.ts").includes("/pg/v4/payment/verify.json"), "ZarinPal server-side verification is missing.");
+check(read("admin/index.html").includes('id="page-orders"'), "Operations/KDS page is missing.");
+check(read("js/app.js").includes('<span>${escapeHTML(window.ROMANO_I18N?.ui?.("signatureButton")'), "Product cards are missing their visible localized CTA.");
 
 console.log("RAMEN static audit");
 console.log(`Root: ${ROOT}`);

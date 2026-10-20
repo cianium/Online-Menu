@@ -1,15 +1,18 @@
-const CACHE_NAME = "romano-v4.9.1-2";
+const CACHE_NAME = "ramen-online-menu-vq3-1";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./css/style.css",
   "./css/romano.css",
   "./css/menu-experience.css",
+  "./css/commerce.css",
   "./js/data.js",
   "./js/public-api.js",
   "./js/i18n.js",
+  "./js/money.js",
   "./js/app.js",
   "./js/menu-experience.js",
+  "./js/commerce.js",
   "./assets/images/logo/logo.png",
   "./assets/images/hero/hero.jpg"
 ];
@@ -19,7 +22,7 @@ self.addEventListener("install", event => {
 });
 
 self.addEventListener("activate", event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith("romano-") && key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => (key.startsWith("romano-") || key.startsWith("online-menu-")) && key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener("fetch", event => {

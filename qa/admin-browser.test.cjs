@@ -15,7 +15,7 @@ const results = [];
 let browser;
 async function check(name, action) { await action(); results.push(name); console.log('PASS', name); }
 (async () => {
-  browser = await pw.chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || undefined, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+  browser = await pw.chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined), args: ['--no-sandbox', '--disable-dev-shm-usage'] });
   const context = await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
   const page = await context.newPage();
   const errors = [];
@@ -23,13 +23,13 @@ async function check(name, action) { await action(); results.push(name); console
   await page.goto(base + '/admin/');
   await page.waitForFunction(() => typeof adminInitialized !== 'undefined' && adminInitialized && !document.querySelector('.admin-app').inert);
   await check('Local demo boot and seed catalog', async () => assert.equal(await page.evaluate(() => state.products.length), 21));
-  await check('4 languages × 3 widths × 4 admin pages: direction and horizontal overflow', async () => {
+  await check('4 languages × 3 widths × 5 admin pages: direction and horizontal overflow', async () => {
     for (const lang of ['en','tr','ar','fa']) {
       await page.evaluate(lang => window.ROMANO_ADMIN_I18N.setLanguage(lang), lang);
       assert.equal(await page.getAttribute('html','dir'), ['fa','ar'].includes(lang) ? 'rtl' : 'ltr');
       for (const width of [1440,390,320]) {
         await page.setViewportSize({width,height:900});
-        for (const section of ['dashboard','products','categories','settings']) {
+        for (const section of ['dashboard','orders','products','categories','settings']) {
           await page.evaluate(section => navigateTo(section),section);
           await page.waitForTimeout(50);
           if(width < 1000) assert.equal(await page.locator("#sidebar").isVisible(),false);

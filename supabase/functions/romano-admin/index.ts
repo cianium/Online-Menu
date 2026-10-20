@@ -244,6 +244,83 @@ async function saveMedia(body: unknown, member: Member, actor: string) {
   return {url:data.publicUrl,mime:image.mime,bytes:image.bytes.length} as const;
 }
 
+async function operationalOrders(member: Member) {
+  const rid=member.restaurant_id;
+  const {data:orders,error}=await service.from("orders")
+    .select("id,branch_id,table_session_id,order_number,status,payment_status,total_minor,currency_code,currency_exponent,notes,version,submitted_at,updated_at")
+    .eq("restaurant_id",rid).order("submitted_at",{ascending:false}).limit(100);
+  if(error) throw error;
+  if(!orders?.length) return {orders:[]};
+  const ids=orders.map(o=>o.id);
+  const branchIds=[...new Set(orders.map(o=>o.branch_id))];
+  const sessionIds=[...new Set(orders.map(o=>o.table_session_id).filter(Boolean))];
+  const results=await Promise.all([
+    service.from("order_items").select("order_id,product_name,quantity,line_total_minor,notes").eq("restaurant_id",rid).in("order_id",ids).order("created_at"),
+    service.from("branches").select("id,name").eq("restaurant_id",rid).in("id",branchIds),
+    sessionIds.length?service.from("table_sessions").select("id,table_id").eq("restaurant_id",rid).in("id",sessionIds):Promise.resolve({data:[],error:null})
+  ]);
+  for(const result of results) if(result.error) throw result.error;
+  const sessions=results[2].data||[];
+  const tableIds=[...new Set(sessions.map(s=>s.table_id).filter(Boolean))];
+  const tableResult=tableIds.length?await service.from("restaurant_tables").select("id,display_name,code").eq("restaurant_id",rid).in("id",tableIds):{data:[],error:null};
+  if(tableResult.error) throw tableResult.error;
+  const itemMap=new Map<string,Record<string,unknown>[]>();
+  for(const item of results[0].data||[]) {
+    const list=itemMap.get(item.order_id)||[];
+    list.push({name:item.product_name,quantity:item.quantity,lineTotalMinor:item.line_total_minor,notes:item.notes});
+    itemMap.set(item.order_id,list);
+  }
+  const branchMap=new Map((results[1].data||[]).map(b=>[b.id,b.name]));
+  const sessionMap=new Map(sessions.map(s=>[s.id,s.table_id]));
+  const tableMap=new Map((tableResult.data||[]).map(t=>[t.id,t]));
+  return {orders:orders.map(o=>{
+    const table=tableMap.get(sessionMap.get(o.table_session_id));
+    return {
+      id:o.id,branchId:o.branch_id,branchName:branchMap.get(o.branch_id)||"",
+      tableName:table?.display_name||table?.code||"",orderNumber:o.order_number,
+      status:o.status,paymentStatus:o.payment_status,totalMinor:o.total_minor,
+      currencyCode:o.currency_code,currencyExponent:o.currency_exponent,notes:o.notes,version:o.version,
+      submittedAt:o.submitted_at,updatedAt:o.updated_at,items:itemMap.get(o.id)||[]
+    };
+  })};
+}
+
+async function branchSettings(member: Member) {
+  const rid=member.restaurant_id;
+  const [branchResult,gatewayResult]=await Promise.all([
+    service.from("branches").select("id,slug,name,active,qr_ordering_enabled,currency_code").eq("restaurant_id",rid).order("created_at"),
+    service.from("branch_payment_gateways").select("branch_id,provider,merchant_id,sandbox,active,updated_at").eq("restaurant_id",rid)
+  ]);
+  if(branchResult.error) throw branchResult.error;
+  if(gatewayResult.error) throw gatewayResult.error;
+  const gateways=new Map((gatewayResult.data||[]).map(g=>[g.branch_id,g]));
+  return {branches:(branchResult.data||[]).map(branch=>{
+    const gateway=gateways.get(branch.id);
+    return {...branch,gateway:gateway?{
+      provider:gateway.provider,
+      merchantMasked:`••••••••-••••-••••-••••-${gateway.merchant_id.slice(-12)}`,
+      sandbox:gateway.sandbox,active:gateway.active,updatedAt:gateway.updated_at
+    }:null};
+  })};
+}
+
+async function saveBranchGateway(member: Member, branchId: string, body: unknown) {
+  const value=body&&typeof body==="object"&&!Array.isArray(body)?body as Record<string,unknown>:null;
+  if(!value || value.provider!=="zarinpal" || typeof value.merchantId!=="string" ||
+     !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.merchantId) ||
+     typeof value.sandbox!=="boolean" || typeof value.active!=="boolean") return null;
+  const {data:branch,error:branchError}=await service.from("branches").select("id,currency_code")
+    .eq("restaurant_id",member.restaurant_id).eq("id",branchId).maybeSingle();
+  if(branchError) throw branchError;
+  if(!branch || (value.active && branch.currency_code!=="IRR")) return null;
+  const {error}=await service.from("branch_payment_gateways").upsert({
+    restaurant_id:member.restaurant_id,branch_id:branchId,provider:"zarinpal",
+    merchant_id:value.merchantId.toLowerCase(),sandbox:value.sandbox,active:value.active
+  },{onConflict:"branch_id"});
+  if(error) throw error;
+  return {saved:true};
+}
+
 Deno.serve(async req => {
   const id = crypto.randomUUID();
   const jar = cookies(req);
@@ -294,6 +371,47 @@ Deno.serve(async req => {
     if (path === "/admin/me" && req.method === "GET") {
       return reply({user:{id:p.id,email:p.email,displayName:p.display_name},
         memberships:p.memberships.map(m=>({restaurantId:m.restaurant_id,role:m.role,slug:m.slug,name:m.name}))},id,200,newCookies);
+    }
+    if (path === "/admin/orders" && req.method === "GET") {
+      const m=resolveMember(p,undefined,"viewer");
+      if(!m) return failure("FORBIDDEN","Restaurant access denied.",id,403,newCookies);
+      return reply(await operationalOrders(m),id,200,newCookies);
+    }
+    const transitionMatch=path.match(/^\/admin\/orders\/([0-9a-f-]{36})\/transition$/i);
+    if(transitionMatch && req.method==="POST") {
+      const m=resolveMember(p,undefined,"manager");
+      if(!m) return failure("FORBIDDEN","Manager access required.",id,403,newCookies);
+      const body=await readBody(req,16_384) as Record<string,unknown>|null;
+      if(!body || typeof body.version!=="number" || !Number.isSafeInteger(body.version) || typeof body.status!=="string" ||
+         !["accepted","preparing","ready","served","delivered","completed","rejected","cancelled"].includes(body.status) ||
+         (body.reason!==undefined && body.reason!==null && typeof body.reason!=="string"))
+        return failure("VALIDATION_ERROR","Invalid order transition.",id,422,newCookies);
+      const {data,error}=await service.rpc("romano_transition_order",{
+        p_order:transitionMatch[1],p_expected_version:body.version,p_to_status:body.status,
+        p_actor:p.id,p_actor_type:"staff",p_reason:body.reason||null,p_metadata:{source:"admin-kds"}
+      });
+      if(error) {
+        if(error.code==="40001") return failure("VERSION_CONFLICT","Order changed; refresh and try again.",id,409,newCookies);
+        if(error.code==="42501") return failure("FORBIDDEN","Transition is not allowed for this user.",id,403,newCookies);
+        if(error.code==="22023") return failure("INVALID_TRANSITION","Order transition is not allowed.",id,409,newCookies);
+        throw error;
+      }
+      return reply(data,id,200,newCookies);
+    }
+    if(path==="/admin/branches" && req.method==="GET") {
+      const m=resolveMember(p,undefined,"viewer");
+      if(!m) return failure("FORBIDDEN","Restaurant access denied.",id,403,newCookies);
+      return reply(await branchSettings(m),id,200,newCookies);
+    }
+    const gatewayMatch=path.match(/^\/admin\/branches\/([0-9a-f-]{36})\/gateway$/i);
+    if(gatewayMatch && req.method==="PUT") {
+      const m=resolveMember(p,undefined,"manager");
+      if(!m) return failure("FORBIDDEN","Manager access required.",id,403,newCookies);
+      const saved=await saveBranchGateway(m,gatewayMatch[1],await readBody(req,16_384));
+      if(!saved) return failure("VALIDATION_ERROR","Invalid gateway settings or branch currency.",id,422,newCookies);
+      await service.from("audit_logs").insert({restaurant_id:m.restaurant_id,actor_user_id:p.id,
+        action:"payment.gateway.updated",entity_type:"branch",entity_id:gatewayMatch[1],metadata:{provider:"zarinpal"}});
+      return reply(saved,id,200,newCookies);
     }
     const match = path.match(/^\/admin(?:\/restaurants\/([0-9a-f-]{36}))?\/(data|snapshot|media)$/i);
     if (match) {

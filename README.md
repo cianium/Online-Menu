@@ -1,116 +1,115 @@
+# RAMEN · Online Menu vq.3
+
 <div align="center">
 
-# RAMEN · Online Menu
-
-**Multilingual digital menus and restaurant management — under active development.**
+**منوی دیجیتال چندزبانه، سفارش QR، عملیات رستوران و پرداخت مستقیم شعبه**
 
 [![CI](https://github.com/cianium/Online-Menu/actions/workflows/ci.yml/badge.svg)](https://github.com/cianium/Online-Menu/actions/workflows/ci.yml)
-[![Repository](https://img.shields.io/badge/Repository-Online--Menu-0B7285?logo=github)](https://github.com/cianium/Online-Menu)
-![Status](https://img.shields.io/badge/Status-Active%20development-F59E0B)
-
-**Customer experience · Restaurant administration · API development**
+[![Live](https://img.shields.io/badge/Live-food.kiankhayat.me-0B7285)](https://food.kiankhayat.me)
+![Release](https://img.shields.io/badge/Release-vq.3-F59E0B)
 
 </div>
 
-> **Project identity:** RAMEN (رامن) is the product brand; `Online-Menu` is the existing GitHub repository name. `ROMANO` remains in some legacy code identifiers, deployment function names, and historical documents for compatibility. Those identifiers are **not** a statement of the current brand.
+> **هویت محصول:** `RAMEN` نام برند فعلی و `Online-Menu` نام مخزن و نسخهٔ محصول است. نام `ROMANO` در شناسه‌های فنی، Edge Functionها و اسناد تاریخی برای سازگاری با محیط موجود حفظ شده است.
 
-## Overview
+## محصول چیست؟
 
-RAMEN is a developing restaurant software project built around a multilingual customer-facing digital menu and an administrative workspace. The repository contains a browser client, an admin interface, a Fastify/PostgreSQL backend, Supabase integration code, and automated checks.
-
-The repository is **not presented as a complete production POS, delivery service, or marketplace**. Those capabilities are potential future product directions, not verified features of this codebase.
-
-## What is in this repository?
-
-| Area | Implemented in source | Verification boundaries |
-| --- | --- | --- |
-| Customer menu | Product/category browsing, search, favorites, pricing views, responsive interface | Local browser QA exists; live coverage is separate |
-| Internationalization | Persian, English, Turkish, Arabic; RTL and LTR interfaces | Reviewed in previous browser QA; verify with real content |
-| Admin workspace | Product/category editing, images, settings, snapshot-oriented data updates | Mock-based browser QA and some live smoke checks; end-to-end write validation needed |
-| Fastify backend | PostgreSQL migrations, authentication, RBAC, public/admin API routes, audit logging | Source exists; real database integration and tenant-boundary tests needed |
-| Supabase integration | Admin Edge Function, SQL migrations, authentication and proxy configuration | Deployment state must be checked against the running environment |
-| Test tooling | Node.js unit/static checks, browser scenarios, API/proxy smoke scripts | Not a comprehensive security or production certification |
-
-## Architecture and source layout
+Online Menu vq.3 مسیر مهمان را از اسکن QR تا ثبت، پرداخت و پیگیری سفارش کوتاه می‌کند و هم‌زمان به تیم رستوران یک پنل مدیریت منو و برد زندهٔ سفارش‌ها می‌دهد. پول سفارش مستقیماً با درگاه همان شعبه تسویه می‌شود؛ پلتفرم وجه رستوران را نگهداری نمی‌کند.
 
 ```text
-Customer menu (index.html, js/, css/)
-               |
-               +--> Public menu API -> configured Supabase public Edge endpoint
-               |
-Admin workspace (admin/)
-               |
-               +--> Auth/admin API -> Supabase admin Edge Function
+مهمان و QR میز             کارکنان رستوران
+      │                           │
+      ▼                           ▼
+منوی موبایل → سبد → سفارش → برد زنده / KDS
+      │              │            │
+      │              └──── Supabase/PostgreSQL
+      ▼                           │
+پرداخت زرین‌پال ← verify سرور ←───┘
 
-Alternative/legacy local backend: backend/ (Fastify + PostgreSQL)
-Database + storage definitions: backend/migrations/ and supabase/migrations/
-Checks: qa/, backend/test/, .github/workflows/
-Documentation and QA reports: docs/
+          پنل مدیریت
+     منو · ترجمه · رسانه · شعبه
 ```
 
-**Important:** `vercel.json` currently proxies public requests to a `romano-public` Supabase function, but that function's source is not present in `supabase/functions/` in this repository. Only `romano-admin` is currently versioned here. Until the missing source and live deployment are reconciled, the deployed API cannot be reproduced solely from this repository. Some older documents describe a previous stage of the admin cutover and need updating.
+## قابلیت‌های vq.3
 
-## Run the local Fastify/PostgreSQL development path
+| بخش | وضعیت در سورس |
+| --- | --- |
+| منوی مشتری | جستجو، فیلتر، علاقه‌مندی، چهار زبان، RTL/LTR و طراحی responsive/image-first |
+| سفارش QR | نشست امن میز، سبد، قیمت‌گذاری سمت سرور، ثبت idempotent و پیگیری وضعیت |
+| عملیات | صف زنده، KDS، ماشین وضعیت، optimistic locking و رویدادهای immutable |
+| پرداخت | آداپتر زرین‌پال، request/verify سمت سرور، callback idempotent و کنترل پرداخت تکراری |
+| مدیریت | CMS منو و رسانه، snapshot اتمیک، نقش‌های tenant-aware و audit log |
+| زیرساخت | Vercel، Supabase Edge Functions، PostgreSQL 17، CSP و RLS fail-closed |
 
-Requirements: Node.js 22+ recommended, PostgreSQL, npm.
+فعال‌شدن سفارش واقعی هر شعبه به ساخت شعبه/میز، QR امضاشده، تنظیم واحد پول و Merchant ID معتبر نیاز دارد. این قابلیت عمداً با feature flag شعبه بسته می‌ماند تا تنظیمات مالی کامل شود.
+
+## معماری و ساختار مخزن
+
+```text
+index.html, js/, css/             رابط مشتری
+admin/                            پنل مدیریت و KDS
+supabase/functions/               API عمومی، ادمین، سفارش و پرداخت
+supabase/migrations/              مدل داده و invariantهای تراکنش
+backend/                          مسیر محلی Fastify/PostgreSQL
+qa/, backend/test/                تست‌های استاتیک، قراردادی، مرورگر و دیتابیس
+.github/workflows/                CI و smoke testهای محیط زنده
+docs/                             تحلیل محصول، امنیت و راهنمای انتشار
+```
+
+در Production، `vercel.json` درخواست‌های `/api/v1/*` را به Edge Functionهای Supabase هدایت می‌کند. مرورگر هیچ‌وقت service-role key، Merchant ID یا حقیقت مبلغ سفارش را در اختیار ندارد.
+
+## اجرای محلی
+
+پیش‌نیازها: Node.js 22+، npm، PostgreSQL 17 یا Docker.
 
 ```bash
 git clone https://github.com/cianium/Online-Menu.git
 cd Online-Menu
+npm --prefix backend ci
 cp backend/.env.example backend/.env
-# Edit backend/.env with LOCAL development credentials.
+# فقط credential محلی را در backend/.env قرار دهید.
 docker compose up -d postgres
-npm --prefix backend install
 npm run backend:migrate
 npm run backend:seed
 npm run backend:start
 ```
 
-Then visit `http://localhost:3000/` for the customer menu and `http://localhost:3000/admin/` for the admin workspace.
+سپس `http://localhost:3000/` برای منوی مشتری و `http://localhost:3000/admin/` برای پنل مدیریت در دسترس است. فایل `.env`، کلید service role و tokenها نباید commit شوند.
 
-These commands target the **Fastify local development backend**, not the live Supabase deployment. Never commit `.env`, database passwords, access tokens, or service-role keys.
-
-## QA commands
+## کیفیت و تست
 
 ```bash
-npm run qa              # JavaScript syntax, static audit, backend unit tests
-npm run qa:production   # Configuration preflight for the legacy Fastify deployment path
+npm run qa          # syntax + static audit + unit/contract tests
+npm run qa:db       # اجرای واقعی migrationها و smoke test روی PostgreSQL 17
+npm run qa:customer # سناریوهای مرورگر منوی مشتری
+npm run qa:browser  # سناریوهای مرورگر پنل مدیریت
 ```
 
-Additional browser tests:
+تست مرورگر به Playwright/Chromium و preview محلی نیاز دارد. موفقیت تست‌های mock جای تست callback واقعی PSP، backup/restore و tenant isolation روی staging را نمی‌گیرد.
 
-```bash
-npm run qa:customer
-npm run qa:browser
-```
+## امنیت و مرز اعتماد
 
-Browser tests need the appropriate local preview and Playwright/Chromium setup. The scripts are not equivalent to full live-database or production validation. Live Supabase/proxy checks are under `qa/` and should be run only against authorized, configured environments.
+- قیمت، مبلغ نهایی و مجازبودن پرداخت فقط در سرور تعیین می‌شود.
+- نشست‌ها با cookie امن و token هش‌شده نگهداری می‌شوند؛ QR با HMAC امضا و قابل ابطال است.
+- سفارش، شروع پرداخت و callback در برابر retry و concurrency idempotent هستند.
+- وضعیت `paid/refunded` به عقب برنمی‌گردد و پرداخت مبهم برای reconciliation علامت می‌خورد.
+- جدول‌های حساس برای `anon` و `authenticated` بسته‌اند و RPCهای مالی فقط در اختیار `service_role` هستند.
+- CSP، HSTS، محدودیت origin/CSRF و audit trail در لایه‌های وب و API اعمال شده‌اند.
 
-See [the current application review](docs/REVIEW_4.9.1_FA.md), [architecture notes](docs/ARCHITECTURE.md), and [production caveats](docs/PRODUCTION_STATUS.md). These documents contain historical information and are being reconciled with the newer Supabase cutover.
+گزارش آسیب‌پذیری را عمومی ثبت نکنید؛ روش گزارش در [SECURITY.md](SECURITY.md) آمده است.
 
-## Current engineering priorities
+## انتشار و اسناد محصول
 
-- [ ] Reconcile the active Vercel/Supabase deployment paths with source-controlled configuration and documentation.
-- [ ] Restore/version-control the `romano-public` Edge Function source used by the configured proxy.
-- [ ] Verify authenticated admin operations and media uploads against the live-compatible environment.
-- [ ] Add repeatable PostgreSQL/Supabase integration checks, including role permissions and cross-restaurant isolation.
-- [ ] Add tests for concurrent updates and a documented backup/restore procedure.
-- [ ] Add a reproducible dependency-locking and deployment strategy.
-- [ ] Complete a gradual RAMEN branding migration while preserving legacy identifiers required by running clients.
+- [تعریف محصول، بازار و مدل درآمد](docs/ONLINE_MENU_VQ3_FA.md)
+- [راهنمای استقرار و Definition of Done](docs/DEPLOY_VQ3_FA.md)
+- [Release notes نسخهٔ vq.3](docs/releases/ONLINE_MENU_VQ3_FA.md)
+- [سیاست نسخه‌ها و سوابق قدیمی](docs/RELEASES.md)
+- [معماری](docs/ARCHITECTURE.md) و [قرارداد API](docs/API_CONTRACT.md)
 
-## Product direction (planned, not implemented here)
+## وضعیت و مجوز
 
-The broader RAMEN vision may grow beyond menus into restaurant operations, QR ordering, and a food-focused discovery/order/delivery experience with customer, merchant, and courier roles. These are **roadmap concepts**; this repository should not be interpreted as proof that those systems are currently built or available.
+مخزن عمومی است اما مجوز متن‌باز برای آن انتخاب نشده؛ نبود فایل `LICENSE` به معنی اعطای مجوز استفاده، تغییر یا توزیع نیست.
 
-## GitHub release history
-
-The existing GitHub releases (`v1.0`, `v1.2` and `v1`) are historical snapshots, not versions of the current `4.9.1` source package. See the [release metadata audit and publishing policy](docs/RELEASES.md). A branding change by itself is not an application release.
-
-## Contributing and project status
-
-This is an evolving personal engineering project. Issues and proposals are welcome. Please open an issue describing the problem and the expected behavior before making large changes.
-
-**Maintenance:** [Kian Khayat](https://github.com/cianium)  
-**Repository:** https://github.com/cianium/Online-Menu
-
-<!-- Before adding a LICENSE, choose the intended terms deliberately; the current repository is public but has no confirmed license. -->
+**Maintainer:** [Kian Khayat](https://github.com/cianium)<br>
+**Repository:** https://github.com/cianium/Online-Menu<br>
+**Production:** https://food.kiankhayat.me
