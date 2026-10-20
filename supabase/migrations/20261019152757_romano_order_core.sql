@@ -5,12 +5,12 @@ create or replace function public.romano_orders_touch_updated_at()
 returns trigger
 language plpgsql
 set search_path = ''
-as $
+as $romano_touch$
 begin
   new.updated_at := now();
   return new;
 end;
-$;
+$romano_touch$;
 revoke all on function public.romano_orders_touch_updated_at() from public, anon, authenticated;
 
 --
