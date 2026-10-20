@@ -10,17 +10,17 @@
     const LANGUAGES = ["fa", "en", "tr", "ar"];
 
     const staticText = {
-        "رمانو | منوی دیجیتال": { fa: "رمانو | منوی دیجیتال", en: "ROMANO | Digital Menu", tr: "ROMANO | Dijital Menü", ar: "رومانو | القائمة الرقمية" },
-        "منوی دیجیتال رستوران رمانو": { fa: "منوی دیجیتال رستوران رمانو", en: "ROMANO digital restaurant menu", tr: "ROMANO dijital restoran menüsü", ar: "القائمة الرقمية لمطعم رومانو" },
+        "RAMEN | منوی دیجیتال": { fa: "RAMEN | منوی دیجیتال", en: "RAMEN | Digital Menu", tr: "RAMEN | Dijital Menü", ar: "رامن | القائمة الرقمية" },
+        "منوی دیجیتال رستوران با RAMEN": { fa: "منوی دیجیتال رستوران با RAMEN", en: "Digital restaurant menus powered by RAMEN", tr: "RAMEN ile dijital restoran menüleri", ar: "قوائم المطاعم الرقمية بواسطة رامن" },
         "رمانو": { fa: "رمانو", en: "ROMANO", tr: "ROMANO", ar: "رومانو" },
         "رستوران و کافه": { fa: "رستوران و کافه", en: "Restaurant & Cafe", tr: "Restoran & Kafe", ar: "مطعم ومقهى" },
         "کافه و رستوران": { fa: "کافه و رستوران", en: "Cafe & Restaurant", tr: "Kafe & Restoran", ar: "مقهى ومطعم" },
         "مسیرهای سریع": { fa: "مسیرهای سریع", en: "Quick Links", tr: "Hızlı Bağlantılar", ar: "روابط سريعة" },
         "خانه": { fa: "خانه", en: "Home", tr: "Ana Sayfa", ar: "الرئيسية" },
-        "منوی رمانو": { fa: "منوی رمانو", en: "ROMANO Menu", tr: "ROMANO Menüsü", ar: "قائمة رومانو" },
+        "منوی رستوران": { fa: "منوی رستوران", en: "Restaurant menu", tr: "Restoran menüsü", ar: "قائمة المطعم" },
         "انتخاب ویژه": { fa: "انتخاب ویژه", en: "Featured Selection", tr: "Özel Seçimler", ar: "الاختيارات المميزة" },
-        "درباره رمانو": { fa: "درباره رمانو", en: "About ROMANO", tr: "ROMANO Hakkında", ar: "عن رومانو" },
-        "تماس با رمانو": { fa: "تماس با رمانو", en: "Contact ROMANO", tr: "ROMANO İletişim", ar: "تواصل مع رومانو" },
+        "درباره رستوران": { fa: "درباره رستوران", en: "About the restaurant", tr: "Restoran hakkında", ar: "عن المطعم" },
+        "تماس با رستوران": { fa: "تماس با رستوران", en: "Contact the restaurant", tr: "Restoranla iletişim", ar: "التواصل مع المطعم" },
         "دسته‌بندی‌های منو": { fa: "دسته‌بندی‌های منو", en: "Menu Categories", tr: "Menü Kategorileri", ar: "تصنيفات القائمة" },
         "انتخاب سریع": { fa: "انتخاب سریع", en: "Quick Selection", tr: "Hızlı Seçim", ar: "اختيار سريع" },
         "مشاهده منو": { fa: "مشاهده منو", en: "View Menu", tr: "Menüyü Gör", ar: "عرض القائمة" },
@@ -29,12 +29,12 @@
         "حال خوب": { fa: "حال خوب", en: "Good mood.", tr: "İyi his.", ar: "مزاج جيد" },
         "طعم‌هایی که برای ماندن در خاطره ساخته شده‌اند.": { fa: "طعم‌هایی که برای ماندن در خاطره ساخته شده‌اند.", en: "Flavors made to stay in your memory.", tr: "Hafızanızda kalmak için yaratılmış lezzetler.", ar: "نكهات صُنعت لتبقى في الذاكرة." },
         "یک دسته را انتخاب کنید تا مستقیماً به بخش محصولات آن بروید.": { fa: "یک دسته را انتخاب کنید تا مستقیماً به بخش محصولات آن بروید.", en: "Choose a category to jump directly to its products.", tr: "Ürünlerine doğrudan gitmek için bir kategori seçin.", ar: "اختر تصنيفًا للانتقال مباشرة إلى منتجاته." },
-        "داستان رمانو": { fa: "داستان رمانو", en: "The ROMANO Story", tr: "ROMANO Hikâyesi", ar: "قصة رومانو" },
-        "رمانو جایی برای غذاهای آشنا با نگاهی متفاوت است؛ از مواد اولیه تا آخرین جزئیات تجربه شما.": { fa: "رمانو جایی برای غذاهای آشنا با نگاهی متفاوت است؛ از مواد اولیه تا آخرین جزئیات تجربه شما.", en: "ROMANO is a place for familiar food with a different perspective — from the ingredients to the final detail of your experience.", tr: "ROMANO, tanıdık lezzetlere farklı bir bakış sunar; malzemelerden deneyiminizin son detayına kadar.", ar: "رومانو مكان للأطعمة المألوفة برؤية مختلفة، من المكونات حتى أدق تفاصيل تجربتك." },
+        "داستان رستوران": { fa: "داستان رستوران", en: "Restaurant story", tr: "Restoran hikâyesi", ar: "قصة المطعم" },
+        "هر رستوران داستان خودش را دارد؛ از مواد اولیه تا آخرین جزئیات تجربه شما.": { fa: "هر رستوران داستان خودش را دارد؛ از مواد اولیه تا آخرین جزئیات تجربه شما.", en: "Every restaurant has its own story, from ingredients to the details of your experience.", tr: "Her restoranın malzemelerden deneyiminizin detaylarına uzanan bir hikâyesi vardır.", ar: "لكل مطعم قصة تبدأ بالمكونات وتمتد إلى تفاصيل تجربتك." },
         "مواد اولیه": { fa: "مواد اولیه", en: "Ingredients", tr: "Malzemeler", ar: "المكونات" },
         "دقت در جزئیات": { fa: "دقت در جزئیات", en: "Attention to Detail", tr: "Detaylara Özen", ar: "الاهتمام بالتفاصيل" },
         "تجربه‌ی ماندگار": { fa: "تجربه‌ی ماندگار", en: "A Lasting Experience", tr: "Kalıcı Bir Deneyim", ar: "تجربة لا تُنسى" },
-        "آدرس رمانو": { fa: "آدرس رمانو", en: "ROMANO Address", tr: "ROMANO Adresi", ar: "عنوان رومانو" },
+        "موقعیت رستوران": { fa: "موقعیت رستوران", en: "Restaurant location", tr: "Restoran konumu", ar: "موقع المطعم" },
         "منتظر": { fa: "منتظر", en: "We are", tr: "Sizi", ar: "نحن" },
         "شما": { fa: "شما", en: "you", tr: "sizi", ar: "كم" },
         "هستیم.": { fa: "هستیم.", en: "waiting.", tr: "bekliyoruz.", ar: "بانتظاركم." },
@@ -42,21 +42,21 @@
         "تلفن": { fa: "تلفن", en: "Phone", tr: "Telefon", ar: "الهاتف" },
         "ما را دنبال کنید": { fa: "ما را دنبال کنید", en: "Follow us", tr: "Bizi takip edin", ar: "تابعنا" },
         "Instagram": { fa: "Instagram", en: "Instagram", tr: "Instagram", ar: "Instagram" },
-        "در حال بارگذاری رمانو": { fa: "در حال بارگذاری رمانو", en: "Loading ROMANO", tr: "ROMANO yükleniyor", ar: "جارٍ تحميل رومانو" },
+        "در حال بارگذاری منو": { fa: "در حال بارگذاری منو", en: "Loading menu", tr: "Menü yükleniyor", ar: "جارٍ تحميل القائمة" },
         "آدرس رستوران": { fa: "آدرس رستوران", en: "Restaurant Address", tr: "Restoran Adresi", ar: "عنوان المطعم" },
         "بستن": { fa: "بستن", en: "Close", tr: "Kapat", ar: "إغلاق" },
         "مشاهده جزئیات": { fa: "مشاهده جزئیات", en: "View Details", tr: "Detayları Gör", ar: "عرض التفاصيل" },
         "رفتن به منو": { fa: "رفتن به منو", en: "Skip to menu", tr: "Menüye geç", ar: "الانتقال إلى القائمة" },
         "منوی اصلی": { fa: "منوی اصلی", en: "Main Menu", tr: "Ana Menü", ar: "القائمة الرئيسية" },
         "Designed by Cian Khayat": { fa: "طراحی: Cian Khayat", en: "Designed by Cian Khayat", tr: "Cian Khayat tarafından tasarlandı", ar: "تصميم Cian Khayat" },
-        "ROMANO · RESTAURANT & CAFE": { fa: "ROMANO · RESTAURANT & CAFE", en: "ROMANO · RESTAURANT & CAFE", tr: "ROMANO · RESTORAN & KAFE", ar: "رومانو · مطعم ومقهى" },
-        "© 2026 رمانو": { fa: "© 2026 رمانو", en: "© 2026 ROMANO", tr: "© 2026 ROMANO", ar: "© 2026 رومانو" },
-        "صفحه اصلی رمانو": { fa: "صفحه اصلی رمانو", en: "ROMANO home", tr: "ROMANO ana sayfa", ar: "صفحة رومانو الرئيسية" },
+        "RAMEN · DIGITAL MENU": { fa: "RAMEN · DIGITAL MENU", en: "RAMEN · DIGITAL MENU", tr: "RAMEN · DİJİTAL MENÜ", ar: "رامن · القائمة الرقمية" },
+        "قدرت‌گرفته از RAMEN": { fa: "قدرت‌گرفته از RAMEN", en: "Powered by RAMEN", tr: "RAMEN ile desteklenmektedir", ar: "مدعوم بواسطة رامن" },
+        "صفحه اصلی رستوران": { fa: "صفحه اصلی رستوران", en: "Restaurant home", tr: "Restoran ana sayfası", ar: "الصفحة الرئيسية للمطعم" },
         "باز کردن منوی اصلی": { fa: "باز کردن منوی اصلی", en: "Open main menu", tr: "Ana menüyü aç", ar: "فتح القائمة الرئيسية" },
-        "ناوبری اصلی رمانو": { fa: "ناوبری اصلی رمانو", en: "ROMANO main navigation", tr: "ROMANO ana navigasyonu", ar: "التنقل الرئيسي لرومانو" },
+        "ناوبری اصلی رستوران": { fa: "ناوبری اصلی رستوران", en: "Restaurant navigation", tr: "Restoran gezinmesi", ar: "التنقل الرئيسي للمطعم" },
         "بستن منوی اصلی": { fa: "بستن منوی اصلی", en: "Close main menu", tr: "Ana menüyü kapat", ar: "إغلاق القائمة الرئيسية" },
-        "ارزش‌های رمانو": { fa: "ارزش‌های رمانو", en: "ROMANO values", tr: "ROMANO değerleri", ar: "قيم رومانو" },
-        "اینستاگرام رمانو": { fa: "اینستاگرام رمانو", en: "ROMANO Instagram", tr: "ROMANO Instagram", ar: "إنستغرام رومانو" },
+        "ارزش‌های رستوران": { fa: "ارزش‌های رستوران", en: "Restaurant values", tr: "Restoran değerleri", ar: "قيم المطعم" },
+        "اینستاگرام رستوران": { fa: "اینستاگرام رستوران", en: "Restaurant Instagram", tr: "Restoran Instagram hesabı", ar: "إنستغرام المطعم" },
         "لگو رمانو": { fa: "لگو رمانو", en: "ROMANO logo", tr: "ROMANO logosu", ar: "شعار رومانو" },
         "بازگشت به بالای صفحه": { fa: "بازگشت به بالای صفحه", en: "Back to top", tr: "Yukarı dön", ar: "العودة إلى الأعلى" },
         "اشتراک‌گذاری": { fa: "اشتراک‌گذاری", en: "Share", tr: "Paylaş", ar: "مشاركة" },
@@ -115,17 +115,17 @@
             next: () => "مشاهده موارد بعدی",
             productView: v => `مشاهده ${v}`,
             skipToMenu: () => "رفتن به منو",
-            logoAlt: () => "لوگوی رمانو",
+            logoAlt: () => "لوگوی رستوران",
             backToTop: () => "بازگشت به بالای صفحه",
             share: () => "اشتراک‌گذاری",
             copyLink: () => "کپی لینک",
             copied: () => "کپی شد ✓",
-            signatureEyebrow: v => `غذای امضای رمانو · ${v}`,
-            signatureFallback: () => "انتخاب ویژه‌ی امروز رمانو.",
+            signatureEyebrow: v => `غذای ویژه · ${v}`,
+            signatureFallback: () => "انتخاب ویژه‌ی امروز.",
             signatureButton: () => "مشاهده جزئیات",
             menuCount: v => `${v} انتخاب`,
             noResults: v => `نتیجه‌ای برای «${v}» پیدا نشد.`,
-            search: () => "جستجو در منوی رمانو…",
+            search: () => "جستجو در منو…",
             searchSr: () => "جستجوی منو",
             categories: () => "دسته‌بندی‌های منو",
             results: () => "نتایج جستجوی منو",
@@ -138,17 +138,17 @@
             next: () => "View next items",
             productView: v => `View ${v}`,
             skipToMenu: () => "Skip to menu",
-            logoAlt: () => "ROMANO logo",
+            logoAlt: () => "Restaurant logo",
             backToTop: () => "Back to top",
             share: () => "Share",
             copyLink: () => "Copy link",
             copied: () => "Copied ✓",
             signatureEyebrow: v => `SIGNATURE DISH · ${v}`,
-            signatureFallback: () => "Today's ROMANO featured selection.",
+            signatureFallback: () => "Today's featured selection.",
             signatureButton: () => "View Details",
             menuCount: v => `${v} items`,
             noResults: v => `No results found for “${v}”.`,
-            search: () => "Search ROMANO menu…",
+            search: () => "Search the menu…",
             searchSr: () => "Search menu",
             categories: () => "Menu categories",
             results: () => "Menu search results",
@@ -161,17 +161,17 @@
             next: () => "Sonraki öğeleri görüntüle",
             productView: v => `${v} görüntüle`,
             skipToMenu: () => "Menüye geç",
-            logoAlt: () => "ROMANO logosu",
+            logoAlt: () => "Restoran logosu",
             backToTop: () => "Yukarı dön",
             share: () => "Paylaş",
             copyLink: () => "Bağlantıyı kopyala",
             copied: () => "Kopyalandı ✓",
             signatureEyebrow: v => `ÖZEL ÜRÜN · ${v}`,
-            signatureFallback: () => "Bugünün ROMANO özel seçimi.",
+            signatureFallback: () => "Bugünün özel seçimi.",
             signatureButton: () => "Detayları Gör",
             menuCount: v => `${v} ürün`,
             noResults: v => `“${v}” için sonuç bulunamadı.`,
-            search: () => "ROMANO menüsünde ara…",
+            search: () => "Menüde ara…",
             searchSr: () => "Menüde ara",
             categories: () => "Menü kategorileri",
             results: () => "Menü arama sonuçları",
@@ -184,17 +184,17 @@
             next: () => "عرض العناصر التالية",
             productView: v => `عرض ${v}`,
             skipToMenu: () => "الانتقال إلى القائمة",
-            logoAlt: () => "شعار رومانو",
+            logoAlt: () => "شعار المطعم",
             backToTop: () => "العودة إلى الأعلى",
             share: () => "مشاركة",
             copyLink: () => "نسخ الرابط",
             copied: () => "تم النسخ ✓",
-            signatureEyebrow: v => `طبق رومانو المميز · ${v}`,
-            signatureFallback: () => "اختيار رومانو المميز اليوم.",
+            signatureEyebrow: v => `طبق مميز · ${v}`,
+            signatureFallback: () => "اختيار اليوم المميز.",
             signatureButton: () => "عرض التفاصيل",
             menuCount: v => `${v} عناصر`,
             noResults: v => `لم يتم العثور على نتائج لـ «${v}».`,
-            search: () => "ابحث في قائمة رومانو…",
+            search: () => "ابحث في القائمة…",
             searchSr: () => "ابحث في القائمة",
             categories: () => "تصنيفات القائمة",
             results: () => "نتائج البحث في القائمة",
@@ -511,22 +511,22 @@
 
         set("#featured .section-title", current === "fa" ? "انتخاب <em>ویژه.</em>" : current === "en" ? "<em>Featured</em> Selection." : current === "tr" ? "<em>Özel</em> Seçim." : "<em>اختيار مميز.</em>", true);
 
-        set("#story .section-eyebrow", t("داستان رمانو"));
+        set("#story .section-eyebrow", t("داستان رستوران"));
         set("#story .section-title", current === "fa" ? "ساده <em>نیست</em><br><span>خاص است</span>" : current === "en" ? "It is <em>not</em><br><span>ordinary.</span>" : current === "tr" ? "Sıradan <em>değil</em><br><span>özel.</span>" : "الأمر <em>ليس</em><br><span>عاديًا.</span>", true);
-        set("#story .story-description", t("رمانو جایی برای غذاهای آشنا با نگاهی متفاوت است؛ از مواد اولیه تا آخرین جزئیات تجربه شما."));
+        set("#story .story-description", t("هر رستوران داستان خودش را دارد؛ از مواد اولیه تا آخرین جزئیات تجربه شما."));
         const points = document.querySelectorAll("#story .romano-story-point strong");
         ["مواد اولیه", "دقت در جزئیات", "تجربه‌ی ماندگار"].forEach((key, i) => { if (points[i]) points[i].textContent = t(key); });
         const storyGrid = document.querySelector("#story .romano-story-grid");
-        if (storyGrid) storyGrid.setAttribute("aria-label", t("ارزش‌های رمانو"));
+        if (storyGrid) storyGrid.setAttribute("aria-label", t("ارزش‌های رستوران"));
 
-        set("#contact .section-eyebrow", t("آدرس رمانو"));
+        set("#contact .section-eyebrow", t("موقعیت رستوران"));
         set("#contact .section-title", current === "fa" ? "منتظر <em>شما</em> هستیم." : current === "en" ? "We are waiting for <em>you.</em>" : current === "tr" ? "<em>Sizi</em> bekliyoruz." : "<em>بانتظاركم.</em>", true);
         const contactLabels = document.querySelectorAll("#contact .contact-label");
         if (contactLabels[0]) contactLabels[0].textContent = t("آدرس");
         if (contactLabels[1]) contactLabels[1].textContent = t("تلفن");
         const contactActions = document.querySelectorAll("#contact .romano-contact-action");
         if (contactActions[0]) contactActions[0].textContent = t("مشاهده منو");
-        if (contactActions[1]) contactActions[1].textContent = t("تماس با رمانو");
+        if (contactActions[1]) contactActions[1].textContent = t("تماس با رستوران");
 
         const footerBrand = document.querySelector(".footer-brand p");
         if (footerBrand) footerBrand.textContent = t("کافه و رستوران");
@@ -536,7 +536,7 @@
         const footerAddress = document.querySelector(".site-footer [data-restaurant-address]");
         if (footerAddress && !footerAddress.closest("#contact")) footerAddress.textContent = t("آدرس رستوران");
         const footerCopyright = document.querySelector(".footer-bottom span");
-        if (footerCopyright) footerCopyright.textContent = current === "fa" ? "© 2026 رمانو" : current === "en" ? "© 2026 ROMANO" : current === "tr" ? "© 2026 ROMANO" : "© 2026 رومانو";
+        if (footerCopyright) footerCopyright.textContent = t("قدرت‌گرفته از RAMEN");
 
         const modalClose = document.querySelector(".product-modal .modal-close");
         if (modalClose) modalClose.setAttribute("aria-label", t("بستن"));
@@ -596,7 +596,7 @@
         applyStatic();
         translateElementContents();
         updateButton();
-        document.title = t("رمانو | منوی دیجیتال", document.title);
+        document.title = t("RAMEN | منوی دیجیتال", document.title);
         const metaDescription = document.querySelector('meta[name="description"]');
         if (metaDescription) metaDescription.setAttribute("content", pick(restaurant.description));
         document.dispatchEvent(new CustomEvent("romano:language-changed", { detail: { lang: current } }));
