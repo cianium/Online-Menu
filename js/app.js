@@ -621,11 +621,11 @@ function renderRestaurantInformation() {
     if (menuDataMode !== "loading" && menuDataMode !== "unavailable") {
         const description = localizedRestaurant.description || "";
         document.querySelector(".hero-description").textContent = description;
-        const title = `${localizedRestaurant.name || "ROMANO"} | ${window.ROMANO_I18N.ui("menuTitle")}`;
+        const title = `${localizedRestaurant.name || "Restaurant"} | ${window.ROMANO_I18N.ui("menuTitle")}`;
         document.title = title;
         for (const selector of ['meta[name="description"]', 'meta[property="og:description"]']) document.querySelector(selector)?.setAttribute("content", description);
         document.querySelector('meta[property="og:title"]')?.setAttribute("content", title);
-        document.querySelector('meta[property="og:site_name"]')?.setAttribute("content", localizedRestaurant.name || "ROMANO");
+        document.querySelector('meta[property="og:site_name"]')?.setAttribute("content", localizedRestaurant.name || "Restaurant");
         document.querySelector('meta[property="og:locale"]')?.setAttribute("content", ({fa:"fa_IR",en:"en_US",tr:"tr_TR",ar:"ar_AR"})[window.ROMANO_I18N.language]);
     }
 
@@ -781,7 +781,7 @@ function createCategoryCard(
         <div class="category-image">
             ${category.image
                 ? `<img src="${escapeAttribute(category.image)}" alt="${escapeAttribute(category.name)}" loading="lazy">`
-                : `<div class="image-fallback" aria-hidden="true">ROMANO</div>`}
+                : `<div class="image-fallback" aria-hidden="true">RAMEN</div>`}
         </div>
 
 
@@ -1402,7 +1402,7 @@ function createProductCard(product) {
         <div class="product-image-wrapper">
             ${product.image
                 ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy">`
-                : `<div class="image-fallback" aria-hidden="true">ROMANO</div>`}
+                : `<div class="image-fallback" aria-hidden="true">RAMEN</div>`}
             ${badge}
         </div>
 
@@ -1612,7 +1612,7 @@ function openProductModal(productId) {
                 const fallback = document.createElement("div");
                 fallback.className = "image-fallback";
                 fallback.setAttribute("aria-hidden", "true");
-                fallback.textContent = "ROMANO";
+                fallback.textContent = "RAMEN";
                 imageWrapper.appendChild(fallback);
             }
         }
@@ -2705,7 +2705,7 @@ window.addEventListener("storage", event => {
         host.hidden = false;
         host.innerHTML = `
             <div class="romano-signature-dish__media">
-                ${product.image ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy">` : `<div class="image-fallback" aria-hidden="true">ROMANO</div>`}
+                ${product.image ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy">` : `<div class="image-fallback" aria-hidden="true">RAMEN</div>`}
             </div>
             <div class="romano-signature-dish__copy">
                 <span class="romano-signature-dish__eyebrow">${escapeHTML(window.ROMANO_I18N?.ui?.("signatureEyebrow", product.categoryName || "ROMANO") || `SIGNATURE DISH · ${product.categoryName || "ROMANO"}`)}</span>
