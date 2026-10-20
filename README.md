@@ -2,6 +2,8 @@
 
 # RAMEN · Online Menu
 
+![RAMEN brand banner](assets/branding/ramen-github-cover.svg)
+
 **Multilingual digital menus and restaurant management — under active development.**
 
 [![CI](https://github.com/cianium/Online-Menu/actions/workflows/ci.yml/badge.svg)](https://github.com/cianium/Online-Menu/actions/workflows/ci.yml)
@@ -13,6 +15,8 @@
 </div>
 
 > **Project identity:** RAMEN (رامن) is the product brand; `Online-Menu` is the existing GitHub repository name. `ROMANO` remains in some legacy code identifiers, deployment function names, and historical documents for compatibility. Those identifiers are **not** a statement of the current brand.
+
+**Brand identity:** [RAMEN logo kit and design guidelines](BRANDING.md) (proposal; visual review pending).
 
 ## Overview
 

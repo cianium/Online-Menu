@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 96 96" role="img" aria-label="RAMEN digital menu platform symbol">
+  <rect x="5" y="5" width="86" height="86" rx="24" fill="#0D1117" stroke="#2D4053" stroke-width="1.6"/>
+  <path d="M25 31a8 8 0 0 1 8-8h34a8 8 0 0 1 8 8v34a8 8 0 0 1-8 8H33a8 8 0 0 1-8-8Z" fill="none" stroke="#FF7A24" stroke-width="4.8"/>
+  <circle cx="39" cy="39" r="3.3" fill="#FFAE67"/><path d="M49 39h13" stroke="#F6F8FA" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="39" cy="50" r="3.3" fill="#FFAE67"/><path d="M49 50h13" stroke="#F6F8FA" stroke-width="4" stroke-linecap="round"/>
+  <path d="M37 61h25" stroke="#FF7A24" stroke-width="4" stroke-linecap="round"/>
+  <rect x="64" y="21" width="14" height="14" rx="3.5" fill="#FF7A24"/>
+  <rect x="69" y="26" width="4" height="4" rx="1" fill="#0D1117"/>
+</svg>
