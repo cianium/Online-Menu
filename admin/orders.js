@@ -5,6 +5,9 @@
   let branches = [];
   let filter = "active";
   let timer = 0;
+  const t = (key) => window.ROMANO_ADMIN_I18N?.get(key) || key;
+  const locale = () => window.ROMANO_ADMIN_I18N?.language || "fa";
+  const number = (value) => Number(value || 0).toLocaleString(locale() === "fa" ? "fa-IR" : locale());
   const terminal = new Set(["completed", "rejected", "cancelled"]);
   const labels = {
     submitted:"جدید", accepted:"پذیرفته شد", preparing:"در حال آماده‌سازی", ready:"آماده", served:"سرو شد", delivered:"تحویل شد", completed:"تکمیل", rejected:"رد شده", cancelled:"لغو شده"
@@ -17,10 +20,10 @@
     ? window.OnlineMenuMoney.formatMinor(minor, {
         currency:order.currencyCode || "IRR",
         exponent:order.currencyExponent ?? 0,
-        language:document.documentElement.lang || "fa",
+        language:locale(),
       })
     : `${Math.round(Number(minor || 0) / 10).toLocaleString("fa-IR")} تومان`;
-  const time = (value) => new Intl.DateTimeFormat("fa-IR", { hour:"2-digit", minute:"2-digit" }).format(new Date(value));
+  const time = (value) => new Intl.DateTimeFormat(locale() === "fa" ? "fa-IR" : locale(), { hour:"2-digit", minute:"2-digit" }).format(new Date(value));
 
   function selectedOrders() {
     if (filter === "all") return orders;
@@ -35,21 +38,21 @@
     const active = orders.filter((order) => !terminal.has(order.status));
     const counts = { submitted:0, preparing:0, ready:0 };
     active.forEach((order) => { if (order.status === "submitted") counts.submitted++; if (["accepted","preparing"].includes(order.status)) counts.preparing++; if (order.status === "ready") counts.ready++; });
-    document.querySelector("#orders-summary").innerHTML = `<span>${active.length.toLocaleString("fa-IR")} سفارش فعال</span><span>${counts.submitted.toLocaleString("fa-IR")} جدید</span><span>${counts.preparing.toLocaleString("fa-IR")} در آشپزخانه</span><span>${counts.ready.toLocaleString("fa-IR")} آماده</span>`;
+    document.querySelector("#orders-summary").innerHTML = `<span>${number(active.length)} ${safe(t("سفارش فعال"))}</span><span>${number(counts.submitted)} ${safe(t("جدید"))}</span><span>${number(counts.preparing)} ${safe(t("در آشپزخانه"))}</span><span>${number(counts.ready)} ${safe(t("آماده"))}</span>`;
     const badge = document.querySelector("#orders-nav-badge");
     badge.hidden = counts.submitted === 0;
     badge.textContent = String(counts.submitted);
     const rows = selectedOrders();
-    if (!rows.length) { board.innerHTML = '<div class="orders-empty">سفارشی در این وضعیت وجود ندارد.</div>'; return; }
+    if (!rows.length) { board.innerHTML = `<div class="orders-empty">${safe(t("سفارشی در این وضعیت وجود ندارد."))}</div>`; return; }
     board.innerHTML = rows.map((order) => {
       const action = next[order.status];
-      const items = (order.items || []).map((item) => `<div class="order-ticket-item"><span><b>${Number(item.quantity).toLocaleString("fa-IR")}×</b> ${safe(item.name)}</span><span>${safe(money(item.lineTotalMinor, order))}</span></div>`).join("");
+      const items = (order.items || []).map((item) => `<div class="order-ticket-item"><span><b>${number(item.quantity)}×</b> ${safe(item.name)}</span><span>${safe(money(item.lineTotalMinor, order))}</span></div>`).join("");
       return `<article class="order-ticket" data-status="${safe(order.status)}">
-        <header class="order-ticket-head"><div><small>${safe(order.branchName || "شعبه")} · ${safe(order.tableName || "")}</small><h2>#${safe(order.orderNumber)}</h2></div><span class="order-status">${safe(labels[order.status] || order.status)}</span></header>
+        <header class="order-ticket-head"><div><small>${safe(order.branchName || t("شعبه"))} · ${safe(order.tableName || "")}</small><h2>#${safe(order.orderNumber)}</h2></div><span class="order-status">${safe(t(labels[order.status] || order.status))}</span></header>
         <div class="order-ticket-items">${items}</div>
         ${order.notes ? `<p class="order-ticket-note">${safe(order.notes)}</p>` : ""}
-        <span class="order-ticket-meta">${safe(time(order.submittedAt))} · ${order.paymentStatus === "paid" ? "پرداخت آنلاین ✓" : "پرداخت‌نشده"}</span>
-        <footer class="order-ticket-footer"><strong>${safe(money(order.totalMinor, order))}</strong>${action ? `<button class="order-next" type="button" data-order-id="${safe(order.id)}" data-version="${safe(order.version)}" data-next="${safe(action[0])}">${safe(action[1])}</button>` : ""}</footer>
+        <span class="order-ticket-meta">${safe(time(order.submittedAt))} · ${t(order.paymentStatus === "paid" ? "پرداخت آنلاین ✓" : "پرداخت‌نشده")}</span>
+        <footer class="order-ticket-footer"><strong>${safe(money(order.totalMinor, order))}</strong>${action ? `<button class="order-next" type="button" data-order-id="${safe(order.id)}" data-version="${safe(order.version)}" data-next="${safe(action[0])}">${safe(t(action[1]))}</button>` : ""}</footer>
       </article>`;
     }).join("");
     board.querySelectorAll(".order-next").forEach((button) => button.addEventListener("click", () => transition(button)));
@@ -57,7 +60,7 @@
 
   async function refresh(silent = false) {
     if (!window.RomanoAPI?.enabled) {
-      if (!silent) document.querySelector("#orders-board").innerHTML = '<div class="orders-empty">برای مشاهده سفارش‌های زنده، پنل را به سرویس سرور متصل کنید.</div>';
+      if (!silent) document.querySelector("#orders-board").innerHTML = `<div class="orders-empty">${safe(t("برای مشاهده سفارش‌های زنده، پنل را به سرویس سرور متصل کنید."))}</div>`;
       return;
     }
     try {
@@ -65,7 +68,7 @@
       orders = Array.isArray(data?.orders) ? data.orders : [];
       render();
     } catch (error) {
-      if (!silent) document.querySelector("#orders-board").innerHTML = `<div class="orders-empty">${safe(error.message || "دریافت سفارش‌ها ناموفق بود.")}</div>`;
+      if (!silent) document.querySelector("#orders-board").innerHTML = `<div class="orders-empty">${safe(t("دریافت سفارش‌ها ناموفق بود."))}</div>`;
     }
   }
 
@@ -76,7 +79,7 @@
       await refresh();
     } catch (error) {
       button.disabled = false;
-      window.alert(error.message || "تغییر وضعیت انجام نشد.");
+      window.alert(t("تغییر وضعیت انجام نشد."));
     }
   }
 
@@ -106,16 +109,16 @@
     const message = document.querySelector("#gateway-message");
     const branchId = document.querySelector("#gateway-branch").value;
     const merchantId = document.querySelector("#gateway-merchant-id").value.trim();
-    if (!branchId || !merchantId) { message.textContent = "برای تغییر تنظیمات، Merchant ID کامل را وارد کنید."; return; }
+    if (!branchId || !merchantId) { message.textContent = t("برای تغییر تنظیمات، Merchant ID کامل را وارد کنید."); return; }
     try {
       await window.RomanoAPI.saveGateway(branchId, {
         provider:"zarinpal", merchantId,
         sandbox:document.querySelector("#gateway-sandbox").checked,
         active:document.querySelector("#gateway-active").checked,
       });
-      message.textContent = "تنظیمات درگاه با موفقیت ذخیره شد.";
+      message.textContent = t("تنظیمات درگاه با موفقیت ذخیره شد.");
       await loadBranches();
-    } catch (error) { message.textContent = error.message || "ذخیره تنظیمات ناموفق بود."; }
+    } catch (error) { message.textContent = t("ذخیره تنظیمات ناموفق بود."); }
   }
 
   function init() {
@@ -126,6 +129,7 @@
       document.querySelectorAll("[data-order-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
       render();
     }));
+    document.addEventListener("romano:language-changed", () => { render(); });
     document.querySelector("#gateway-branch")?.addEventListener("change", syncGateway);
     document.querySelector("#gateway-settings-form")?.addEventListener("submit", saveGateway);
     window.setTimeout(() => { refresh(true); loadBranches(); }, 900);
