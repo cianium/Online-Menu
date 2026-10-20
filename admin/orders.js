@@ -5,6 +5,46 @@
   let branches = [];
   let filter = "active";
   let timer = 0;
+  let audioContext = null;
+  let soundEnabled = false;
+  let orderBaselineReady = false;
+
+  function updateSoundButton() {
+    const button=document.querySelector("#orders-sound");
+    if(!button) return;
+    button.textContent=t(soundEnabled?"قطع اعلان صوتی":"فعال‌سازی اعلان صوتی");
+    button.setAttribute("aria-pressed",String(soundEnabled));
+  }
+
+  async function toggleSound() {
+    if(soundEnabled){soundEnabled=false;updateSoundButton();return;}
+    const AudioConstructor=window.AudioContext || window.webkitAudioContext;
+    if(!AudioConstructor){window.alert(t("اعلان صوتی در این مرورگر پشتیبانی نمی‌شود."));return;}
+    try{
+      audioContext=audioContext || new AudioConstructor();
+      await audioContext.resume();
+      soundEnabled=audioContext.state==="running";
+      updateSoundButton();
+    }catch{soundEnabled=false;updateSoundButton();}
+  }
+
+  function alertNewOrder() {
+    if(!soundEnabled || !audioContext || audioContext.state!=="running") return;
+    const now=audioContext.currentTime;
+    for(const offset of [0,.23]){
+      const oscillator=audioContext.createOscillator();
+      const volume=audioContext.createGain();
+      oscillator.type="sine";
+      oscillator.frequency.setValueAtTime(880,now+offset);
+      volume.gain.setValueAtTime(0.001,now+offset);
+      volume.gain.exponentialRampToValueAtTime(0.16,now+offset+.025);
+      volume.gain.exponentialRampToValueAtTime(0.001,now+offset+.16);
+      oscillator.connect(volume);volume.connect(audioContext.destination);
+      oscillator.start(now+offset);
+      oscillator.stop(now+offset+.17);
+    }
+  }
+
   const t = (key) => window.ROMANO_ADMIN_I18N?.get(key) || key;
   const locale = () => window.ROMANO_ADMIN_I18N?.language || "fa";
   const number = (value) => Number(value || 0).toLocaleString(locale() === "fa" ? "fa-IR" : locale());
@@ -65,7 +105,11 @@
     }
     try {
       const data = await window.RomanoAPI.orders();
-      orders = Array.isArray(data?.orders) ? data.orders : [];
+      const previous=new Set(orders.map(item=>item.id));
+      const incoming=Array.isArray(data?.orders) ? data.orders : [];
+      if(orderBaselineReady && incoming.some(item=>item.status==="submitted" && !previous.has(item.id)))alertNewOrder();
+      orders=incoming;
+      orderBaselineReady=true;
       render();
     } catch (error) {
       if (!silent) document.querySelector("#orders-board").innerHTML = `<div class="orders-empty">${safe(t("دریافت سفارش‌ها ناموفق بود."))}</div>`;
@@ -289,13 +333,15 @@
 
   function init() {
     document.querySelector("#orders-refresh")?.addEventListener("click", () => refresh());
+    document.querySelector("#orders-sound")?.addEventListener("click", toggleSound);
+    updateSoundButton();
     document.querySelector('[data-page="orders"]')?.addEventListener("click", () => refresh());
     document.querySelectorAll("[data-order-filter]").forEach((button) => button.addEventListener("click", () => {
       filter = button.dataset.orderFilter;
       document.querySelectorAll("[data-order-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
       render();
     }));
-    document.addEventListener("romano:language-changed", () => { render(); syncBranchManagement(); });
+    document.addEventListener("romano:language-changed", () => { render(); syncBranchManagement(); updateSoundButton(); });
     document.querySelector("#ops-branch")?.addEventListener("change", syncBranchManagement);
     document.querySelector("#create-branch-form")?.addEventListener("submit", addBranch);
     document.querySelector("#create-table-form")?.addEventListener("submit", addTable);
