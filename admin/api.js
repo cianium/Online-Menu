@@ -71,6 +71,19 @@
     logout: async () => { try { return await request("/auth/logout", { method: "POST", body: JSON.stringify({}) }); } finally { csrfToken = null; } },
     uploadImage: dataUrl => request("/admin/media", { method: "POST", body: JSON.stringify({ dataUrl }) }),
     adminData: () => request("/admin/data"),
-    saveSnapshot: snapshot => request("/admin/snapshot", { method: "PUT", body: JSON.stringify(snapshot) })
+    saveSnapshot: snapshot => request("/admin/snapshot", { method: "PUT", body: JSON.stringify(snapshot) }),
+    orders: () => request("/admin/orders"),
+    transitionOrder: (orderId, version, status, reason = null) => request(`/admin/orders/${encodeURIComponent(orderId)}/transition`, {
+      method: "POST", body: JSON.stringify({ version, status, reason })
+    }),
+    branches: () => request("/admin/branches"),
+    createBranch: value => request("/admin/branches", { method:"POST", body:JSON.stringify(value) }),
+    branchSettings: (branchId, value) => request(`/admin/branches/${encodeURIComponent(branchId)}/settings`, { method:"PUT", body:JSON.stringify(value) }),
+    tables: branchId => request(`/admin/branches/${encodeURIComponent(branchId)}/tables`),
+    createTable: (branchId, value) => request(`/admin/branches/${encodeURIComponent(branchId)}/tables`, { method:"POST", body:JSON.stringify(value) }),
+    tableQr: (branchId, tableId) => request(`/admin/branches/${encodeURIComponent(branchId)}/tables/${encodeURIComponent(tableId)}/qr`),
+    saveGateway: (branchId, gateway) => request(`/admin/branches/${encodeURIComponent(branchId)}/gateway`, {
+      method: "PUT", body: JSON.stringify(gateway)
+    })
   });
 })();

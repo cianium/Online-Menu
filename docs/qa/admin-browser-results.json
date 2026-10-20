@@ -2,7 +2,7 @@
   "passed": 18,
   "cases": [
     "Local demo boot and seed catalog",
-    "4 languages × 3 widths × 4 admin pages: direction and horizontal overflow",
+    "4 languages × 3 widths × 5 admin pages: direction and horizontal overflow",
     "Create product with decimal price and persist after reload",
     "Zero and decimal ratings survive product edits and reload",
     "Mobile product form has readable inputs and reachable sticky save",

@@ -18,3 +18,26 @@ jobs:
           node-version: 22
       - name: Syntax, static audit and backend unit tests
         run: npm run qa
+
+  database-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run migrations and commerce smoke tests on PostgreSQL 17
+        run: npm run qa:db
+
+  edge-functions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check Supabase Edge Functions
+        run: |
+          deno check --frozen --lock=deno.lock --config supabase/functions/romano-public/deno.json supabase/functions/romano-public/index.ts
+          deno check --frozen --lock=deno.lock --config supabase/functions/romano-admin/deno.json supabase/functions/romano-admin/index.ts
+          deno check --frozen --lock=deno.lock --config supabase/functions/romano-order/deno.json supabase/functions/romano-order/index.ts
+          deno check --frozen --lock=deno.lock --config supabase/functions/romano-payment/deno.json supabase/functions/romano-payment/index.ts

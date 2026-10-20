@@ -47,6 +47,7 @@
 
     <link rel="stylesheet" href="rv4-admin-plus.css">
     <link rel="stylesheet" href="workspace.css">
+    <link rel="stylesheet" href="orders.css">
 
 </head>
 
@@ -121,6 +122,18 @@
 
             <button
                 class="nav-item"
+                data-page="orders"
+                type="button"
+            >
+                <span class="nav-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h5"></path></svg>
+                </span>
+                <span>سفارش‌ها</span>
+                <b class="orders-nav-badge" id="orders-nav-badge" hidden>0</b>
+            </button>
+
+            <button
+                class="nav-item"
                 data-page="products"
                 type="button"
             >
@@ -167,7 +180,7 @@
             </a>
 
             <span>
-                RAMEN · 4.9.1
+                RAMEN · ONLINE-MENU vq.3
             </span>
 
         </div>
@@ -470,6 +483,30 @@
 
 
             <!-- ===================================
+                 ORDERS
+            ==================================== -->
+
+            <section class="admin-page" id="page-orders" aria-labelledby="orders-title">
+                <div class="page-heading page-heading-row">
+                    <div>
+                        <span class="page-eyebrow">LIVE OPERATIONS · KDS</span>
+                        <h1 id="orders-title">سفارش‌ها و آشپزخانه</h1>
+                        <p>سفارش‌های QR را از پذیرش تا سرو، زنده مدیریت کنید.</p>
+                    </div>
+                    <button class="secondary-button" id="orders-refresh" type="button">به‌روزرسانی</button>
+                </div>
+                <div class="orders-summary" id="orders-summary" role="status"></div>
+                <div class="orders-filters" role="group" aria-label="فیلتر وضعیت سفارش">
+                    <button class="is-active" type="button" data-order-filter="active">فعال</button>
+                    <button type="button" data-order-filter="submitted">جدید</button>
+                    <button type="button" data-order-filter="preparing">آشپزخانه</button>
+                    <button type="button" data-order-filter="ready">آماده</button>
+                    <button type="button" data-order-filter="all">همه</button>
+                </div>
+                <div class="orders-board" id="orders-board" aria-live="polite"></div>
+            </section>
+
+            <!-- ===================================
                  PRODUCTS
             ==================================== -->
 
@@ -761,6 +798,53 @@
 
                 </form>
 
+                <section class="gateway-settings" id="branch-management" aria-labelledby="branch-management-title">
+                    <div><span class="page-eyebrow">QR TABLE SETUP</span>
+                        <h2 id="branch-management-title" data-admin-i18n="شعبه‌ها و میزها">شعبه‌ها و میزها</h2>
+                        <p data-admin-i18n="پیش از فعال‌سازی سفارش، ارزش ریالی هر واحد قیمت منو را مشخص کنید.">پیش از فعال‌سازی سفارش، ارزش ریالی هر واحد قیمت منو را مشخص کنید.</p>
+                    </div>
+                    <form id="create-branch-form" class="gateway-settings-form">
+                        <label><span data-admin-i18n="نام شعبه">نام شعبه</span><input name="branchName" required maxlength="120" autocomplete="off"></label>
+                        <label><span data-admin-i18n="شناسه شعبه (لاتین)">شناسه شعبه (لاتین)</span><input name="branchSlug" required maxlength="80" pattern="[a-z0-9]+(-[a-z0-9]+)*" autocomplete="off" dir="ltr"></label>
+                        <label><span data-admin-i18n="ضریب تبدیل قیمت به ریال">ضریب تبدیل قیمت به ریال</span>
+                            <select name="priceMultiplier" required>
+                                <option value="1" data-admin-i18n="۱ (اگر قیمت منو ریال است)">۱ (اگر قیمت منو ریال است)</option>
+                                <option value="10" data-admin-i18n="۱۰ (اگر قیمت منو تومان است)">۱۰ (اگر قیمت منو تومان است)</option>
+                            </select>
+                        </label>
+                        <button class="primary-button" type="submit" data-admin-i18n="افزودن شعبه">افزودن شعبه</button>
+                    </form>
+                    <div class="gateway-settings-form">
+                        <label><span data-admin-i18n="انتخاب شعبه">انتخاب شعبه</span><select id="ops-branch"></select></label>
+                        <label class="gateway-check"><input id="ops-qr-enabled" type="checkbox"><span data-admin-i18n="فعال‌سازی سفارش QR">فعال‌سازی سفارش QR</span></label>
+                        <button class="secondary-button" id="ops-save-branch" type="button" data-admin-i18n="ذخیره وضعیت سفارش‌گیری">ذخیره وضعیت سفارش‌گیری</button>
+                    </div>
+                    <form id="create-table-form" class="gateway-settings-form">
+                        <label><span data-admin-i18n="کد میز (لاتین)">کد میز (لاتین)</span><input name="tableCode" required maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_-]*" dir="ltr"></label>
+                        <label><span data-admin-i18n="نام میز">نام میز</span><input name="tableName" required maxlength="80"></label>
+                        <button class="primary-button" type="submit" data-admin-i18n="افزودن میز">افزودن میز</button>
+                    </form>
+                    <div id="ops-tables" class="ops-tables" aria-live="polite"></div>
+                    <p id="ops-message" role="status" aria-live="polite"></p>
+                </section>
+
+                <section class="gateway-settings" aria-labelledby="gateway-settings-title">
+                    <div>
+                        <span class="page-eyebrow">DIRECT SETTLEMENT</span>
+                        <h2 id="gateway-settings-title">درگاه پرداخت شعبه</h2>
+                        <p>مبالغ سفارش مستقیماً به پذیرنده خود رستوران واریز می‌شود.</p>
+                    </div>
+                    <form id="gateway-settings-form" class="gateway-settings-form">
+                        <label><span>شعبه</span><select id="gateway-branch" required></select></label>
+                        <label><span>درگاه</span><select id="gateway-provider"><option value="zarinpal">زرین‌پال</option></select></label>
+                        <label class="gateway-merchant"><span>Merchant ID</span><input id="gateway-merchant-id" type="text" inputmode="latin" autocomplete="off" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label>
+                        <label class="gateway-check"><input id="gateway-sandbox" type="checkbox" checked><span>محیط آزمایشی</span></label>
+                        <label class="gateway-check"><input id="gateway-active" type="checkbox"><span>فعال‌سازی پرداخت آنلاین</span></label>
+                        <button class="primary-button" type="submit">ذخیره درگاه</button>
+                        <p id="gateway-message" role="status"></p>
+                    </form>
+                </section>
+
             </section>
 
         </div>
@@ -769,7 +853,7 @@
             <div class="admin-footer-brand"><strong>RAMEN</strong><span>ADMIN CONSOLE</span></div>
             <p>مدیریت منوی دیجیتال رستوران</p>
             <a class="creator-signature" href="https://kiankhayat.me" target="_blank" rel="noopener noreferrer">طراحی و توسعه: Cian Khayat</a>
-            <div class="admin-footer-meta"><span data-admin-i18n="نسخه 4.9.1">نسخه 4.9.1</span><span class="footer-separator" aria-hidden="true">·</span><span id="admin-storage-mode">نسخه آزمایشی محلی</span></div>
+            <div class="admin-footer-meta"><span data-admin-i18n="نسخه vq.3">نسخه vq.3</span><span class="footer-separator" aria-hidden="true">·</span><span id="admin-storage-mode">نسخه آزمایشی محلی</span></div>
         </footer>
 
     </main>
@@ -1323,11 +1407,13 @@
 
 
 <script src="../js/data.js"></script>
+<script src="../js/money.js"></script>
 <script src="admin-i18n.js"></script>
 <script src="api.js"></script>
 <script src="admin.js"></script>
 <script src="rv4-admin-plus.js"></script>
 <script src="workspace.js"></script>
+<script src="orders.js"></script>
 
 </body>
 

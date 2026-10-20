@@ -1425,21 +1425,26 @@ function createProductCard(product) {
             </h3>
 
 
+            ${price}
+
+
             <p class="product-description">
                 ${escapeHTML(product.description)}
             </p>
 
 
-            ${price}
+            <button
+                class="product-card-button"
+                type="button"
+                aria-label="${escapeAttribute(window.ROMANO_I18N?.ui?.("productView", product.name) || `مشاهده ${product.name}`)}"
+            >
+                <span>${escapeHTML(window.ROMANO_I18N?.ui?.("signatureButton") || "مشاهده جزئیات")}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="m9 18 6-6-6-6" />
+                </svg>
+            </button>
 
         </div>
-
-
-        <button
-            class="product-card-button"
-            type="button"
-            aria-label="${escapeAttribute(window.ROMANO_I18N?.ui?.("productView", product.name) || `مشاهده ${product.name}`)}"
-        ></button>
 
     `;
 
@@ -2400,9 +2405,15 @@ function formatPrice(price) {
 
 
     const language = window.ROMANO_I18N?.language || "fa";
+    if (window.OnlineMenuMoney?.formatCatalog) {
+        return window.OnlineMenuMoney.formatCatalog(numericPrice, {
+            currency: restaurantConfig?.currency,
+            language
+        });
+    }
     const locale = language === "en" ? "en-US" : language === "tr" ? "tr-TR" : language === "ar" ? "ar" : "fa-IR";
     const currencyCode = String(restaurantConfig?.currency || "").toUpperCase();
-    if (/^[A-Z]{3}$/.test(currencyCode) && currencyCode !== "IRT") {
+    if (/^[A-Z]{3}$/.test(currencyCode) && !["IRR", "IRT"].includes(currencyCode)) {
         try { return new Intl.NumberFormat(locale, { style: "currency", currency: currencyCode }).format(numericPrice); } catch (_) {}
     }
     const currencyLabel = window.ROMANO_I18N?.ui?.("currency") || " تومان";

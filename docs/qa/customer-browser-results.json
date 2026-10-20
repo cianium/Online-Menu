@@ -1,7 +1,9 @@
 {
-  "passed": 13,
+  "passed": 15,
   "cases": [
     "Static demo boots with 21 products",
+    "Image-first card CTA and favorite remain accessible",
+    "Cart supports add, quantity and QR-gated checkout",
     "Search, category, price order and reset",
     "Favorites persist, filter and clear",
     "Modal focus, inert background, Escape and URL restoration",

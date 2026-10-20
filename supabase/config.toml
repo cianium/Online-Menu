@@ -1,0 +1,11 @@
+[functions.romano-admin]
+verify_jwt = false
+
+[functions.romano-public]
+verify_jwt = false
+
+[functions.romano-order]
+verify_jwt = false
+
+[functions.romano-payment]
+verify_jwt = false
