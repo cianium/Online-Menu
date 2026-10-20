@@ -11,3 +11,25 @@
 .ops-table input{flex:1 1 260px;min-width:0;padding:10px;direction:ltr}
 #ops-message{min-height:20px}
 @media(max-width:700px){.ops-table{align-items:stretch;flex-direction:column}.ops-table button{width:100%}}
+
+
+/* Printable QR card, intentionally isolated from the rest of the Admin layout. */
+.ops-table-info{min-width:0;overflow-wrap:anywhere}
+.ops-table-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ops-qr-result{width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px;background:#fff;color:#142b2a;border-radius:14px;text-align:center;direction:rtl}
+.ops-qr-result h3{margin:0;font-size:20px;color:#142b2a}
+.ops-qr-result p{margin:0;color:#344c49;font-size:13px}
+.ops-qr-result .ops-qr-image{display:flex;justify-content:center;align-items:center;max-width:100%}
+.ops-qr-result .ops-qr-image img,.ops-qr-result .ops-qr-image canvas{max-width:100%;height:auto}
+.ops-qr-result input{width:100%;max-width:420px;direction:ltr;unicode-bidi:plaintext;color:#142b2a}
+.ops-qr-buttons{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.ops-table .ops-qr-buttons button{color:#142b2a;border-color:#142b2a}
+@media(max-width:700px){.ops-table-actions{width:100%;flex-direction:column}.ops-table-actions button{width:100%}.ops-qr-result{padding:12px}}
+@media print{
+  @page{size:A4;margin:18mm}
+  body *{visibility:hidden!important}
+  #ops-tables .ops-qr-result,#ops-tables .ops-qr-result *{visibility:visible!important}
+  #ops-tables .ops-qr-result{position:fixed!important;inset:0 auto auto 0!important;width:100%!important;margin:0!important;padding:24px!important;border:0!important;box-shadow:none!important;min-height:unset!important}
+  #ops-tables .ops-qr-result input,#ops-tables .ops-qr-buttons{display:none!important}
+  #ops-tables .ops-qr-image img{display:block!important}
+}
