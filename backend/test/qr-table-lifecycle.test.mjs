@@ -45,3 +45,17 @@ test("QR table management has localized controls and no inline secrets",()=>{
   }
   assert.doesNotMatch(js,/ROMANO_QR_SIGNING_SECRET|SERVICE_ROLE_KEY/);
 });
+
+test("KDS sound alerts require opt-in and ignore the initial order list",()=>{
+  const html=read("admin/index.html");
+  const script=read("admin/orders.js");
+  const translations=read("admin/admin-i18n.js");
+  assert.match(html,/id="orders-sound"[^>]*aria-pressed="false"/);
+  assert.match(script,/let soundEnabled = false;/);
+  assert.match(script,/let orderBaselineReady = false;/);
+  assert.match(script,/orderBaselineReady && incoming\.some/);
+  assert.match(script,/if\(!soundEnabled \|\| !audioContext/);
+  for(const key of ["فعال‌سازی اعلان صوتی","قطع اعلان صوتی"]){
+    assert.ok(translations.includes(JSON.stringify(key)+":"),"Missing sound translation: "+key);
+  }
+});
