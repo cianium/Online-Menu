@@ -1,7 +1,7 @@
 {
-  "name": "ROMANO Digital Menu",
-  "short_name": "ROMANO",
-  "description": "رومانو | منوی دیجیتال رستوران",
+  "name": "RAMEN Digital Menu",
+  "short_name": "RAMEN",
+  "description": "منوی دیجیتال و مدیریت رستوران با رامن",
   "lang": "fa",
   "dir": "rtl",
   "start_url": "./",
