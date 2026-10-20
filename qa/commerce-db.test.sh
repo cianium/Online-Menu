@@ -26,7 +26,8 @@ docker run --rm -d \
 ready=0
 attempt=1
 while [ "$attempt" -le 30 ]; do
-  if docker exec "$qa_container" pg_isready -U postgres -d online_menu_qa >/dev/null 2>&1; then
+  if docker exec "$qa_container" \
+    psql -U postgres -d online_menu_qa -Atqc 'select 1' >/dev/null 2>&1; then
     ready=1
     break
   fi
