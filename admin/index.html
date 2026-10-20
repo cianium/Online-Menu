@@ -798,6 +798,36 @@
 
                 </form>
 
+                <section class="gateway-settings" id="branch-management" aria-labelledby="branch-management-title">
+                    <div><span class="page-eyebrow">QR TABLE SETUP</span>
+                        <h2 id="branch-management-title" data-admin-i18n="شعبه‌ها و میزها">شعبه‌ها و میزها</h2>
+                        <p data-admin-i18n="پیش از فعال‌سازی سفارش، ارزش ریالی هر واحد قیمت منو را مشخص کنید.">پیش از فعال‌سازی سفارش، ارزش ریالی هر واحد قیمت منو را مشخص کنید.</p>
+                    </div>
+                    <form id="create-branch-form" class="gateway-settings-form">
+                        <label><span data-admin-i18n="نام شعبه">نام شعبه</span><input name="branchName" required maxlength="120" autocomplete="off"></label>
+                        <label><span data-admin-i18n="شناسه شعبه (لاتین)">شناسه شعبه (لاتین)</span><input name="branchSlug" required maxlength="80" pattern="[a-z0-9]+(-[a-z0-9]+)*" autocomplete="off" dir="ltr"></label>
+                        <label><span data-admin-i18n="ضریب تبدیل قیمت به ریال">ضریب تبدیل قیمت به ریال</span>
+                            <select name="priceMultiplier" required>
+                                <option value="1" data-admin-i18n="۱ (اگر قیمت منو ریال است)">۱ (اگر قیمت منو ریال است)</option>
+                                <option value="10" data-admin-i18n="۱۰ (اگر قیمت منو تومان است)">۱۰ (اگر قیمت منو تومان است)</option>
+                            </select>
+                        </label>
+                        <button class="primary-button" type="submit" data-admin-i18n="افزودن شعبه">افزودن شعبه</button>
+                    </form>
+                    <div class="gateway-settings-form">
+                        <label><span data-admin-i18n="انتخاب شعبه">انتخاب شعبه</span><select id="ops-branch"></select></label>
+                        <label class="gateway-check"><input id="ops-qr-enabled" type="checkbox"><span data-admin-i18n="فعال‌سازی سفارش QR">فعال‌سازی سفارش QR</span></label>
+                        <button class="secondary-button" id="ops-save-branch" type="button" data-admin-i18n="ذخیره وضعیت سفارش‌گیری">ذخیره وضعیت سفارش‌گیری</button>
+                    </div>
+                    <form id="create-table-form" class="gateway-settings-form">
+                        <label><span data-admin-i18n="کد میز (لاتین)">کد میز (لاتین)</span><input name="tableCode" required maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_-]*" dir="ltr"></label>
+                        <label><span data-admin-i18n="نام میز">نام میز</span><input name="tableName" required maxlength="80"></label>
+                        <button class="primary-button" type="submit" data-admin-i18n="افزودن میز">افزودن میز</button>
+                    </form>
+                    <div id="ops-tables" class="ops-tables" aria-live="polite"></div>
+                    <p id="ops-message" role="status" aria-live="polite"></p>
+                </section>
+
                 <section class="gateway-settings" aria-labelledby="gateway-settings-title">
                     <div>
                         <span class="page-eyebrow">DIRECT SETTLEMENT</span>
