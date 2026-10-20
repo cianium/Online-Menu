@@ -59,11 +59,11 @@ create index payment_attempts_pending_idx
 
 create trigger branch_payment_gateways_updated_at
 before update on public.branch_payment_gateways
-for each row execute function public.set_updated_at();
+for each row execute function public.romano_orders_touch_updated_at();
 
 create trigger payment_attempts_updated_at
 before update on public.payment_attempts
-for each row execute function public.set_updated_at();
+for each row execute function public.romano_orders_touch_updated_at();
 
 create or replace function public.romano_guard_order_payment_update()
 returns trigger
