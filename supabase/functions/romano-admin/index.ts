@@ -288,7 +288,7 @@ async function operationalOrders(member: Member) {
 async function branchSettings(member: Member) {
   const rid=member.restaurant_id;
   const [branchResult,gatewayResult]=await Promise.all([
-    service.from("branches").select("id,slug,name,active,qr_ordering_enabled,currency_code").eq("restaurant_id",rid).order("created_at"),
+    service.from("branches").select("id,slug,name,active,qr_ordering_enabled,currency_code,currency_exponent,menu_price_to_minor_multiplier").eq("restaurant_id",rid).order("created_at"),
     service.from("branch_payment_gateways").select("branch_id,provider,merchant_id,sandbox,active,updated_at").eq("restaurant_id",rid)
   ]);
   if(branchResult.error) throw branchResult.error;
@@ -319,6 +319,65 @@ async function saveBranchGateway(member: Member, branchId: string, body: unknown
   },{onConflict:"branch_id"});
   if(error) throw error;
   return {saved:true};
+}
+
+
+const branchSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const tableCodePattern = /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/;
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function record(value: unknown): Record<string,unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string,unknown> : null;
+}
+async function ownedBranch(member: Member, branchId: string) {
+  if (!uuidPattern.test(branchId)) return null;
+  const {data,error}=await service.from("branches")
+    .select("id,restaurant_id,active,qr_ordering_enabled,currency_code,menu_price_to_minor_multiplier")
+    .eq("restaurant_id",member.restaurant_id).eq("id",branchId).maybeSingle();
+  if(error) throw error;
+  return data;
+}
+async function saveBranch(member: Member, body: unknown) {
+  const value=record(body);
+  if(!value || typeof value.name !== "string" || value.name.trim().length<1 || value.name.trim().length>120
+     || typeof value.slug !== "string" || value.slug.length>80 || !branchSlugPattern.test(value.slug)
+     || value.currencyCode !== "IRR" || value.currencyExponent !== 0
+     || !Number.isSafeInteger(value.priceMultiplier) || Number(value.priceMultiplier)<1 || Number(value.priceMultiplier)>1000) return null;
+  const {data,error}=await service.from("branches").insert({
+    restaurant_id:member.restaurant_id, slug:value.slug, name:value.name.trim(),
+    currency_code:"IRR", currency_exponent:0, menu_price_to_minor_multiplier:value.priceMultiplier,
+    active:true, qr_ordering_enabled:false, auto_accept_qr_orders:false
+  }).select("id,slug,name,active,qr_ordering_enabled,currency_code").single();
+  if(error) throw error;
+  return data;
+}
+async function createRestaurantTable(member: Member, branchId: string, body: unknown) {
+  const branch=await ownedBranch(member,branchId);
+  const value=record(body);
+  if(!branch || !value || typeof value.code!=="string" || !tableCodePattern.test(value.code) ||
+     typeof value.name!=="string" || value.name.trim().length<1 || value.name.trim().length>80) return null;
+  const {data,error}=await service.from("restaurant_tables").insert({
+    restaurant_id:member.restaurant_id,branch_id:branchId,code:value.code,display_name:value.name.trim(),active:true
+  }).select("id,code,display_name,active,qr_version").single();
+  if(error) throw error;
+  return data;
+}
+async function signTableQr(branchId:string,tableId:string,qrVersion:number) {
+  const configured=Deno.env.get("ROMANO_QR_SIGNING_SECRET");
+  let key=configured && configured.length>=32 ? configured : "";
+  if (!key) {
+    const {data,error}=await service.rpc("romano_qr_signing_material");
+    if(error || typeof data!=="string" || data.length<64) throw new Error("QR_SIGNING_NOT_CONFIGURED");
+    key=data;
+  }
+  const message=`v1.${branchId.toLowerCase()}.${tableId.toLowerCase()}.${qrVersion}`;
+  const imported=await crypto.subtle.importKey("raw",new TextEncoder().encode(key),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
+  const signature=new Uint8Array(await crypto.subtle.sign("HMAC",imported,new TextEncoder().encode(message)));
+  const base64=btoa(String.fromCharCode(...signature)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  const qrToken=`${message}.${base64}`;
+  const origin=(Deno.env.get("ROMANO_CUSTOMER_ORIGIN") || "https://food.kiankhayat.me").replace(/\/$/,"");
+  const url=new URL(origin+"/");
+  url.searchParams.set("qr",qrToken);
+  return {qrUrl:url.toString(),qrVersion};
 }
 
 Deno.serve(async req => {
@@ -402,6 +461,64 @@ Deno.serve(async req => {
       const m=resolveMember(p,undefined,"viewer");
       if(!m) return failure("FORBIDDEN","Restaurant access denied.",id,403,newCookies);
       return reply(await branchSettings(m),id,200,newCookies);
+    }
+    if(path==="/admin/branches" && req.method==="POST") {
+      const m=resolveMember(p,undefined,"manager");
+      if(!m) return failure("FORBIDDEN","Manager access required.",id,403,newCookies);
+      const created=await saveBranch(m,await readBody(req,16_384));
+      if(!created) return failure("VALIDATION_ERROR","Invalid branch input.",id,422,newCookies);
+      return reply({branch:created},id,201,newCookies);
+    }
+    const branchSettingsMatch=path.match(/^\/admin\/branches\/([0-9a-f-]{36})\/settings$/i);
+    if(branchSettingsMatch && req.method==="PUT") {
+      const m=resolveMember(p,undefined,"manager");
+      if(!m) return failure("FORBIDDEN","Manager access required.",id,403,newCookies);
+      const branch=await ownedBranch(m,branchSettingsMatch[1]);
+      const value=record(await readBody(req,16_384));
+      if(!branch) return failure("NOT_FOUND","Branch not found.",id,404,newCookies);
+      if(!value || typeof value.qrOrderingEnabled!=="boolean") return failure("VALIDATION_ERROR","Invalid settings.",id,422,newCookies);
+      if(value.qrOrderingEnabled) {
+        if(!branch.active || !branch.currency_code || !branch.menu_price_to_minor_multiplier)
+          return failure("VALIDATION_ERROR","Set branch prices and currency before enabling QR.",id,422,newCookies);
+        const {count,error:countError}=await service.from("restaurant_tables").select("id",{head:true,count:"exact"})
+          .eq("restaurant_id",m.restaurant_id).eq("branch_id",branch.id).eq("active",true);
+        if(countError) throw countError;
+        if(!count) return failure("VALIDATION_ERROR","Add an active table before enabling QR.",id,422,newCookies);
+      }
+      const {error}=await service.from("branches").update({qr_ordering_enabled:value.qrOrderingEnabled})
+        .eq("restaurant_id",m.restaurant_id).eq("id",branch.id);
+      if(error) throw error;
+      return reply({saved:true,enabled:value.qrOrderingEnabled},id,200,newCookies);
+    }
+    const branchTablesMatch=path.match(/^\/admin\/branches\/([0-9a-f-]{36})\/tables$/i);
+    if(branchTablesMatch && (req.method==="GET" || req.method==="POST")) {
+      const m=resolveMember(p,undefined,req.method==="GET"?"viewer":"manager");
+      if(!m) return failure("FORBIDDEN","Restaurant access denied.",id,403,newCookies);
+      const branch=await ownedBranch(m,branchTablesMatch[1]);
+      if(!branch) return failure("NOT_FOUND","Branch not found.",id,404,newCookies);
+      if(req.method==="POST") {
+        const table=await createRestaurantTable(m,branch.id,await readBody(req,16_384));
+        if(!table) return failure("VALIDATION_ERROR","Invalid table input.",id,422,newCookies);
+        return reply({table},id,201,newCookies);
+      }
+      const {data,error}=await service.from("restaurant_tables").select("id,code,display_name,active,qr_version")
+        .eq("restaurant_id",m.restaurant_id).eq("branch_id",branch.id).order("created_at");
+      if(error) throw error;
+      return reply({tables:data||[]},id,200,newCookies);
+    }
+    const tableQrMatch=path.match(/^\/admin\/branches\/([0-9a-f-]{36})\/tables\/([0-9a-f-]{36})\/qr$/i);
+    if(tableQrMatch && req.method==="GET") {
+      const m=resolveMember(p,undefined,"manager");
+      if(!m) return failure("FORBIDDEN","Manager access required.",id,403,newCookies);
+      const branch=await ownedBranch(m,tableQrMatch[1]);
+      if(!branch) return failure("NOT_FOUND","Branch not found.",id,404,newCookies);
+      const {data:table,error}=await service.from("restaurant_tables")
+        .select("id,qr_version,active")
+        .eq("restaurant_id",m.restaurant_id).eq("branch_id",branch.id)
+        .eq("id",tableQrMatch[2]).maybeSingle();
+      if(error) throw error;
+      if(!table || !table.active) return failure("NOT_FOUND","Table is not active.",id,404,newCookies);
+      return reply(await signTableQr(branch.id,table.id,table.qr_version),id,200,newCookies);
     }
     const gatewayMatch=path.match(/^\/admin\/branches\/([0-9a-f-]{36})\/gateway$/i);
     if(gatewayMatch && req.method==="PUT") {
