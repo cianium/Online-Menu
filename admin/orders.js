@@ -91,6 +91,7 @@
       const select = document.querySelector("#gateway-branch");
       select.innerHTML = branches.map((branch) => `<option value="${safe(branch.id)}">${safe(branch.name)}</option>`).join("");
       syncGateway();
+      syncBranchManagement();
     } catch { /* Settings remain unavailable until the server is connected. */ }
   }
 
@@ -121,6 +122,118 @@
     } catch (error) { message.textContent = t("ذخیره تنظیمات ناموفق بود."); }
   }
 
+
+  function opsMessage(key) {
+    const el=document.querySelector("#ops-message");
+    if(el) el.textContent=key ? t(key) : "";
+  }
+
+  function syncBranchManagement() {
+    const select=document.querySelector("#ops-branch");
+    if(!select) return;
+    const selected=select.value;
+    select.innerHTML=branches.map((branch) => `<option value="${safe(branch.id)}">${safe(branch.name)}</option>`).join("");
+    if(branches.some((item)=>item.id===selected)) select.value=selected;
+    const branch=branches.find((item)=>item.id===select.value);
+    const checkbox=document.querySelector("#ops-qr-enabled");
+    checkbox.checked=branch?.qr_ordering_enabled===true;
+    checkbox.disabled=!branch;
+    document.querySelector("#ops-save-branch").disabled=!branch;
+    document.querySelector("#create-table-form button[type=submit]").disabled=!branch;
+    refreshTables();
+  }
+
+  async function refreshTables() {
+    const select=document.querySelector("#ops-branch");
+    const host=document.querySelector("#ops-tables");
+    if(!host) return;
+    const selected=select?.value || "";
+    if(!selected) {host.textContent=t("برای شروع یک شعبه بسازید.");return;}
+    try {
+      const result=await window.RomanoAPI.tables(selected);
+      if(select.value!==selected) return;
+      const tables=Array.isArray(result?.tables)?result.tables:[];
+      if(!tables.length){host.textContent=t("میزی ثبت نشده است.");return;}
+      host.innerHTML=tables.map((table)=>`
+        <div class="ops-table">
+          <div><strong>${safe(table.display_name)}</strong><small> · ${safe(table.code)}</small></div>
+          <button type="button" data-table-qr="${safe(table.id)}" ${table.active?"":"disabled"}>${safe(t("دریافت لینک QR"))}</button>
+        </div>`).join("");
+      host.querySelectorAll("[data-table-qr]").forEach((button)=>button.addEventListener("click",async()=>{
+        button.disabled=true;
+        opsMessage("");
+        try {
+          const output=await window.RomanoAPI.tableQr(selected,button.dataset.tableQr);
+          const parent=button.closest(".ops-table");
+          parent.querySelector(".ops-qr-result")?.remove();
+          const container=document.createElement("div");
+          container.className="ops-qr-result";
+          const input=document.createElement("input");
+          input.type="url";input.readOnly=true;input.value=output.qrUrl;input.dir="ltr";
+          const copy=document.createElement("button");
+          copy.type="button";copy.textContent=t("کپی لینک");
+          copy.addEventListener("click",async()=>{
+            try{await navigator.clipboard.writeText(input.value);opsMessage("لینک کپی شد.");}
+            catch{input.focus();input.select();}
+          });
+          container.append(input,copy);parent.append(container);
+        }catch{opsMessage("عملیات انجام نشد.");}
+        finally{button.disabled=false;}
+      }));
+    } catch { host.textContent=t("عملیات انجام نشد."); }
+  }
+
+  async function addBranch(event) {
+    event.preventDefault();
+    const form=event.currentTarget;
+    const button=form.querySelector("button");
+    button.disabled=true;opsMessage("");
+    try {
+      const input=new FormData(form);
+      await window.RomanoAPI.createBranch({
+        name:String(input.get("branchName")||"").trim(),
+        slug:String(input.get("branchSlug")||"").trim(),
+        priceMultiplier:Number(input.get("priceMultiplier")),
+        currencyCode:"IRR",currencyExponent:0
+      });
+      form.reset();
+      await loadBranches();
+      opsMessage("شعبه ایجاد شد.");
+    }catch{opsMessage("عملیات انجام نشد.");}
+    finally{button.disabled=false;}
+  }
+
+  async function addTable(event) {
+    event.preventDefault();
+    const form=event.currentTarget;
+    const button=form.querySelector("button");
+    const branchId=document.querySelector("#ops-branch")?.value;
+    if(!branchId)return;
+    button.disabled=true;opsMessage("");
+    try {
+      const input=new FormData(form);
+      await window.RomanoAPI.createTable(branchId,{
+        code:String(input.get("tableCode")||"").trim(),
+        name:String(input.get("tableName")||"").trim()
+      });
+      form.reset();await refreshTables();opsMessage("میز ایجاد شد.");
+    }catch{opsMessage("عملیات انجام نشد.");}
+    finally{button.disabled=false;}
+  }
+
+  async function saveOrderingStatus() {
+    const branchId=document.querySelector("#ops-branch")?.value;
+    const enabled=document.querySelector("#ops-qr-enabled")?.checked===true;
+    if(!branchId)return;
+    const button=document.querySelector("#ops-save-branch");
+    button.disabled=true;opsMessage("");
+    try{
+      await window.RomanoAPI.branchSettings(branchId,{qrOrderingEnabled:enabled});
+      await loadBranches();opsMessage("وضعیت ذخیره شد.");
+    }catch{opsMessage("عملیات انجام نشد.");}
+    finally{button.disabled=false;}
+  }
+
   function init() {
     document.querySelector("#orders-refresh")?.addEventListener("click", () => refresh());
     document.querySelector('[data-page="orders"]')?.addEventListener("click", () => refresh());
@@ -129,7 +242,11 @@
       document.querySelectorAll("[data-order-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
       render();
     }));
-    document.addEventListener("romano:language-changed", () => { render(); });
+    document.addEventListener("romano:language-changed", () => { render(); syncBranchManagement(); });
+    document.querySelector("#ops-branch")?.addEventListener("change", syncBranchManagement);
+    document.querySelector("#create-branch-form")?.addEventListener("submit", addBranch);
+    document.querySelector("#create-table-form")?.addEventListener("submit", addTable);
+    document.querySelector("#ops-save-branch")?.addEventListener("click", saveOrderingStatus);
     document.querySelector("#gateway-branch")?.addEventListener("change", syncGateway);
     document.querySelector("#gateway-settings-form")?.addEventListener("submit", saveGateway);
     window.setTimeout(() => { refresh(true); loadBranches(); }, 900);
