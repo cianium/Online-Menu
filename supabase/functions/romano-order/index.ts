@@ -37,8 +37,32 @@ function resolveSecretKey() {
 }
 
 const secretKey = resolveSecretKey();
-if (!supabaseUrl || !secretKey || !qrSecret || qrSecret.length < 32) {
+if (!supabaseUrl || !secretKey) {
   throw new Error("Romano order runtime secrets are not configured");
+}
+
+let qrSigningKeyPromise: Promise<string> | null = null;
+async function qrSigningKey(): Promise<string> {
+  if (qrSecret && qrSecret.length >= 32) return qrSecret;
+  if (!qrSigningKeyPromise) qrSigningKeyPromise = (async () => {
+    const res = await fetch(`${supabaseUrl}/rest/v1/rpc/romano_qr_signing_material`, {
+      method: "POST",
+      headers: {
+        apikey: secretKey!,
+        "content-type": "application/json",
+        accept: "application/json",
+      },
+      body: "{}",
+    });
+    if (!res.ok) throw new Error("QR_ORDERING_NOT_AVAILABLE");
+    const material: unknown = await res.json();
+    if (typeof material !== "string" || material.length < 64) {
+      throw new Error("QR_ORDERING_NOT_AVAILABLE");
+    }
+    return material;
+  })();
+  try { return await qrSigningKeyPromise; }
+  catch (error) { qrSigningKeyPromise = null; throw error; }
 }
 
 function originHeaders(request: Request): Record<string, string> {
@@ -266,7 +290,7 @@ Deno.serve(async (request) => {
       const qrToken = body !== null && typeof body === "object"
         ? (body as Record<string, unknown>).qrToken
         : null;
-      const qr = await verifyQrToken(qrToken, qrSecret);
+      const qr = await verifyQrToken(qrToken, await qrSigningKey());
       const sessionToken = randomSessionToken();
       const sessionTokenHash = await sha256Hex(sessionToken);
       const data = await rpc("romano_open_table_session", {
