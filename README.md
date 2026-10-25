@@ -5,16 +5,18 @@
 **منوی دیجیتال چندزبانه، سفارش QR، عملیات رستوران و پرداخت مستقیم شعبه**
 
 [![CI](https://github.com/cianium/Online-Menu/actions/workflows/ci.yml/badge.svg)](https://github.com/cianium/Online-Menu/actions/workflows/ci.yml)
-[![Live](https://img.shields.io/badge/Live-food.kiankhayat.me-0B7285)](https://food.kiankhayat.me)
+[![Website](https://img.shields.io/badge/Website-food.kiankhayat.me-0B7285)](https://food.kiankhayat.me)
 ![Release](https://img.shields.io/badge/Release-vq.3-F59E0B)
 
 </div>
 
 > **هویت محصول:** `RAMEN` نام برند فعلی و `Online-Menu` نام مخزن و نسخهٔ محصول است. نام `ROMANO` در شناسه‌های فنی، Edge Functionها و اسناد تاریخی برای سازگاری با محیط موجود حفظ شده است.
+>
+> **وضعیت انتشار:** نسخهٔ `vq.3` در GitHub منتشر شده و سورس و تست‌ها در مخزن وجود دارند؛ بااین‌حال فعال‌بودن سرویس‌های واقعی سفارش و پرداخت، تنظیمات امنیتی محیط عملیاتی و آدرس وب‌سایت در این بررسی مستقلاً تأیید نشده‌اند. لینک وب‌سایت را نباید معادل تأیید Production در نظر گرفت.
 
 ## محصول چیست؟
 
-Online Menu vq.3 مسیر مهمان را از اسکن QR تا ثبت، پرداخت و پیگیری سفارش کوتاه می‌کند و هم‌زمان به تیم رستوران یک پنل مدیریت منو و برد زندهٔ سفارش‌ها می‌دهد. پول سفارش مستقیماً با درگاه همان شعبه تسویه می‌شود؛ پلتفرم وجه رستوران را نگهداری نمی‌کند.
+Online Menu vq.3 برای کوتاه‌کردن مسیر مهمان از اسکن QR تا ثبت، پرداخت و پیگیری سفارش طراحی شده و برای تیم رستوران پنل مدیریت منو و برد زندهٔ سفارش‌ها دارد. در مدل تسویهٔ پیش‌بینی‌شده، مبلغ از طریق درگاه همان شعبه پرداخت می‌شود و پلتفرم قرار نیست وجه رستوران را نگهداری کند؛ عملکرد واقعی این فرایند به پیکربندی و آزمون مستقل هر شعبه وابسته است.
 
 ```text
 مهمان و QR میز             کارکنان رستوران
@@ -112,7 +114,7 @@ npm run qa:browser  # سناریوهای مرورگر پنل مدیریت
 
 **Maintainer:** [Kian Khayat](https://github.com/cianium)<br>
 **Repository:** https://github.com/cianium/Online-Menu<br>
-**Production:** https://food.kiankhayat.me
+**Website / deployment target (not independently verified):** https://food.kiankhayat.me
 
 ## گزارش نگهداری و آمادگی انتشار
 
