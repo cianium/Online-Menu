@@ -113,3 +113,7 @@ npm run qa:browser  # سناریوهای مرورگر پنل مدیریت
 **Maintainer:** [Kian Khayat](https://github.com/cianium)<br>
 **Repository:** https://github.com/cianium/Online-Menu<br>
 **Production:** https://food.kiankhayat.me
+
+## گزارش نگهداری و آمادگی انتشار
+
+[وضعیت مخزن، CI و موانع انتشار — ۲۵ اکتبر ۲۰۲۶](docs/REPOSITORY_HEALTH_2026-10-25.md)
