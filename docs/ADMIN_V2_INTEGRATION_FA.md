@@ -94,6 +94,23 @@
 - هیچ Secret یا توکن دسترسی در localStorage، HTML یا log مرورگر قرار نگیرد.
 - تست‌های مشتری و ادمین و مرورگر قبل از ادغام PR اجرا شوند.
 
+
+## یافته تکمیلی درباره schema و دسترسی محیط‌ها
+
+بررسی فایل‌های `supabase/migrations` نشان می‌دهد migrationهای موجود عمدتاً لایه‌های افزایشی سفارش، پرداخت، QR و عملیات را اضافه می‌کنند. در این مسیر، migration پایه مستقلی برای ساخت کامل جداول اصلی مورد استفاده Admin Function (از جمله `users`، `restaurant_memberships`، `restaurants`، `categories`، `products` و ترجمه‌های آن‌ها) در فهرست migrationهای Supabase مخزن دیده نشد. بعضی migrationهای افزایشی نیز به جداول و توابع موجود وابسته‌اند.
+
+در نتیجه:
+- نباید فرض کرد اجرای پوشه `supabase/migrations` روی یک پروژه خالی، دیتابیس کامل vq.3 را می‌سازد.
+- migrationهای قدیمی `backend/migrations` متعلق به مسیر Fastify هستند و بدون تطبیق schema نباید به‌عنوان bootstrap مستقیم Supabase اجرا شوند.
+- پیش از هر migration یا feature جدید، باید baseline schema واقعی محیط هدف export و با تمام Edge Functionها و migrationها تطبیق داده شود.
+- هیچ DDL یا تغییر داده‌ای در این مرحله اجرا نشده است.
+
+### دسترسی محیطی در زمان این بررسی
+
+اتصال Supabase در دسترس، پروژه‌ای با شناسه منطبق بر مقصد Supabase درج‌شده در `vercel.json` را برنگرداند؛ همچنین فهرست پروژه‌های Vercel متصل، مخزن `cianium/Online-Menu` را نشان نداد. بنابراین وضعیت واقعی دیتابیس، migration history، Edge Function deployment، secrets و deployment alias از طریق اتصال‌های فعلی قابل تأیید نبود. این یک مانع دسترسی/پیکربندی است، نه اثبات خرابی Production.
+
+برای ادامه تغییرات اجرایی لازم است حساب متصل به Supabase و Vercel به پروژه‌های واقعی همین مخزن دسترسی داشته باشد، یا پروژه صحیح از طریق اتصال‌های مجاز در دسترس قرار گیرد.
+
 ## وضعیت فعلی انجام کار
 
 - شاخه مستقل `feat/admin-v2-curated-integration` از commit مبنا ایجاد شده است.
