@@ -39,15 +39,18 @@
   }
 
   /**
-   * Probe the backend once. Static hosting (GitHub Pages, file://) has no /api,
-   * so the admin falls back to its local demo mode instead of breaking.
+   * Probe the backend once. When the API route is absent (including JSON 404
+   * responses from an un-deployed Edge Function), use the local demo store.
    * Resolves to { available: boolean, session: object | null }.
    */
   async function detect() {
     if (!isHttp) { backendAvailable = false; return { available: false, session: null }; }
     const response = await fetch(`${API_PREFIX}/auth/me`, { credentials: "include", headers: { Accept: "application/json" } });
     const isJson = (response.headers.get("content-type") || "").includes("application/json");
-    if (response.status === 404 && !isJson) { backendAvailable = false; return { available: false, session: null }; }
+    if (response.status === 404) {
+      backendAvailable = false;
+      return { available: false, session: null };
+    }
     if (response.status === 401) return { available: true, session: null };
     if (!response.ok || !isJson) throw new Error("Admin service unavailable");
     const body = await response.json();
