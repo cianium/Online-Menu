@@ -50,6 +50,7 @@ async function check(name, action) { await action(); results.push(name); console
                 position: style.position
               };
             }).filter(item => item.right > innerWidth + 1 || item.left < -1 || item.scrollWidth > item.clientWidth + 1)
+              .sort((a, b) => b.right - a.right)
               .slice(0, 20);
             return { viewportWidth: innerWidth, documentWidth: document.documentElement.scrollWidth, offenders };
           });
