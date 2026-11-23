@@ -14,6 +14,8 @@ declare
   v_actor uuid := gen_random_uuid();
   v_order_a uuid;
   v_order_b uuid;
+  v_order_inactive uuid;
+  v_order_unmembered uuid;
   v_result jsonb;
 begin
   insert into public.users(id,active) values (v_actor,true);
@@ -111,7 +113,46 @@ begin
     raise exception 'Authorized same-tenant order transition failed: %',v_result;
   end if;
 
-  if (select count(*) from public.orders where restaurant_id=v_restaurant_a)<>1
+  -- Deactivated application users must lose operational access immediately.
+  v_result:=public.romano_create_qr_order(
+    repeat('a',64),'fa','tenant-a-inactive-user-01',repeat('f',64),
+    '[{"productId":"tenant-a-product","quantity":1,"modifiers":[]}]'::jsonb,null
+  );
+  v_order_inactive:=(v_result->>'id')::uuid;
+  update public.users set active=false where id=v_actor;
+  begin
+    perform public.romano_transition_order(
+      v_order_inactive,1,'accepted',v_actor,'staff',null,'{"source":"inactive-user-smoke"}'::jsonb
+    );
+    raise exception 'A deactivated user was allowed to transition an order';
+  exception when insufficient_privilege then
+    null;
+  end;
+  if (select status from public.orders where id=v_order_inactive)<>'submitted' then
+    raise exception 'Deactivated user mutated an order';
+  end if;
+
+  -- Removing a tenant membership must revoke access even if the Auth user remains active.
+  update public.users set active=true where id=v_actor;
+  delete from public.restaurant_memberships where restaurant_id=v_restaurant_a and user_id=v_actor;
+  v_result:=public.romano_create_qr_order(
+    repeat('a',64),'fa','tenant-a-unmembered-user-01',repeat('g',64),
+    '[{"productId":"tenant-a-product","quantity":1,"modifiers":[]}]'::jsonb,null
+  );
+  v_order_unmembered:=(v_result->>'id')::uuid;
+  begin
+    perform public.romano_transition_order(
+      v_order_unmembered,1,'accepted',v_actor,'staff',null,'{"source":"removed-membership-smoke"}'::jsonb
+    );
+    raise exception 'A user without tenant membership was allowed to transition an order';
+  exception when insufficient_privilege then
+    null;
+  end;
+  if (select status from public.orders where id=v_order_unmembered)<>'submitted' then
+    raise exception 'User without tenant membership mutated an order';
+  end if;
+
+  if (select count(*) from public.orders where restaurant_id=v_restaurant_a)<>3
      or (select count(*) from public.orders where restaurant_id=v_restaurant_b)<>1 then
     raise exception 'Tenant order counts changed unexpectedly';
   end if;
