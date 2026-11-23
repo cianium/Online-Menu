@@ -36,13 +36,17 @@ function randomToken(bytes = 24) {
   const buf = crypto.getRandomValues(new Uint8Array(bytes));
   return btoa(String.fromCharCode(...buf)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
+async function sha256Hex(value: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
+}
 function reply(data: unknown, id: string, status = 200, setCookies: string[] = []) {
   const h = new Headers({ "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" });
   for (const value of setCookies) h.append("set-cookie", value);
   return new Response(JSON.stringify({ data, error: null, requestId: id }), { status, headers: h });
 }
-function failure(code: string, message: string, id: string, status = 400, setCookies: string[] = []) {
-  const h = new Headers({ "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" });
+function failure(code: string, message: string, id: string, status = 400, setCookies: string[] = [], extraHeaders: HeadersInit = {}) {
+  const h = new Headers({ "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", ...extraHeaders });
   for (const value of setCookies) h.append("set-cookie", value);
   return new Response(JSON.stringify({ data: null, error: { code, message }, requestId: id }), { status, headers: h });
 }
@@ -402,9 +406,18 @@ Deno.serve(async req => {
       if (!body || typeof body.email !== "string" || typeof body.password !== "string" ||
         body.email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email) ||
         body.password.length < 8 || body.password.length > 128) return failure("VALIDATION_ERROR","Invalid credentials.",id,400);
+      const emailHash = await sha256Hex(body.email.trim().toLowerCase());
+      const {data:limit,error:limitError} = await service.rpc("romano_consume_admin_login_attempt",{p_email_hash:emailHash});
+      if (limitError) throw limitError;
+      if (limit?.allowed !== true) {
+        const retryAfter = Math.max(1,Number(limit?.retryAfter)||900);
+        return failure("LOGIN_RATE_LIMITED","Too many login attempts. Try again later.",id,429,[],{"retry-after":String(retryAfter)});
+      }
       const anonClient = createClient(url!,anon!,{auth:{persistSession:false,autoRefreshToken:false}});
       const {data,error} = await anonClient.auth.signInWithPassword({email:body.email,password:body.password});
       if (error || !data.user || !data.session) return failure("INVALID_CREDENTIALS","Email or password is incorrect.",id,401);
+      const {error:clearLimitError} = await service.rpc("romano_clear_admin_login_rate_limit",{p_email_hash:emailHash});
+      if (clearLimitError) console.error("admin login rate-limit reset failed",{requestId:id});
       const p = await principal(data.user.id);
       if (!p || !p.memberships.length) return failure("FORBIDDEN","No restaurant access.",id,403);
       const nextCsrf = randomToken();
