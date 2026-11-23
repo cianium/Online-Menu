@@ -435,12 +435,12 @@ Deno.serve(async req => {
       if (jar.romano_access && jar.romano_refresh) {
         const logoutClient = createClient(url!,anon!,{auth:{persistSession:false,autoRefreshToken:false}});
         const {error:sessionError} = await logoutClient.auth.setSession({
-          access_token:decodeURIComponent(jar.romano_access),
-          refresh_token:decodeURIComponent(jar.romano_refresh)
+          access_token:jar.romano_access,
+          refresh_token:jar.romano_refresh
         });
         if (sessionError) {
           const status = Number(sessionError.status)||0;
-          if (status===0 || status>=500) {
+          if (![400,401,403,404].includes(status)) {
             return failure("LOGOUT_UNAVAILABLE","Could not securely end this session. Please try again.",id,503);
           }
           // Invalid/expired refresh credentials already cannot establish a live session.
