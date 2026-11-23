@@ -35,7 +35,7 @@ begin
   perform pg_advisory_xact_lock(hashtextextended(p_email_hash, 0));
 
   -- Opportunistic bounded cleanup avoids an ever-growing table without a cron dependency.
-  if mod(abs(hashtextextended(p_email_hash, 0)), 100) = 0 then
+  if mod(hashtextextended(p_email_hash, 0) % 100 + 100, 100) = 0 then
     delete from public.admin_login_rate_limits
      where updated_at < v_now - interval '1 day';
   end if;
