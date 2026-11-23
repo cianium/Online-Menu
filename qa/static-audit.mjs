@@ -130,7 +130,7 @@ check(read("supabase/functions/romano-admin/index.ts").includes("@supabase/supab
 const adminFunction = read("supabase/functions/romano-admin/index.ts");
 const logoutRoute = adminFunction.indexOf('if (path === "/auth/logout" && req.method === "POST")');
 const sessionResolution = adminFunction.indexOf("const p = await session(req,jar,newCookies);");
-check(/auth\\.admin\\.signOut\\(accessToken,"local"\\)/.test(adminFunction), "Admin logout must revoke the active JWT with local scope before refreshing.");
+check(/auth\.admin\.signOut\(accessToken,"local"\)/.test(adminFunction), "Admin logout must revoke the active JWT with local scope before refreshing.");
 check(logoutRoute >= 0 && logoutRoute < sessionResolution, "Admin logout must revoke its own session before ordinary session refresh.");
 check(/auth\.setSession\(\{[\s\S]{0,1000}auth\.signOut\(\{scope:\s*"local"\}\)/.test(adminFunction), "Admin logout must revoke the current Supabase refresh session with local scope.");
 check(!/auth\.signOut\(\s*\)/.test(adminFunction) && !/auth\.signOut\(\{scope:\s*"global"\}\)/.test(adminFunction), "Admin logout must never revoke all user devices implicitly.");
