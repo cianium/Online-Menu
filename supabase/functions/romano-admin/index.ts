@@ -76,15 +76,51 @@ async function principal(userId: string): Promise<Principal | null> {
   const { data, error } = await service.from("users").select("id,email,display_name,active").eq("id",userId).maybeSingle();
   if (error) throw error;
   if (!data?.active) return null;
-  return { id: data.id, email: data.email, display_name: data.display_name, memberships: await memberships(data.id) };
+  const activeMemberships = await memberships(data.id);
+  if (!activeMemberships.length) return null;
+  return { id: data.id, email: data.email, display_name: data.display_name, memberships: activeMemberships };
+}
+function sessionIdFromJwt(token: string): string | null {
+  const payload = token.split(".")[1];
+  if (!payload) return null;
+  try {
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=")));
+    const value = decoded?.session_id;
+    return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+      ? value : null;
+  } catch {
+    return null;
+  }
+}
+async function authSessionIsActive(userId: string, token: string) {
+  const sessionId = sessionIdFromJwt(token);
+  if (!sessionId) return false;
+  const { data, error } = await service.rpc("romano_is_auth_session_active", {
+    p_user_id: userId,
+    p_session_id: sessionId
+  });
+  if (error) throw error;
+  return data === true;
 }
 async function session(req: Request, jar: Record<string, string>, setCookies: string[]) {
   let token = jar.romano_access;
   if (token) {
     const { data, error } = await service.auth.getUser(token);
-    if (!error && data.user) return principal(data.user.id);
+    if (!error && data.user) {
+      if (!await authSessionIsActive(data.user.id, token)) {
+        setCookies.push(...clearAuth());
+        return null;
+      }
+      const currentPrincipal = await principal(data.user.id);
+      if (!currentPrincipal) setCookies.push(...clearAuth());
+      return currentPrincipal;
+    }
   }
-  if (!jar.romano_refresh) return null;
+  if (!jar.romano_refresh) {
+    if (token) setCookies.push(...clearAuth());
+    return null;
+  }
   const anonClient = createClient(url!, anon!, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await anonClient.auth.refreshSession({ refresh_token: jar.romano_refresh });
   if (error || !data.session || !data.user) {
@@ -92,9 +128,18 @@ async function session(req: Request, jar: Record<string, string>, setCookies: st
     return null;
   }
   token = data.session.access_token;
+  if (!await authSessionIsActive(data.user.id, token)) {
+    setCookies.push(...clearAuth());
+    return null;
+  }
+  const refreshedPrincipal = await principal(data.user.id);
+  if (!refreshedPrincipal) {
+    setCookies.push(...clearAuth());
+    return null;
+  }
   setCookies.push(cookie("romano_access", token, true, data.session.expires_in || 3600));
   setCookies.push(cookie("romano_refresh", data.session.refresh_token, true, 60 * 60 * 24 * 30));
-  return principal(data.user.id);
+  return refreshedPrincipal;
 }
 function resolveMember(p: Principal, explicit?: string, minRole = "viewer") {
   const m = explicit ? p.memberships.find(m => m.restaurant_id === explicit) : p.memberships[0];
