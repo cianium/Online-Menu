@@ -273,8 +273,8 @@ html[dir="rtl"] .nav-item.is-active { box-shadow: inset -3px 0 0 var(--admin-acc
 .admin-status-badge.is-inactive { background: rgba(215,127,120,.1); color: #e5a09a; }
 .admin-product-actions, .admin-category-actions { gap: 6px; }
 .icon-button {
-  min-width: 38px;
-  min-height: 38px;
+  min-width: 40px;
+  min-height: 40px;
   border: 1px solid rgba(255,255,255,.07);
   border-radius: 9px;
   background: rgba(255,255,255,.025);
@@ -373,7 +373,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .admin-category-card { align-items: center; gap: 8px; padding: 11px; }
   .category-admin-info { gap: 8px; }
   .category-admin-image { width: 46px; height: 46px; }
-  .admin-category-actions .icon-button { min-width: 35px; }
+  .admin-category-actions .icon-button { min-width: 40px; min-height: 40px; }
   .settings-form { padding: 14px; }
   .form-grid { grid-template-columns: 1fr; }
 }
