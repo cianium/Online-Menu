@@ -363,7 +363,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .admin-quick-actions { grid-template-columns: 1fr; }
   .dashboard-grid { grid-template-columns: 1fr; }
   .toolbar, .admin-section-toolbar { display: grid; grid-template-columns: 1fr; }
-  .toolbar > *, .admin-section-toolbar > * { width: 100%; min-width: 0; }
+  .toolbar > :not(.sr-only), .admin-section-toolbar > :not(.sr-only) { width: 100%; min-width: 0; }
   .products-admin-list { gap: 10px; }
   .admin-product-card { grid-template-columns: auto minmax(0,1fr); gap: 10px; padding: 12px; }
   .admin-product-main { gap: 10px; }
