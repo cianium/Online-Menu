@@ -49,6 +49,7 @@ check(read("admin/index.html").indexOf('href="admin-polish.css"') > read("admin/
 const adminPolish = read("admin/admin-polish.css");
 check(adminPolish.includes('html[dir="rtl"] .nav-item.is-active') && adminPolish.includes('html[dir="ltr"] .nav-item:hover'), "Admin visual polish must include explicit RTL and LTR navigation handling.");
 check(adminPolish.includes("@media (max-width: 760px)") && adminPolish.includes("@media (max-width: 420px)"), "Admin visual polish is missing mobile breakpoints.");
+check(/\.toolbar\s*>\s*:not\(\.sr-only\)/.test(adminPolish) && !/\.toolbar\s*>\s*\*/.test(adminPolish), "Mobile toolbar sizing must not widen visually hidden accessibility labels.");
 check(adminPolish.includes("@media (prefers-reduced-motion: reduce)"), "Admin visual polish must respect reduced-motion preferences.");
 check(/\.icon-button\s*\{[^}]*min-width:\s*40px;[^}]*min-height:\s*40px;/s.test(adminPolish), "Admin visual polish must preserve the existing 40px icon-action target size.");
 check(/\.admin-category-actions \.icon-button\s*\{[^}]*min-width:\s*40px;[^}]*min-height:\s*40px;/s.test(adminPolish), "Admin category actions must preserve 40px touch targets.");
