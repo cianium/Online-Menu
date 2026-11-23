@@ -1,0 +1,51 @@
+name: Admin browser QA
+
+on:
+  pull_request:
+    paths:
+      - "admin/**"
+      - "qa/admin-browser.test.cjs"
+      - ".github/workflows/admin-browser.yml"
+      - "package.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  admin-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Start local static preview
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/admin-preview.log 2>&1 &
+          echo $! > /tmp/admin-preview.pid
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8765/admin/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/admin-preview.log
+          exit 1
+      - name: Run admin browser regression suite
+        env:
+          ADMIN_TEST_URL: http://127.0.0.1:8765
+        run: |
+          CHROMIUM_EXECUTABLE_PATH="$(node -p "require('playwright').chromium.executablePath()")" npm run qa:browser
+      - name: Upload browser screenshots and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-browser-qa
+          path: docs/qa/
+          if-no-files-found: ignore

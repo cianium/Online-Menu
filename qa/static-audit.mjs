@@ -9,7 +9,7 @@ const required = [
   "index.html", "js/app.js", "js/i18n.js", "js/money.js", "js/data.js", "js/commerce.js", "css/commerce.css",
   "css/style.css", "css/romano.css", "manifest.webmanifest", "sw.js",
   "admin/index.html", "admin/api.js", "admin/admin.js", "admin/admin-i18n.js", "admin/rv4-admin-plus.js",
-  "admin/admin.css", "admin/rv4-admin-plus.css", "admin/orders.js", "admin/orders.css", "admin/vendor/qrcode.min.js", "admin/vendor/QRCODE_LICENSE.txt"
+  "admin/admin.css", "admin/admin-polish.css", "admin/rv4-admin-plus.css", "admin/orders.js", "admin/orders.css", "admin/vendor/qrcode.min.js", "admin/vendor/QRCODE_LICENSE.txt"
 ];
 
 function read(rel) { return fs.readFileSync(path.join(ROOT, rel), "utf8"); }
@@ -45,6 +45,15 @@ check(read("js/i18n.js").includes('const LANGUAGES = ["fa", "en", "tr", "ar"]'),
 check(read("index.html").indexOf('js/money.js') < read("index.html").indexOf('js/app.js'), "Money formatter must load before customer app code.");
 check(read("admin/index.html").includes('../js/money.js'), "Admin does not load the shared money formatter.");
 check(read("admin/index.html").includes("admin-language-toggle"), "Admin language toggle is missing.");
+check(read("admin/index.html").indexOf('href="admin-polish.css"') > read("admin/index.html").indexOf('href="orders.css"'), "Admin visual polish stylesheet must load after the existing admin styles.");
+const adminPolish = read("admin/admin-polish.css");
+check(adminPolish.includes('html[dir="rtl"] .nav-item.is-active') && adminPolish.includes('html[dir="ltr"] .nav-item:hover'), "Admin visual polish must include explicit RTL and LTR navigation handling.");
+check(adminPolish.includes("@media (max-width: 760px)") && adminPolish.includes("@media (max-width: 420px)"), "Admin visual polish is missing mobile breakpoints.");
+check(/\.toolbar\s*>\s*:not\(\.sr-only\)/.test(adminPolish) && !/\.toolbar\s*>\s*\*/.test(adminPolish), "Mobile toolbar sizing must not widen visually hidden accessibility labels.");
+check(adminPolish.includes("@media (prefers-reduced-motion: reduce)"), "Admin visual polish must respect reduced-motion preferences.");
+check(/\.icon-button\s*\{[^}]*min-width:\s*40px;[^}]*min-height:\s*40px;/s.test(adminPolish), "Admin visual polish must preserve the existing 40px icon-action target size.");
+check(/\.admin-category-actions \.icon-button\s*\{[^}]*min-width:\s*40px;[^}]*min-height:\s*40px;/s.test(adminPolish), "Admin category actions must preserve 40px touch targets.");
+
 check(read("admin/index.html").includes("نسخه vq.3"), "Admin footer version is not vq.3.");
 check(!/const Storage\s*=/.test(read("admin/admin.js")), "Admin custom storage object still shadows the browser Storage type.");
 check(read("admin/admin.js").includes('const instagram ='), "Admin settings Instagram field is not declared.");

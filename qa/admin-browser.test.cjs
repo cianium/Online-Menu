@@ -33,7 +33,28 @@ async function check(name, action) { await action(); results.push(name); console
           await page.evaluate(section => navigateTo(section),section);
           await page.waitForTimeout(50);
           if(width < 1000) assert.equal(await page.locator("#sidebar").isVisible(),false);
-          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth+1), false, `${lang}/${width}/${section}`);
+          const overflow = await page.evaluate(() => {
+            const offenders = [...document.querySelectorAll('body *')].map(node => {
+              const rect = node.getBoundingClientRect();
+              const style = getComputedStyle(node);
+              return {
+                tag: node.tagName.toLowerCase(),
+                id: node.id,
+                className: typeof node.className === 'string' ? node.className : '',
+                left: Math.round(rect.left),
+                right: Math.round(rect.right),
+                width: Math.round(rect.width),
+                scrollWidth: node.scrollWidth,
+                clientWidth: node.clientWidth,
+                display: style.display,
+                position: style.position
+              };
+            }).filter(item => item.right > innerWidth + 1 || item.left < -1 || item.scrollWidth > item.clientWidth + 1)
+              .sort((a, b) => b.right - a.right)
+              .slice(0, 20);
+            return { viewportWidth: innerWidth, documentWidth: document.documentElement.scrollWidth, offenders };
+          });
+          assert.equal(overflow.documentWidth > overflow.viewportWidth + 1, false, `${lang}/${width}/${section}: ${JSON.stringify(overflow)}`);
         }
       }
     }
