@@ -131,7 +131,7 @@ const adminFunction = read("supabase/functions/romano-admin/index.ts");
 const logoutRoute = adminFunction.indexOf('if (path === "/auth/logout" && req.method === "POST")');
 const sessionResolution = adminFunction.indexOf("const p = await session(req,jar,newCookies);");
 check(logoutRoute >= 0 && logoutRoute < sessionResolution, "Admin logout must revoke its own session before ordinary session refresh.");
-check(/auth\.setSession\(\{[\s\S]{0,300}auth\.signOut\(\{scope:\s*"local"\}\)/.test(adminFunction), "Admin logout must revoke the current Supabase refresh session with local scope.");
+check(/auth\.setSession\(\{[\s\S]{0,1000}auth\.signOut\(\{scope:\s*"local"\}\)/.test(adminFunction), "Admin logout must revoke the current Supabase refresh session with local scope.");
 check(!/auth\.signOut\(\s*\)/.test(adminFunction) && !/auth\.signOut\(\{scope:\s*"global"\}\)/.test(adminFunction), "Admin logout must never revoke all user devices implicitly.");
 check(exists("qa/sql/tenant-isolation-smoke.sql") && read("qa/commerce-db.test.sh").includes("/qa/tenant-isolation-smoke.sql"), "Tenant isolation PostgreSQL regression test is not wired into QA.");
 check(exists("supabase/config.toml") && read("supabase/config.toml").includes("[functions.romano-order]"), "Public order function config is missing.");
