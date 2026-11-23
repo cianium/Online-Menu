@@ -143,6 +143,12 @@ check(read("supabase/functions/romano-payment/index.ts").includes("/pg/v4/paymen
 check(read("admin/index.html").includes('id="page-orders"'), "Operations/KDS page is missing.");
 check(read("js/app.js").includes('<span>${escapeHTML(window.ROMANO_I18N?.ui?.("signatureButton")'), "Product cards are missing their visible localized CTA.");
 
+
+check(adminFunction.includes("romano_is_auth_session_active") && adminFunction.includes("sessionIdFromJwt"), "Admin protected routes must validate JWT session_id against auth.sessions.");
+check(/if \(!data\?\.active\) return null;[\\s\\S]{0,300}if \(!activeMemberships\.length\) return null;/.test(adminFunction), "Deactivated users and users without restaurant memberships must be denied.");
+check(/if \(!currentPrincipal\) setCookies\.push\(\.\.\.clearAuth\(\)\)/.test(adminFunction), "Inactive admin principals must have stale auth cookies cleared.");
+check(read("supabase/migrations/20261124090000_admin_login_rate_limit.sql").includes("romano_is_auth_session_active") && read("qa/sql/admin-login-rate-limit-smoke.sql").includes("deleted/revoked Supabase Auth session"), "Supabase session revocation regression test is missing.");
+
 console.log("RAMEN static audit");
 console.log(`Root: ${ROOT}`);
 console.log(`Failures: ${failures.length}`);
@@ -151,8 +157,3 @@ console.log(`Warnings: ${warnings.length}`);
 for (const item of warnings) console.log(`WARN  ${item}`);
 
 if (failures.length) process.exit(1);
-
-check(adminFunction.includes("romano_is_auth_session_active") && adminFunction.includes("sessionIdFromJwt"), "Admin protected routes must validate JWT session_id against auth.sessions.");
-check(/if \(!data\?\.active\) return null;[\\s\\S]{0,300}if \(!activeMemberships\.length\) return null;/.test(adminFunction), "Deactivated users and users without restaurant memberships must be denied.");
-check(/if \(!currentPrincipal\) setCookies\.push\(\.\.\.clearAuth\(\)\)/.test(adminFunction), "Inactive admin principals must have stale auth cookies cleared.");
-check(read("supabase/migrations/20261124090000_admin_login_rate_limit.sql").includes("romano_is_auth_session_active") && read("qa/sql/admin-login-rate-limit-smoke.sql").includes("deleted/revoked Supabase Auth session"), "Supabase session revocation regression test is missing.");
