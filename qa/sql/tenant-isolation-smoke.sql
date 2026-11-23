@@ -48,11 +48,15 @@ begin
     restaurant_id,slug,name,qr_ordering_enabled,currency_code,
     currency_exponent,menu_price_to_minor_multiplier
   ) values
-    (v_restaurant_a,'main','Tenant A Main',true,'IRR',0,10),
-    (v_restaurant_b,'main','Tenant B Main',true,'IRR',0,10)
+    (v_restaurant_a,'main','Tenant A Main',true,'IRR',0,10)
   returning id into v_branch_a;
 
-  select id into v_branch_b from public.branches where restaurant_id=v_restaurant_b;
+  insert into public.branches(
+    restaurant_id,slug,name,qr_ordering_enabled,currency_code,
+    currency_exponent,menu_price_to_minor_multiplier
+  ) values
+    (v_restaurant_b,'main','Tenant B Main',true,'IRR',0,10)
+  returning id into v_branch_b;
 
   insert into public.restaurant_tables(restaurant_id,branch_id,code,display_name)
   values (v_restaurant_a,v_branch_a,'A1','A Table') returning id into v_table_a;
@@ -88,7 +92,7 @@ begin
   -- A manager/owner of tenant A must not transition an order belonging to tenant B.
   begin
     perform public.romano_transition_order(
-      v_order_b,0,'accepted',v_actor,'staff',null,'{"source":"tenant-isolation-smoke"}'::jsonb
+      v_order_b,1,'accepted',v_actor,'staff',null,'{"source":"tenant-isolation-smoke"}'::jsonb
     );
     raise exception 'Tenant A owner was allowed to transition a tenant B order';
   exception when insufficient_privilege then
@@ -101,7 +105,7 @@ begin
 
   -- Positive control: the same actor can operate on their own tenant's order.
   v_result:=public.romano_transition_order(
-    v_order_a,0,'accepted',v_actor,'staff',null,'{"source":"tenant-isolation-smoke"}'::jsonb
+    v_order_a,1,'accepted',v_actor,'staff',null,'{"source":"tenant-isolation-smoke"}'::jsonb
   );
   if v_result->>'status'<>'accepted' then
     raise exception 'Authorized same-tenant order transition failed: %',v_result;
