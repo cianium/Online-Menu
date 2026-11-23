@@ -59,4 +59,5 @@ docker exec "$qa_container" sh -c '
   psql -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -f /qa/commerce-smoke.sql
   psql -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -f /qa/table-ops-smoke.sql
   psql -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -f /qa/admin-login-rate-limit-smoke.sql
+  psql -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -f /qa/tenant-isolation-smoke.sql
 '
