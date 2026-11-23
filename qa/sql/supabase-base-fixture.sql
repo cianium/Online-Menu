@@ -1,4 +1,11 @@
 -- Minimal pre-order Supabase schema used only by isolated PostgreSQL QA.
+
+create schema if not exists auth;
+create table auth.sessions (
+  id uuid primary key,
+  user_id uuid not null,
+  not_after timestamptz
+);
 -- The production catalog schema predates this repository's order migrations.
 
 do $$

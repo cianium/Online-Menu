@@ -36,13 +36,17 @@ function randomToken(bytes = 24) {
   const buf = crypto.getRandomValues(new Uint8Array(bytes));
   return btoa(String.fromCharCode(...buf)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
+async function sha256Hex(value: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
+}
 function reply(data: unknown, id: string, status = 200, setCookies: string[] = []) {
   const h = new Headers({ "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" });
   for (const value of setCookies) h.append("set-cookie", value);
   return new Response(JSON.stringify({ data, error: null, requestId: id }), { status, headers: h });
 }
-function failure(code: string, message: string, id: string, status = 400, setCookies: string[] = []) {
-  const h = new Headers({ "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" });
+function failure(code: string, message: string, id: string, status = 400, setCookies: string[] = [], extraHeaders: HeadersInit = {}) {
+  const h = new Headers({ "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", ...extraHeaders });
   for (const value of setCookies) h.append("set-cookie", value);
   return new Response(JSON.stringify({ data: null, error: { code, message }, requestId: id }), { status, headers: h });
 }
@@ -72,15 +76,51 @@ async function principal(userId: string): Promise<Principal | null> {
   const { data, error } = await service.from("users").select("id,email,display_name,active").eq("id",userId).maybeSingle();
   if (error) throw error;
   if (!data?.active) return null;
-  return { id: data.id, email: data.email, display_name: data.display_name, memberships: await memberships(data.id) };
+  const activeMemberships = await memberships(data.id);
+  if (!activeMemberships.length) return null;
+  return { id: data.id, email: data.email, display_name: data.display_name, memberships: activeMemberships };
+}
+function sessionIdFromJwt(token: string): string | null {
+  const payload = token.split(".")[1];
+  if (!payload) return null;
+  try {
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=")));
+    const value = decoded?.session_id;
+    return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+      ? value : null;
+  } catch {
+    return null;
+  }
+}
+async function authSessionIsActive(userId: string, token: string) {
+  const sessionId = sessionIdFromJwt(token);
+  if (!sessionId) return false;
+  const { data, error } = await service.rpc("romano_is_auth_session_active", {
+    p_user_id: userId,
+    p_session_id: sessionId
+  });
+  if (error) throw error;
+  return data === true;
 }
 async function session(req: Request, jar: Record<string, string>, setCookies: string[]) {
   let token = jar.romano_access;
   if (token) {
     const { data, error } = await service.auth.getUser(token);
-    if (!error && data.user) return principal(data.user.id);
+    if (!error && data.user) {
+      if (!await authSessionIsActive(data.user.id, token)) {
+        setCookies.push(...clearAuth());
+        return null;
+      }
+      const currentPrincipal = await principal(data.user.id);
+      if (!currentPrincipal) setCookies.push(...clearAuth());
+      return currentPrincipal;
+    }
   }
-  if (!jar.romano_refresh) return null;
+  if (!jar.romano_refresh) {
+    if (token) setCookies.push(...clearAuth());
+    return null;
+  }
   const anonClient = createClient(url!, anon!, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await anonClient.auth.refreshSession({ refresh_token: jar.romano_refresh });
   if (error || !data.session || !data.user) {
@@ -88,9 +128,18 @@ async function session(req: Request, jar: Record<string, string>, setCookies: st
     return null;
   }
   token = data.session.access_token;
+  if (!await authSessionIsActive(data.user.id, token)) {
+    setCookies.push(...clearAuth());
+    return null;
+  }
+  const refreshedPrincipal = await principal(data.user.id);
+  if (!refreshedPrincipal) {
+    setCookies.push(...clearAuth());
+    return null;
+  }
   setCookies.push(cookie("romano_access", token, true, data.session.expires_in || 3600));
   setCookies.push(cookie("romano_refresh", data.session.refresh_token, true, 60 * 60 * 24 * 30));
-  return principal(data.user.id);
+  return refreshedPrincipal;
 }
 function resolveMember(p: Principal, explicit?: string, minRole = "viewer") {
   const m = explicit ? p.memberships.find(m => m.restaurant_id === explicit) : p.memberships[0];
@@ -402,9 +451,18 @@ Deno.serve(async req => {
       if (!body || typeof body.email !== "string" || typeof body.password !== "string" ||
         body.email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email) ||
         body.password.length < 8 || body.password.length > 128) return failure("VALIDATION_ERROR","Invalid credentials.",id,400);
+      const emailHash = await sha256Hex(body.email.trim().toLowerCase());
+      const {data:limit,error:limitError} = await service.rpc("romano_consume_admin_login_attempt",{p_email_hash:emailHash});
+      if (limitError) throw limitError;
+      if (limit?.allowed !== true) {
+        const retryAfter = Math.max(1,Number(limit?.retryAfter)||900);
+        return failure("LOGIN_RATE_LIMITED","Too many login attempts. Try again later.",id,429,[],{"retry-after":String(retryAfter)});
+      }
       const anonClient = createClient(url!,anon!,{auth:{persistSession:false,autoRefreshToken:false}});
       const {data,error} = await anonClient.auth.signInWithPassword({email:body.email,password:body.password});
       if (error || !data.user || !data.session) return failure("INVALID_CREDENTIALS","Email or password is incorrect.",id,401);
+      const {error:clearLimitError} = await service.rpc("romano_clear_admin_login_rate_limit",{p_email_hash:emailHash});
+      if (clearLimitError) console.error("admin login rate-limit reset failed",{requestId:id});
       const p = await principal(data.user.id);
       if (!p || !p.memberships.length) return failure("FORBIDDEN","No restaurant access.",id,403);
       const nextCsrf = randomToken();
@@ -415,6 +473,55 @@ Deno.serve(async req => {
       );
       return reply({ user: { id:p.id,email:p.email,displayName:p.display_name },csrfToken:nextCsrf },id,200,newCookies);
     }
+    if (path === "/auth/logout" && req.method === "POST") {
+      // Revoke this browser session only. Try the current access JWT first;
+      // if it has expired, refresh from the HttpOnly cookie and revoke the new JWT.
+      const accessToken=jar.romano_access;
+      const refreshToken=jar.romano_refresh;
+      if (accessToken) {
+        const {error:directError}=await service.auth.admin.signOut(accessToken,"local");
+        if (directError) {
+          const directStatus=Number(directError.status)||0;
+          if (directStatus===0 || directStatus>=500 || directStatus===403 || directStatus===429) {
+            return failure("LOGOUT_UNAVAILABLE","Could not securely end this session. Please try again.",id,503);
+          }
+          if (refreshToken) {
+            const logoutClient=createClient(url!,anon!,{auth:{persistSession:false,autoRefreshToken:false}});
+            const {error:sessionError}=await logoutClient.auth.setSession({
+              access_token:accessToken,
+              refresh_token:refreshToken
+            });
+            if (sessionError) {
+              const refreshStatus=Number(sessionError.status)||0;
+              if (![400,401,404].includes(refreshStatus)) {
+                return failure("LOGOUT_UNAVAILABLE","Could not securely end this session. Please try again.",id,503);
+              }
+              // Both credentials are invalid/expired; this session cannot refresh.
+            } else {
+              const {error:revokeError}=await logoutClient.auth.signOut({scope:"local"});
+              if (revokeError) {
+                return failure("LOGOUT_UNAVAILABLE","Could not securely end this session. Please try again.",id,503);
+              }
+            }
+          }
+        }
+      } else if (refreshToken) {
+        const logoutClient=createClient(url!,anon!,{auth:{persistSession:false,autoRefreshToken:false}});
+        const {data:refreshed,error:refreshError}=await logoutClient.auth.refreshSession({refresh_token:refreshToken});
+        if (refreshError) {
+          const refreshStatus=Number(refreshError.status)||0;
+          if (![400,401,404].includes(refreshStatus)) {
+            return failure("LOGOUT_UNAVAILABLE","Could not securely end this session. Please try again.",id,503);
+          }
+        } else if (refreshed.session) {
+          const {error:revokeError}=await logoutClient.auth.signOut({scope:"local"});
+          if (revokeError) {
+            return failure("LOGOUT_UNAVAILABLE","Could not securely end this session. Please try again.",id,503);
+          }
+        }
+      }
+      return reply({loggedOut:true},id,200,[...newCookies,...clearAuth(),cookie("romano_csrf","",false,0)]);
+    }
     const p = await session(req,jar,newCookies);
     if (path === "/auth/me" && req.method === "GET") {
       return reply(p ? {
@@ -422,9 +529,6 @@ Deno.serve(async req => {
         memberships:p.memberships.map(m=>({restaurantId:m.restaurant_id,role:m.role,slug:m.slug,name:m.name})),
         membership:p.memberships[0]||null
       } : null,id,200,newCookies);
-    }
-    if (path === "/auth/logout" && req.method === "POST") {
-      return reply({loggedOut:true},id,200,[...newCookies,...clearAuth(),cookie("romano_csrf","",false,0)]);
     }
     if (!p) return failure("UNAUTHENTICATED","Authentication required.",id,401,newCookies);
     if (path === "/admin/me" && req.method === "GET") {

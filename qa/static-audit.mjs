@@ -127,6 +127,16 @@ check(read("admin/api.js").includes("HttpOnly") || read("backend/server.mjs").in
 check(exists("supabase/functions/romano-public/index.ts"), "The deployed public Supabase function is not versioned.");
 check(read("supabase/functions/romano-public/index.ts").includes("@supabase/supabase-js@2.118.0"), "Public Supabase function dependency is not pinned.");
 check(read("supabase/functions/romano-admin/index.ts").includes("@supabase/supabase-js@2.118.0"), "Admin Supabase function dependency is not pinned.");
+const adminFunction = read("supabase/functions/romano-admin/index.ts");
+const logoutRoute = adminFunction.indexOf('if (path === "/auth/logout" && req.method === "POST")');
+const sessionResolution = adminFunction.indexOf("const p = await session(req,jar,newCookies);");
+check(/auth\.admin\.signOut\(accessToken,"local"\)/.test(adminFunction), "Admin logout must revoke the active JWT with local scope before refreshing.");
+check(logoutRoute >= 0 && logoutRoute < sessionResolution, "Admin logout must revoke its own session before ordinary session refresh.");
+check(/auth\.setSession\(\{[\s\S]{0,1000}auth\.signOut\(\{scope:\s*"local"\}\)/.test(adminFunction), "Admin logout must revoke the current Supabase refresh session with local scope.");
+check(!/auth\.signOut\(\s*\)/.test(adminFunction) && !/auth\.signOut\(\{scope:\s*"global"\}\)/.test(adminFunction), "Admin logout must never revoke all user devices implicitly.");
+check(exists("qa/sql/tenant-isolation-smoke.sql") && read("qa/commerce-db.test.sh").includes("/qa/tenant-isolation-smoke.sql"), "Tenant isolation PostgreSQL regression test is not wired into QA.");
+check(exists("SECURITY-OPERATIONS.md"), "Security and backup/restore operations runbook is missing.");
+check(read("qa/sql/tenant-isolation-smoke.sql").includes("tenant-scoped audit event") && read("qa/sql/tenant-isolation-smoke.sql").includes("missing row-level security"), "Tenant audit and RLS privilege regression checks are missing.");
 check(exists("supabase/config.toml") && read("supabase/config.toml").includes("[functions.romano-order]"), "Public order function config is missing.");
 check(vercel.rewrites?.some(rule => rule.source === "/api/v1/orders/:path*" && rule.destination.includes("/romano-order/")), "Vercel order API rewrite is missing.");
 check(read("supabase/functions/romano-order/index.ts").includes("HttpOnly; Secure; SameSite=Lax"), "Order session cookie is not hardened.");
@@ -134,6 +144,12 @@ check(vercel.rewrites?.some(rule => rule.source === "/api/v1/payments/:path*" &&
 check(read("supabase/functions/romano-payment/index.ts").includes("/pg/v4/payment/verify.json"), "ZarinPal server-side verification is missing.");
 check(read("admin/index.html").includes('id="page-orders"'), "Operations/KDS page is missing.");
 check(read("js/app.js").includes('<span>${escapeHTML(window.ROMANO_I18N?.ui?.("signatureButton")'), "Product cards are missing their visible localized CTA.");
+
+
+check(adminFunction.includes("romano_is_auth_session_active") && adminFunction.includes("sessionIdFromJwt"), "Admin protected routes must validate JWT session_id against auth.sessions.");
+check(adminFunction.includes("if (!data?.active) return null;") && adminFunction.includes("if (!activeMemberships.length) return null;"), "Deactivated users and users without restaurant memberships must be denied.");
+check(/if \(!currentPrincipal\) setCookies\.push\(\.\.\.clearAuth\(\)\)/.test(adminFunction), "Inactive admin principals must have stale auth cookies cleared.");
+check(read("supabase/migrations/20261124090000_admin_login_rate_limit.sql").includes("romano_is_auth_session_active") && read("qa/sql/admin-login-rate-limit-smoke.sql").includes("deleted/revoked Supabase Auth session"), "Supabase session revocation regression test is missing.");
 
 console.log("RAMEN static audit");
 console.log(`Root: ${ROOT}`);

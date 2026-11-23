@@ -55,6 +55,9 @@ docker exec "$qa_container" sh -c '
   do
     psql -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -f "$migration" >/dev/null
   done
+  psql -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -f /migrations/20261124090000_admin_login_rate_limit.sql
   psql -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -f /qa/commerce-smoke.sql
   psql -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -f /qa/table-ops-smoke.sql
+  psql -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -f /qa/admin-login-rate-limit-smoke.sql
+  psql -v ON_ERROR_STOP=1 -U postgres -d online_menu_qa -f /qa/tenant-isolation-smoke.sql
 '
