@@ -101,3 +101,28 @@ grant execute on function public.romano_clear_admin_login_rate_limit(text) to se
 comment on table public.admin_login_rate_limits is
   'Hashed email keys for durable admin password-login throttling; raw identifiers are never stored.';
 notify pgrst, 'reload schema';
+
+-- Validate the JWT session_id against Supabase Auth's authoritative session table.
+-- This closes the remaining access-token window after local logout or user deletion
+-- for requests mediated by the admin Edge Function.
+create or replace function public.romano_is_auth_session_active(
+  p_user_id uuid,
+  p_session_id uuid
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+      from auth.sessions s
+     where s.id = p_session_id
+       and s.user_id = p_user_id
+       and (s.not_after is null or s.not_after > now())
+  );
+$$;
+
+revoke all on function public.romano_is_auth_session_active(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.romano_is_auth_session_active(uuid, uuid) to service_role;
