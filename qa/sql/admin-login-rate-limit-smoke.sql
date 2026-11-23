@@ -65,7 +65,7 @@ begin
   end if;
 end;
 $$;
-rollback;end;
-$$;
+end;
+$;
 rollback;
 select 'ROMANO admin login rate-limit smoke passed' as result;
