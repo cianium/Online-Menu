@@ -112,6 +112,47 @@ begin
   if v_result->>'status'<>'accepted' then
     raise exception 'Authorized same-tenant order transition failed: %',v_result;
   end if;
+  if not exists(
+    select 1 from public.audit_logs
+     where restaurant_id=v_restaurant_a and actor_user_id=v_actor
+       and action='order.status.changed' and entity_id=v_order_a
+       and metadata->>'toStatus'='accepted'
+  ) then
+    raise exception 'Authorized order transition did not write its tenant-scoped audit event';
+  end if;
+  if exists(
+    select 1 from public.audit_logs
+     where restaurant_id=v_restaurant_b and entity_id=v_order_b
+       and action='order.status.changed'
+  ) then
+    raise exception 'Rejected cross-tenant transition unexpectedly wrote an audit event';
+  end if;
+  if has_function_privilege('anon','public.romano_transition_order(uuid,bigint,text,uuid,text,text,jsonb)','execute')
+     or has_function_privilege('authenticated','public.romano_transition_order(uuid,bigint,text,uuid,text,text,jsonb)','execute')
+     or not has_function_privilege('service_role','public.romano_transition_order(uuid,bigint,text,uuid,text,text,jsonb)','execute') then
+    raise exception 'Order transition RPC privileges are too broad or service role grant is missing';
+  end if;
+  if exists(
+    select 1 from (values
+      ('branches'),('branch_staff_memberships'),('restaurant_tables'),('table_sessions'),
+      ('table_session_tokens'),('branch_order_counters'),('orders'),('order_items'),
+      ('order_events'),('integration_outbox'),('branch_payment_gateways'),('payment_attempts')
+    ) as expected(table_name)
+    join pg_class c on c.oid=to_regclass('public.'||expected.table_name)
+    where not c.relrowsecurity
+  ) then
+    raise exception 'A protected commerce table is missing row-level security';
+  end if;
+  if exists(
+    select 1 from information_schema.role_table_grants
+     where table_schema='public'
+       and table_name in ('branches','branch_staff_memberships','restaurant_tables','table_sessions',
+         'table_session_tokens','branch_order_counters','orders','order_items','order_events',
+         'integration_outbox','branch_payment_gateways','payment_attempts')
+       and grantee in ('anon','authenticated')
+  ) then
+    raise exception 'Browser roles unexpectedly have direct privileges on commerce tables';
+  end if;
 
   -- Deactivated application users must lose operational access immediately.
   v_result:=public.romano_create_qr_order(
