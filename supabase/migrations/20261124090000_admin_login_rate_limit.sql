@@ -8,6 +8,9 @@ create table public.admin_login_rate_limits (
   updated_at timestamptz not null default now()
 );
 
+create index admin_login_rate_limits_updated_at_idx
+  on public.admin_login_rate_limits(updated_at);
+
 alter table public.admin_login_rate_limits enable row level security;
 revoke all on table public.admin_login_rate_limits from public, anon, authenticated;
 grant select, insert, update, delete on table public.admin_login_rate_limits to service_role;
@@ -20,7 +23,7 @@ set search_path = ''
 as $$
 declare
   v_row public.admin_login_rate_limits%rowtype;
-  v_now timestamptz := now();
+  v_now timestamptz := clock_timestamp();
   v_window interval := interval '15 minutes';
   v_limit smallint := 8;
   v_retry integer;
@@ -30,6 +33,12 @@ begin
   end if;
 
   perform pg_advisory_xact_lock(hashtextextended(p_email_hash, 0));
+
+  -- Opportunistic bounded cleanup avoids an ever-growing table without a cron dependency.
+  if mod(abs(hashtextextended(p_email_hash, 0)), 100) = 0 then
+    delete from public.admin_login_rate_limits
+     where updated_at < v_now - interval '1 day';
+  end if;
 
   select * into v_row
     from public.admin_login_rate_limits
