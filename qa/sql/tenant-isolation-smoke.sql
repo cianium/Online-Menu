@@ -177,7 +177,7 @@ begin
   update public.users set active=true where id=v_actor;
   delete from public.restaurant_memberships where restaurant_id=v_restaurant_a and user_id=v_actor;
   v_result:=public.romano_create_qr_order(
-    repeat('a',64),'fa','tenant-a-unmembered-user-01',repeat('g',64),
+    repeat('a',64),'fa','tenant-a-unmembered-user-01',repeat('b',64),
     '[{"productId":"tenant-a-product","quantity":1,"modifiers":[]}]'::jsonb,null
   );
   v_order_unmembered:=(v_result->>'id')::uuid;
