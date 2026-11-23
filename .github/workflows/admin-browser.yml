@@ -40,7 +40,6 @@ jobs:
       - name: Run admin browser regression suite
         env:
           ADMIN_TEST_URL: http://127.0.0.1:8765
-          CHROMIUM_EXECUTABLE_PATH: ${{ steps.playwright.outputs.executable_path }}
         run: |
           CHROMIUM_EXECUTABLE_PATH="$(node -p "require('playwright').chromium.executablePath()")" npm run qa:browser
       - name: Upload browser screenshots and results
