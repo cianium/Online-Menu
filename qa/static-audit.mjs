@@ -135,6 +135,8 @@ check(logoutRoute >= 0 && logoutRoute < sessionResolution, "Admin logout must re
 check(/auth\.setSession\(\{[\s\S]{0,1000}auth\.signOut\(\{scope:\s*"local"\}\)/.test(adminFunction), "Admin logout must revoke the current Supabase refresh session with local scope.");
 check(!/auth\.signOut\(\s*\)/.test(adminFunction) && !/auth\.signOut\(\{scope:\s*"global"\}\)/.test(adminFunction), "Admin logout must never revoke all user devices implicitly.");
 check(exists("qa/sql/tenant-isolation-smoke.sql") && read("qa/commerce-db.test.sh").includes("/qa/tenant-isolation-smoke.sql"), "Tenant isolation PostgreSQL regression test is not wired into QA.");
+check(exists("SECURITY-OPERATIONS.md"), "Security and backup/restore operations runbook is missing.");
+check(read("qa/sql/tenant-isolation-smoke.sql").includes("tenant-scoped audit event") && read("qa/sql/tenant-isolation-smoke.sql").includes("missing row-level security"), "Tenant audit and RLS privilege regression checks are missing.");
 check(exists("supabase/config.toml") && read("supabase/config.toml").includes("[functions.romano-order]"), "Public order function config is missing.");
 check(vercel.rewrites?.some(rule => rule.source === "/api/v1/orders/:path*" && rule.destination.includes("/romano-order/")), "Vercel order API rewrite is missing.");
 check(read("supabase/functions/romano-order/index.ts").includes("HttpOnly; Secure; SameSite=Lax"), "Order session cookie is not hardened.");
@@ -145,7 +147,7 @@ check(read("js/app.js").includes('<span>${escapeHTML(window.ROMANO_I18N?.ui?.("s
 
 
 check(adminFunction.includes("romano_is_auth_session_active") && adminFunction.includes("sessionIdFromJwt"), "Admin protected routes must validate JWT session_id against auth.sessions.");
-check(/if \(!data\?\.active\) return null;[\\s\\S]{0,300}if \(!activeMemberships\.length\) return null;/.test(adminFunction), "Deactivated users and users without restaurant memberships must be denied.");
+check(adminFunction.includes("if (!data?.active) return null;") && adminFunction.includes("if (!activeMemberships.length) return null;"), "Deactivated users and users without restaurant memberships must be denied.");
 check(/if \(!currentPrincipal\) setCookies\.push\(\.\.\.clearAuth\(\)\)/.test(adminFunction), "Inactive admin principals must have stale auth cookies cleared.");
 check(read("supabase/migrations/20261124090000_admin_login_rate_limit.sql").includes("romano_is_auth_session_active") && read("qa/sql/admin-login-rate-limit-smoke.sql").includes("deleted/revoked Supabase Auth session"), "Supabase session revocation regression test is missing.");
 
