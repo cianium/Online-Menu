@@ -428,6 +428,31 @@ Deno.serve(async req => {
       );
       return reply({ user: { id:p.id,email:p.email,displayName:p.display_name },csrfToken:nextCsrf },id,200,newCookies);
     }
+    if (path === "/auth/logout" && req.method === "POST") {
+      // Restore the cookie-backed session first (refreshing it when necessary),
+      // then revoke only this session's refresh token. Never use the default
+      // global scope: staff may be signed in on other devices.
+      if (jar.romano_access && jar.romano_refresh) {
+        const logoutClient = createClient(url!,anon!,{auth:{persistSession:false,autoRefreshToken:false}});
+        const {error:sessionError} = await logoutClient.auth.setSession({
+          access_token:decodeURIComponent(jar.romano_access),
+          refresh_token:decodeURIComponent(jar.romano_refresh)
+        });
+        if (sessionError) {
+          const status = Number(sessionError.status)||0;
+          if (status===0 || status>=500) {
+            return failure("LOGOUT_UNAVAILABLE","Could not securely end this session. Please try again.",id,503);
+          }
+          // Invalid/expired refresh credentials already cannot establish a live session.
+        } else {
+          const {error:revokeError} = await logoutClient.auth.signOut({scope:"local"});
+          if (revokeError) {
+            return failure("LOGOUT_UNAVAILABLE","Could not securely end this session. Please try again.",id,503);
+          }
+        }
+      }
+      return reply({loggedOut:true},id,200,[...newCookies,...clearAuth(),cookie("romano_csrf","",false,0)]);
+    }
     const p = await session(req,jar,newCookies);
     if (path === "/auth/me" && req.method === "GET") {
       return reply(p ? {
@@ -435,9 +460,6 @@ Deno.serve(async req => {
         memberships:p.memberships.map(m=>({restaurantId:m.restaurant_id,role:m.role,slug:m.slug,name:m.name})),
         membership:p.memberships[0]||null
       } : null,id,200,newCookies);
-    }
-    if (path === "/auth/logout" && req.method === "POST") {
-      return reply({loggedOut:true},id,200,[...newCookies,...clearAuth(),cookie("romano_csrf","",false,0)]);
     }
     if (!p) return failure("UNAUTHENTICATED","Authentication required.",id,401,newCookies);
     if (path === "/admin/me" && req.method === "GET") {
