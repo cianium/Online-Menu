@@ -64,6 +64,6 @@ begin
     raise exception 'Auth session validator privileges are too broad or service role grant is missing';
   end if;
 end;
-$;
+$$;
 rollback;
 select 'ROMANO admin login rate-limit smoke passed' as result;
