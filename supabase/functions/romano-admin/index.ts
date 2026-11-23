@@ -429,23 +429,47 @@ Deno.serve(async req => {
       return reply({ user: { id:p.id,email:p.email,displayName:p.display_name },csrfToken:nextCsrf },id,200,newCookies);
     }
     if (path === "/auth/logout" && req.method === "POST") {
-      // Restore the cookie-backed session first (refreshing it when necessary),
-      // then revoke only this session's refresh token. Never use the default
-      // global scope: staff may be signed in on other devices.
-      if (jar.romano_access && jar.romano_refresh) {
-        const logoutClient = createClient(url!,anon!,{auth:{persistSession:false,autoRefreshToken:false}});
-        const {error:sessionError} = await logoutClient.auth.setSession({
-          access_token:jar.romano_access,
-          refresh_token:jar.romano_refresh
-        });
-        if (sessionError) {
-          const status = Number(sessionError.status)||0;
-          if (![400,401,403,404].includes(status)) {
+      // Revoke this browser session only. Try the current access JWT first;
+      // if it has expired, refresh from the HttpOnly cookie and revoke the new JWT.
+      const accessToken=jar.romano_access;
+      const refreshToken=jar.romano_refresh;
+      if (accessToken) {
+        const {error:directError}=await service.auth.admin.signOut(accessToken,"local");
+        if (directError) {
+          const directStatus=Number(directError.status)||0;
+          if (directStatus===0 || directStatus>=500 || directStatus===403 || directStatus===429) {
             return failure("LOGOUT_UNAVAILABLE","Could not securely end this session. Please try again.",id,503);
           }
-          // Invalid/expired refresh credentials already cannot establish a live session.
-        } else {
-          const {error:revokeError} = await logoutClient.auth.signOut({scope:"local"});
+          if (refreshToken) {
+            const logoutClient=createClient(url!,anon!,{auth:{persistSession:false,autoRefreshToken:false}});
+            const {error:sessionError}=await logoutClient.auth.setSession({
+              access_token:accessToken,
+              refresh_token:refreshToken
+            });
+            if (sessionError) {
+              const refreshStatus=Number(sessionError.status)||0;
+              if (![400,401,404].includes(refreshStatus)) {
+                return failure("LOGOUT_UNAVAILABLE","Could not securely end this session. Please try again.",id,503);
+              }
+              // Both credentials are invalid/expired; this session cannot refresh.
+            } else {
+              const {error:revokeError}=await logoutClient.auth.signOut({scope:"local"});
+              if (revokeError) {
+                return failure("LOGOUT_UNAVAILABLE","Could not securely end this session. Please try again.",id,503);
+              }
+            }
+          }
+        }
+      } else if (refreshToken) {
+        const logoutClient=createClient(url!,anon!,{auth:{persistSession:false,autoRefreshToken:false}});
+        const {data:refreshed,error:refreshError}=await logoutClient.auth.refreshSession({refresh_token:refreshToken});
+        if (refreshError) {
+          const refreshStatus=Number(refreshError.status)||0;
+          if (![400,401,404].includes(refreshStatus)) {
+            return failure("LOGOUT_UNAVAILABLE","Could not securely end this session. Please try again.",id,503);
+          }
+        } else if (refreshed.session) {
+          const {error:revokeError}=await logoutClient.auth.signOut({scope:"local"});
           if (revokeError) {
             return failure("LOGOUT_UNAVAILABLE","Could not securely end this session. Please try again.",id,503);
           }
