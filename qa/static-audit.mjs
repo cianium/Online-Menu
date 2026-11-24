@@ -62,14 +62,14 @@ check(!/handleProductSubmit[\s\S]{0,500}const instagram\s*=/.test(read("admin/ad
 check(read("js/app.js").includes("getSafeExternalUrl"), "Customer external URL sanitizer is missing.");
 check(read("admin/rv4-admin-plus.js").includes('payload.schema !== "romano.menu-backup"'), "Backup restore is not strict-schema validated.");
 check(read("manifest.webmanifest").includes('"display": "standalone"'), "PWA manifest is incomplete.");
-check(read("manifest.webmanifest").includes('"short_name": "RAMEN"'), "PWA still uses legacy brand.");
-check(read("admin/index.html").includes("<title>RAMEN | پنل مدیریت</title>"), "Admin HTML title must use the localized default.");
-check(!/>\s*(?:OVERVIEW|RAMEN · CONTROL CENTER|MENU HEALTH|MENU MANAGEMENT|MENU STRUCTURE|RESTAURANT CONFIGURATION|SECURE SERVER AUTHENTICATION|RAMEN DIGITAL MENU|AUTHORIZED USERS ONLY)\s*</.test(read("admin/index.html")), "Admin HTML still contains untranslated English section labels.");
+check(read("manifest.webmanifest").includes('"short_name": "ROMANO"'), "PWA still uses legacy brand.");
+check(read("admin/index.html").includes("<title>ROMANO | پنل مدیریت</title>"), "Admin HTML title must use the localized default.");
+check(!/>\s*(?:OVERVIEW|ROMANO · CONTROL CENTER|MENU HEALTH|MENU MANAGEMENT|MENU STRUCTURE|RESTAURANT CONFIGURATION|SECURE SERVER AUTHENTICATION|ROMANO DIGITAL MENU|AUTHORIZED USERS ONLY)\s*</.test(read("admin/index.html")), "Admin HTML still contains untranslated English section labels.");
 check(!/>\s*(?:Badge|بدون Badge|رستوران CONFIGURATION|Merchant ID)\s*</.test(read("admin/index.html")), "Admin HTML still contains mixed-language field labels.");
-check(read("index.html").includes("منوی دیجیتال RAMEN") && read("js/i18n.js").includes('"منوی دیجیتال RAMEN"'), "Customer navigation footer brand is not localized.");
+check(read("index.html").includes("منوی دیجیتال ROMANO") && read("js/i18n.js").includes('"منوی دیجیتال ROMANO"'), "Customer navigation footer brand is not localized.");
 check(!read("js/i18n.js").includes("Designed by Cian Khayat"), "Obsolete developer credit remains in customer localization.");
 check(read("js/menu-experience.js").includes('id="menu-browser-eyebrow"') && read("js/i18n.js").includes('"menuEyebrow"'), "Customer menu eyebrow is not localized.");
-check(!read("js/menu-experience.js").includes('class="section-eyebrow">RAMEN'), "Customer menu still contains a hard-coded platform heading.");
+check(!read("js/menu-experience.js").includes('class="section-eyebrow">ROMANO'), "Customer menu still contains a hard-coded platform heading.");
 check(read("sw.js").includes('url.pathname.includes("/admin/")'), "Service worker does not explicitly exclude admin.");
 
 const syntaxTargets = ["js/app.js", "js/menu-experience.js", "js/commerce.js", "js/i18n.js", "js/money.js", "admin/admin.js", "admin/admin-i18n.js", "admin/rv4-admin-plus.js", "admin/workspace.js", "admin/orders.js", "admin/vendor/qrcode.min.js", "sw.js", "qa/static-audit.mjs", "admin/api.js", "js/public-api.js", "backend/server.mjs", "backend/seed.mjs", "backend/migrate.mjs", "supabase/functions/romano-public/index.ts", "supabase/functions/romano-admin/index.ts", "supabase/functions/romano-order/core.ts", "supabase/functions/romano-order/index.ts", "supabase/functions/romano-payment/index.ts"];
@@ -157,7 +157,7 @@ check(adminFunction.includes("if (!data?.active) return null;") && adminFunction
 check(/if \(!currentPrincipal\) setCookies\.push\(\.\.\.clearAuth\(\)\)/.test(adminFunction), "Inactive admin principals must have stale auth cookies cleared.");
 check(read("supabase/migrations/20261124090000_admin_login_rate_limit.sql").includes("romano_is_auth_session_active") && read("qa/sql/admin-login-rate-limit-smoke.sql").includes("deleted/revoked Supabase Auth session"), "Supabase session revocation regression test is missing.");
 
-console.log("RAMEN static audit");
+console.log("ROMANO static audit");
 console.log(`Root: ${ROOT}`);
 console.log(`Failures: ${failures.length}`);
 for (const item of failures) console.log(`FAIL  ${item}`);
