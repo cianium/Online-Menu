@@ -14,6 +14,15 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
  const p=await ctx.newPage();await p.goto(base);await ready(p);
  const cards=p.locator('#menu .product-card');
  await check('Static demo boots with 21 products',async()=>{assert.equal(await cards.count(),21);assert.equal(await p.evaluate(()=>menuDataMode),'demo')});
+ await check('Category image fallback uses localized category initials, not brand/developer copy',async()=>{
+  const fallback=await p.evaluate(()=>{
+   const category=state.categories.find(item=>item.active!==false);
+   const localized=ROMANO_I18N.localizeCategory(category);
+   const card=createCategoryCard({...category,image:''},0);
+   return {value:card.querySelector('.image-fallback')?.textContent,name:localized.name};
+  });
+  assert.equal(fallback.value,fallback.name.trim().charAt(0));
+ });
  await check('Image-first card CTA and favorite remain accessible',async()=>{
   const card=cards.first(),button=card.locator('.product-card-button'),favorite=card.locator('[data-favorite-product]');
   await card.scrollIntoViewIfNeeded();
