@@ -142,3 +142,9 @@ body.commerce-open .rv4-back-top{opacity:0;pointer-events:none}
     height: 40px;
   }
 }
+
+/* The global header must mirror with the active document direction. */
+html[dir="ltr"] .header-container { direction: ltr; }
+html[dir="rtl"] .header-container { direction: rtl; }
+html[dir="ltr"] .header-container .brand { direction: ltr; }
+html[dir="rtl"] .header-container .brand { direction: rtl; }
