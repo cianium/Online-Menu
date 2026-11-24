@@ -225,6 +225,8 @@
       </article>`;
     }).join("");
     host.innerHTML = rows || `<p class="commerce-empty">${safe(t("empty"))}</p>`;
+    const checkout = document.querySelector("#commerce-checkout");
+    if (checkout) checkout.hidden = amount === 0;
     host.querySelectorAll("[data-cart-change]").forEach((button) => button.addEventListener("click", () => change(button.dataset.productId, Number(button.dataset.cartChange))));
     host.querySelectorAll("[data-cart-remove]").forEach((button) => button.addEventListener("click", () => { delete cart[button.dataset.productId]; save(cartKey(), cart); render(); }));
     const submit = document.querySelector("#commerce-submit");
