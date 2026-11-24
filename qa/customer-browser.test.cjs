@@ -123,11 +123,14 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    if((lang==='fa'&&width===390)||(lang==='en'&&width===1440)){
     await cards.first().locator('.product-card-button').click();await p.locator('.product-modal').waitFor({state:'visible'});
     await p.screenshot({path:path.join(out,`customer-product-modal-${lang}-${width}.png`)});
-    await p.keyboard.press('Escape');
+    await p.locator('.product-modal .modal-close').click();
+    await p.locator('.product-modal').waitFor({state:'hidden'});
     const cartButton=width<700?p.locator('#ramen-bottom-cart'):p.locator('#ramen-header-cart');
     await cartButton.click();await p.locator('#commerce-drawer.is-open').waitFor({state:'visible'});
+    assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'false');
     await p.screenshot({path:path.join(out,`customer-cart-${lang}-${width}.png`)});
-    await p.keyboard.press('Escape');
+    await p.locator('#commerce-drawer .commerce-close').click();
+    await p.locator('#commerce-drawer').waitFor({state:'hidden'});
    }
   }
  });
