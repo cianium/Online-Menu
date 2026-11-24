@@ -437,3 +437,16 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
   .admin-product-name { font-size: 14px; }
   .admin-product-meta { font-size: 12px; }
 }
+
+
+/* Readability floor for dense admin metadata, forms and operational badges. */
+.sidebar-footer, .header-title span, .summary-label, .admin-product-category,
+.admin-product-status, .checkbox-field, .icon-button, .image-upload-hint,
+.rv4-command__meta, .admin-status-copy, .admin-status-badge,
+.product-featured-badge, .category-admin-meta, .order-ticket-head small,
+.order-ticket-meta, .order-status, .gateway-settings-form label:not(.gateway-check) {
+  font-size: 12px;
+}
+.admin-brand-label { font-size: 11px; letter-spacing: .12em; }
+.admin-gate-brand-label { font-size: 11px; letter-spacing: .16em; }
+.admin-gate-eyebrow, .admin-gate-secure-line { font-size: 11px; letter-spacing: .12em; }
