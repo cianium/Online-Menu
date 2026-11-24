@@ -102,6 +102,8 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.equal(await p.locator('#ramen-header-cart').getAttribute('aria-label'),labels.cartAria);
    const headerBoxes=await p.locator('.header-container .brand, #romano-language-toggle, #ramen-header-cart, #menu-toggle').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {name:node.className||node.id,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};}));
    assert.equal(headerBoxes.length,4,JSON.stringify(headerBoxes));
+   const wordmark=await p.locator('.brand-name').evaluate(node=>({text:node.textContent.trim(),scrollWidth:node.scrollWidth,clientWidth:node.clientWidth}));
+   assert.ok(wordmark.clientWidth>0&&wordmark.scrollWidth<=wordmark.clientWidth+1,'Restaurant wordmark is clipped '+lang+'/'+width+': '+JSON.stringify(wordmark));
    for(let i=0;i<headerBoxes.length;i++)for(let j=i+1;j<headerBoxes.length;j++){
     const a=headerBoxes[i],b=headerBoxes[j];
     const separated=a.right<=b.left+1||b.right<=a.left+1||a.bottom<=b.top+1||b.bottom<=a.top+1;
