@@ -297,6 +297,18 @@ await check('Persian admin section labels are fully localized', async () => {
       await page.waitForTimeout(300);
       await page.screenshot({path:path.join(out,name+'.png'),fullPage:section==='dashboard' && width>700});
     }
+    for(const [lang,width,section,name] of [
+      ['en',1440,'orders','admin-desktop-orders'],
+      ['en',1440,'categories','admin-desktop-categories'],
+      ['en',1440,'settings','admin-desktop-settings'],
+      ['fa',390,'orders','admin-mobile-orders-fa'],
+      ['fa',390,'settings','admin-mobile-settings-fa']
+    ]){
+      await page.setViewportSize({width,height:900});
+      await page.evaluate(({lang,section})=>{window.ROMANO_ADMIN_I18N.setLanguage(lang);navigateTo(section);},{lang,section});
+      await page.waitForTimeout(250);
+      await page.screenshot({path:path.join(out,name+'.png'),fullPage:true});
+    }
     assert.deepEqual(errors,[]);
   });
   fs.writeFileSync(path.join(out,'admin-browser-results.json'),JSON.stringify({passed:results.length,cases:results,errors,notes:'Chromium only. Server flows use a mocked HTTP contract; no real PostgreSQL test.'},null,2));
