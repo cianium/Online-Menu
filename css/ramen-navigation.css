@@ -12,6 +12,7 @@
 .ramen-bottom-icon-wrap{position:relative;display:inline-grid;place-items:center}
 .ramen-bottom-cart-count{inset-block-start:-9px;inset-inline-end:-11px}
 body.commerce-open .ramen-bottom-nav{visibility:hidden;pointer-events:none}
+body.commerce-open .rv4-back-top{opacity:0;pointer-events:none}
 #commerce-cart-bar{display:none!important}
 @media(max-width:720px){
  .ramen-bottom-nav{display:flex}
