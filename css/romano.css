@@ -1919,7 +1919,11 @@ html[dir="ltr"] .section-title { font-family: "Playfair Display", "Inter", serif
 
 
 /* Minimum readable sizes for customer-facing metadata and navigation. */
-.brand-tagline { font-size: 10px; letter-spacing: .16em; }
+.brand-tagline, .hero-caption, .hero-eyebrow, .section-eyebrow,
+.romano-signature-dish__eyebrow, .product-category, .modal-category,
+.contact-label, .footer-heading, .navigation-section-label, .navigation-kicker { font-size: 11px; }
+.category-name, .product-rating, .menu-category-index, .menu-category-count,
+.footer-bottom, .navigation-label, .product-description { font-size: 12px; }
 .hero-section::before { font-size: 10px; }
 .hero-eyebrow, .section-eyebrow, .product-category, .contact-label,
 .footer-heading, .navigation-section-label { font-size: 11px; line-height: 1.5; }
