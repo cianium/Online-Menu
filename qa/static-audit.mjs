@@ -68,7 +68,8 @@ check(!/>\s*(?:OVERVIEW|RAMEN · CONTROL CENTER|MENU HEALTH|MENU MANAGEMENT|MENU
 check(!/>\s*(?:Badge|بدون Badge|رستوران CONFIGURATION|Merchant ID)\s*</.test(read("admin/index.html")), "Admin HTML still contains mixed-language field labels.");
 check(read("index.html").includes("منوی دیجیتال RAMEN") && read("js/i18n.js").includes('"منوی دیجیتال RAMEN"'), "Customer navigation footer brand is not localized.");
 check(!read("js/i18n.js").includes("Designed by Cian Khayat"), "Obsolete developer credit remains in customer localization.");
-check(read("js/menu-experience.js").includes('<span class="section-eyebrow">RAMEN</span>'), "Customer menu still shows legacy platform heading.");
+check(read("js/menu-experience.js").includes('id="menu-browser-eyebrow"') && read("js/i18n.js").includes('"menuEyebrow"'), "Customer menu eyebrow is not localized.");
+check(!read("js/menu-experience.js").includes('class="section-eyebrow">RAMEN'), "Customer menu still contains a hard-coded platform heading.");
 check(read("sw.js").includes('url.pathname.includes("/admin/")'), "Service worker does not explicitly exclude admin.");
 
 const syntaxTargets = ["js/app.js", "js/menu-experience.js", "js/commerce.js", "js/i18n.js", "js/money.js", "admin/admin.js", "admin/admin-i18n.js", "admin/rv4-admin-plus.js", "admin/workspace.js", "admin/orders.js", "admin/vendor/qrcode.min.js", "sw.js", "qa/static-audit.mjs", "admin/api.js", "js/public-api.js", "backend/server.mjs", "backend/seed.mjs", "backend/migrate.mjs", "supabase/functions/romano-public/index.ts", "supabase/functions/romano-admin/index.ts", "supabase/functions/romano-order/core.ts", "supabase/functions/romano-order/index.ts", "supabase/functions/romano-payment/index.ts"];
