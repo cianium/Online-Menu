@@ -96,6 +96,8 @@
       "منوی دیجیتال RAMEN": ["RAMEN digital menu", "RAMEN dijital menüsü", "قائمة RAMEN الرقمية"],
       "فقط کاربران مجاز": ["Authorized users only", "Yalnızca yetkili kullanıcılar", "للمستخدمين المصرح لهم فقط"],
       "پنل مدیریت": ["Admin panel", "Yönetim paneli", "لوحة الإدارة"],
+      "مدیریت": ["Admin", "Yönetim", "الإدارة"],
+      "RAMEN | مدیریت": ["RAMEN | Admin", "RAMEN | Yönetim", "رامن | الإدارة"],
       "دسترسی امن مدیریت": ["Secure admin access", "Güvenli yönetici erişimi", "وصول آمن للإدارة"],
       "عملیات زنده · آشپزخانه": ["Live operations · Kitchen", "Canlı operasyonlar · Mutfak", "العمليات المباشرة · المطبخ"],
       "تنظیم میز و QR": ["Table & QR setup", "Masa ve QR kurulumu", "إعداد الطاولات ورمز QR"],
