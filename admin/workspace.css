@@ -1,19 +1,20 @@
 /* 4.8 admin workspace: scoped layout and operational components. */
 :root {
-    --bg: #0e1012;
-    --bg-soft: #14171a;
-    --card: #181b1f;
-    --card-light: #20242a;
-    --text: #f1f0ec;
-    --text-soft: #c2c3c6;
-    --muted: #a0a3aa;
-    --gold: #d5b37b;
-    --gold-light: #e7c791;
-    --border: #ffffff13;
-    --border-strong: #d5b37b55;
-    --radius: 14px;
-    --sidebar-width: 248px;
+    --bg: var(--admin-canvas);
+    --bg-soft: var(--admin-surface);
+    --card: var(--admin-surface-raised);
+    --card-light: var(--admin-surface-hover);
+    --text: var(--admin-ink);
+    --text-soft: var(--admin-ink-soft);
+    --muted: var(--admin-ink-muted);
+    --gold: var(--admin-accent);
+    --gold-light: var(--admin-accent-bright);
+    --border: var(--admin-line);
+    --border-strong: var(--admin-line-strong);
+    --radius: var(--admin-radius);
+    --sidebar-width: 282px;
 }
+
 [hidden] { display: none !important; }
 body { background: var(--bg); }
 button, input, select, textarea { font: inherit; }
@@ -147,13 +148,13 @@ input[type="checkbox"] { accent-color: var(--gold); width: 18px; height: 18px; f
 }
 
 /* Touch-first editing: readable inputs and reachable actions inside scrollable forms. */
-.creator-signature { color: var(--gold); display: inline-flex; align-items: center; min-height: 44px; overflow-wrap: anywhere; }
 @media (max-width: 700px) {
     .modal-form input, .modal-form select, .modal-form textarea,
     .settings-form input, .settings-form select, .settings-form textarea,
     .toolbar input, .toolbar select { font-size: 16px; min-height: 44px; }
-    .admin-modal-container { padding: 12px; overscroll-behavior: contain; scroll-padding-block: 20px 100px; }
-    .modal-form { padding: 12px; }
+    .admin-modal-container { display: flex; flex-direction: column; overflow: hidden; padding: 12px; overscroll-behavior: contain; }
+    .modal-header { flex: 0 0 auto; }
+    .modal-form { display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scroll-padding-block: 20px 96px; padding: 12px 12px 24px; }
     .modal-form .form-actions { position: sticky; bottom: -12px; z-index: 2; background: var(--card); padding: 12px 0 max(12px, env(safe-area-inset-bottom)); }
     .form-actions button { min-height: 48px; flex: 1 1 100px; min-width: 0 !important; }
     .admin-product-actions .icon-button, .admin-header-link, .admin-header-action,

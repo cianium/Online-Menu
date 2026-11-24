@@ -54,7 +54,8 @@ check(adminPolish.includes("@media (prefers-reduced-motion: reduce)"), "Admin vi
 check(/\.icon-button\s*\{[^}]*min-width:\s*40px;[^}]*min-height:\s*40px;/s.test(adminPolish), "Admin visual polish must preserve the existing 40px icon-action target size.");
 check(/\.admin-category-actions \.icon-button\s*\{[^}]*min-width:\s*40px;[^}]*min-height:\s*40px;/s.test(adminPolish), "Admin category actions must preserve 40px touch targets.");
 
-check(read("admin/index.html").includes("نسخه vq.3"), "Admin footer version is not vq.3.");
+check(!read("admin/index.html").includes("نسخه vq.3") && !read("admin/index.html").includes("ONLINE-MENU vq.3"), "Internal release labels must not be visible in the admin UI.");
+check(!read("admin/index.html").includes("Cian Khayat") && !read("index.html").includes("Designed by Cian Khayat"), "Developer credits must not appear in customer-facing interfaces.");
 check(!/const Storage\s*=/.test(read("admin/admin.js")), "Admin custom storage object still shadows the browser Storage type.");
 check(read("admin/admin.js").includes('const instagram ='), "Admin settings Instagram field is not declared.");
 check(!/handleProductSubmit[\s\S]{0,500}const instagram\s*=/.test(read("admin/admin.js")), "Instagram validation leaked into the product-submit handler.");
@@ -62,7 +63,11 @@ check(read("js/app.js").includes("getSafeExternalUrl"), "Customer external URL s
 check(read("admin/rv4-admin-plus.js").includes('payload.schema !== "romano.menu-backup"'), "Backup restore is not strict-schema validated.");
 check(read("manifest.webmanifest").includes('"display": "standalone"'), "PWA manifest is incomplete.");
 check(read("manifest.webmanifest").includes('"short_name": "RAMEN"'), "PWA still uses legacy brand.");
-check(read("admin/index.html").includes("RAMEN | Admin Panel"), "Admin HTML brand was not updated.");
+check(read("admin/index.html").includes("<title>RAMEN | پنل مدیریت</title>"), "Admin HTML title must use the localized default.");
+check(!/>\s*(?:OVERVIEW|RAMEN · CONTROL CENTER|MENU HEALTH|MENU MANAGEMENT|MENU STRUCTURE|RESTAURANT CONFIGURATION|SECURE SERVER AUTHENTICATION|RAMEN DIGITAL MENU|AUTHORIZED USERS ONLY)\s*</.test(read("admin/index.html")), "Admin HTML still contains untranslated English section labels.");
+check(!/>\s*(?:Badge|بدون Badge|رستوران CONFIGURATION|Merchant ID)\s*</.test(read("admin/index.html")), "Admin HTML still contains mixed-language field labels.");
+check(read("index.html").includes("منوی دیجیتال RAMEN") && read("js/i18n.js").includes('"منوی دیجیتال RAMEN"'), "Customer navigation footer brand is not localized.");
+check(!read("js/i18n.js").includes("Designed by Cian Khayat"), "Obsolete developer credit remains in customer localization.");
 check(read("js/menu-experience.js").includes('<span class="section-eyebrow">RAMEN</span>'), "Customer menu still shows legacy platform heading.");
 check(read("sw.js").includes('url.pathname.includes("/admin/")'), "Service worker does not explicitly exclude admin.");
 

@@ -1,6 +1,7 @@
 (() => {
   "use strict";
   const enabled = ["http:", "https:"].includes(location.protocol);
+  const explicitRestaurant = Boolean(document.body.dataset.restaurantSlug) || new URLSearchParams(location.search).has("restaurant");
   async function load(slug, lang) {
     if (!enabled) return null;
     const controller = new AbortController();
@@ -8,9 +9,9 @@
     try {
       const response = await fetch(`/api/v1/public/restaurants/${encodeURIComponent(slug)}/menu?lang=${encodeURIComponent(lang)}`, { signal: controller.signal, credentials: "same-origin", headers: { Accept: "application/json" } });
       const json = (response.headers.get("content-type") || "").includes("application/json");
-      // An absent public API/Edge Function means this deployment is using
-      // the bundled demo catalog and shared localStorage data.
-      if (response.status === 404) return null;
+      // Only the unqualified demo route may fall back to bundled sample data.
+      // An explicit restaurant slug must fail closed when that restaurant is missing.
+      if (response.status === 404 && !explicitRestaurant) return null;
       if (!response.ok || !json) { const error = new Error(`Menu API ${response.status}`); error.status = response.status; throw error; }
       const body = await response.json();
       if (!body?.data) throw new Error("Invalid menu response");

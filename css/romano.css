@@ -44,6 +44,8 @@
   --color-gold: var(--romano-gold);
   --color-gold-light: var(--romano-gold-light);
   --header-height: 80px;
+  --font-ui: "Inter", "Vazirmatn", system-ui, sans-serif;
+  --font-display: "Playfair Display", "Inter", serif;
 }
 
 html {
@@ -1899,3 +1901,16 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 @media (max-width: 420px) {
   .site-header, .admin-header { padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right)); }
 }
+
+
+/* Language-aware typography: Persian/Arabic use Vazirmatn; LTR uses Inter. */
+body { font-family: var(--font-ui); }
+html[lang="fa"] body, html[lang="ar"] body { font-family: "Vazirmatn", sans-serif; }
+html[lang="en"] body, html[lang="tr"] body { font-family: "Inter", system-ui, sans-serif; }
+html[dir="rtl"] .hero-title,
+html[dir="rtl"] .section-title,
+html[dir="rtl"] .menu-browser-heading h2,
+html[dir="rtl"] .product-name { font-family: "Vazirmatn", sans-serif; letter-spacing: 0; }
+html[dir="rtl"] .hero-title { line-height: 1.22; }
+html[dir="ltr"] .hero-title,
+html[dir="ltr"] .section-title { font-family: "Playfair Display", "Inter", serif; letter-spacing: -.035em; }

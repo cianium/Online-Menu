@@ -23,11 +23,22 @@ async function check(name, action) { await action(); results.push(name); console
   await page.goto(base + '/admin/');
   await page.waitForFunction(() => typeof adminInitialized !== 'undefined' && adminInitialized && !document.querySelector('.admin-app').inert);
   await check('Local demo boot and seed catalog', async () => assert.equal(await page.evaluate(() => state.products.length), 21));
-  await check('4 languages × 3 widths × 5 admin pages: direction and horizontal overflow', async () => {
+await check('Admin interface contains no developer credits or internal release labels', async () => {
+ assert.equal(await page.locator('.creator-signature').count(), 0);
+ const visibleText = await page.locator('.admin-app').innerText();
+ assert.doesNotMatch(visibleText, /Cian Khayat|ONLINE-MENU vq\.3|ADMIN CONSOLE|LIVE OPERATIONS|QR TABLE SETUP|DIRECT SETTLEMENT/);
+});
+await check('Persian admin section labels are fully localized', async () => {
+ const visibleText = await page.locator('.admin-app').innerText();
+ assert.doesNotMatch(visibleText, /\bOVERVIEW\b|\bMENU HEALTH\b|\bMENU MANAGEMENT\b|\bMENU STRUCTURE\b|\bRESTAURANT CONFIGURATION\b|\bSECURE SERVER AUTHENTICATION\b|\bAUTHORIZED USERS ONLY\b/);
+});
+  await check('4 languages × 5 widths × 5 admin pages: direction and horizontal overflow', async () => {
     for (const lang of ['en','tr','ar','fa']) {
       await page.evaluate(lang => window.ROMANO_ADMIN_I18N.setLanguage(lang), lang);
       assert.equal(await page.getAttribute('html','dir'), ['fa','ar'].includes(lang) ? 'rtl' : 'ltr');
-      for (const width of [1440,390,320]) {
+      const expectedFont = ['fa','ar'].includes(lang) ? 'Vazirmatn' : 'Inter';
+      assert.match(await page.locator('body').evaluate(node => getComputedStyle(node).fontFamily), new RegExp(expectedFont));
+      for (const width of [1440,1024,768,390,320]) {
         await page.setViewportSize({width,height:900});
         for (const section of ['dashboard','orders','products','categories','settings']) {
           await page.evaluate(section => navigateTo(section),section);
@@ -106,6 +117,12 @@ async function check(name, action) { await action(); results.push(name); console
       const box=document.querySelector('#product-form button[type=submit]').getBoundingClientRect();
       return box.height>=44 && box.y>=0 && box.bottom<=innerHeight;
     });
+    const imageButton=page.locator('#product-modal .image-upload-button');
+    assert.equal(await imageButton.count(),1);
+    await imageButton.evaluate(el=>el.scrollIntoView({block:'center',inline:'nearest'}));
+    const imageBox=await imageButton.boundingBox();
+    const actionsBox=await page.locator('#product-form .form-actions').boundingBox();
+    assert.ok(imageBox && actionsBox && imageBox.y+imageBox.height<=actionsBox.y-4,JSON.stringify({imageBox,actionsBox}));
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     await page.screenshot({path:path.join(out,'admin-mobile-edit-320.png')});
     await page.locator('#product-modal button[data-close-modal]').first().click();

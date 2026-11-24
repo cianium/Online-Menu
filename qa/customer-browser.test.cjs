@@ -24,12 +24,31 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
  });
  await check('Cart supports add, quantity and QR-gated checkout',async()=>{
   const add=cards.first().locator('.commerce-card-add');assert.equal(await add.isVisible(),true);await add.click();
-  const bar=p.locator('#commerce-cart-bar');assert.equal(await bar.isVisible(),true);assert.equal(await bar.locator('.commerce-cart-count').textContent(),'1');
-  await bar.click();assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'false');
+  const cartButton=p.locator('#ramen-bottom-cart');assert.equal(await cartButton.isVisible(),true);assert.equal(await p.locator('.ramen-bottom-cart-count').textContent(),'1');
+  await cartButton.click();assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'false');
+  await check('Cart drawer traps keyboard focus and restores its opener',async()=>{
+   await p.keyboard.press('Shift+Tab');
+   assert.equal(await p.evaluate(()=>document.activeElement?.id),'commerce-submit');
+   await p.keyboard.press('Tab');
+   assert.equal(await p.evaluate(()=>document.activeElement?.classList.contains('commerce-close')),true);
+   await p.keyboard.press('Escape');
+   assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'true');
+   assert.equal(await p.evaluate(()=>document.activeElement?.id),'ramen-bottom-cart');
+   await cartButton.click();
+  });
   await p.locator('.commerce-quantity button[data-cart-change="1"]').click();assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
   await p.locator('#commerce-submit').click();assert.ok((await p.locator('#commerce-message').textContent()).trim());
   await p.locator('[data-cart-remove]').click();
   await p.locator('[data-commerce-close]').last().click();
+ });
+ await check('Language changes close an open cart without leaving the page inert',async()=>{
+  const cartButton=p.locator('#ramen-bottom-cart');
+  await cartButton.click();
+  assert.equal(await p.locator('body').evaluate(node=>node.classList.contains('commerce-open')),true);
+  await p.evaluate(()=>ROMANO_I18N.setLanguage('tr'));
+  await p.waitForFunction(()=>!document.body.classList.contains('commerce-open'));
+  assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'true');
+  assert.equal(await p.evaluate(()=>document.activeElement?.id),'ramen-bottom-cart');
  });
  await check('Search, category, price order and reset',async()=>{
   await p.evaluate(()=>ROMANO_I18N.setLanguage('en'));
@@ -52,10 +71,12 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   await p.waitForFunction(()=>document.activeElement.classList.contains('modal-close'));
   await p.keyboard.press('Escape');assert.equal(await p.locator('.product-modal').getAttribute('aria-hidden'),'true');assert.equal(await p.locator('#main-content').evaluate(n=>n.inert),false);assert.doesNotMatch(await p.evaluate(()=>location.hash),/^#product-/);
  });
- await check('Four languages at 320, 390 and 1440px: direction, overflow and modal',async()=>{
-  for(const lang of ['en','tr','ar','fa'])for(const width of [320,390,1440]){
+ await check('Four languages at 320, 390, 768, 1024 and 1440px: direction, overflow and modal',async()=>{
+  for(const lang of ['en','tr','ar','fa'])for(const width of [320,390,768,1024,1440]){
    await p.setViewportSize({width,height:900});await p.evaluate(lang=>ROMANO_I18N.setLanguage(lang),lang);
    assert.equal(await p.locator('html').getAttribute('dir'),['fa','ar'].includes(lang)?'rtl':'ltr');
+   const expectedFont=['fa','ar'].includes(lang)?'Vazirmatn':'Inter';
+   assert.match(await p.locator('body').evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expectedFont));
    assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${lang}/${width}`);
    assert.ok(await p.locator('#rv4-menu-search').getAttribute('placeholder'));
    const bounds=await cards.evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().width));assert.ok(bounds.every(w=>w>125),`Readable card widths ${lang}/${width}: ${bounds}`);
@@ -103,6 +124,21 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   const c=await browser.newContext({serviceWorkers:'block'});await c.addInitScript(()=>{Storage.prototype.getItem=()=>{throw Error('blocked')};Storage.prototype.setItem=()=>{throw Error('blocked')}});
   const s=await c.newPage();s.on('pageerror',e=>errors.push(String(e)));await s.goto(base);await ready(s);assert.equal(await s.locator('#menu .product-card').count(),21);
   await s.locator('#menu .product-card [data-favorite-product]').first().click();assert.equal(await s.locator('#menu .product-card [data-favorite-product]').first().getAttribute('aria-pressed'),'true');await c.close();
+ });
+ await check('Desktop and mobile cart entry points remain visible',async()=>{
+  await p.setViewportSize({width:1440,height:900});
+  const headerCart=p.locator('#ramen-header-cart');
+  assert.equal(await headerCart.isVisible(),true);
+  const cartBox=await headerCart.boundingBox();
+  const menuBox=await p.locator('#menu-toggle').boundingBox();
+  assert.ok(cartBox && cartBox.width>=40 && cartBox.height>=40 && cartBox.x>=0 && cartBox.x+cartBox.width<=1440,JSON.stringify({cartBox,menuBox}));
+  assert.ok(menuBox && (cartBox.x+cartBox.width<=menuBox.x-4 || menuBox.x+menuBox.width<=cartBox.x-4),JSON.stringify({cartBox,menuBox}));
+  await p.setViewportSize({width:390,height:900});
+  assert.equal(await p.locator('#ramen-bottom-cart').isVisible(),true);
+ });
+ await check('No developer credits or internal release labels remain',async()=>{
+  assert.equal(await p.locator('.footer-bottom a[href*="kiankhayat.me"]').count(),0);
+  assert.equal(await p.locator('.commerce-drawer small').textContent(),'RAMEN');
  });
  await check('No uncaught browser errors',async()=>assert.deepEqual(errors,[]));
  fs.writeFileSync(path.join(out,'customer-browser-results.json'),JSON.stringify({passed:results.length,cases:results,errors,notes:'Chromium, static preview and mocked public API. Service workers blocked. No real PostgreSQL or production test.'},null,2));

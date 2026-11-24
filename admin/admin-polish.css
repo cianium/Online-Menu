@@ -1,17 +1,17 @@
 /* ROMANO Admin visual refinement — presentation only.
    Loaded last so the existing admin behavior and component markup remain intact. */
 :root {
-  --admin-canvas: #0b0d0f;
-  --admin-surface: #111518;
-  --admin-surface-raised: #171d20;
-  --admin-surface-hover: #1d2528;
-  --admin-line: rgba(226, 190, 132, .13);
-  --admin-line-strong: rgba(226, 190, 132, .27);
-  --admin-ink: #f2eee7;
-  --admin-ink-soft: #c2bbb0;
-  --admin-ink-muted: #8d918f;
-  --admin-accent: #d2aa70;
-  --admin-accent-bright: #e8c894;
+  --admin-canvas: #090807;
+  --admin-surface: #100e0c;
+  --admin-surface-raised: #15120f;
+  --admin-surface-hover: #1b1713;
+  --admin-line: rgba(255, 255, 255, .075);
+  --admin-line-strong: rgba(201, 164, 106, .22);
+  --admin-ink: #f2ece3;
+  --admin-ink-soft: #c4bbb0;
+  --admin-ink-muted: #9a9186;
+  --admin-accent: #c9a46a;
+  --admin-accent-bright: #e2c28d;
   --admin-danger: #d77f78;
   --admin-success: #8fbd9a;
   --admin-shadow: 0 18px 48px rgba(0,0,0,.22);
@@ -388,4 +388,52 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+
+/* Unified admin system: typography, geometry and RTL/LTR behavior. */
+:root {
+  --font-ui: "Inter", "Vazirmatn", system-ui, sans-serif;
+  --font-display: "Playfair Display", "Inter", serif;
+  --admin-font-ui: var(--font-ui);
+  --admin-font-display: var(--font-display);
+}
+html[dir="rtl"] {
+  --font-ui: "Vazirmatn", sans-serif;
+  --font-display: "Vazirmatn", sans-serif;
+}
+html[dir="ltr"] {
+  --font-ui: "Inter", system-ui, sans-serif;
+  --font-display: "Playfair Display", "Inter", serif;
+}
+body { font-family: var(--font-ui); line-height: 1.65; }
+html[dir="rtl"] .page-heading h1,
+html[dir="rtl"] .panel h2,
+html[dir="rtl"] .admin-welcome-strip h2 { font-family: "Vazirmatn", sans-serif; letter-spacing: 0; line-height: 1.5; }
+html[dir="ltr"] .page-heading h1,
+html[dir="ltr"] .admin-welcome-strip h2 { font-family: var(--admin-font-display); letter-spacing: -.025em; line-height: 1.2; }
+.sidebar { width: var(--sidebar-width); border-inline-start: 0; border-inline-end: 1px solid var(--admin-line); }
+.admin-main { margin-inline-start: var(--sidebar-width); }
+.admin-content { width: min(100%, 1480px); margin-inline: auto; padding: clamp(22px, 2.5vw, 36px); }
+.stats-grid { gap: 14px; }
+.stat-card { min-height: 118px; padding: 19px 20px; }
+.panel, .workspace-review, .admin-integrity-panel { padding: 21px; }
+.admin-header-link, .admin-logout-button { min-height: 42px; }
+input, select, textarea { font-family: inherit; font-size: 15px; }
+:where(button, a, input, select, textarea, [tabindex]):focus-visible { outline: 2px solid var(--admin-accent-bright); outline-offset: 3px; }
+@media (max-width: 999px) {
+  .admin-main { margin-inline-start: 0; }
+  .sidebar { width: min(292px, 88vw); }
+}
+@media (max-width: 760px) {
+  .admin-content { padding: 18px 14px 30px; }
+  .admin-header-link, .admin-header-action, .admin-logout-button { min-height: 42px; }
+  .stat-card { min-height: 104px; padding: 15px; }
+  .panel, .workspace-review, .admin-integrity-panel { padding: 16px; }
+  input, select, textarea { font-size: 16px; }
+}
+@media (max-width: 420px) {
+  .admin-header-link, .admin-header-action, .admin-logout-button { min-height: 40px; }
+  .admin-product-name { font-size: 14px; }
+  .admin-product-meta { font-size: 11px; }
 }

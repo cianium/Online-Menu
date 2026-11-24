@@ -193,7 +193,7 @@ body {
 
 /* -------------------- Sidebar -------------------- */
 .sidebar {
-    width: 282px;
+    width: var(--sidebar-width);
     background:
         linear-gradient(180deg, rgba(17,15,13,.985), rgba(11,10,9,.985));
     border-color: var(--admin-line);
@@ -963,7 +963,7 @@ textarea { min-height: 112px; line-height: 1.9; }
 }
 
 @media (min-width: 1000px) {
-    .admin-main { margin-inline-start: 282px; }
+    .admin-main { margin-inline-start: var(--sidebar-width); }
 }
 
 @media (max-width: 999px) {

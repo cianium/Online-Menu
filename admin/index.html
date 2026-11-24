@@ -20,7 +20,7 @@
         content="پنل مدیریت منوی دیجیتال RAMEN"
     >
 
-    <title>RAMEN | Admin Panel</title>
+    <title>RAMEN | پنل مدیریت</title>
 
     <link
         rel="preconnect"
@@ -34,7 +34,7 @@
     >
 
     <link
-        href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Vazirmatn:wght@300;400;500;600;700&display=swap"
         rel="stylesheet"
     >
 
@@ -86,7 +86,7 @@
                 </span>
 
                 <span class="admin-brand-label">
-                    ADMIN
+                    مدیریت
                 </span>
 
             </a>
@@ -181,7 +181,7 @@
             </a>
 
             <span>
-                RAMEN · ONLINE-MENU vq.3
+                مدیریت رستوران
             </span>
 
         </div>
@@ -296,7 +296,7 @@
                     <div>
 
                         <span class="page-eyebrow">
-                            OVERVIEW
+                            نمای کلی
                         </span>
 
                         <h1 id="dashboard-title">
@@ -314,7 +314,7 @@
 
                 <div class="admin-welcome-strip">
                     <div>
-                        <span class="welcome-kicker">RAMEN · CONTROL CENTER</span>
+                        <span class="welcome-kicker">مرکز مدیریت RAMEN</span>
                         <p>از اینجا منو، محصولات و اطلاعات نمایشی رستوران را مدیریت کنید.</p>
                     </div>
                     <div class="welcome-date" id="admin-current-date" aria-live="off">—</div>
@@ -391,7 +391,7 @@
 
                 <section class="admin-integrity-panel" aria-labelledby="admin-integrity-title">
                     <div class="integrity-heading">
-                        <div><span class="panel-eyebrow">MENU HEALTH</span><h2 id="admin-integrity-title">نمای کلی وضعیت منو</h2></div>
+                        <div><span class="panel-eyebrow">وضعیت منو</span><h2 id="admin-integrity-title">نمای کلی وضعیت منو</h2></div>
                         <span class="integrity-note">بر اساس اطلاعات فعلی منو</span>
                     </div>
                     <div class="integrity-items">
@@ -416,7 +416,7 @@
                             <div>
 
                                 <span class="panel-eyebrow">
-                                    RESTAURANT
+                                    رستوران
                                 </span>
 
                                 <h2>
@@ -451,7 +451,7 @@
                             <div>
 
                                 <span class="panel-eyebrow">
-                                    RECENT
+                                    آخرین موارد
                                 </span>
 
                                 <h2>
@@ -490,7 +490,7 @@
             <section class="admin-page" id="page-orders" aria-labelledby="orders-title">
                 <div class="page-heading page-heading-row">
                     <div>
-                        <span class="page-eyebrow">LIVE OPERATIONS · KDS</span>
+                        <span class="page-eyebrow">عملیات زنده · آشپزخانه</span>
                         <h1 id="orders-title">سفارش‌ها و آشپزخانه</h1>
                         <p>سفارش‌های QR را از پذیرش تا سرو، زنده مدیریت کنید.</p>
                     </div>
@@ -525,7 +525,7 @@
                     <div>
 
                         <span class="page-eyebrow">
-                            MENU MANAGEMENT
+                            مدیریت منو
                         </span>
 
                         <h1 id="products-title">
@@ -612,7 +612,7 @@
                     <div>
 
                         <span class="page-eyebrow">
-                            MENU STRUCTURE
+                            ساختار منو
                         </span>
 
                         <h1 id="categories-title">
@@ -674,7 +674,7 @@
                     <div>
 
                         <span class="page-eyebrow">
-                            RESTAURANT CONFIGURATION
+                            پیکربندی رستوران
                         </span>
 
                         <h1 id="settings-title">
@@ -803,7 +803,7 @@
                 </form>
 
                 <section class="gateway-settings" id="branch-management" aria-labelledby="branch-management-title">
-                    <div><span class="page-eyebrow">QR TABLE SETUP</span>
+                    <div><span class="page-eyebrow">تنظیم میز و QR</span>
                         <h2 id="branch-management-title" data-admin-i18n="شعبه‌ها و میزها">شعبه‌ها و میزها</h2>
                         <p data-admin-i18n="پیش از فعال‌سازی سفارش، ارزش ریالی هر واحد قیمت منو را مشخص کنید.">پیش از فعال‌سازی سفارش، ارزش ریالی هر واحد قیمت منو را مشخص کنید.</p>
                     </div>
@@ -834,14 +834,14 @@
 
                 <section class="gateway-settings" aria-labelledby="gateway-settings-title">
                     <div>
-                        <span class="page-eyebrow">DIRECT SETTLEMENT</span>
+                        <span class="page-eyebrow">تسویه مستقیم</span>
                         <h2 id="gateway-settings-title">درگاه پرداخت شعبه</h2>
                         <p>مبالغ سفارش مستقیماً به پذیرنده خود رستوران واریز می‌شود.</p>
                     </div>
                     <form id="gateway-settings-form" class="gateway-settings-form">
                         <label><span>شعبه</span><select id="gateway-branch" required></select></label>
                         <label><span>درگاه</span><select id="gateway-provider"><option value="zarinpal">زرین‌پال</option></select></label>
-                        <label class="gateway-merchant"><span>Merchant ID</span><input id="gateway-merchant-id" type="text" inputmode="latin" autocomplete="off" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label>
+                        <label class="gateway-merchant"><span>شناسه پذیرنده</span><input id="gateway-merchant-id" type="text" inputmode="latin" autocomplete="off" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label>
                         <label class="gateway-check"><input id="gateway-sandbox" type="checkbox" checked><span>محیط آزمایشی</span></label>
                         <label class="gateway-check"><input id="gateway-active" type="checkbox"><span>فعال‌سازی پرداخت آنلاین</span></label>
                         <button class="primary-button" type="submit">ذخیره درگاه</button>
@@ -854,10 +854,9 @@
         </div>
 
         <footer class="admin-footer">
-            <div class="admin-footer-brand"><strong>RAMEN</strong><span>ADMIN CONSOLE</span></div>
+            <div class="admin-footer-brand"><strong>RAMEN</strong><span>پنل مدیریت</span></div>
             <p>مدیریت منوی دیجیتال رستوران</p>
-            <a class="creator-signature" href="https://kiankhayat.me" target="_blank" rel="noopener noreferrer">طراحی و توسعه: Cian Khayat</a>
-            <div class="admin-footer-meta"><span data-admin-i18n="نسخه vq.3">نسخه vq.3</span><span class="footer-separator" aria-hidden="true">·</span><span id="admin-storage-mode">نسخه آزمایشی محلی</span></div>
+            <div class="admin-footer-meta"><span id="admin-storage-mode">نسخه آزمایشی محلی</span></div>
         </footer>
 
     </main>
@@ -866,7 +865,7 @@
 
 
 <!-- =============================================
-     PRODUCT MODAL
+     محصول MODAL
 ============================================= -->
 
 <div
@@ -894,7 +893,7 @@
             <div>
 
                 <span class="page-eyebrow">
-                    PRODUCT
+                    محصول
                 </span>
 
                 <h2 id="product-modal-title">
@@ -1052,15 +1051,11 @@
 
             <label class="form-field">
 
-                <span>
-                    Badge
-                </span>
+                <span>برچسب</span>
 
                 <select name="badge" maxlength="80">
 
-                    <option value="">
-                        بدون Badge
-                    </option>
+                    <option value="">بدون برچسب</option>
 
                     <option value="پرفروش">
                         پرفروش
@@ -1152,7 +1147,7 @@
 
 
 <!-- =============================================
-     CATEGORY MODAL
+     دسته‌بندی MODAL
 ============================================= -->
 
 <div
@@ -1180,7 +1175,7 @@
             <div>
 
                 <span class="page-eyebrow">
-                    CATEGORY
+                    دسته‌بندی
                 </span>
 
                 <h2 id="category-modal-title">
@@ -1349,13 +1344,13 @@
 
             <div class="admin-gate-wordmark">
                 <span class="admin-gate-brand-name">RAMEN</span>
-                <span class="admin-gate-brand-label">ADMIN CONSOLE</span>
+                <span class="admin-gate-brand-label">پنل مدیریت</span>
             </div>
 
         </div>
 
         <div class="admin-gate-heading">
-            <span class="admin-gate-eyebrow">PRIVATE ADMIN ACCESS</span>
+            <span class="admin-gate-eyebrow">دسترسی امن مدیریت</span>
 
             <h1 id="admin-gate-title">
                 خوش آمدید
@@ -1386,7 +1381,7 @@
 
             <div class="admin-gate-secure-line" aria-hidden="true">
                 <span class="admin-gate-secure-dot"></span>
-                <span>SECURE SERVER AUTHENTICATION</span>
+                <span>احراز هویت امن سرور</span>
                 <span class="admin-gate-secure-dot"></span>
             </div>
 
@@ -1400,9 +1395,9 @@
         ></p>
 
         <div class="admin-gate-footer">
-            <span>RAMEN DIGITAL MENU</span>
+            <span>منوی دیجیتال RAMEN</span>
             <span aria-hidden="true">•</span>
-            <span>AUTHORIZED USERS ONLY</span>
+            <span>فقط کاربران مجاز</span>
         </div>
 
     </div>
