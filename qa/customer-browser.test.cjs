@@ -295,6 +295,33 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    await p.waitForFunction(()=>document.querySelector('#main-navigation')?.getAttribute('aria-hidden')==='true');
   }
  });
+ await check('Hero, story, contact and footer content stay localized and direction-aware',async()=>{
+  const expected={
+   fa:{tagline:'کافه و رستوران',footerBrand:'کافه و رستوران',contact:'ارتباط با ما',follow:'ما را دنبال کنید',powered:'قدرت‌گرفته از ROMANO',story:'ساده نیست خاص است',contactTitle:'منتظر شما هستیم.'},
+   en:{tagline:'Cafe & Restaurant',footerBrand:'Cafe & Restaurant',contact:'Contact',follow:'Follow us',powered:'Powered by ROMANO',story:'It is not ordinary.',contactTitle:'We are waiting for you.'},
+   tr:{tagline:'Kafe & Restoran',footerBrand:'Kafe & Restoran',contact:'İletişim',follow:'Bizi takip edin',powered:'ROMANO ile desteklenmektedir',story:'Sıradan değil özel.',contactTitle:'Sizi bekliyoruz.'},
+   ar:{tagline:'مقهى ومطعم',footerBrand:'مقهى ومطعم',contact:'تواصل معنا',follow:'تابعنا',powered:'مدعوم بواسطة رومانو',story:'الأمر ليس عاديًا.',contactTitle:'بانتظاركم.'}
+  };
+  for(const lang of ['fa','ar','en','tr']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   const e=expected[lang],dir=['fa','ar'].includes(lang)?'rtl':'ltr',font=dir==='rtl'?'Vazirmatn':'Inter';
+   const text=selector=>p.locator(selector).innerText().then(v=>v.replace(/\\s+/g,' ').trim());
+   assert.equal((await text('.hero-eyebrow')),e.tagline,lang+' hero tagline');
+   assert.equal(await p.locator('.hero-content').evaluate(n=>getComputedStyle(n).direction),dir,lang+' hero direction');
+   assert.equal(await p.locator('.hero-title').evaluate(n=>getComputedStyle(n).textAlign),'start',lang+' hero title alignment');
+   assert.match(await p.locator('.hero-content').evaluate(n=>getComputedStyle(n).fontFamily),new RegExp(font),lang+' hero font');
+   assert.equal(await text('#story .section-title'),e.story,lang+' story title');
+   assert.equal(await text('#contact .section-title'),e.contactTitle,lang+' contact title');
+   assert.equal(await text('.footer-brand p'),e.footerBrand,lang+' footer brand');
+   const headings=p.locator('.site-footer .footer-heading');
+   assert.equal((await headings.nth(0).innerText()).trim(),e.contact,lang+' footer contact heading');
+   assert.equal((await headings.nth(1).innerText()).trim(),e.follow,lang+' footer social heading');
+   assert.equal((await text('.footer-bottom span')),e.powered,lang+' footer attribution');
+   assert.equal(await p.locator('.site-footer .footer-main').evaluate(n=>getComputedStyle(n).direction),dir,lang+' footer direction');
+   assert.match(await p.locator('.site-footer').evaluate(n=>getComputedStyle(n).fontFamily),new RegExp(font),lang+' footer font');
+   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,lang+' hero/footer horizontal overflow');
+  }
+ });
  await check('Hero eyebrow is semantic, localized and direction-aware in all four languages',async()=>{
   const readEyebrow=()=>p.locator('.hero-eyebrow').textContent();
   assert.equal(await p.locator('.hero-section').evaluate(el=>getComputedStyle(el,'::before').content),'none');
