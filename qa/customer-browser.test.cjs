@@ -32,8 +32,14 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   await button.click();await p.waitForTimeout(450);const modal=await p.locator('.product-modal .modal-container').boundingBox();assert.ok(modal);assert.ok(Math.abs((modal.y+modal.height/2)-844/2)<2,JSON.stringify(modal));await p.keyboard.press('Escape');
  });
  await check('Cart supports add, quantity and QR-gated checkout',async()=>{
+  const cartButton=p.locator('#ramen-bottom-cart');
+  await cartButton.click();
+  assert.equal(await p.locator('.commerce-items .commerce-empty').isVisible(),true);
+  assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
+  await p.locator('[data-commerce-close]').last().click();
   const add=cards.first().locator('.commerce-card-add');assert.equal(await add.isVisible(),true);await add.click();
-  const cartButton=p.locator('#ramen-bottom-cart');assert.equal(await cartButton.isVisible(),true);assert.equal(await p.locator('.ramen-bottom-cart-count').textContent(),'1');
+  assert.equal(await p.locator('#commerce-checkout').isVisible(),true);
+  assert.equal(await cartButton.isVisible(),true);assert.equal(await p.locator('.ramen-bottom-cart-count').textContent(),'1');
   await cartButton.click();assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'false');
   await check('Cart drawer traps keyboard focus and restores its opener',async()=>{
    await p.keyboard.press('Shift+Tab');
@@ -48,6 +54,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   await p.locator('.commerce-quantity button[data-cart-change="1"]').click();assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
   await p.locator('#commerce-submit').click();assert.ok((await p.locator('#commerce-message').textContent()).trim());
   await p.locator('[data-cart-remove]').click();
+  assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
   await p.locator('[data-commerce-close]').last().click();
  });
  await check('Language changes close an open cart without leaving the page inert',async()=>{
