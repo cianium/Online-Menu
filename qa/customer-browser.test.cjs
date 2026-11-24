@@ -100,6 +100,13 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.equal(await normalizedText('#featured .section-title'),labels.featuredTitle);
    assert.equal(await normalizedText('#story .section-title'),labels.story);
    assert.equal(await p.locator('#ramen-header-cart').getAttribute('aria-label'),labels.cartAria);
+   const headerBoxes=await p.locator('.header-container .brand, #romano-language-toggle, #ramen-header-cart, #menu-toggle').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {name:node.className||node.id,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};}));
+   assert.equal(headerBoxes.length,4,JSON.stringify(headerBoxes));
+   for(let i=0;i<headerBoxes.length;i++)for(let j=i+1;j<headerBoxes.length;j++){
+    const a=headerBoxes[i],b=headerBoxes[j];
+    const separated=a.right<=b.left+1||b.right<=a.left+1||a.bottom<=b.top+1||b.bottom<=a.top+1;
+    assert.ok(separated,'Header controls overlap '+lang+'/'+width+': '+JSON.stringify(headerBoxes));
+   }
    assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${lang}/${width}`);
    assert.ok(await p.locator('#rv4-menu-search').getAttribute('placeholder'));
    const bounds=await cards.evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().width));assert.ok(bounds.every(w=>w>125),`Readable card widths ${lang}/${width}: ${bounds}`);
