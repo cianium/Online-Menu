@@ -1376,7 +1376,7 @@ html[dir="ltr"] .category-card { direction: ltr; }
         11px;
 
     direction:
-        ltr;
+        inherit;
 }
 
 
