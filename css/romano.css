@@ -1916,3 +1916,15 @@ html[dir="rtl"] .product-name { font-family: "Vazirmatn", sans-serif; letter-spa
 html[dir="rtl"] .hero-title { line-height: 1.22; }
 html[dir="ltr"] .hero-title,
 html[dir="ltr"] .section-title { font-family: "Playfair Display", "Inter", serif; letter-spacing: -.035em; }
+
+
+/* Minimum readable sizes for customer-facing metadata and navigation. */
+.brand-tagline { font-size: 10px; letter-spacing: .16em; }
+.hero-section::before { font-size: 10px; }
+.hero-eyebrow, .section-eyebrow, .product-category, .contact-label,
+.footer-heading, .navigation-section-label { font-size: 11px; line-height: 1.5; }
+.product-rating, .menu-category-count, .footer-bottom, .navigation-label { font-size: 12px; }
+html[lang="fa"] .hero-section::before { content: "رستوران و کافه"; }
+html[lang="en"] .hero-section::before { content: "ROMANO · RESTAURANT & CAFE"; }
+html[lang="tr"] .hero-section::before { content: "ROMANO · RESTORAN & KAFE"; }
+html[lang="ar"] .hero-section::before { content: "رومانو · مطعم ومقهى"; }
