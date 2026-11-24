@@ -499,6 +499,7 @@
             current === "tr" ? "<span>İyi yemek.</span><span>İyi his.</span>" :
             "<span>طعام جيد.</span><span>مزاج جيد.</span>", true);
 
+        set(".hero-eyebrow", pick(restaurant.tagline));
         set(".hero-description", pick(restaurant.description));
         set(".hero-button span:first-child", ui("skipToMenu"));
 

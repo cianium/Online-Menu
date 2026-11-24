@@ -209,20 +209,24 @@ input:focus-visible {
     linear-gradient(90deg, rgba(6, 5, 4, 0.15) 0%, rgba(6, 5, 4, 0.25) 38%, rgba(6, 5, 4, 0.78) 100%),
     linear-gradient(180deg, rgba(6, 5, 4, 0.12) 0%, rgba(6, 5, 4, 0.52) 72%, rgba(6, 5, 4, 0.9) 100%);
 }
-.hero-section::before {
-  content: "ROMANO · RESTAURANT & CAFE";
+.hero-eyebrow {
   position: absolute;
-  top: 30px;
-  left: 0;
-  right: 0;
+  inset-block-start: 30px;
+  inset-inline: max(24px, calc((100vw - var(--container-width)) / 2 + var(--container-padding)));
   z-index: 1;
-  padding-inline: max(24px, calc((100vw - var(--container-width)) / 2 + var(--container-padding)));
-  color: rgba(242, 236, 227, 0.58);
-  font-size: 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(242, 236, 227, 0.72);
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.24em;
-  direction: ltr;
-  text-align: left;
+  letter-spacing: 0.08em;
+  direction: inherit;
+  text-align: start;
+}
+html[lang="fa"] .hero-eyebrow,
+html[lang="ar"] .hero-eyebrow {
+  letter-spacing: 0;
 }
 .hero-content {
   width: min(calc(100% - 48px), var(--container-width));
@@ -237,8 +241,6 @@ input:focus-visible {
   align-items: center;
   gap: 10px;
   color: var(--romano-gold-light);
-  font-size: 9px;
-  letter-spacing: 0.26em;
 }
 .hero-eyebrow::before {
   content: "";
