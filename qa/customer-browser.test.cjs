@@ -52,6 +52,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    await cartButton.click();
   });
   await p.locator('.commerce-quantity button[data-cart-change="1"]').click();assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
+  await p.screenshot({path:path.join(out,'customer-cart-filled-fa-390.png')});
   await p.locator('#commerce-submit').click();assert.ok((await p.locator('#commerce-message').textContent()).trim());
   await p.locator('[data-cart-remove]').click();
   assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
