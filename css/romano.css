@@ -1747,24 +1747,28 @@ html[lang="ar"] .hero-eyebrow {
   margin-top: auto;
   padding-top: 22px;
   border-top: 1px solid var(--romano-line-soft);
-  color: rgba(242, 236, 227, 0.34);
-  font-family: var(--font-display);
-  font-size: 8px;
-  letter-spacing: 0.13em;
-  direction: ltr;
+  color: rgba(242, 236, 227, 0.62);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0;
+  direction: inherit;
+}
+html[dir="ltr"] .navigation-footer {
+  letter-spacing: 0.1em;
 }
 
 .navigation-menu-cta {
   flex: 0 0 auto;
-  min-height: 34px;
-  padding: 0 12px;
+  min-height: 40px;
+  padding: 0 14px;
   border: 1px solid var(--romano-line-gold);
   border-radius: 999px;
   background: rgba(201, 164, 106, 0.06);
   color: var(--romano-gold-light);
-  font-family: var(--font-persian);
-  font-size: 10px;
-  direction: rtl;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: normal;
+  direction: inherit;
 }
 
 .menu-toggle {

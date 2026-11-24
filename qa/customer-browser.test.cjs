@@ -213,6 +213,25 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   await p.setViewportSize({width:390,height:900});
   assert.equal(await p.locator('#ramen-bottom-cart').isVisible(),true);
  });
+ await check('Navigation footer and CTA follow the selected language direction and font',async()=>{
+  const expected={fa:{dir:'rtl',font:'Vazirmatn'},ar:{dir:'rtl',font:'Vazirmatn'},en:{dir:'ltr',font:'Inter'},tr:{dir:'ltr',font:'Inter'}};
+  for(const lang of ['fa','ar','en','tr']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   const nav=p.locator('#main-navigation');
+   if(await nav.getAttribute('aria-hidden')==='true')await p.locator('#menu-toggle').click();
+   await p.waitForFunction(()=>document.querySelector('#main-navigation')?.getAttribute('aria-hidden')==='false');
+   const footer=p.locator('.navigation-footer');
+   const cta=p.locator('.navigation-menu-cta');
+   assert.equal(await footer.evaluate(node=>getComputedStyle(node).direction),expected[lang].dir,lang+' footer direction');
+   assert.equal(await cta.evaluate(node=>getComputedStyle(node).direction),expected[lang].dir,lang+' CTA direction');
+   assert.match(await footer.evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expected[lang].font),lang+' footer font');
+   assert.match(await cta.evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expected[lang].font),lang+' CTA font');
+   assert.ok((await cta.boundingBox()).height>=40,lang+' CTA touch target');
+   assert.ok((await cta.textContent()).trim().length>0,lang+' CTA label');
+   await p.locator('#navigation-close').click();
+   await p.waitForFunction(()=>document.querySelector('#main-navigation')?.getAttribute('aria-hidden')==='true');
+  }
+ });
  await check('Hero eyebrow is semantic, localized and direction-aware in all four languages',async()=>{
   const readEyebrow=()=>p.locator('.hero-eyebrow').textContent();
   assert.equal(await p.locator('.hero-section').evaluate(el=>getComputedStyle(el,'::before').content),'none');

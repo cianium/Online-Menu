@@ -68,6 +68,7 @@ check(!/>\s*(?:OVERVIEW|ROMANO · CONTROL CENTER|MENU HEALTH|MENU MANAGEMENT|MEN
 check(read("admin/index.html").includes('data-admin-i18n-aria-label="فیلتر وضعیت سفارش"') && adminI18n.includes('"فیلتر وضعیت سفارش": ["Order status filters", "Sipariş durumu filtreleri", "تصفية حالة الطلب"]'), "Order filter group accessible name must be localized in all four languages.");
 check(!/>\s*(?:Badge|بدون Badge|رستوران CONFIGURATION|Merchant ID)\s*</.test(read("admin/index.html")), "Admin HTML still contains mixed-language field labels.");
 check(read("index.html").includes("منوی دیجیتال ROMANO") && read("js/i18n.js").includes('"منوی دیجیتال ROMANO"'), "Customer navigation footer brand is not localized.");
+check(/\.navigation-footer\s*\{[^}]*direction:\s*inherit/s.test(read("css/romano.css")) && /\.navigation-menu-cta\s*\{[^}]*direction:\s*inherit/s.test(read("css/romano.css")), "Customer navigation footer and CTA must inherit the active language direction.");
 check(/<span class="hero-eyebrow">\s*کافه و رستوران\s*<\/span>/.test(read("index.html")) && read("js/i18n.js").includes('set(".hero-eyebrow", pick(restaurant.tagline))'), "Hero eyebrow must be semantic and localized from restaurant tagline.");
 check(!read("css/romano.css").includes("hero-section::before"), "Hero eyebrow must not be duplicated by generated CSS content.");
 check(!read("js/i18n.js").includes("Designed by Cian Khayat"), "Obsolete developer credit remains in customer localization.");
