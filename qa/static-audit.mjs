@@ -69,6 +69,7 @@ check(read("admin/index.html").includes('data-admin-i18n-aria-label="فیلتر 
 check(!/>\s*(?:Badge|بدون Badge|رستوران CONFIGURATION|Merchant ID)\s*</.test(read("admin/index.html")), "Admin HTML still contains mixed-language field labels.");
 check(read("index.html").includes("منوی دیجیتال ROMANO") && read("js/i18n.js").includes('"منوی دیجیتال ROMANO"'), "Customer navigation footer brand is not localized.");
 check(/<span class="hero-eyebrow">\s*کافه و رستوران\s*<\/span>/.test(read("index.html")) && read("js/i18n.js").includes('set(".hero-eyebrow", pick(restaurant.tagline))'), "Hero eyebrow must be semantic and localized from restaurant tagline.");
+check(!read("css/romano.css").includes("hero-section::before"), "Hero eyebrow must not be duplicated by generated CSS content.");
 check(!read("js/i18n.js").includes("Designed by Cian Khayat"), "Obsolete developer credit remains in customer localization.");
 check(read("js/menu-experience.js").includes('id="menu-browser-eyebrow"') && read("js/i18n.js").includes('"menuEyebrow"'), "Customer menu eyebrow is not localized.");
 check(!read("js/menu-experience.js").includes('class="section-eyebrow">ROMANO'), "Customer menu still contains a hard-coded platform heading.");

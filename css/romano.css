@@ -1092,12 +1092,7 @@ html[lang="ar"] .hero-eyebrow {
   .hero-section {
     min-height: calc(100svh - 72px);
   }
-  .hero-section::before {
-    top: 18px;
-    padding-inline: 18px;
-    font-size: 7px;
-  }
-  .hero-content {
+.hero-content {
     width: min(calc(100% - 36px), var(--container-width));
     padding-block: 94px 72px;
     align-items: center;
@@ -1926,16 +1921,9 @@ html[dir="ltr"] .section-title { font-family: "Playfair Display", "Inter", serif
 .contact-label, .footer-heading, .navigation-section-label, .navigation-kicker { font-size: 11px; }
 .category-name, .product-rating, .menu-category-index, .menu-category-count,
 .footer-bottom, .navigation-label, .product-description { font-size: 12px; }
-.hero-section::before { font-size: 10px; }
 .hero-eyebrow, .section-eyebrow, .product-category, .contact-label,
 .footer-heading, .navigation-section-label { font-size: 11px; line-height: 1.5; }
 .product-rating, .menu-category-count, .footer-bottom, .navigation-label { font-size: 12px; }
-html[lang="fa"] .hero-section::before { content: "رستوران و کافه"; }
-html[lang="en"] .hero-section::before { content: "ROMANO · RESTAURANT & CAFE"; }
-html[lang="tr"] .hero-section::before { content: "ROMANO · RESTORAN & KAFE"; }
-html[lang="ar"] .hero-section::before { content: "رومانو · مطعم ومقهى"; }
-
-
 /* ---------------------------------------------------------
    13. DIRECTION-AWARE EDITORIAL LAYOUT
    Keep the same visual system while mirroring composition for LTR.
@@ -1947,10 +1935,6 @@ html[lang="ar"] .hero-section::before { content: "رومانو · مطعم وم�
 }
 .hero-title,
 .hero-description {
-  text-align: start;
-}
-.hero-section::before {
-  direction: inherit;
   text-align: start;
 }
 .hero-scroll-indicator {
@@ -1971,11 +1955,6 @@ html[lang="ar"] .hero-section::before { content: "رومانو · مطعم وم�
 .contact-item a {
   text-align: start;
 }
-html[lang="en"] .hero-section::before { content: "ROMANO · RESTAURANT & CAFE"; }
-html[lang="tr"] .hero-section::before { content: "ROMANO · RESTORAN & KAFE"; }
-html[lang="fa"] .hero-section::before { content: "رستوران و کافه"; }
-html[lang="ar"] .hero-section::before { content: "رومانو · مطعم ومقهى"; }
-
 html[dir="ltr"] .hero-overlay {
   background:
     linear-gradient(270deg, rgba(6, 5, 4, 0.15) 0%, rgba(6, 5, 4, 0.25) 38%, rgba(6, 5, 4, 0.78) 100%),
@@ -1986,9 +1965,6 @@ html[dir="ltr"] .hero-content {
 }
 html[dir="ltr"] .hero-title {
   letter-spacing: -0.035em;
-}
-html[dir="ltr"] .hero-section::before {
-  letter-spacing: 0.2em;
 }
 html[dir="ltr"] .story-content,
 html[dir="ltr"] .contact-content {

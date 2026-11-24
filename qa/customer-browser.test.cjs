@@ -98,8 +98,8 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.match(await p.locator('.hero-title').first().evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expectedDisplay));
    assert.ok(Number.parseFloat(await p.locator('.hero-eyebrow').first().evaluate(node=>getComputedStyle(node).fontSize))>=11);
    assert.ok(Number.parseFloat(await p.locator('[data-ramen-label="menu"]').evaluate(node=>getComputedStyle(node).fontSize))>=11);
-   const heroMeta={fa:'رستوران و کافه',en:'ROMANO · RESTAURANT & CAFE',tr:'ROMANO · RESTORAN & KAFE',ar:'رومانو · مطعم ومقهى'}[lang];
-   assert.ok((await p.locator('.hero-section').evaluate(node=>getComputedStyle(node,'::before').content)).includes(heroMeta));
+   const heroMeta={fa:'کافه و رستوران',en:'Cafe & Restaurant',tr:'Kafe & Restoran',ar:'مقهى ومطعم'}[lang];
+   assert.equal((await p.locator('.hero-eyebrow').textContent()).trim(),heroMeta);
    const labels={fa:{home:'خانه',menu:'منو',featured:'ویژه‌ها',contact:'ارتباط',cart:'سبد',cartAria:'سبد سفارش',menuEyebrow:'منوی رستوران',categories:'انتخاب شما',featuredTitle:'انتخاب ویژه.',story:'ساده نیست خاص است'},en:{home:'Home',menu:'Menu',featured:'Featured',contact:'Contact',cart:'Cart',cartAria:'Your order',menuEyebrow:'RESTAURANT MENU',categories:'Your Choice',featuredTitle:'Featured Selection.',story:'It is not ordinary.'},tr:{home:'Ana Sayfa',menu:'Menü',featured:'Öne çıkanlar',contact:'İletişim',cart:'Sepet',cartAria:'Siparişiniz',menuEyebrow:'RESTORAN MENÜSÜ',categories:'Sizin Seçiminiz',featuredTitle:'Özel Seçim.',story:'Sıradan değil özel.'},ar:{home:'الرئيسية',menu:'القائمة',featured:'المميز',contact:'اتصل بنا',cart:'السلة',cartAria:'طلبك',menuEyebrow:'قائمة المطعم',categories:'اختيارك',featuredTitle:'اختيار مميز.',story:'الأمر ليس عاديًا.'}}[lang];
    for(const key of ['home','menu','featured','contact','cart']) assert.equal(await p.locator('[data-ramen-label="'+key+'"]').textContent(),labels[key]);
    const normalizedText=selector=>p.locator(selector).innerText().then(value=>value.replace(/\s+/g,' ').trim());
@@ -215,6 +215,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
  });
  await check('Hero eyebrow is semantic, localized and direction-aware in all four languages',async()=>{
   const readEyebrow=()=>p.locator('.hero-eyebrow').textContent();
+  assert.equal(await p.locator('.hero-section').evaluate(el=>getComputedStyle(el,'::before').content),'none');
   await p.evaluate(()=>ROMANO_I18N.setLanguage('en',false));
   assert.equal((await readEyebrow()).trim(),'Cafe & Restaurant');
   assert.equal(await p.locator('.hero-eyebrow').evaluate(el=>getComputedStyle(el).direction),'ltr');
