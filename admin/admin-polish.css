@@ -448,5 +448,6 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
   font-size: 12px;
 }
 .admin-brand-label { font-size: 11px; letter-spacing: .12em; }
+.text-button, .view-menu, .admin-user { font-size: 12px; }
 .admin-gate-brand-label { font-size: 11px; letter-spacing: .16em; }
 .admin-gate-eyebrow, .admin-gate-secure-line { font-size: 11px; letter-spacing: .12em; }
