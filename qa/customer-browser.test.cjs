@@ -116,7 +116,19 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   }
   for(const [lang,width]of [['fa',390],['en',1440],['ar',390],['tr',390]]){
    await p.setViewportSize({width,height:1000});await p.evaluate(l=>ROMANO_I18N.setLanguage(l),lang);
-   await p.evaluate(()=>window.scrollTo({top:document.querySelector('#menu').getBoundingClientRect().top+scrollY-85,behavior:'instant'}));await p.waitForTimeout(200);await p.screenshot({path:path.join(out,`customer-${lang}-${width}.png`)});
+   await p.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));await p.waitForTimeout(150);
+   await p.screenshot({path:path.join(out,`customer-hero-${lang}-${width}.png`)});
+   await p.evaluate(()=>window.scrollTo({top:document.querySelector('#menu').getBoundingClientRect().top+scrollY-85,behavior:'instant'}));await p.waitForTimeout(200);
+   await p.screenshot({path:path.join(out,`customer-menu-${lang}-${width}.png`)});
+   if((lang==='fa'&&width===390)||(lang==='en'&&width===1440)){
+    await cards.first().locator('.product-card-button').click();await p.locator('.product-modal').waitFor({state:'visible'});
+    await p.screenshot({path:path.join(out,`customer-product-modal-${lang}-${width}.png`)});
+    await p.keyboard.press('Escape');
+    const cartButton=width<700?p.locator('#ramen-bottom-cart'):p.locator('#ramen-header-cart');
+    await cartButton.click();await p.locator('#commerce-drawer.is-open').waitFor({state:'visible'});
+    await p.screenshot({path:path.join(out,`customer-cart-${lang}-${width}.png`)});
+    await p.keyboard.press('Escape');
+   }
   }
  });
  await check('Demo cross-tab changes remove unavailable open product',async()=>{
