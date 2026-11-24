@@ -171,6 +171,28 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   await p.setViewportSize({width:390,height:900});
   assert.equal(await p.locator('#ramen-bottom-cart').isVisible(),true);
  });
+ await check('Hero branding and editorial alignment follow the active language direction',async()=>{
+  await p.evaluate(()=>ROMANO_I18N.setLanguage('en',false));
+  const en=await p.evaluate(()=>{
+   const hero=document.querySelector('.hero-section');
+   const title=document.querySelector('.hero-title');
+   return {dir:document.documentElement.dir,textAlign:getComputedStyle(title).textAlign,brand:getComputedStyle(hero,'::before').content};
+  });
+  assert.equal(en.dir,'ltr');
+  assert.equal(en.textAlign,'start');
+  assert.match(en.brand,/RAMEN/);
+  assert.doesNotMatch(en.brand,/ROMANO/);
+  await p.evaluate(()=>ROMANO_I18N.setLanguage('tr',false));
+  const tr=await p.evaluate(()=>getComputedStyle(document.querySelector('.hero-section'),'::before').content);
+  assert.match(tr,/RAMEN/);
+  await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));
+  const fa=await p.evaluate(()=>{
+   const title=document.querySelector('.hero-title');
+   return {dir:document.documentElement.dir,textAlign:getComputedStyle(title).textAlign};
+  });
+  assert.equal(fa.dir,'rtl');
+  assert.equal(fa.textAlign,'start');
+ });
  await check('No developer credits or internal release labels remain',async()=>{
   assert.equal(await p.locator('.footer-bottom a[href*="kiankhayat.me"]').count(),0);
   assert.equal(await p.locator('.commerce-drawer small').textContent(),'RAMEN');
