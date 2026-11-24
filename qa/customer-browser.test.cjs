@@ -23,6 +23,30 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   });
   assert.equal(fallback.value,fallback.name.trim().charAt(0));
  });
+ await check('Product image fallbacks use localized product initials, not internal brand copy',async()=>{
+  const fallback=await p.evaluate(()=>{
+   const raw=menuProducts.find(isAvailableProduct);
+   const localized=ROMANO_I18N.localizeProduct(raw);
+   const card=createProductCard({...raw,image:''});
+   const cardValue=card.querySelector('.image-fallback')?.textContent;
+   openProductModal(raw.id);
+   const modalValue=document.querySelector('.modal-image-wrapper .image-fallback')?.textContent;
+   closeProductModal();
+   const broken=document.createElement('img');
+   broken.alt=localized.name;
+   const wrapper=document.createElement('div');
+   wrapper.appendChild(broken);
+   document.body.appendChild(wrapper);
+   handleImageError(broken);
+   const brokenValue=wrapper.querySelector('.image-fallback')?.textContent;
+   wrapper.remove();
+   return {name:localized.name,cardValue,modalValue,brokenValue};
+  });
+  const initial=Array.from(fallback.name.trim())[0];
+  assert.equal(fallback.cardValue,initial);
+  assert.equal(fallback.modalValue,initial);
+  assert.equal(fallback.brokenValue,initial);
+ });
  await check('Image-first card CTA and favorite remain accessible',async()=>{
   const card=cards.first(),button=card.locator('.product-card-button'),favorite=card.locator('[data-favorite-product]');
   await card.scrollIntoViewIfNeeded();
