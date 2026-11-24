@@ -460,6 +460,12 @@
         "Tekrar dene",
         "حاول مجددًا"
     ],
+    "menuEyebrow": [
+        "منوی رستوران",
+        "RESTAURANT MENU",
+        "RESTORAN MENÜSÜ",
+        "قائمة المطعم"
+    ],
     "menuIntro": [
         "یک انتخاب خوش‌طعم",
         "Find your next favorite",
