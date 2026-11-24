@@ -111,7 +111,7 @@
       <div class="commerce-backdrop" data-commerce-close hidden></div>
       <section class="commerce-drawer" id="commerce-drawer" role="dialog" aria-modal="true" aria-labelledby="commerce-title" aria-hidden="true" tabindex="-1" inert>
         <header class="commerce-drawer-head">
-          <div><small>RAMEN</small><h2 id="commerce-title">${safe(t("cart"))}</h2></div>
+          <div><small>ROMANO</small><h2 id="commerce-title">${safe(t("cart"))}</h2></div>
           <button class="commerce-close" type="button" data-commerce-close aria-label="${safe(t("close"))}">×</button>
         </header>
         <div class="commerce-order-status" id="commerce-order-status" hidden></div>
