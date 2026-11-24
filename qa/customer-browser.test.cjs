@@ -305,7 +305,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   for(const lang of ['fa','ar','en','tr']){
    await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
    const e=expected[lang],dir=['fa','ar'].includes(lang)?'rtl':'ltr',font=dir==='rtl'?'Vazirmatn':'Inter';
-   const text=selector=>p.locator(selector).innerText().then(v=>v.replace(/\\s+/g,' ').trim());
+   const text=selector=>p.locator(selector).innerText().then(v=>v.replace(/\s+/g,' ').trim());
    assert.equal((await text('.hero-eyebrow')),e.tagline,lang+' hero tagline');
    assert.equal(await p.locator('.hero-content').evaluate(n=>getComputedStyle(n).direction),dir,lang+' hero direction');
    assert.equal(await p.locator('.hero-title').evaluate(n=>getComputedStyle(n).textAlign),'start',lang+' hero title alignment');
