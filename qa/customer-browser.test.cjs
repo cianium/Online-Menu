@@ -76,7 +76,9 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    await p.setViewportSize({width,height:900});await p.evaluate(lang=>ROMANO_I18N.setLanguage(lang),lang);
    assert.equal(await p.locator('html').getAttribute('dir'),['fa','ar'].includes(lang)?'rtl':'ltr');
    const expectedFont=['fa','ar'].includes(lang)?'Vazirmatn':'Inter';
+   const expectedDisplay=['fa','ar'].includes(lang)?'Vazirmatn':'Playfair Display';
    assert.match(await p.locator('body').evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expectedFont));
+   assert.match(await p.locator('.hero-title').first().evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expectedDisplay));
    assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${lang}/${width}`);
    assert.ok(await p.locator('#rv4-menu-search').getAttribute('placeholder'));
    const bounds=await cards.evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().width));assert.ok(bounds.every(w=>w>125),`Readable card widths ${lang}/${width}: ${bounds}`);
