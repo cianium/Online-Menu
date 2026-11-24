@@ -64,8 +64,9 @@ body.commerce-open .rv4-back-top{opacity:0;pointer-events:none}
   .header-container .brand-name {
     display: block;
     max-width: 100%;
-    font-size: clamp(15px, 4.6vw, 19px);
+    font-size: 16px;
     line-height: 1.15;
+    letter-spacing: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -74,9 +75,9 @@ body.commerce-open .rv4-back-top{opacity:0;pointer-events:none}
     display: none;
   }
   .header-container .language-toggle {
-    flex: 0 0 72px;
-    width: 72px;
-    min-width: 72px;
+    flex: 0 0 64px;
+    width: 64px;
+    min-width: 64px;
     height: 40px;
     margin: 0;
     padding-inline: 7px;
@@ -84,6 +85,7 @@ body.commerce-open .rv4-back-top{opacity:0;pointer-events:none}
     justify-content: center;
   }
   .header-container .language-toggle-icon {
+    display: none;
     width: 15px;
     height: 15px;
     flex: 0 0 15px;
@@ -108,9 +110,9 @@ body.commerce-open .rv4-back-top{opacity:0;pointer-events:none}
     height: 38px;
   }
   .header-container .language-toggle {
-    flex-basis: 66px;
-    width: 66px;
-    min-width: 66px;
+    flex-basis: 60px;
+    width: 60px;
+    min-width: 60px;
     padding-inline: 5px;
   }
   .header-container .ramen-header-cart,
