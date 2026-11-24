@@ -29,9 +29,12 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    const localized=ROMANO_I18N.localizeProduct(raw);
    const card=createProductCard({...raw,image:''});
    const cardValue=card.querySelector('.image-fallback')?.textContent;
+   const originalImage=raw.image;
+   raw.image='';
    openProductModal(raw.id);
    const modalValue=document.querySelector('.modal-image-wrapper .image-fallback')?.textContent;
    closeProductModal();
+   raw.image=originalImage;
    const broken=document.createElement('img');
    broken.alt=localized.name;
    const wrapper=document.createElement('div');

@@ -2723,7 +2723,7 @@ window.addEventListener("storage", event => {
         host.hidden = false;
         host.innerHTML = `
             <div class="romano-signature-dish__media">
-                ${product.image ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy">` : `<div class="image-fallback" aria-hidden="true">RAMEN</div>`}
+                ${product.image ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy">` : `<div class="image-fallback" aria-hidden="true">${escapeHTML(getImageFallbackLabel(product.name))}</div>`}
             </div>
             <div class="romano-signature-dish__copy">
                 <span class="romano-signature-dish__eyebrow">${escapeHTML(window.ROMANO_I18N?.ui?.("signatureEyebrow", product.categoryName || "ROMANO") || `SIGNATURE DISH · ${product.categoryName || "ROMANO"}`)}</span>
