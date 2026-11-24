@@ -79,13 +79,12 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    const expectedDisplay=['fa','ar'].includes(lang)?'Vazirmatn':'Playfair Display';
    assert.match(await p.locator('body').evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expectedFont));
    assert.match(await p.locator('.hero-title').first().evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expectedDisplay));
-   const labels={fa:{menu:'منو',featured:'ویژه‌ها',contact:'ارتباط',cart:'سبد',choice1:'انتخاب',choice2:'شما',featured1:'انتخاب',featured2:'ویژه.',story:'خاص است',cartAria:'سبد سفارش'},en:{menu:'Menu',featured:'Featured',contact:'Contact',cart:'Cart',choice1:'Your',choice2:'choice',featured1:'Featured',featured2:'selection.',story:"It's special.",cartAria:'Order cart'},tr:{menu:'Menü',featured:'Öne Çıkanlar',contact:'İletişim',cart:'Sepet',choice1:'Senin',choice2:'tercihin',featured1:'Öne çıkan',featured2:'özel.',story:'Özel.',cartAria:'Sipariş sepeti'},ar:{menu:'القائمة',featured:'المميزة',contact:'التواصل',cart:'السلة',choice1:'اختيارك',choice2:'اختيار',featured1:'الاختيار',featured2:'المميز.',story:'إنه مميز.',cartAria:'سلة الطلبات'}}[lang];
+   const labels={fa:{menu:'منو',featured:'ویژه‌ها',contact:'ارتباط',cart:'سبد',cartAria:'سبد سفارش',categories:'انتخاب شما',featuredTitle:'انتخاب ویژه.',story:'ساده نیست خاص است'},en:{menu:'Menu',featured:'Featured',contact:'Contact',cart:'Cart',cartAria:'Order cart',categories:'Your Choice',featuredTitle:'Featured Selection.',story:'It is not ordinary.'},tr:{menu:'Menü',featured:'Öne Çıkanlar',contact:'İletişim',cart:'Sepet',cartAria:'Sipariş sepeti',categories:'Sizin Seçiminiz',featuredTitle:'Özel Seçim.',story:'Sıradan değil özel.'},ar:{menu:'القائمة',featured:'المميزة',contact:'التواصل',cart:'السلة',cartAria:'سلة الطلبات',categories:'اختيارك',featuredTitle:'اختيار مميز.',story:'الأمر ليس عاديًا.'}}[lang];
    for(const key of ['menu','featured','contact','cart']) assert.equal(await p.locator('[data-ramen-label="'+key+'"]').textContent(),labels[key]);
-   assert.equal(await p.locator('[data-i18n="انتخاب شما - اول"]').textContent(),labels.choice1);
-   assert.equal(await p.locator('[data-i18n="انتخاب شما - دوم"]').textContent(),labels.choice2);
-   assert.equal(await p.locator('[data-i18n="انتخاب ویژه - اول"]').textContent(),labels.featured1);
-   assert.equal(await p.locator('[data-i18n="انتخاب ویژه - دوم"]').textContent(),labels.featured2);
-   assert.equal(await p.locator('[data-i18n="خاص است"]').textContent(),labels.story);
+   const normalizedText=selector=>p.locator(selector).innerText().then(value=>value.replace(/\\s+/g,' ').trim());
+   assert.equal(await normalizedText('#categories .section-title'),labels.categories);
+   assert.equal(await normalizedText('#featured .section-title'),labels.featuredTitle);
+   assert.equal(await normalizedText('#story .section-title'),labels.story);
    assert.equal(await p.locator('#ramen-header-cart').getAttribute('aria-label'),labels.cartAria);
    assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${lang}/${width}`);
    assert.ok(await p.locator('#rv4-menu-search').getAttribute('placeholder'));
