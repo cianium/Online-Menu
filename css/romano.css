@@ -1932,3 +1932,78 @@ html[lang="fa"] .hero-section::before { content: "رستوران و کافه"; }
 html[lang="en"] .hero-section::before { content: "ROMANO · RESTAURANT & CAFE"; }
 html[lang="tr"] .hero-section::before { content: "ROMANO · RESTORAN & KAFE"; }
 html[lang="ar"] .hero-section::before { content: "رومانو · مطعم ومقهى"; }
+
+
+/* ---------------------------------------------------------
+   13. DIRECTION-AWARE EDITORIAL LAYOUT
+   Keep the same visual system while mirroring composition for LTR.
+--------------------------------------------------------- */
+.hero-section,
+.story-content,
+.contact-content {
+  text-align: start;
+}
+.hero-title,
+.hero-description {
+  text-align: start;
+}
+.hero-section::before {
+  direction: inherit;
+  text-align: start;
+}
+.hero-scroll-indicator {
+  right: auto;
+  inset-inline-start: max(24px, calc((100vw - var(--container-width)) / 2 + var(--container-padding)));
+  align-items: flex-start;
+  text-align: start;
+}
+.story-description {
+  margin-inline: 0;
+  text-align: start;
+}
+.contact-item {
+  align-items: flex-start;
+  text-align: start;
+}
+.contact-item p,
+.contact-item a {
+  text-align: start;
+}
+html[dir="ltr"] .hero-overlay {
+  background:
+    linear-gradient(270deg, rgba(6, 5, 4, 0.15) 0%, rgba(6, 5, 4, 0.25) 38%, rgba(6, 5, 4, 0.78) 100%),
+    linear-gradient(180deg, rgba(6, 5, 4, 0.12) 0%, rgba(6, 5, 4, 0.52) 72%, rgba(6, 5, 4, 0.9) 100%);
+}
+html[dir="ltr"] .hero-content {
+  align-items: flex-start;
+}
+html[dir="ltr"] .hero-title {
+  letter-spacing: -0.035em;
+}
+html[dir="ltr"] .hero-section::before {
+  letter-spacing: 0.2em;
+}
+html[dir="ltr"] .story-content,
+html[dir="ltr"] .contact-content {
+  margin-inline: 0 auto;
+}
+html[dir="rtl"] .story-content,
+html[dir="rtl"] .contact-content {
+  margin-inline: 0 auto;
+}
+html[dir="ltr"] .contact-details {
+  direction: ltr;
+}
+@media (max-width: 600px) {
+  .hero-content {
+    width: min(calc(100% - 36px), var(--container-width));
+    padding-block: 88px 76px;
+  }
+  .hero-description {
+    max-width: 36ch;
+  }
+  .story-content .section-title,
+  .contact-content .section-title {
+    overflow-wrap: anywhere;
+  }
+}
