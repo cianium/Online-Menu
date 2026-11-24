@@ -84,6 +84,11 @@ body.commerce-open .rv4-back-top{opacity:0;pointer-events:none}
     gap: 4px;
     justify-content: center;
   }
+  .header-container #romano-language-toggle {
+    flex: 0 0 64px;
+    width: 64px;
+    min-width: 64px;
+  }
   .header-container .language-toggle-icon {
     display: none;
     width: 15px;
@@ -114,6 +119,11 @@ body.commerce-open .rv4-back-top{opacity:0;pointer-events:none}
     width: 60px;
     min-width: 60px;
     padding-inline: 5px;
+  }
+  .header-container #romano-language-toggle {
+    flex-basis: 60px;
+    width: 60px;
+    min-width: 60px;
   }
   .header-container .ramen-header-cart,
   .header-container .menu-toggle {
