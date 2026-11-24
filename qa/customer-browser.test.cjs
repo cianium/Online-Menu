@@ -58,6 +58,23 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   assert.ok(Math.abs(geometry.card.width-geometry.image.width)<1&&Math.abs(geometry.card.height-geometry.image.height)<1);assert.ok(geometry.ctaWidth>geometry.card.width*.35);assert.equal(geometry.heartHit,true);
   await button.click();await p.waitForTimeout(450);const modal=await p.locator('.product-modal .modal-container').boundingBox();assert.ok(modal);assert.ok(Math.abs((modal.y+modal.height/2)-844/2)<2,JSON.stringify(modal));await p.keyboard.press('Escape');
  });
+ await check('Product card metadata and modal close control follow RTL/LTR direction',async()=>{
+  const expected={fa:'rtl',ar:'rtl',en:'ltr',tr:'ltr'};
+  for(const lang of ['fa','ar','en','tr']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   const topline=cards.first().locator('.product-topline');
+   assert.equal(await topline.evaluate(node=>getComputedStyle(node).direction),expected[lang],lang+' product metadata direction');
+   await cards.first().locator('.product-card-button').click();
+   const geometry=await p.locator('.product-modal .modal-container').evaluate(container=>{
+    const panel=container.getBoundingClientRect(),close=container.querySelector('.modal-close').getBoundingClientRect();
+    return {panelLeft:panel.left,panelRight:panel.right,closeLeft:close.left,closeRight:close.right};
+   });
+   if(expected[lang]==='rtl')assert.ok(geometry.closeRight>=geometry.panelRight-20,lang+' modal close must sit at inline-start/right: '+JSON.stringify(geometry));
+   else assert.ok(geometry.closeLeft<=geometry.panelLeft+20,lang+' modal close must sit at inline-start/left: '+JSON.stringify(geometry));
+   await p.keyboard.press('Escape');
+   assert.equal(await p.locator('.product-modal').getAttribute('aria-hidden'),'true');
+  }
+ });
  await check('Cart supports add, quantity and QR-gated checkout',async()=>{
   const cartButton=p.locator('#ramen-bottom-cart');
   await cartButton.click();

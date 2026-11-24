@@ -1571,7 +1571,7 @@ p {
         12px;
 
     direction:
-        rtl;
+        inherit;
 }
 
 
@@ -2141,7 +2141,7 @@ background-repeat:
     top:
         12px;
 
-    left:
+    inset-inline-start:
         12px;
 
     z-index:
