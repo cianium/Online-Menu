@@ -1904,6 +1904,8 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 
 
 /* Language-aware typography: Persian/Arabic use Vazirmatn; LTR uses Inter. */
+html[dir="rtl"] { --font-ui: "Vazirmatn", sans-serif; --font-display: "Vazirmatn", sans-serif; }
+html[dir="ltr"] { --font-ui: "Inter", system-ui, sans-serif; --font-display: "Playfair Display", "Inter", serif; }
 body { font-family: var(--font-ui); }
 html[lang="fa"] body, html[lang="ar"] body { font-family: "Vazirmatn", sans-serif; }
 html[lang="en"] body, html[lang="tr"] body { font-family: "Inter", system-ui, sans-serif; }
