@@ -316,6 +316,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    const headings=p.locator('.site-footer .footer-heading');
    assert.equal((await headings.nth(0).innerText()).trim(),e.contact,lang+' footer contact heading');
    assert.equal((await headings.nth(1).innerText()).trim(),e.follow,lang+' footer social heading');
+   if(dir==='rtl')assert.equal(await headings.first().evaluate(n=>getComputedStyle(n).letterSpacing),'0px',lang+' footer heading letter spacing');
    assert.equal((await text('.footer-bottom span')),e.powered,lang+' footer attribution');
    assert.equal(await p.locator('.site-footer .footer-main').evaluate(n=>getComputedStyle(n).direction),dir,lang+' footer direction');
    assert.match(await p.locator('.site-footer').evaluate(n=>getComputedStyle(n).fontFamily),new RegExp(font),lang+' footer font');

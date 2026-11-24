@@ -2001,3 +2001,8 @@ html[dir="ltr"] .contact-details {
     overflow-wrap: anywhere;
   }
 }
+
+/* Arabic-script typography should not use Latin tracking. */
+html[dir="rtl"] .site-footer .footer-heading {
+  letter-spacing: 0;
+}
