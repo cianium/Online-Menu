@@ -225,6 +225,7 @@
       </article>`;
     }).join("");
     host.innerHTML = rows || `<p class="commerce-empty">${safe(t("empty"))}</p>`;
+    host.classList.toggle("is-empty", amount === 0);
     const checkout = document.querySelector("#commerce-checkout");
     if (checkout) checkout.hidden = amount === 0;
     host.querySelectorAll("[data-cart-change]").forEach((button) => button.addEventListener("click", () => change(button.dataset.productId, Number(button.dataset.cartChange))));
