@@ -1969,6 +1969,11 @@ html[lang="ar"] .hero-section::before { content: "رومانو · مطعم وم�
 .contact-item a {
   text-align: start;
 }
+html[lang="en"] .hero-section::before { content: "RAMEN · RESTAURANT & CAFE"; }
+html[lang="tr"] .hero-section::before { content: "RAMEN · RESTORAN & KAFE"; }
+html[lang="fa"] .hero-section::before { content: "RAMEN · رستوران و کافه"; }
+html[lang="ar"] .hero-section::before { content: "رامن · مطعم ومقهى"; }
+
 html[dir="ltr"] .hero-overlay {
   background:
     linear-gradient(270deg, rgba(6, 5, 4, 0.15) 0%, rgba(6, 5, 4, 0.25) 38%, rgba(6, 5, 4, 0.78) 100%),
