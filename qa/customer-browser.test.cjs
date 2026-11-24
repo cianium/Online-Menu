@@ -83,7 +83,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.equal(await topline.evaluate(node=>getComputedStyle(node).direction),expected[lang],lang+' product metadata direction');
    const categoryLabel=cards.first().locator('.product-category');
    assert.equal(await categoryLabel.evaluate(node=>getComputedStyle(node).direction),expected[lang],lang+' product category direction');
-   if(expected[lang]==='rtl')assert.equal(await categoryLabel.evaluate(node=>getComputedStyle(node).letterSpacing),'0px',lang+' product category must not use Latin tracking');
+   if(expected[lang]==='rtl')assert.ok(['normal','0px'].includes(await categoryLabel.evaluate(node=>getComputedStyle(node).letterSpacing)),lang+' product category must not use Latin tracking');
    await cards.first().locator('.product-card-button').click();
    assert.equal(await p.locator('.rv4-back-top').evaluate(node=>getComputedStyle(node).visibility),'hidden',lang+' back-to-top must be hidden while modal is open');
    assert.equal(await p.locator('.rv4-back-top').evaluate(node=>getComputedStyle(node).pointerEvents),'none',lang+' back-to-top must not intercept modal interaction');
