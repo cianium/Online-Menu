@@ -102,6 +102,12 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.equal(await p.locator('#ramen-header-cart').getAttribute('aria-label'),labels.cartAria);
    const headerBoxes=await p.locator('.header-container .brand, #romano-language-toggle, #ramen-header-cart, #menu-toggle').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {name:node.className||node.id,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};}));
    assert.equal(headerBoxes.length,4,JSON.stringify(headerBoxes));
+   const headerDirection=await p.locator('.header-container').evaluate(node=>getComputedStyle(node).direction);
+   assert.equal(headerDirection,lang==='fa'||lang==='ar'?'rtl':'ltr','Header direction mismatch '+lang+'/'+width);
+   const brandParts=await p.locator('.brand-logo, .brand-content').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right};}));
+   assert.equal(brandParts.length,2);
+   if(lang==='fa'||lang==='ar')assert.ok(brandParts[0].left>brandParts[1].left,'RTL brand logo must follow wordmark '+lang+'/'+width);
+   else assert.ok(brandParts[0].left<brandParts[1].left,'LTR brand logo must precede wordmark '+lang+'/'+width);
    const wordmark=await p.locator('.brand-name').evaluate(node=>{const range=document.createRange();range.selectNodeContents(node);return {text:node.textContent.trim(),textWidth:range.getBoundingClientRect().width,clientWidth:node.clientWidth};});
    assert.ok(wordmark.clientWidth>0&&wordmark.textWidth<=wordmark.clientWidth+1,'Restaurant wordmark is clipped '+lang+'/'+width+': '+JSON.stringify(wordmark));
    for(let i=0;i<headerBoxes.length;i++)for(let j=i+1;j<headerBoxes.length;j++){
