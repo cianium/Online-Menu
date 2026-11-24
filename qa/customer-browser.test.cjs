@@ -128,6 +128,9 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
     const cartButton=width<700?p.locator('#ramen-bottom-cart'):p.locator('#ramen-header-cart');
     await cartButton.click();await p.locator('#commerce-drawer.is-open').waitFor({state:'visible'});
     assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'false');
+    await p.waitForTimeout(350);
+    const drawerBox=await p.locator('#commerce-drawer').boundingBox();
+    assert.ok(drawerBox&&drawerBox.width>300&&drawerBox.x>=0&&drawerBox.x+drawerBox.width<=width, 'Cart drawer did not finish entering the viewport: '+JSON.stringify(drawerBox));
     await p.screenshot({path:path.join(out,`customer-cart-${lang}-${width}.png`)});
     await p.locator('#commerce-drawer .commerce-close').click();
     await p.waitForFunction(()=>document.querySelector('#commerce-drawer')?.getAttribute('aria-hidden')==='true');
