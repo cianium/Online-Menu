@@ -40,7 +40,7 @@ await check('Persian admin section labels are fully localized', async () => {
       const expectedDisplay = ['fa','ar'].includes(lang) ? 'Vazirmatn' : 'Playfair Display';
       assert.match(await page.locator('body').evaluate(node => getComputedStyle(node).fontFamily), new RegExp(expectedFont));
       assert.match(await page.locator('#dashboard-title').evaluate(node => getComputedStyle(node).fontFamily), new RegExp(expectedDisplay));
-      const expectedBrand = {fa:'مدیریت',en:'Admin',tr:'Yönetim',ar:'الإدارة'}[lang];
+      const expectedBrand = {fa:'مدیریت',en:'Management',tr:'Yönetim',ar:'الإدارة'}[lang];
       assert.equal(await page.locator('.admin-brand-label').textContent().then(value=>value.trim()), expectedBrand);
       assert.equal(await page.locator('.admin-brand').getAttribute('aria-label'), ({fa:'RAMEN | مدیریت',en:'RAMEN | Admin',tr:'RAMEN | Yönetim',ar:'رامن | الإدارة'})[lang]);
       for (const width of [1440,1024,768,390,320]) {
