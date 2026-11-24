@@ -28,6 +28,11 @@ await check('Admin interface contains no developer credits or internal release l
  const visibleText = await page.locator('.admin-app').innerText();
  assert.doesNotMatch(visibleText, /Cian Khayat|ONLINE-MENU vq\.3|ADMIN CONSOLE|LIVE OPERATIONS|QR TABLE SETUP|DIRECT SETTLEMENT/);
 });
+await check('Admin metadata typography meets the readable size floor', async () => {
+ const brandSize = Number.parseFloat(await page.locator('.admin-brand-label').evaluate(node => getComputedStyle(node).fontSize));
+ const eyebrowSize = Number.parseFloat(await page.locator('.page-eyebrow').evaluate(node => getComputedStyle(node).fontSize));
+ assert.ok(brandSize >= 11 && eyebrowSize >= 11, JSON.stringify({brandSize,eyebrowSize}));
+});
 await check('Persian admin section labels are fully localized', async () => {
  const visibleText = await page.locator('.admin-app').innerText();
  assert.doesNotMatch(visibleText, /\bOVERVIEW\b|\bMENU HEALTH\b|\bMENU MANAGEMENT\b|\bMENU STRUCTURE\b|\bRESTAURANT CONFIGURATION\b|\bSECURE SERVER AUTHENTICATION\b|\bAUTHORIZED USERS ONLY\b/);
