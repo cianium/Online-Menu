@@ -81,7 +81,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.match(await p.locator('.hero-title').first().evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expectedDisplay));
    const labels={fa:{menu:'منو',featured:'ویژه‌ها',contact:'ارتباط',cart:'سبد',cartAria:'سبد سفارش',categories:'انتخاب شما',featuredTitle:'انتخاب ویژه.',story:'ساده نیست خاص است'},en:{menu:'Menu',featured:'Featured',contact:'Contact',cart:'Cart',cartAria:'Order cart',categories:'Your Choice',featuredTitle:'Featured Selection.',story:'It is not ordinary.'},tr:{menu:'Menü',featured:'Öne Çıkanlar',contact:'İletişim',cart:'Sepet',cartAria:'Sipariş sepeti',categories:'Sizin Seçiminiz',featuredTitle:'Özel Seçim.',story:'Sıradan değil özel.'},ar:{menu:'القائمة',featured:'المميزة',contact:'التواصل',cart:'السلة',cartAria:'سلة الطلبات',categories:'اختيارك',featuredTitle:'اختيار مميز.',story:'الأمر ليس عاديًا.'}}[lang];
    for(const key of ['menu','featured','contact','cart']) assert.equal(await p.locator('[data-ramen-label="'+key+'"]').textContent(),labels[key]);
-   const normalizedText=selector=>p.locator(selector).innerText().then(value=>value.replace(/\\s+/g,' ').trim());
+   const normalizedText=selector=>p.locator(selector).innerText().then(value=>value.replace(/\s+/g,' ').trim());
    assert.equal(await normalizedText('#categories .section-title'),labels.categories);
    assert.equal(await normalizedText('#featured .section-title'),labels.featuredTitle);
    assert.equal(await normalizedText('#story .section-title'),labels.story);
