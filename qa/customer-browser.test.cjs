@@ -16,7 +16,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
  await check('Static demo boots with 21 products',async()=>{assert.equal(await cards.count(),21);assert.equal(await p.evaluate(()=>menuDataMode),'demo')});
  await check('Category image fallback uses localized category initials, not brand/developer copy',async()=>{
   const fallback=await p.evaluate(()=>{
-   const category=state.categories.find(item=>item.active!==false);
+   const category=menuCategories.find(item=>item.active!==false);
    const localized=ROMANO_I18N.localizeCategory(category);
    const card=createCategoryCard({...category,image:''},0);
    return {value:card.querySelector('.image-fallback')?.textContent,name:localized.name};
