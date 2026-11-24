@@ -130,7 +130,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
     assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'false');
     await p.screenshot({path:path.join(out,`customer-cart-${lang}-${width}.png`)});
     await p.locator('#commerce-drawer .commerce-close').click();
-    await p.locator('#commerce-drawer').waitFor({state:'hidden'});
+    await p.waitForFunction(()=>document.querySelector('#commerce-drawer')?.getAttribute('aria-hidden')==='true');
    }
   }
  });
