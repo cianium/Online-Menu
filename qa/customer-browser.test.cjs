@@ -79,6 +79,10 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    const expectedDisplay=['fa','ar'].includes(lang)?'Vazirmatn':'Playfair Display';
    assert.match(await p.locator('body').evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expectedFont));
    assert.match(await p.locator('.hero-title').first().evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expectedDisplay));
+   assert.ok(Number.parseFloat(await p.locator('.hero-eyebrow').first().evaluate(node=>getComputedStyle(node).fontSize))>=11);
+   assert.ok(Number.parseFloat(await p.locator('[data-ramen-label="menu"]').evaluate(node=>getComputedStyle(node).fontSize))>=11);
+   const heroMeta={fa:'رستوران و کافه',en:'ROMANO · RESTAURANT & CAFE',tr:'ROMANO · RESTORAN & KAFE',ar:'رومانو · مطعم ومقهى'}[lang];
+   assert.ok((await p.locator('.hero-section').evaluate(node=>getComputedStyle(node,'::before').content)).includes(heroMeta));
    const labels={fa:{menu:'منو',featured:'ویژه‌ها',contact:'ارتباط',cart:'سبد',cartAria:'سبد سفارش',categories:'انتخاب شما',featuredTitle:'انتخاب ویژه.',story:'ساده نیست خاص است'},en:{menu:'Menu',featured:'Featured',contact:'Contact',cart:'Cart',cartAria:'Your order',categories:'Your Choice',featuredTitle:'Featured Selection.',story:'It is not ordinary.'},tr:{menu:'Menü',featured:'Öne Çıkanlar',contact:'İletişim',cart:'Sepet',cartAria:'Siparişiniz',categories:'Sizin Seçiminiz',featuredTitle:'Özel Seçim.',story:'Sıradan değil özel.'},ar:{menu:'القائمة',featured:'المميزة',contact:'التواصل',cart:'السلة',cartAria:'طلبك',categories:'اختيارك',featuredTitle:'اختيار مميز.',story:'الأمر ليس عاديًا.'}}[lang];
    for(const key of ['menu','featured','contact','cart']) assert.equal(await p.locator('[data-ramen-label="'+key+'"]').textContent(),labels[key]);
    const normalizedText=selector=>p.locator(selector).innerText().then(value=>value.replace(/\s+/g,' ').trim());
