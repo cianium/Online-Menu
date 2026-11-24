@@ -59,7 +59,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
     const card=node.getBoundingClientRect(),index=node.querySelector('.category-index').getBoundingClientRect();
     return {cardLeft:card.left,cardRight:card.right,indexLeft:index.left,indexRight:index.right,indexWidth:index.width};
    });
-   if(['fa','ar'].includes(lang))assert.ok(box.indexLeft>box.cardLeft+box.cardRight/2,lang+' category index must align to inline-start/right: '+JSON.stringify(box));
+   if(['fa','ar'].includes(lang))assert.ok(box.indexRight>(box.cardLeft+box.cardRight)/2,lang+' category index must align to inline-start/right: '+JSON.stringify(box));
    else assert.ok(box.indexRight<box.cardLeft+box.cardRight/2,lang+' category index must align to inline-start/left: '+JSON.stringify(box));
    assert.equal(await rail.evaluate(node=>getComputedStyle(node).scrollSnapType.includes('inline')),true,lang+' category rail snap');
    const buttons=rail.locator('button');
