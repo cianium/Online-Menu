@@ -41,6 +41,10 @@ body.commerce-open .rv4-back-top{opacity:0;pointer-events:none}
 /* Compact mobile header: reserve space for each control and prevent brand overlap. */
 @media (max-width: 640px) {
   .header-container {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 64px 42px 42px;
+    align-items: center;
+    justify-content: initial;
     direction: inherit;
     gap: 6px;
   }
@@ -107,7 +111,10 @@ body.commerce-open .rv4-back-top{opacity:0;pointer-events:none}
   }
 }
 @media (max-width: 360px) {
-  .header-container { gap: 5px; }
+  .header-container {
+    grid-template-columns: minmax(0, 1fr) 60px 40px 40px;
+    gap: 5px;
+  }
   .header-container .brand { gap: 6px; }
   .header-container .brand-logo {
     flex-basis: 38px;
