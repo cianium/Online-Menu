@@ -821,6 +821,13 @@ html[lang="ar"] .hero-eyebrow {
   border-color: rgba(201, 164, 106, 0.4);
 }
 
+/* Keep floating page controls behind modal/navigation interaction layers. */
+body.modal-open .rv4-back-top {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ---------------------------------------------------------
    10. MODAL
 --------------------------------------------------------- */

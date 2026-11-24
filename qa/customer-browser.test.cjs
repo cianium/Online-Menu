@@ -65,6 +65,8 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    const topline=cards.first().locator('.product-topline');
    assert.equal(await topline.evaluate(node=>getComputedStyle(node).direction),expected[lang],lang+' product metadata direction');
    await cards.first().locator('.product-card-button').click();
+   assert.equal(await p.locator('.rv4-back-top').evaluate(node=>getComputedStyle(node).visibility),'hidden',lang+' back-to-top must be hidden while modal is open');
+   assert.equal(await p.locator('.rv4-back-top').evaluate(node=>getComputedStyle(node).pointerEvents),'none',lang+' back-to-top must not intercept modal interaction');
    const geometry=await p.locator('.product-modal .modal-container').evaluate(container=>{
     const panel=container.getBoundingClientRect(),close=container.querySelector('.modal-close').getBoundingClientRect();
     return {panelLeft:panel.left,panelRight:panel.right,closeLeft:close.left,closeRight:close.right};
