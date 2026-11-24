@@ -16,7 +16,7 @@ body.commerce-open .rv4-back-top{opacity:0;pointer-events:none}
 #commerce-cart-bar{display:none!important}
 @media(max-width:720px){
  .ramen-bottom-nav{display:flex}
- .rv4-back-top{inset-block-end:calc(100px + env(safe-area-inset-bottom))}
+ .rv4-back-top{inset-block-end:calc(108px + env(safe-area-inset-bottom))}
  .site-footer{padding-bottom:calc(115px + env(safe-area-inset-bottom))}
  .header-container{gap:8px}
  .header-container .brand{margin-inline-end:auto;min-width:0}
