@@ -132,6 +132,9 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   const topBox=await p.locator('.rv4-back-top').boundingBox();
   const navBox=await p.locator('.ramen-bottom-nav').boundingBox();
   assert.ok(topBox && navBox && topBox.y+topBox.height<=navBox.y-8,JSON.stringify({topBox,navBox}));
+  await p.locator('#ramen-bottom-cart').click();
+  assert.equal(await p.locator('.rv4-back-top').evaluate(node=>getComputedStyle(node).opacity),'0');
+  await p.keyboard.press('Escape');
   await p.evaluate(()=>window.scrollTo(0,0));
  });
  await check('Desktop and mobile cart entry points remain visible',async()=>{
