@@ -125,6 +125,15 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   const s=await c.newPage();s.on('pageerror',e=>errors.push(String(e)));await s.goto(base);await ready(s);assert.equal(await s.locator('#menu .product-card').count(),21);
   await s.locator('#menu .product-card [data-favorite-product]').first().click();assert.equal(await s.locator('#menu .product-card [data-favorite-product]').first().getAttribute('aria-pressed'),'true');await c.close();
  });
+ await check('Mobile back-to-top control stays clear of bottom navigation',async()=>{
+  await p.setViewportSize({width:390,height:900});
+  await p.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));
+  await p.waitForFunction(()=>document.querySelector('.rv4-back-top')?.classList.contains('is-visible'));
+  const topBox=await p.locator('.rv4-back-top').boundingBox();
+  const navBox=await p.locator('.ramen-bottom-nav').boundingBox();
+  assert.ok(topBox && navBox && topBox.y+topBox.height<=navBox.y-8,JSON.stringify({topBox,navBox}));
+  await p.evaluate(()=>window.scrollTo(0,0));
+ });
  await check('Desktop and mobile cart entry points remain visible',async()=>{
   await p.setViewportSize({width:1440,height:900});
   const headerCart=p.locator('#ramen-header-cart');
