@@ -52,7 +52,6 @@
         "ویژه‌ها": { fa: "ویژه‌ها", en: "Featured", tr: "Öne Çıkanlar", ar: "المميزة" },
         "ارتباط": { fa: "ارتباط", en: "Contact", tr: "İletişim", ar: "التواصل" },
         "سبد": { fa: "سبد", en: "Cart", tr: "Sepet", ar: "السلة" },
-        "سبد سفارش": { fa: "سبد سفارش", en: "Order cart", tr: "Sipariş sepeti", ar: "سلة الطلبات" },
         "منوی دیجیتال RAMEN": { fa: "منوی دیجیتال RAMEN", en: "RAMEN · DIGITAL MENU", tr: "RAMEN · DİJİTAL MENÜ", ar: "رامن · القائمة الرقمية" },
         "قدرت‌گرفته از RAMEN": { fa: "قدرت‌گرفته از RAMEN", en: "Powered by RAMEN", tr: "RAMEN ile desteklenmektedir", ar: "مدعوم بواسطة رامن" },
         "صفحه اصلی رستوران": { fa: "صفحه اصلی رستوران", en: "Restaurant home", tr: "Restoran ana sayfası", ar: "الصفحة الرئيسية للمطعم" },
