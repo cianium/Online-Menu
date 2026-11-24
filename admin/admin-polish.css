@@ -39,7 +39,7 @@ body {
   border: 1px solid var(--admin-line-strong);
   border-radius: 6px;
   color: var(--admin-accent-bright);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: .12em;
 }
 .sidebar-navigation { padding: 20px 14px; }
