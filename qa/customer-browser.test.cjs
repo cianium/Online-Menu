@@ -121,7 +121,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    await p.evaluate(()=>window.scrollTo({top:document.querySelector('#menu').getBoundingClientRect().top+scrollY-85,behavior:'instant'}));await p.waitForTimeout(200);
    await p.screenshot({path:path.join(out,`customer-menu-${lang}-${width}.png`)});
    if((lang==='fa'&&width===390)||(lang==='en'&&width===1440)){
-    await cards.first().locator('.product-card-button').click();await p.locator('.product-modal').waitFor({state:'visible'});
+    await cards.first().locator('.product-card-button').click();await p.locator('.product-modal').waitFor({state:'visible'});await p.waitForTimeout(250);
     await p.screenshot({path:path.join(out,`customer-product-modal-${lang}-${width}.png`)});
     await p.locator('.product-modal .modal-close').click();
     await p.locator('.product-modal').waitFor({state:'hidden'});
@@ -222,7 +222,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
  });
  await check('No developer credits or internal release labels remain',async()=>{
   assert.equal(await p.locator('.footer-bottom a[href*="kiankhayat.me"]').count(),0);
-  assert.equal(await p.locator('.commerce-drawer small').textContent(),'RAMEN');
+  assert.equal(await p.locator('.commerce-drawer small').textContent(),'ROMANO');
  });
  await check('No uncaught browser errors',async()=>assert.deepEqual(errors,[]));
  fs.writeFileSync(path.join(out,'customer-browser-results.json'),JSON.stringify({passed:results.length,cases:results,errors,notes:'Chromium, static preview and mocked public API. Service workers blocked. No real PostgreSQL or production test.'},null,2));
