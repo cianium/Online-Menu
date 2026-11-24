@@ -781,7 +781,7 @@ function createCategoryCard(
         <div class="category-image">
             ${category.image
                 ? `<img src="${escapeAttribute(category.image)}" alt="${escapeAttribute(category.name)}" loading="lazy">`
-                : `<div class="image-fallback" aria-hidden="true">RAMEN</div>`}
+                : `<div class="image-fallback" aria-hidden="true">${escapeHTML(String(category.name || "").trim().charAt(0) || "•")}</div>`}
         </div>
 
 
