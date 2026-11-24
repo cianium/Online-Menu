@@ -73,7 +73,7 @@ check(/<span class="hero-eyebrow">\s*کافه و رستوران\s*<\/span>/.test
 check(!read("css/romano.css").includes("hero-section::before"), "Hero eyebrow must not be duplicated by generated CSS content.");
 check(!read("js/i18n.js").includes("Designed by Cian Khayat"), "Obsolete developer credit remains in customer localization.");
 check(read("js/menu-experience.js").includes('id="menu-browser-eyebrow"') && read("js/i18n.js").includes('"menuEyebrow"'), "Customer menu eyebrow is not localized.");
-check((read("js/app.js").match(/getImageFallbackLabel\\(/g) || []).length >= 4, "Customer product image fallbacks must use localized product initials in cards, modal and broken-image states.");
+check(read("js/app.js").split("getImageFallbackLabel(").length >= 5, "Customer product image fallbacks must use localized product initials in cards, modal and broken-image states.");
 check(!read("js/menu-experience.js").includes('class="section-eyebrow">ROMANO'), "Customer menu still contains a hard-coded platform heading.");
 check(read("sw.js").includes('url.pathname.includes("/admin/")'), "Service worker does not explicitly exclude admin.");
 
