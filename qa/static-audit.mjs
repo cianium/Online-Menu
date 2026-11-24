@@ -65,6 +65,7 @@ check(read("manifest.webmanifest").includes('"display": "standalone"'), "PWA man
 check(read("manifest.webmanifest").includes('"short_name": "ROMANO"'), "PWA still uses legacy brand.");
 check(read("admin/index.html").includes("<title>ROMANO | پنل مدیریت</title>"), "Admin HTML title must use the localized default.");
 check(!/>\s*(?:OVERVIEW|ROMANO · CONTROL CENTER|MENU HEALTH|MENU MANAGEMENT|MENU STRUCTURE|RESTAURANT CONFIGURATION|SECURE SERVER AUTHENTICATION|ROMANO DIGITAL MENU|AUTHORIZED USERS ONLY)\s*</.test(read("admin/index.html")), "Admin HTML still contains untranslated English section labels.");
+check(read("admin/index.html").includes('data-admin-i18n-aria-label="فیلتر وضعیت سفارش"') && adminI18n.includes('"فیلتر وضعیت سفارش": ["Order status filters", "Sipariş durumu filtreleri", "تصفية حالة الطلب"]'), "Order filter group accessible name must be localized in all four languages.");
 check(!/>\s*(?:Badge|بدون Badge|رستوران CONFIGURATION|Merchant ID)\s*</.test(read("admin/index.html")), "Admin HTML still contains mixed-language field labels.");
 check(read("index.html").includes("منوی دیجیتال ROMANO") && read("js/i18n.js").includes('"منوی دیجیتال ROMANO"'), "Customer navigation footer brand is not localized.");
 check(/<span class="hero-eyebrow">\s*کافه و رستوران\s*<\/span>/.test(read("index.html")) && read("js/i18n.js").includes('set(".hero-eyebrow", pick(restaurant.tagline))'), "Hero eyebrow must be semantic and localized from restaurant tagline.");

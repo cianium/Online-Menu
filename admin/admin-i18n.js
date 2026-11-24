@@ -99,6 +99,7 @@
       "ROMANO | مدیریت": ["ROMANO | Admin", "ROMANO | Yönetim", "رومانو | الإدارة"],
       "دسترسی امن مدیریت": ["Secure admin access", "Güvenli yönetici erişimi", "وصول آمن للإدارة"],
       "عملیات زنده · آشپزخانه": ["Live operations · Kitchen", "Canlı operasyonlar · Mutfak", "العمليات المباشرة · المطبخ"],
+      "فیلتر وضعیت سفارش": ["Order status filters", "Sipariş durumu filtreleri", "تصفية حالة الطلب"],
       "تنظیم میز و QR": ["Table & QR setup", "Masa ve QR kurulumu", "إعداد الطاولات ورمز QR"],
       "تسویه مستقیم": ["Direct settlement", "Doğrudan ödeme", "التسوية المباشرة"],
       "صفر یعنی بدون امتیاز": ["Zero means unrated", "Sıfır, puan yok demektir", "الصفر يعني بدون تقييم"],

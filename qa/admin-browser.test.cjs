@@ -37,6 +37,13 @@ await check('Persian admin section labels are fully localized', async () => {
  const visibleText = await page.locator('.admin-app').innerText();
  assert.doesNotMatch(visibleText, /\bOVERVIEW\b|\bMENU HEALTH\b|\bMENU MANAGEMENT\b|\bMENU STRUCTURE\b|\bRESTAURANT CONFIGURATION\b|\bSECURE SERVER AUTHENTICATION\b|\bAUTHORIZED USERS ONLY\b/);
 });
+await check('Order filter group accessible name is localized in all four languages', async () => {
+ const expected = {fa:'فیلتر وضعیت سفارش',en:'Order status filters',tr:'Sipariş durumu filtreleri',ar:'تصفية حالة الطلب'};
+ for (const lang of ['fa','en','tr','ar']) {
+  await page.evaluate(lang => window.ROMANO_ADMIN_I18N.setLanguage(lang), lang);
+  assert.equal(await page.locator('.orders-filters').getAttribute('aria-label'), expected[lang]);
+ }
+});
   await check('4 languages × 5 widths × 5 admin pages: direction and horizontal overflow', async () => {
     for (const lang of ['en','tr','ar','fa']) {
       await page.evaluate(lang => window.ROMANO_ADMIN_I18N.setLanguage(lang), lang);
