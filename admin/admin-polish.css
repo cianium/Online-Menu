@@ -135,7 +135,7 @@ html[dir="rtl"] .nav-item.is-active { box-shadow: inset -3px 0 0 var(--admin-acc
 .page-heading p { max-width: 62ch; color: var(--admin-ink-muted); }
 .page-eyebrow, .panel-eyebrow {
   color: var(--admin-accent);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .13em;
 }
@@ -163,7 +163,7 @@ html[dir="rtl"] .nav-item.is-active { box-shadow: inset -3px 0 0 var(--admin-acc
   border-radius: 50%;
   pointer-events: none;
 }
-.welcome-kicker { color: var(--admin-accent-bright); font-size: 10px; letter-spacing: .13em; }
+.welcome-kicker { color: var(--admin-accent-bright); font-size: 12px; letter-spacing: .13em; }
 .admin-welcome-strip p { margin: 5px 0 0; color: var(--admin-ink-soft); }
 .welcome-date { color: var(--admin-ink-muted); font-size: 12px; white-space: nowrap; }
 .stats-grid { gap: 14px; }
@@ -196,7 +196,7 @@ html[dir="rtl"] .nav-item.is-active { box-shadow: inset -3px 0 0 var(--admin-acc
 .admin-integrity-panel { margin-block: 18px; padding: 21px; }
 .integrity-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
 .integrity-heading h2, .panel h2 { margin: 5px 0 0; color: var(--admin-ink); font-size: 17px; }
-.integrity-note { color: var(--admin-ink-muted); font-size: 11px; }
+.integrity-note { color: var(--admin-ink-muted); font-size: 12px; }
 .integrity-items { gap: 10px; }
 .integrity-items > div { min-height: 46px; padding: 10px 12px; border: 1px solid rgba(255,255,255,.045); border-radius: 10px; background: rgba(255,255,255,.018); }
 .integrity-items strong { color: var(--admin-accent-bright); }
@@ -266,7 +266,7 @@ html[dir="rtl"] .nav-item.is-active { box-shadow: inset -3px 0 0 var(--admin-acc
 }
 .admin-product-image img { width: 100%; height: 100%; object-fit: cover; }
 .admin-product-name { color: var(--admin-ink); font-size: 15px; font-weight: 700; }
-.admin-product-meta { color: var(--admin-ink-muted); font-size: 11px; }
+.admin-product-meta { color: var(--admin-ink-muted); font-size: 12px; }
 .admin-product-status-row { gap: 7px; margin-top: 8px; }
 .admin-status-badge, .featured-badge { border-radius: 99px; }
 .admin-status-badge.is-active { background: rgba(113,169,126,.11); color: var(--admin-success); }
@@ -297,7 +297,7 @@ html[dir="rtl"] .nav-item.is-active { box-shadow: inset -3px 0 0 var(--admin-acc
 .category-admin-index { color: var(--admin-accent); font-variant-numeric: tabular-nums; }
 .category-admin-image { width: 54px; height: 54px; border-radius: 11px; background: #0b1012; }
 .category-admin-name { color: var(--admin-ink); font-weight: 700; }
-.category-admin-meta { color: var(--admin-ink-muted); font-size: 11px; }
+.category-admin-meta { color: var(--admin-ink-muted); font-size: 12px; }
 .settings-form, .settings-form .panel { border: 1px solid var(--admin-line); border-radius: var(--admin-radius); background: var(--admin-surface); }
 .settings-form { padding: clamp(16px, 2.5vw, 26px); }
 .form-grid { gap: 18px; }
@@ -354,7 +354,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .page-heading-row { flex-wrap: wrap; }
   .page-heading-row > .primary-button { width: 100%; }
   .admin-welcome-strip { align-items: flex-start; padding: 17px; }
-  .welcome-date { font-size: 10px; }
+  .welcome-date { font-size: 12px; }
   .stats-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
   .stat-card { min-height: 106px; padding: 15px; }
   .stat-value { font-size: 27px; }
@@ -383,8 +383,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .admin-user-chip { display: none; }
   .welcome-date { display: none; }
   .admin-product-name { font-size: 13px; }
-  .admin-product-meta { font-size: 10px; }
-  .action-label { font-size: 10px; }
+  .admin-product-meta { font-size: 12px; }
+  .action-label { font-size: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
@@ -435,5 +435,5 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
 @media (max-width: 420px) {
   .admin-header-link, .admin-header-action, .admin-logout-button { min-height: 40px; }
   .admin-product-name { font-size: 14px; }
-  .admin-product-meta { font-size: 11px; }
+  .admin-product-meta { font-size: 12px; }
 }
