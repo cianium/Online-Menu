@@ -50,6 +50,23 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   assert.equal(fallback.modalValue,initial);
   assert.equal(fallback.brokenValue,initial);
  });
+ await check('Category cards and browsing rail respect RTL/LTR layout and touch behavior',async()=>{
+  const categoryCard=p.locator('#categories-grid .category-card').first();
+  const rail=p.locator('#rv4-category-rail');
+  for(const lang of ['fa','ar','en','tr']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   const box=await categoryCard.evaluate(node=>{
+    const card=node.getBoundingClientRect(),index=node.querySelector('.category-index').getBoundingClientRect();
+    return {cardLeft:card.left,cardRight:card.right,indexLeft:index.left,indexRight:index.right,indexWidth:index.width};
+   });
+   if(['fa','ar'].includes(lang))assert.ok(box.indexLeft>box.cardLeft+box.cardRight/2,lang+' category index must align to inline-start/right: '+JSON.stringify(box));
+   else assert.ok(box.indexRight<box.cardLeft+box.cardRight/2,lang+' category index must align to inline-start/left: '+JSON.stringify(box));
+   assert.equal(await rail.evaluate(node=>getComputedStyle(node).scrollSnapType.includes('inline')),true,lang+' category rail snap');
+   const buttons=rail.locator('button');
+   assert.ok(await buttons.count()>1);
+   assert.ok(await buttons.first().evaluate(node=>node.getBoundingClientRect().height>=44),lang+' category filter touch target');
+  }
+ });
  await check('Image-first card CTA and favorite remain accessible',async()=>{
   const card=cards.first(),button=card.locator('.product-card-button'),favorite=card.locator('[data-favorite-product]');
   await card.scrollIntoViewIfNeeded();

@@ -20,8 +20,8 @@
 #menu-favorites-toggle, .browse-category-rail button, #menu-reset, #menu-sort, .menu-data-status button { font: inherit; color: var(--romano-ink-soft); border: 1px solid var(--menu-border); background: var(--menu-surface); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
 #menu-favorites-toggle { white-space: nowrap; }
 #menu-favorites-toggle[aria-pressed="true"], .browse-category-rail button[aria-pressed="true"] { border-color: var(--romano-gold); color: var(--romano-gold-light); background: #c9a46a14; }
-.browse-category-rail { display: flex; gap: 8px; overflow-x: auto; padding-block: 18px 12px; scrollbar-width: thin; scrollbar-color: #c9a46a55 transparent; }
-.browse-category-rail button { flex: 0 0 auto; min-height: 44px; border-radius: 40px; font-size: 13px; }
+.browse-category-rail { display: flex; gap: 8px; overflow-x: auto; padding-block: 18px 12px; scrollbar-width: thin; scrollbar-color: #c9a46a55 transparent; scroll-snap-type: inline proximity; scroll-padding-inline: 12px; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
+.browse-category-rail button { flex: 0 0 auto; min-height: 44px; border-radius: 40px; font-size: 13px; scroll-snap-align: start; }
 .browse-category-rail button span { opacity: .7; margin-inline-start: 6px; font-size: 11px; }
 .menu-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 8px; }
 #menu-result-count { margin-inline-end: auto; font-size: 13px; color: var(--menu-muted); }
