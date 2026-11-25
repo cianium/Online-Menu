@@ -150,3 +150,12 @@ test('Customer footer has a safe localized creator link and motion preference gu
 test('Product modal records explicit opener and restores a refreshed card by product identity',()=>{
  const js=read("js/app.js");assert.match(js,/function openProductModal\(productId, opener = null\)/);assert.match(js,/product\.id,\s*event\.currentTarget/);assert.match(js,/productModalReturnTarget/);assert.match(js,/returnTarget\.id/);assert.match(js,/document\.activeElement === element/);
 });
+
+
+test('Commerce enhances freshly rendered cards synchronously and preserves focus when wrapping details',()=>{
+ const js=read('js/commerce.js');
+ assert.match(js,/document\.addEventListener\("romano:catalog-rendered", enhanceProducts\)/);
+ assert.match(js,/document\.addEventListener\("romano:product-opened", enhanceProducts\)/);
+ assert.doesNotMatch(js,/setTimeout\(enhanceProducts/);
+ assert.match(js,/restoreDetailsFocus && !details\.closest\("\[inert\]"\)/);
+});

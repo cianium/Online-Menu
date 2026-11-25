@@ -5,3 +5,5 @@ Based on tested RC2 `fa3be8aca865f3ed52c1f55b92b27eddd937e57e`. The customer foo
 Release gate: validate CI, full customer/admin and three-engine delivery, exact static export. Public Pages tree must use exported noindex index and non-caching worker plus existing .nojekyll and Pages-only Vercel disable config, not source backend configuration. Preserve old Pages commit for rollback; do not merge source PRs without explicit authorization.
 
 Regression gate found a product dialog focus restoration failure in Chromium run 45708924232, so publication was held. Capture explicit opener from card/signature clicks, preserve source surface/product ID when cards are replaced, return to menu landmark if the product disappears. Retain original focus assertion and add refreshed-card test. No payment or data changes.
+
+Follow-up refreshed-card test exposed delayed commerce action wrapping. Replace click timeout with synchronous catalog/product render events, preserve focus during actual DOM reparenting, assert rebuilt add action and focus stability across frames. No change to cart, price or payment semantics.

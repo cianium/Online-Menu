@@ -275,8 +275,14 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   await button.focus();await button.press('Enter');
   await p.waitForFunction(()=>document.activeElement.classList.contains('modal-close'));
   await p.evaluate(()=>renderMenuCategories());
+  const updatedCard=p.locator('#menu .product-card[data-product-id="'+id+'"]');
+  assert.equal(await updatedCard.locator('.commerce-card-add').count(),1,'cart action rebuilt synchronously');
   await p.keyboard.press('Escape');
-  assert.equal(await p.locator('#menu .product-card[data-product-id="'+id+'"] .product-card-button').evaluate(n=>n===document.activeElement),true);
+  const updatedButton=updatedCard.locator('.product-card-button');
+  assert.equal(await updatedButton.evaluate(n=>n===document.activeElement),true,'focus restored after catalog render');
+  // Wait two rendering frames to verify no delayed reparenting steals focus.
+  await p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  assert.equal(await updatedButton.evaluate(n=>n===document.activeElement),true,'focus stable after rendering frames');
  });
  await check('Four languages at 320, 390, 768, 1024 and 1440px: direction, overflow and modal',async()=>{
   for(const lang of ['en','tr','ar','fa'])for(const width of [320,390,768,1024,1440]){

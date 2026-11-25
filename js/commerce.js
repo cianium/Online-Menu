@@ -428,8 +428,11 @@
       if (details && body) {
         const actions = document.createElement("div");
         actions.className = "commerce-card-actions";
+        const restoreDetailsFocus = document.activeElement === details;
         details.before(actions);
         actions.append(details, button);
+        // Moving a focused node between parents can reset focus in Chromium.
+        if (restoreDetailsFocus && !details.closest("[inert]")) details.focus({preventScroll:true});
       } else {
         body?.append(button);
       }
@@ -594,9 +597,11 @@
   function init() {
     buildShell(); initializeCustomerNavigation(); render(); enhanceProducts(); openQrSession(); paymentReturn();
     if (activeOrder?.id && !["completed", "rejected", "cancelled"].includes(activeOrder.status)) startPolling();
-    document.addEventListener("click", (event) => {
-      if (event.target.closest(".product-card-button,[data-signature-product]")) window.setTimeout(enhanceProducts, 20);
-    });
+    // Enhance synchronously at the actual render boundary, not on a delayed click.
+    // This keeps the cart actions present after filtering/refresh and avoids moving
+    // the opener after the product dialog has already restored keyboard focus.
+    document.addEventListener("romano:catalog-rendered", enhanceProducts);
+    document.addEventListener("romano:product-opened", enhanceProducts);
     window.addEventListener("romano:data-updated", () => { reconcileCart(); enhanceProducts(); render(); });
     window.addEventListener("storage", event => {
       if (event.key !== null && event.key !== cartKey()) return;
