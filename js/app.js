@@ -377,7 +377,7 @@ document.addEventListener(
 
 async function initializeApplication() {
 
-    initializeSplashScreen();
+    const dismissSplash = initializeSplashScreen();
 
 
     /*
@@ -464,117 +464,34 @@ async function initializeApplication() {
         window.dispatchEvent(new CustomEvent("romano:data-updated"));
     });
 
+    dismissSplash();
+
 }
 
 
 /**
- * Show the splash screen for at least a short, deliberate
- * moment (so it reads as a branded intro, not a flash), and
- * hide it once the window has fully loaded — fonts, the hero
- * background, and the logo included — whichever comes later.
- *
- * A safety timeout guarantees the splash never blocks the
- * site indefinitely if "load" is delayed for some reason
- * (slow connection, a stalled asset, etc.).
+ * Reveal the menu when its data and controls are ready, not when every image
+ * or optional font finishes loading. Keep a bounded fallback for slow APIs.
  */
-
 function initializeSplashScreen() {
+    const splash = document.querySelector("#splash-screen");
+    if (!splash) return () => {};
 
-    const splash =
-        document.querySelector("#splash-screen");
-
-
-    if (!splash) {
-
-        return;
-
-    }
-
-
-    const MINIMUM_VISIBLE_MS = 0;
-
-    const MAXIMUM_WAIT_MS = 1500;
-
-    const shownAt =
-        performance.now();
-
-    let hidden =
-        false;
-
-
-    function hideSplash() {
-
-        if (hidden) {
-
-            return;
-
-        }
-
-
+    let hidden = false;
+    const hideSplash = () => {
+        if (hidden) return;
         hidden = true;
-
-
-        const elapsed =
-            performance.now() - shownAt;
-
-        const remaining =
-            Math.max(
-                0,
-                MINIMUM_VISIBLE_MS - elapsed
-            );
-
-
-        window.setTimeout(
-            () => {
-
-                splash.classList.add(
-                    "is-hidden"
-                );
-
-                splash.setAttribute(
-                    "aria-hidden",
-                    "true"
-                );
-
-
-                /*
-                 * Removed after the fade-out transition so
-                 * it doesn't linger in the DOM or the
-                 * accessibility tree.
-                 */
-
-                window.setTimeout(
-                    () => splash.remove(),
-                    650
-                );
-
-            },
-            remaining
-        );
-
-    }
-
-
-    if (document.readyState === "complete") {
-
-        hideSplash();
-
-    } else {
-
-        window.addEventListener(
-            "load",
-            hideSplash,
-            { once: true }
-        );
-
-    }
-
-
-    window.setTimeout(
-        hideSplash,
-        MAXIMUM_WAIT_MS
-    );
-
+        window.clearTimeout(safetyTimeout);
+        splash.classList.add("is-hidden");
+        splash.setAttribute("aria-hidden", "true");
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            splash.remove();
+        } else {
+            window.setTimeout(() => splash.remove(), 650);
+        }
+    };
+    const safetyTimeout = window.setTimeout(hideSplash, 1500);
+    return hideSplash;
 }
 
 
@@ -625,15 +542,25 @@ function renderRestaurantInformation() {
 
     const localizedRestaurant = window.ROMANO_I18N?.localizeRestaurant?.(restaurantConfig) || restaurantConfig;
 
-    if (menuDataMode !== "loading" && menuDataMode !== "unavailable") {
-        const description = localizedRestaurant.description || "";
+    if (menuDataMode !== "loading") {
+        const unavailable = menuDataMode === "unavailable";
+        const i18n = window.ROMANO_I18N;
+        const name = unavailable ? "" : (localizedRestaurant.name || "");
+        const menuTitle = i18n.ui("menuTitle");
+        const title = name ? `${name} | ${menuTitle}` : menuTitle;
+        const description = unavailable ? i18n.ui("menuUnavailable") : (localizedRestaurant.description || title);
         document.querySelector(".hero-description").textContent = description;
-        const title = `${localizedRestaurant.name || "Restaurant"} | ${window.ROMANO_I18N.ui("menuTitle")}`;
         document.title = title;
         for (const selector of ['meta[name="description"]', 'meta[property="og:description"]']) document.querySelector(selector)?.setAttribute("content", description);
         document.querySelector('meta[property="og:title"]')?.setAttribute("content", title);
-        document.querySelector('meta[property="og:site_name"]')?.setAttribute("content", localizedRestaurant.name || "Restaurant");
-        document.querySelector('meta[property="og:locale"]')?.setAttribute("content", ({fa:"fa_IR",en:"en_US",tr:"tr_TR",ar:"ar_AR"})[window.ROMANO_I18N.language]);
+        document.querySelector('meta[property="og:site_name"]')?.setAttribute("content", name);
+        // Never advertise a missing restaurant as the seeded demo; never loosen private-export robots rules.
+        if (unavailable) document.querySelector('meta[name="robots"]')?.setAttribute("content", "noindex, nofollow");
+        const locales = {fa:"fa_IR",en:"en_US",tr:"tr_TR",ar:"ar_AR"};
+        const locale = locales[i18n.language];
+        document.querySelector('meta[property="og:locale"]')?.setAttribute("content", locale);
+        const alternatives = Object.values(locales).filter(value => value !== locale);
+        document.querySelectorAll('meta[property="og:locale:alternate"]').forEach((node, index) => node.setAttribute("content", alternatives[index]));
     }
 
     DOM.brandName.forEach(
@@ -787,7 +714,7 @@ function createCategoryCard(
 
         <div class="category-image">
             ${category.image
-                ? `<img src="${escapeAttribute(category.image)}" alt="${escapeAttribute(category.name)}" loading="lazy">`
+                ? `<img src="${escapeAttribute(category.image)}" alt="${escapeAttribute(category.name)}" loading="lazy" decoding="async">`
                 : `<div class="image-fallback" aria-hidden="true">${escapeHTML(String(category.name || "").trim().charAt(0) || "•")}</div>`}
         </div>
 
@@ -1413,7 +1340,7 @@ function createProductCard(product) {
         ${window.RomanoMenuExperience?.favoriteButton(product.id) || ""}
         <div class="product-image-wrapper">
             ${product.image
-                ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy">`
+                ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy" decoding="async">`
                 : `<div class="image-fallback" aria-hidden="true">${escapeHTML(getImageFallbackLabel(product.name))}</div>`}
             ${badge}
         </div>
@@ -2078,7 +2005,7 @@ function renderNavigation() {
         item.dataset.categoryLink = "true";
         item.innerHTML = `
             <a href="#category-${escapeAttribute(category.id)}" data-category-link="true">
-                <span class="navigation-category-media">${category.image ? `<img src="${escapeAttribute(getSafeImageSource(category.image))}" alt="${escapeAttribute(category.name)}" loading="lazy" width="96" height="64">` : `<span class="image-fallback">${escapeHTML(getImageFallbackLabel(category.name))}</span>`}</span>
+                <span class="navigation-category-media">${category.image ? `<img src="${escapeAttribute(getSafeImageSource(category.image))}" alt="${escapeAttribute(category.name)}" loading="lazy" decoding="async" width="96" height="64">` : `<span class="image-fallback">${escapeHTML(getImageFallbackLabel(category.name))}</span>`}</span>
                 <span class="navigation-category-name">${escapeHTML(category.name)}</span>
             </a>
         `;
@@ -2561,12 +2488,9 @@ window.addEventListener("storage", event => {
     });
 
     function initSkipLink() {
-        if (document.querySelector(".rv4-skip-link")) return;
-        const link = document.createElement("a");
-        link.className = "rv4-skip-link";
-        link.href = "#menu";
-        link.textContent = window.ROMANO_I18N?.ui?.("skipToMenu") || "رفتن به منو";
-        document.body.prepend(link);
+        // The link is present in the initial HTML, including before JavaScript boot.
+        const link = document.querySelector(".rv4-skip-link");
+        if (link) link.textContent = window.ROMANO_I18N?.ui?.("skipToMenu") || "رفتن به منو";
     }
 
     function initHeaderEffects() {
@@ -2742,7 +2666,7 @@ window.addEventListener("storage", event => {
         host.hidden = false;
         host.innerHTML = `
             <div class="romano-signature-dish__media">
-                ${product.image ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy">` : `<div class="image-fallback" aria-hidden="true">${escapeHTML(getImageFallbackLabel(product.name))}</div>`}
+                ${product.image ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy" decoding="async">` : `<div class="image-fallback" aria-hidden="true">${escapeHTML(getImageFallbackLabel(product.name))}</div>`}
             </div>
             <div class="romano-signature-dish__copy">
                 <span class="romano-signature-dish__eyebrow">${escapeHTML(window.ROMANO_I18N?.ui?.("signatureEyebrow", product.categoryName || "ROMANO") || `SIGNATURE DISH · ${product.categoryName || "ROMANO"}`)}</span>

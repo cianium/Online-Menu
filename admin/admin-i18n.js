@@ -9,6 +9,7 @@
     const LANGS = ["fa", "en", "tr", "ar"];
 
     const T = {
+      "رفتن به محتوای اصلی": ["Skip to main content", "Ana içeriğe geç", "الانتقال إلى المحتوى الرئيسي"],
       "ارسال واقعی نیازمند رضایت دریافت پیامک، لغو عضویت و نگهداری کلید سرویس در سرور است.": ["Live delivery requires SMS consent, opt-out and server-side credential storage.", "Gerçek gönderim SMS onayı, abonelik iptali ve sunucuda kimlik bilgisi saklama gerektirir.", "يتطلب الإرسال الفعلي موافقة الرسائل وإلغاء الاشتراك وحفظ بيانات الاعتماد على الخادم."],
       "سرویس ارسال متصل نیست. فقط متن و قوانین را آماده کنید.": ["No messaging service is connected. Prepare text and rules only.", "Mesaj hizmeti bağlı değil. Yalnızca metin ve kuralları hazırlayın.", "خدمة الرسائل غير متصلة. جهّز النص والقواعد فقط."],
       "تنظیمات پیامکی": ["SMS settings", "SMS ayarları", "إعدادات الرسائل النصية"],

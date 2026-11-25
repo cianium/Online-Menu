@@ -61,3 +61,30 @@ test('Hero and footer share the restaurant tagline rendering path',()=>{
  assert.match(app,/brandTagline:\s*document\.querySelectorAll\("\.brand-tagline, \[data-restaurant-tagline\], \.hero-eyebrow"\)/);
  assert.match(app,/DOM\.brandTagline\.forEach\([\s\S]*?localizedRestaurant\.tagline/);
 });
+
+
+test('Initial keyboard shortcuts have focusable destinations and private indexing remains intact',()=>{
+ const customer=read('index.html'),admin=read('admin/index.html');
+ assert.match(customer,/<a class="rv4-skip-link" href="#menu">/);
+ assert.match(customer,/id="menu"\s+tabindex="-1"/);
+ assert.match(admin,/<a class="admin-skip-link" href="#admin-content">/);
+ assert.match(admin,/id="admin-content" tabindex="-1"/);
+ assert.match(admin,/name="robots" content="noindex, nofollow"/);
+ assert.match(customer,/property="og:type" content="website"/);
+});
+
+test('Splash readiness does not depend on the window load event',()=>{
+ const app=read('js/app.js'),start=app.indexOf('function initializeSplashScreen()'),end=app.indexOf('\n}',start)+2;
+ assert.ok(start>=0&&end>start);
+ const pending=new Map(),calls=[];let next=0;
+ const splash={classList:{add:v=>calls.push(v)},setAttribute:(k,v)=>calls.push([k,v]),remove:()=>calls.push('removed')};
+ const ctx=vm.createContext({document:{querySelector:()=>splash},window:{setTimeout:(fn,ms)=>{const id=++next;pending.set(id,{fn,ms});return id;},clearTimeout:id=>pending.delete(id),matchMedia:()=>({matches:true})}});
+ vm.runInContext(app.slice(start,end),ctx);
+ const dismiss=vm.runInContext('initializeSplashScreen()',ctx);
+ assert.equal([...pending.values()][0].ms,1500);
+ dismiss();dismiss();
+ assert.deepEqual(calls,['is-hidden',['aria-hidden','true'],'removed']);
+ assert.equal(pending.size,0);
+ assert.match(app,/const dismissSplash = initializeSplashScreen\(\);/);
+ assert.match(app,/dismissSplash\(\);/);
+});

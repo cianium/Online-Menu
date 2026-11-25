@@ -37,3 +37,10 @@ html[dir="ltr"] .ramen-bottom-link { direction:ltr; }
 }
 @media(min-width:721px) { .ramen-contact-dialog { inset:0; margin:auto; border-radius:22px; } }
 @media(prefers-reduced-motion:reduce) { .ramen-bottom-link,.ramen-contact-dialog,.commerce-quantity button { animation:none!important; transition:none!important; } }
+
+/* Keyboard access to the admin content, independent of the sidebar. */
+.admin-skip-link { position:fixed; inset-block-start:max(12px,env(safe-area-inset-top)); inset-inline-start:max(12px,env(safe-area-inset-left)); z-index:9999; max-inline-size:calc(100% - 24px); min-block-size:44px; display:flex; align-items:center; padding:10px 16px; background:#f2ece3; color:#17120c; border-radius:12px; font-weight:700; text-decoration:none; box-sizing:border-box; }
+.admin-skip-link:not(:focus) { clip-path:inset(50%); inline-size:1px; block-size:1px; min-block-size:0; padding:0; overflow:hidden; white-space:nowrap; }
+.admin-skip-link:focus { outline:2px solid #17120c; outline-offset:-4px; }
+#admin-content:focus-visible,#menu:focus-visible { outline:2px solid var(--ui-focus); outline-offset:-2px; }
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto!important; } .rv4-skip-link { transition:none; } }

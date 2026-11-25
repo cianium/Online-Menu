@@ -44,10 +44,22 @@ const readyCustomer = async page => {
       console.log('LAB '+label+' '+JSON.stringify(observation));
     }
     console.log('PASS: static referrer protection and reduced-motion preference');
+    const originalRobots = await customer.locator('meta[name="robots"]').getAttribute('content');
     for (const lang of ['fa','ar','en','tr']) {
       await customer.evaluate(l => ROMANO_I18N.setLanguage(l,false),lang);
       await admin.evaluate(l => ROMANO_ADMIN_I18N.setLanguage(l),lang);
       const dir = ['fa','ar'].includes(lang) ? 'rtl' : 'ltr';
+      const expected = {fa:['رفتن به منو','رفتن به محتوای اصلی','fa_IR'],ar:['الانتقال إلى القائمة','الانتقال إلى المحتوى الرئيسي','ar_AR'],en:['Skip to menu','Skip to main content','en_US'],tr:['Menüye geç','Ana içeriğe geç','tr_TR']}[lang];
+      assert.equal((await customer.locator('.rv4-skip-link').textContent()).trim(),expected[0]);
+      assert.equal((await admin.locator('.admin-skip-link').textContent()).trim(),expected[1]);
+      assert.equal(await customer.locator('meta[property="og:locale"]').getAttribute('content'),expected[2]);
+      assert.equal(await customer.locator('meta[property="og:title"]').getAttribute('content'),await customer.title());
+      assert.equal(await customer.locator('meta[property="og:description"]').getAttribute('content'),await customer.locator('meta[name="description"]').getAttribute('content'));
+      const alternate = await customer.locator('meta[property="og:locale:alternate"]').evaluateAll(nodes=>nodes.map(n=>n.content));
+      assert.equal(new Set(alternate).size,3);
+      assert.ok(!alternate.includes(expected[2]));
+      assert.equal(await customer.locator('meta[name="robots"]').getAttribute('content'),originalRobots);
+      assert.equal(await admin.locator('meta[name="robots"]').getAttribute('content'),'noindex, nofollow');
       for (const page of [customer,admin]) {
         assert.equal(await page.locator('html').getAttribute('dir'),dir);
         for (const width of [320,768,1440]) {
@@ -57,6 +69,15 @@ const readyCustomer = async page => {
       }
     }
     console.log('PASS: four locales and three widths without external fonts');
+    for (const [page,link,target] of [[customer,'.rv4-skip-link','#menu'],[admin,'.admin-skip-link','#admin-content']]) {
+      const shortcut = page.locator(link);
+      await shortcut.focus();
+      await page.waitForFunction(s=>document.activeElement===document.querySelector(s),link);
+      await shortcut.press('Enter');
+      await page.waitForFunction(s=>document.activeElement===document.querySelector(s),target);
+      assert.equal(await page.locator(target).getAttribute('tabindex'),'-1');
+    }
+    console.log('PASS: localized keyboard skip links move focus into content and metadata is consistent');
     await admin.evaluate(() => { ROMANO_ADMIN_I18N.setLanguage('en'); navigateTo('products'); });
     await admin.locator('#add-product-button').click();
     await admin.locator('#product-form [name=name]').fill('Standalone QA Dish');
@@ -106,6 +127,9 @@ const readyCustomer = async page => {
     await customer.goto(new URL('./?restaurant=standalone-qa-missing',base).href); await readyCustomer(customer);
     assert.equal(await customer.evaluate(() => menuDataMode), 'unavailable');
     assert.equal(await cards.count(),0);
+    assert.equal(await customer.locator('meta[name="robots"]').getAttribute('content'),'noindex, nofollow');
+    assert.equal(await customer.locator('meta[property="og:site_name"]').getAttribute('content'),'');
+    assert.equal(await customer.locator('meta[name="description"]').getAttribute('content'),await customer.evaluate(()=>ROMANO_I18N.ui('menuUnavailable')));
     assert.deepEqual(errors,[]);
     console.log('PASS: unknown restaurant fails closed; no uncaught JavaScript errors');
     await context.close();
