@@ -23,3 +23,10 @@ test('Demo membership storage failure is not reported as success',()=>{
  assert.throws(()=>model.register(db,session,'Sample','+12025550102'));
  assert.deepEqual(model.read(db),[]);
 });
+
+test('Corrupted member/order data and inconsistent totals fail closed',()=>{
+ const db=storage(),session=storage();model.register(db,session,'Sample','+12025550103');
+ assert.throws(()=>model.addOrder(db,session,[{name:'Demo dish',quantity:2,price:5}],1),/INVALID_ORDER/);
+ const rows=model.read(db);rows[0].orders=[{id:'bad',total:10}];db.setItem(model.key,JSON.stringify(rows));
+ assert.throws(()=>model.active(db,session),/INVALID_STORAGE/);
+});

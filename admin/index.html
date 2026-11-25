@@ -645,7 +645,7 @@
             <section class="admin-page" id="page-loyalty" aria-labelledby="loyalty-title">
                 <div class="page-heading page-heading-row"><div><span class="page-eyebrow">باشگاه مشتریان</span><h1 id="loyalty-title">قوانین و کمپین‌ها</h1><p>پیش‌نویس قوانین تخفیف و پیامک را مدیریت کنید.</p></div><button type="button" class="primary-button" id="loyalty-add">+ قانون جدید</button></div>
                 <p class="panel loyalty-notice">این بخش فقط پیش‌نویس محلی است؛ ارسال پیامک، اعمال تخفیف و اطلاعات اعضای واقعی به سرویس سرور نیاز دارد.</p>
-                <section class="panel" id="demo-members-panel" hidden aria-labelledby="demo-members-title"><h2 id="demo-members-title">اعضای آزمایشی باشگاه مشتریان</h2><p>فقط اطلاعات ساختگی همین مرورگر؛ عضویت و سفارش واقعی نیست.</p><div id="demo-members-list"></div></section>
+                <section class="panel" id="demo-members-panel" hidden aria-labelledby="demo-members-title"><h2 id="demo-members-title">اعضای آزمایشی باشگاه مشتریان</h2><p>فقط اطلاعات ساختگی همین مرورگر؛ عضویت و سفارش واقعی نیست.</p><p><a class="secondary-button" id="demo-customer-entry-link" href="../?qr=demo" target="_blank" rel="noopener noreferrer">باز کردن ورود آزمایشی مشتری</a></p><div id="demo-members-list"></div></section>
                 <section class="panel loyalty-sms-readiness" aria-labelledby="loyalty-sms-title"><h2 id="loyalty-sms-title">تنظیمات پیامکی</h2><p>سرویس ارسال متصل نیست. فقط متن و قوانین را آماده کنید.</p><p>ارسال واقعی نیازمند رضایت دریافت پیامک، لغو عضویت و نگهداری کلید سرویس در سرور است.</p></section>
                 <p class="panel" id="loyalty-connected" hidden>مدیریت قوانین در حالت متصل هنوز فعال نیست.</p>
                 <form class="settings-form" id="loyalty-form" hidden>
@@ -1361,13 +1361,13 @@
         </div>
 
         <div class="admin-gate-heading">
-            <span class="admin-gate-eyebrow">دسترسی امن مدیریت</span>
+            <span class="admin-gate-eyebrow" id="admin-gate-eyebrow">دسترسی امن مدیریت</span>
 
             <h1 id="admin-gate-title">
                 خوش آمدید
             </h1>
 
-            <p>
+            <p id="admin-gate-description">
                 برای ورود امن به پنل مدیریت، با حساب مجاز خود وارد شوید.
             </p>
         </div>
@@ -1410,7 +1410,7 @@
         <div class="admin-gate-footer">
             <span>منوی دیجیتال ROMANO</span>
             <span aria-hidden="true">•</span>
-            <span>فقط کاربران مجاز</span>
+            <span id="admin-gate-footer-mode">فقط کاربران مجاز</span>
         </div>
 
     </div>

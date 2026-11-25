@@ -62,8 +62,8 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    const nav=p.locator('#main-navigation');
    await nav.locator('.navigation-category-list a').first().waitFor({state:'visible'});
    assert.equal(await nav.locator('.navigation-category-media img').count(),7);
-   const bounds=await nav.locator('.navigation-inner').boundingBox();
-   assert.ok(bounds && bounds.height>=843 && bounds.width>=389);
+   const bounds=await nav.locator('.navigation-inner').boundingBox(),overlay=await nav.boundingBox();
+   assert.ok(bounds&&overlay&&Math.abs(bounds.height-overlay.height)<=2&&Math.abs(bounds.width-overlay.width)<=2,JSON.stringify({bounds,overlay}));
    const categoryBounds=await nav.locator('.navigation-categories').boundingBox();
    assert.ok(categoryBounds && categoryBounds.height>0);
    assert.equal(await nav.locator('[data-nav-panel="profile"]').getAttribute('aria-label')!==null,true);

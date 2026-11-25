@@ -168,8 +168,11 @@ const readyCustomer = async page => {
     await admin.waitForFunction(()=>document.querySelector('#demo-members-list').textContent.includes('Sample Customer'));
     await customer.evaluate(()=>RomanoCommerce.add(menuProducts.find(p=>p.active!==false&&p.price>0).id));
     await customer.evaluate(()=>RomanoCommerce.open());
+    assert.equal(await customer.locator('.commerce-pay-method').isVisible(),false);
     await customer.locator('#commerce-submit').click();
     await customer.waitForFunction(()=>RomanoCustomerEntry.current()?.orders.length===1);
+    assert.ok((await customer.locator('#commerce-demo-status').innerText()).includes('nothing was sent to the restaurant'));
+    assert.equal(await customer.locator('#commerce-demo-status').isVisible(),true);
     await admin.waitForFunction(()=>document.querySelector('#demo-members-list').textContent.includes('Sample order count: 1'));
     await customer.reload();await readyCustomer(customer);
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders.length),1);

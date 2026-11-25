@@ -168,10 +168,10 @@ html[dir="ltr"] .main-navigation.is-open .navigation-inner { transform:translate
  #menu .product-card .product-body { padding:12px; }
 }
 @media(max-width:359px) { #menu .menu-category-products {grid-auto-columns:calc(100% - 8px);} }
-.main-navigation .navigation-inner { width:50vw; max-width:680px; min-width:360px; height:100%; height:100dvh; max-height:100dvh; }
+.main-navigation .navigation-inner { width:50vw; max-width:680px; min-width:360px; height:100%; height:100dvh; max-height:100dvh; box-sizing:border-box; }
 .main-navigation .navigation-categories { max-height:none; min-height:0; overflow:hidden; }
 .main-navigation .navigation-category-list { flex:1; min-height:0; overflow-y:auto; }
-@media(max-width:720px) { .main-navigation .navigation-inner {width:100%;min-width:0;max-width:none;} }
+@media(max-width:720px) { .main-navigation .navigation-inner {width:100%;min-width:0;max-width:none;} html[dir] .main-navigation .navigation-inner { inset-inline:0; } }
 @media(max-height:490px) { .main-navigation .navigation-inner {display:flex;flex-direction:column;overflow-y:auto;} .main-navigation .navigation-categories {min-height:180px;} }
 .customer-entry { position:fixed; inset:0; width:100%; max-width:none; height:100%; max-height:none; margin:0; border:0; padding:clamp(12px,4vw,36px); box-sizing:border-box; overflow:auto; background:linear-gradient(120deg,#170c08a8,#110d0b9e),url("../assets/images/hero/hero.jpg") center/cover; color:#fff8ef; }
 .customer-entry[open] { display:flex; align-items:center; justify-content:center; }
@@ -192,3 +192,6 @@ html[dir="ltr"] .main-navigation.is-open .navigation-inner { transform:translate
 .customer-entry-panel .customer-entry-error:empty {display:none;}
 .customer-entry-panel .customer-entry-error {color:#ffd5cb;margin:0;}
 @media(prefers-reduced-motion:no-preference){.customer-entry[open] .customer-entry-panel {animation:customer-enter 260ms var(--ui-ease) both;}}
+
+.commerce-pay-method[hidden],.commerce-note[hidden],#commerce-demo-status[hidden]{display:none!important;}
+#commerce-demo-status:not([hidden]){padding:12px;border:1px solid #d6ae7055;border-radius:12px;background:#211b14;color:#f0e0c5;}

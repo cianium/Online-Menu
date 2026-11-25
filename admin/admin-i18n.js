@@ -9,6 +9,10 @@
     const LANGS = ["fa", "en", "tr", "ar"];
 
     const T = {
+      "باز کردن ورود آزمایشی مشتری": ["Open demo customer entry","Demo müşteri girişini aç","فتح دخول العميل التجريبي"],
+      "فقط داده آزمایشی": ["Sample data only","Yalnızca örnek veri","بيانات تجريبية فقط"],
+      "با شناسه و رمز عمومی نمونه وارد شوید؛ این حساب واقعی نیست.": ["Sign in with the public sample ID and password; this is not a real account.","Herkese açık örnek kimlik ve şifreyle giriş yapın; bu gerçek hesap değildir.","ادخل بالمعرّف وكلمة المرور التجريبيين العامين؛ هذا ليس حسابًا حقيقيًا."],
+      "دسترسی آزمایشی مدیریت": ["Demo admin access","Demo yönetim erişimi","دخول الإدارة التجريبي"],
       "زبان": ["Language","Dil","اللغة"],
       "عضو نمونه‌ای ثبت نشده است.": ["No sample members yet.","Henüz örnek üye yok.","لا يوجد أعضاء تجريبيون بعد."],
       "تعداد سفارش‌های نمونه": ["Sample order count","Örnek sipariş sayısı","عدد الطلبات التجريبية"],

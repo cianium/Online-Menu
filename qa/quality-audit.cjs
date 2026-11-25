@@ -154,6 +154,18 @@ async function measure(browser,surface) {
         assert.equal(await contact.getAttribute('aria-controls'),null);
         assert.equal(await contact.evaluate(el=>el===document.activeElement),true);
       }
+      await customer.evaluate(()=>ROMANO_I18N.setLanguage('en',false));
+      for(const width of [390,1440]){
+        await customer.setViewportSize({width,height:844});
+        await customer.locator('#menu .menu-category-products').first().scrollIntoViewIfNeeded();
+        await customer.screenshot({path:path.join(out,'customer-horizontal-catalog-en-'+width+'.png'),animations:'disabled'});
+        await customer.evaluate(()=>window.scrollTo(0,0));
+        await customer.locator('#menu-toggle').click();
+        const rect=await customer.locator('.navigation-inner').boundingBox(),overlay=await customer.locator('.main-navigation').boundingBox();
+        assert.ok(rect&&overlay&&Math.abs(rect.height-overlay.height)<=2&&Math.abs(rect.width-(width===390?overlay.width:680))<=2,JSON.stringify({rect,overlay}));
+        await customer.screenshot({path:path.join(out,'customer-navigation-en-'+width+'.png'),animations:'disabled'});
+        await customer.locator('#navigation-close').click();
+      }
       await admin.evaluate(()=>ROMANO_ADMIN_I18N.setLanguage('en'));
       for(const view of ['orders','products','categories','settings','loyalty']){
         await admin.evaluate(v=>navigateTo(v),view);
