@@ -16,3 +16,9 @@ Customer LCP 1620 ms, initial CLS .0221, DCL 2882 ms, load 2906 ms, 478476 encod
 
 ## New evidence
 Extended audit to 25 scans, including open contact dialog in all four locales, actual Space/escape/focus restoration checks, and complete axe incomplete-rule evidence with check messages. Existing severity gate retained. New static semantic guards and browser tests. Cache namespace incremented. Verify results at the new head before release. No merge/deploy.
+
+## Verified first repair and visual follow-up
+
+[Audit rerun](https://github.com/cianium/Online-Menu/actions/runs/45701027719) at `f1b07cce5a55b0b3ae5b8926f74b752eac827be4`: all 25 scans passed with zero definite violations and `ARIA REVIEW []`. Artifact 15063451020 contained 27 screenshots. Remaining incomplete results: 23 color-contrast rule/scan instances, 278 unique selectors (automated background/text determination limitations, including gradients, non-text glyphs and image nodes). Customer LCP 1616 ms / initial CLS .0221; admin LCP 1536 ms / initial CLS .0019. Repeated mobile-emulated measurements remain single-run lab observations, not an improvement claim.
+
+Review of the four new dialog screenshots exposed RTL international telephone group ordering. Apply explicit LTR direction to footer and dialog telephone values, retain RTL alignment for the dialog and preserve the original displayed text and safe tel-link policy. Added computed-style assertions in all four locales and a static guard. No layout or palette rewrite; no claim of full manual contrast compliance. Re-run quality, CI and browser gates at the new head. No merge/deploy.

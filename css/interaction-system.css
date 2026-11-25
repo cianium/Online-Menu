@@ -44,3 +44,7 @@ html[dir="ltr"] .ramen-bottom-link { direction:ltr; }
 .admin-skip-link:focus { outline:2px solid #17120c; outline-offset:-4px; }
 #admin-content:focus-visible,#menu:focus-visible { outline:2px solid var(--ui-focus); outline-offset:-2px; }
 @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto!important; } .rv4-skip-link { transition:none; } }
+
+/* International telephone numbers retain their reading order in RTL locales. */
+.ramen-contact-item > span[dir="ltr"] { unicode-bidi:isolate; text-align:left; }
+html[dir="rtl"] .ramen-contact-item > span[dir="ltr"] { text-align:right; }

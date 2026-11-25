@@ -112,6 +112,11 @@ async function measure(browser,surface) {
         await customer.locator('#ramen-contact-dialog').waitFor({state:'visible'});
         assert.equal(await contact.getAttribute('aria-expanded'),'true');
         assert.equal(await contact.getAttribute('aria-controls'),'ramen-contact-dialog');
+        const footerPhone=customer.locator('[data-restaurant-phone]');
+        const phone=customer.locator('#ramen-contact-dialog .ramen-contact-item > span[dir="ltr"]');
+        assert.equal(await phone.count(),1);
+        assert.equal(await phone.textContent(),(await footerPhone.textContent()).trim());
+        for(const node of [phone,footerPhone]) assert.equal(await node.evaluate(el=>getComputedStyle(el).direction),'ltr');
         await scan(customer,'customer-contact',lang,390,844);
         await customer.keyboard.press('Escape');
         await customer.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open && document.querySelector('[data-ramen-nav="contact"]').getAttribute('aria-expanded')==='false');

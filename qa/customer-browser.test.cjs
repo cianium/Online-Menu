@@ -34,6 +34,9 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.equal(await trigger.getAttribute('aria-controls'),'ramen-contact-dialog');
    assert.ok((await dialog.locator('h2').innerText()).trim());
    assert.equal(await dialog.locator('a[href^="tel:"]').count(),0,'sample phone must not initiate a call');
+   assert.equal(await dialog.locator('.ramen-contact-item > span[dir="ltr"]').count(),1);
+   assert.equal(await dialog.locator('.ramen-contact-item > span[dir="ltr"]').evaluate(n=>getComputedStyle(n).direction),'ltr');
+   assert.equal(await p.locator('[data-restaurant-phone]').evaluate(n=>getComputedStyle(n).direction),'ltr');
    await p.keyboard.press('Escape');
    await p.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open && document.querySelector('[data-ramen-nav="contact"]').getAttribute('aria-expanded')==='false');
    assert.equal(await trigger.evaluate(n=>document.activeElement===n),true);

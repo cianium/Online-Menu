@@ -128,3 +128,12 @@ test('Named action collections have group semantics; the Instagram placeholder n
  const social=html.match(/<a\s+href=""\s+class="social-link"[\s\S]*?<\/a>/)?.[0];
  assert.ok(social);assert.doesNotMatch(social,/aria-label=/);assert.match(social,/Instagram/);
 });
+
+
+test('Telephone numbers are isolated left-to-right in footer and contact dialog',()=>{
+ assert.match(read('index.html'),/data-restaurant-phone dir="ltr"/);
+ const commerce=read('js/commerce.js');
+ assert.match(commerce,/if\(direction\)valueNode.dir=direction/);
+ assert.match(commerce,/appendInfo\(words.phone,[^\n]*null,'ltr'\)/);
+ assert.match(read('css/interaction-system.css'),/span\[dir="ltr"\] \{ unicode-bidi:isolate/);
+});

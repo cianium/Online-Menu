@@ -199,17 +199,19 @@
           content.append(field,commentLabel,button,status);
         }
       }
-      const appendInfo=(label,value,href)=>{
+      const appendInfo=(label,value,href,direction)=>{
         if(!value)return;
         const item=element(href?'a':'div',null,'ramen-contact-item');
         if(href){item.href=href;if(href.startsWith('https:')||href.startsWith('http:')){item.target='_blank';item.rel='noopener noreferrer';}}
-        item.append(element('small',label),element('span',value));content.append(item);
+        const valueNode=element('span',value);
+        if(direction)valueNode.dir=direction;
+        item.append(element('small',label),valueNode);content.append(item);
       };
       // Read only the current rendered restaurant information. Never introduce a fake chat or map destination.
       const address=document.querySelector('[data-restaurant-address]')?.textContent.trim();
       const phone=document.querySelector('[data-restaurant-phone]')?.textContent.trim();
       const social=document.querySelector('[data-restaurant-instagram]')?.getAttribute('href');
-      if((panel==='contact'||panel==='chat') && (demo || mode==='public' || mode==='offline') && phone)appendInfo(words.phone,phone,!demo && /^\+?[\d\s().-]{5,25}$/.test(phone)?'tel:'+phone.replace(/[^+\d]/g,''):null);
+      if((panel==='contact'||panel==='chat') && (demo || mode==='public' || mode==='offline') && phone)appendInfo(words.phone,phone,!demo && /^\+?[\d\s().-]{5,25}$/.test(phone)?'tel:'+phone.replace(/[^+\d]/g,''):null,'ltr');
       if(panel==='contact' && (demo || mode==='public' || mode==='offline') && address)appendInfo(words.address,address,null);
       if((panel==='contact'||panel==='chat') && social && /^https?:\/\//i.test(social) && (mode==='public' || mode==='offline')){const url=getSafeExternalUrl(social);if(url)appendInfo(words.social,words.social,url);}
       if(panel==='contact' && !content.querySelector('.ramen-contact-item'))content.append(element('p',words.missing,'ramen-contact-note'));
