@@ -334,7 +334,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   await p.waitForFunction(()=>document.querySelectorAll('#menu .product-card').length===20);
   assert.equal(await p.locator('.product-modal').getAttribute('aria-hidden'),'true');await other.close();
  });
- const data={restaurant:{name:'Test Kitchen',description:'Fresh public menu',address:'QA restaurant address',currency:'TRY'},categories:[{id:'food',name:'Food'},{id:'hidden',name:'Hidden',active:false}],products:[{id:'late',category:'food',name:'Fresh dish',price:100,rating:0},{id:'unsafe',category:'food',name:'<img src=x onerror=alert(1)>',price:0},{id:'hidden-item',category:'hidden',name:'Secret',price:10},{id:'inactive',category:'food',name:'Inactive',active:false},{id:'orphan',category:'missing',name:'Orphan'}]};
+ const data={restaurant:{name:'Test Kitchen',tagline:'کافه و رستوران',description:'Fresh public menu',address:'QA restaurant address',currency:'TRY'},categories:[{id:'food',name:'Food'},{id:'hidden',name:'Hidden',active:false}],products:[{id:'late',category:'food',name:'Fresh dish',price:100,rating:0},{id:'unsafe',category:'food',name:'<img src=x onerror=alert(1)>',price:0},{id:'hidden-item',category:'hidden',name:'Secret',price:10},{id:'inactive',category:'food',name:'Inactive',active:false},{id:'orphan',category:'missing',name:'Orphan'}]};
  let status=200,payload=data,delay=0;
  await ctx.route('**/api/v1/public/**',async route=>{if(delay)await new Promise(r=>setTimeout(r,delay));await route.fulfill({status,contentType:'application/json',body:JSON.stringify({data:payload})})});
  await check('Delayed public deep link preserves query; hidden items excluded and HTML escaped',async()=>{
@@ -358,8 +358,10 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   status=200;await p.reload();await ready(p);status=404;await p.reload();await ready(p);assert.equal(await p.evaluate(()=>menuDataMode),'unavailable');assert.equal(await cards.count(),0);
  });
  await check('Empty public catalog never restores seed products',async()=>{
-  status=200;payload={restaurant:{...data.restaurant,address:''},categories:[],products:[]};await p.reload();await ready(p);assert.equal(await p.evaluate(()=>menuDataMode),'public');assert.equal(await cards.count(),0);assert.equal(await p.locator('#menu-empty').count(),1);
+  status=200;payload={restaurant:{...data.restaurant,address:'',tagline:''},categories:[],products:[]};await p.reload();await ready(p);assert.equal(await p.evaluate(()=>menuDataMode),'public');assert.equal(await cards.count(),0);assert.equal(await p.locator('#menu-empty').count(),1);
   assert.equal((await p.locator('.footer-address').textContent()).trim(),'','Missing public address must not restore demo address');
+  assert.equal((await p.locator('.hero-eyebrow').textContent()).trim(),'','Missing public tagline must not restore demo tagline');
+  assert.equal((await p.locator('.footer-brand p').textContent()).trim(),'');
   payload={restaurant:data.restaurant,categories:[],products:[]};await p.reload();await ready(p);
  });
  await check('Blocked storage still permits browsing and session favorites',async()=>{
@@ -453,6 +455,16 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   await p.evaluate(()=>ROMANO_I18N.setLanguage('ar',false));
   assert.equal((await readEyebrow()).trim(),'مقهى ومطعم');
   assert.equal(await p.locator('.hero-eyebrow').evaluate(el=>getComputedStyle(el).direction),'rtl');
+ });
+ await check('Configured restaurant tagline is consistent in Hero and footer in four languages',async()=>{
+  const custom={fa:'آشپزخانه آزمایشی',en:'QA Kitchen',tr:'Test Mutfağı',ar:'مطبخ تجريبي'};
+  payload={restaurant:{...data.restaurant,tagline:custom.fa,translations:Object.fromEntries(Object.entries(custom).map(([lang,tagline])=>[lang,{tagline}]))},categories:[],products:[]};
+  await p.reload();await ready(p);
+  for(const lang of ['fa','en','tr','ar']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   assert.equal((await p.locator('.hero-eyebrow').textContent()).trim(),custom[lang]);
+   assert.equal((await p.locator('.footer-brand p').textContent()).trim(),custom[lang]);
+  }
  });
  await check('No developer credits or internal release labels remain',async()=>{
   assert.equal(await p.locator('.footer-bottom a[href*="kiankhayat.me"]').count(),0);

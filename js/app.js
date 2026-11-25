@@ -287,7 +287,7 @@ const DOM = {
         document.querySelectorAll(".brand-name, [data-restaurant-brand]"),
 
     brandTagline:
-        document.querySelectorAll(".brand-tagline, [data-restaurant-tagline]"),
+        document.querySelectorAll(".brand-tagline, [data-restaurant-tagline], .hero-eyebrow"),
 
     menuToggle:
         document.querySelector(".menu-toggle"),

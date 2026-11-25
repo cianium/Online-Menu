@@ -54,3 +54,10 @@ test('Public asset budgets prevent major regressions in the initial UI',()=>{
  assert.ok([...new Set(resources)].reduce((sum,p)=>sum+size(p),0)<=400*1024,'Uncompressed customer JS/CSS budget');
  assert.match(read('js/app.js'),/loading="lazy"/);
 });
+
+
+test('Hero and footer share the restaurant tagline rendering path',()=>{
+ const app=read('js/app.js');
+ assert.match(app,/brandTagline:\s*document\.querySelectorAll\("\.brand-tagline, \[data-restaurant-tagline\], \.hero-eyebrow"\)/);
+ assert.match(app,/DOM\.brandTagline\.forEach\([\s\S]*?localizedRestaurant\.tagline/);
+});
