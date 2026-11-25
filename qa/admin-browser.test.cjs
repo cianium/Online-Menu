@@ -23,11 +23,42 @@ async function check(name, action) { await action(); results.push(name); console
   await page.goto(base + '/admin/');
   await page.waitForFunction(() => typeof adminInitialized !== 'undefined' && adminInitialized && !document.querySelector('.admin-app').inert);
   await check('Local demo boot and seed catalog', async () => assert.equal(await page.evaluate(() => state.products.length), 21));
-  await check('4 languages × 3 widths × 5 admin pages: direction and horizontal overflow', async () => {
+await check('Admin interface contains no developer credits or internal release labels', async () => {
+ assert.equal(await page.locator('.creator-signature').count(), 0);
+ const visibleText = await page.locator('.admin-app').innerText();
+ assert.doesNotMatch(visibleText, /Cian Khayat|ONLINE-MENU vq\.3|ADMIN CONSOLE|LIVE OPERATIONS|QR TABLE SETUP|DIRECT SETTLEMENT/);
+});
+await check('Admin metadata typography meets the readable size floor', async () => {
+ const brandSize = Number.parseFloat(await page.locator('.admin-brand-label').evaluate(node => getComputedStyle(node).fontSize));
+ const eyebrowSize = Number.parseFloat(await page.locator('.page-eyebrow').first().evaluate(node => getComputedStyle(node).fontSize));
+ assert.ok(brandSize >= 11 && eyebrowSize >= 11, JSON.stringify({brandSize,eyebrowSize}));
+});
+await check('Persian admin section labels are fully localized', async () => {
+ const visibleText = await page.locator('.admin-app').innerText();
+ assert.doesNotMatch(visibleText, /\bOVERVIEW\b|\bMENU HEALTH\b|\bMENU MANAGEMENT\b|\bMENU STRUCTURE\b|\bRESTAURANT CONFIGURATION\b|\bSECURE SERVER AUTHENTICATION\b|\bAUTHORIZED USERS ONLY\b/);
+});
+await check('Order filter group accessible name is localized in all four languages', async () => {
+ const expected = {fa:'فیلتر وضعیت سفارش',en:'Order status filters',tr:'Sipariş durumu filtreleri',ar:'تصفية حالة الطلب'};
+ for (const lang of ['fa','en','tr','ar']) {
+  await page.evaluate(lang => window.ROMANO_ADMIN_I18N.setLanguage(lang), lang);
+  assert.equal(await page.locator('.orders-filters').getAttribute('aria-label'), expected[lang]);
+ }
+});
+  await check('4 languages × 5 widths × 5 admin pages: direction and horizontal overflow', async () => {
     for (const lang of ['en','tr','ar','fa']) {
       await page.evaluate(lang => window.ROMANO_ADMIN_I18N.setLanguage(lang), lang);
       assert.equal(await page.getAttribute('html','dir'), ['fa','ar'].includes(lang) ? 'rtl' : 'ltr');
-      for (const width of [1440,390,320]) {
+      const expectedFont = ['fa','ar'].includes(lang) ? 'Vazirmatn' : 'Inter';
+      const expectedDisplay = ['fa','ar'].includes(lang) ? 'Vazirmatn' : 'Playfair Display';
+      assert.match(await page.locator('body').evaluate(node => getComputedStyle(node).fontFamily), new RegExp(expectedFont));
+      assert.match(await page.locator('#dashboard-title').evaluate(node => getComputedStyle(node).fontFamily), new RegExp(expectedDisplay));
+      const expectedBrand = {fa:'مدیریت',en:'Management',tr:'Yönetim',ar:'الإدارة'}[lang];
+      assert.equal(await page.locator('.admin-brand-label').textContent().then(value=>value.trim()), expectedBrand);
+      assert.equal(await page.locator('.admin-brand').getAttribute('aria-label'), ({fa:'ROMANO | مدیریت',en:'ROMANO | Admin',tr:'ROMANO | Yönetim',ar:'رومانو | الإدارة'})[lang]);
+      assert.equal(await page.locator('.admin-brand-name').textContent().then(value=>value.trim()), 'ROMANO');
+      assert.equal(await page.locator('.admin-footer-brand strong').textContent().then(value=>value.trim()), 'ROMANO');
+      assert.match(await page.title(), /ROMANO|رومانو/);
+      for (const width of [1440,1024,768,390,320]) {
         await page.setViewportSize({width,height:900});
         for (const section of ['dashboard','orders','products','categories','settings']) {
           await page.evaluate(section => navigateTo(section),section);
@@ -106,6 +137,12 @@ async function check(name, action) { await action(); results.push(name); console
       const box=document.querySelector('#product-form button[type=submit]').getBoundingClientRect();
       return box.height>=44 && box.y>=0 && box.bottom<=innerHeight;
     });
+    const imageButton=page.locator('#product-modal .image-upload-button');
+    assert.equal(await imageButton.count(),1);
+    await imageButton.evaluate(el=>el.scrollIntoView({block:'center',inline:'nearest'}));
+    const imageBox=await imageButton.boundingBox();
+    const actionsBox=await page.locator('#product-form .form-actions').boundingBox();
+    assert.ok(imageBox && actionsBox && imageBox.y+imageBox.height<=actionsBox.y-4,JSON.stringify({imageBox,actionsBox}));
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     await page.screenshot({path:path.join(out,'admin-mobile-edit-320.png')});
     await page.locator('#product-modal button[data-close-modal]').first().click();
@@ -266,6 +303,18 @@ async function check(name, action) { await action(); results.push(name); console
       await page.evaluate(({lang,section})=>{window.ROMANO_ADMIN_I18N.setLanguage(lang);navigateTo(section);},{lang,section});
       await page.waitForTimeout(300);
       await page.screenshot({path:path.join(out,name+'.png'),fullPage:section==='dashboard' && width>700});
+    }
+    for(const [lang,width,section,name] of [
+      ['en',1440,'orders','admin-desktop-orders'],
+      ['en',1440,'categories','admin-desktop-categories'],
+      ['en',1440,'settings','admin-desktop-settings'],
+      ['fa',390,'orders','admin-mobile-orders-fa'],
+      ['fa',390,'settings','admin-mobile-settings-fa']
+    ]){
+      await page.setViewportSize({width,height:900});
+      await page.evaluate(({lang,section})=>{window.ROMANO_ADMIN_I18N.setLanguage(lang);navigateTo(section);},{lang,section});
+      await page.waitForTimeout(250);
+      await page.screenshot({path:path.join(out,name+'.png'),fullPage:true});
     }
     assert.deepEqual(errors,[]);
   });

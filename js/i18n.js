@@ -10,8 +10,8 @@
     const LANGUAGES = ["fa", "en", "tr", "ar"];
 
     const staticText = {
-        "RAMEN | منوی دیجیتال": { fa: "RAMEN | منوی دیجیتال", en: "RAMEN | Digital Menu", tr: "RAMEN | Dijital Menü", ar: "رامن | القائمة الرقمية" },
-        "منوی دیجیتال رستوران با RAMEN": { fa: "منوی دیجیتال رستوران با RAMEN", en: "Digital restaurant menus powered by RAMEN", tr: "RAMEN ile dijital restoran menüleri", ar: "قوائم المطاعم الرقمية بواسطة رامن" },
+        "ROMANO | منوی دیجیتال": { fa: "ROMANO | منوی دیجیتال", en: "ROMANO | Digital Menu", tr: "ROMANO | Dijital Menü", ar: "رومانو | القائمة الرقمية" },
+        "منوی دیجیتال رستوران با ROMANO": { fa: "منوی دیجیتال رستوران با ROMANO", en: "Digital restaurant menus powered by ROMANO", tr: "ROMANO ile dijital restoran menüleri", ar: "قوائم المطاعم الرقمية بواسطة رومانو" },
         "رمانو": { fa: "رمانو", en: "ROMANO", tr: "ROMANO", ar: "رومانو" },
         "رستوران و کافه": { fa: "رستوران و کافه", en: "Restaurant & Cafe", tr: "Restoran & Kafe", ar: "مطعم ومقهى" },
         "کافه و رستوران": { fa: "کافه و رستوران", en: "Cafe & Restaurant", tr: "Kafe & Restoran", ar: "مقهى ومطعم" },
@@ -48,9 +48,8 @@
         "مشاهده جزئیات": { fa: "مشاهده جزئیات", en: "View Details", tr: "Detayları Gör", ar: "عرض التفاصيل" },
         "رفتن به منو": { fa: "رفتن به منو", en: "Skip to menu", tr: "Menüye geç", ar: "الانتقال إلى القائمة" },
         "منوی اصلی": { fa: "منوی اصلی", en: "Main Menu", tr: "Ana Menü", ar: "القائمة الرئيسية" },
-        "Designed by Cian Khayat": { fa: "طراحی: Cian Khayat", en: "Designed by Cian Khayat", tr: "Cian Khayat tarafından tasarlandı", ar: "تصميم Cian Khayat" },
-        "RAMEN · DIGITAL MENU": { fa: "RAMEN · DIGITAL MENU", en: "RAMEN · DIGITAL MENU", tr: "RAMEN · DİJİTAL MENÜ", ar: "رامن · القائمة الرقمية" },
-        "قدرت‌گرفته از RAMEN": { fa: "قدرت‌گرفته از RAMEN", en: "Powered by RAMEN", tr: "RAMEN ile desteklenmektedir", ar: "مدعوم بواسطة رامن" },
+        "منوی دیجیتال ROMANO": { fa: "منوی دیجیتال ROMANO", en: "ROMANO · DIGITAL MENU", tr: "ROMANO · DİJİTAL MENÜ", ar: "رومانو · القائمة الرقمية" },
+        "قدرت‌گرفته از ROMANO": { fa: "قدرت‌گرفته از ROMANO", en: "Powered by ROMANO", tr: "ROMANO ile desteklenmektedir", ar: "مدعوم بواسطة رومانو" },
         "صفحه اصلی رستوران": { fa: "صفحه اصلی رستوران", en: "Restaurant home", tr: "Restoran ana sayfası", ar: "الصفحة الرئيسية للمطعم" },
         "باز کردن منوی اصلی": { fa: "باز کردن منوی اصلی", en: "Open main menu", tr: "Ana menüyü aç", ar: "فتح القائمة الرئيسية" },
         "ناوبری اصلی رستوران": { fa: "ناوبری اصلی رستوران", en: "Restaurant navigation", tr: "Restoran gezinmesi", ar: "التنقل الرئيسي للمطعم" },
@@ -461,6 +460,12 @@
         "Tekrar dene",
         "حاول مجددًا"
     ],
+    "menuEyebrow": [
+        "منوی رستوران",
+        "RESTAURANT MENU",
+        "RESTORAN MENÜSÜ",
+        "قائمة المطعم"
+    ],
     "menuIntro": [
         "یک انتخاب خوش‌طعم",
         "Find your next favorite",
@@ -494,6 +499,7 @@
             current === "tr" ? "<span>İyi yemek.</span><span>İyi his.</span>" :
             "<span>طعام جيد.</span><span>مزاج جيد.</span>", true);
 
+        set(".hero-eyebrow", pick(restaurant.tagline));
         set(".hero-description", pick(restaurant.description));
         set(".hero-button span:first-child", ui("skipToMenu"));
 
@@ -536,7 +542,7 @@
         const footerAddress = document.querySelector(".site-footer [data-restaurant-address]");
         if (footerAddress && !footerAddress.closest("#contact")) footerAddress.textContent = t("آدرس رستوران");
         const footerCopyright = document.querySelector(".footer-bottom span");
-        if (footerCopyright) footerCopyright.textContent = t("قدرت‌گرفته از RAMEN");
+        if (footerCopyright) footerCopyright.textContent = t("قدرت‌گرفته از ROMANO");
 
         const modalClose = document.querySelector(".product-modal .modal-close");
         if (modalClose) modalClose.setAttribute("aria-label", t("بستن"));
@@ -596,7 +602,7 @@
         applyStatic();
         translateElementContents();
         updateButton();
-        document.title = t("RAMEN | منوی دیجیتال", document.title);
+        document.title = t("ROMANO | منوی دیجیتال", document.title);
         const metaDescription = document.querySelector('meta[name="description"]');
         if (metaDescription) metaDescription.setAttribute("content", pick(restaurant.description));
         document.dispatchEvent(new CustomEvent("romano:language-changed", { detail: { lang: current } }));

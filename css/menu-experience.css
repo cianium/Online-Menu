@@ -20,8 +20,8 @@
 #menu-favorites-toggle, .browse-category-rail button, #menu-reset, #menu-sort, .menu-data-status button { font: inherit; color: var(--romano-ink-soft); border: 1px solid var(--menu-border); background: var(--menu-surface); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
 #menu-favorites-toggle { white-space: nowrap; }
 #menu-favorites-toggle[aria-pressed="true"], .browse-category-rail button[aria-pressed="true"] { border-color: var(--romano-gold); color: var(--romano-gold-light); background: #c9a46a14; }
-.browse-category-rail { display: flex; gap: 8px; overflow-x: auto; padding-block: 18px 12px; scrollbar-width: thin; scrollbar-color: #c9a46a55 transparent; }
-.browse-category-rail button { flex: 0 0 auto; min-height: 44px; border-radius: 40px; font-size: 13px; }
+.browse-category-rail { display: flex; gap: 8px; overflow-x: auto; padding-block: 18px 12px; scrollbar-width: thin; scrollbar-color: #c9a46a55 transparent; scroll-snap-type: inline proximity; scroll-padding-inline: 12px; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
+.browse-category-rail button { flex: 0 0 auto; min-height: 44px; border-radius: 40px; font-size: 13px; scroll-snap-align: start; }
 .browse-category-rail button span { opacity: .7; margin-inline-start: 6px; font-size: 11px; }
 .menu-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 8px; }
 #menu-result-count { margin-inline-end: auto; font-size: 13px; color: var(--menu-muted); }
@@ -41,6 +41,7 @@
 #menu .product-name { color: #fff; font-size: clamp(20px,2.2vw,27px); line-height: 1.45; overflow-wrap: anywhere; margin-block: 10px 2px; text-shadow: 0 2px 18px #000b; }
 #menu .product-description { color: #f3eee5; line-height: 1.8; min-height: 3.6em; margin-block: 8px 14px; opacity: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 0 1px 10px #000; }
 #menu .product-category { color: #f2c987; text-shadow: 0 1px 10px #000; }
+html[dir="rtl"] #menu .product-category { direction: rtl; letter-spacing: 0; }
 #menu .product-rating { text-shadow: 0 1px 10px #000; }
 #menu .product-price { align-self: flex-start; color: #fff; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; text-shadow: 0 2px 14px #000; }
 #menu .product-card-button { position: static; z-index: auto; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 48px; height: auto; margin-top: 2px; padding: 11px 16px; border: 1px solid #e8c58a88; border-radius: 11px; background: #c9a46a; color: #17120c; font-size: 13px; font-weight: 700; cursor: pointer; pointer-events: auto; transition: background 180ms ease,border-color 180ms ease,transform 180ms ease; }

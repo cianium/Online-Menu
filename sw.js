@@ -1,4 +1,4 @@
-const CACHE_NAME = "ramen-online-menu-vq3-2";
+const CACHE_NAME = "ramen-online-menu-vq3-3";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -23,7 +23,7 @@ self.addEventListener("install", event => {
 });
 
 self.addEventListener("activate", event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => (key.startsWith("romano-") || key.startsWith("online-menu-")) && key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => (key.startsWith("romano-") || key.startsWith("online-menu-") || key.startsWith("ramen-online-menu-")) && key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener("fetch", event => {
@@ -48,7 +48,7 @@ self.addEventListener("fetch", event => {
           }
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || (isDocument ? caches.match("./index.html") : new Response("", { status: 503 }))))
+        .catch(async () => (await caches.match(request)) || (isDocument && await caches.match("./index.html")) || new Response("", { status: 503 }))
     );
     return;
   }

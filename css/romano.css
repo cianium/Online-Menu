@@ -44,6 +44,8 @@
   --color-gold: var(--romano-gold);
   --color-gold-light: var(--romano-gold-light);
   --header-height: 80px;
+  --font-ui: "Inter", "Vazirmatn", system-ui, sans-serif;
+  --font-display: "Playfair Display", "Inter", serif;
 }
 
 html {
@@ -207,20 +209,24 @@ input:focus-visible {
     linear-gradient(90deg, rgba(6, 5, 4, 0.15) 0%, rgba(6, 5, 4, 0.25) 38%, rgba(6, 5, 4, 0.78) 100%),
     linear-gradient(180deg, rgba(6, 5, 4, 0.12) 0%, rgba(6, 5, 4, 0.52) 72%, rgba(6, 5, 4, 0.9) 100%);
 }
-.hero-section::before {
-  content: "ROMANO · RESTAURANT & CAFE";
+.hero-eyebrow {
   position: absolute;
-  top: 30px;
-  left: 0;
-  right: 0;
+  inset-block-start: 30px;
+  inset-inline: max(24px, calc((100vw - var(--container-width)) / 2 + var(--container-padding)));
   z-index: 1;
-  padding-inline: max(24px, calc((100vw - var(--container-width)) / 2 + var(--container-padding)));
-  color: rgba(242, 236, 227, 0.58);
-  font-size: 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(242, 236, 227, 0.72);
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.24em;
-  direction: ltr;
-  text-align: left;
+  letter-spacing: 0.08em;
+  direction: inherit;
+  text-align: start;
+}
+html[lang="fa"] .hero-eyebrow,
+html[lang="ar"] .hero-eyebrow {
+  letter-spacing: 0;
 }
 .hero-content {
   width: min(calc(100% - 48px), var(--container-width));
@@ -235,8 +241,6 @@ input:focus-visible {
   align-items: center;
   gap: 10px;
   color: var(--romano-gold-light);
-  font-size: 9px;
-  letter-spacing: 0.26em;
 }
 .hero-eyebrow::before {
   content: "";
@@ -817,6 +821,13 @@ input:focus-visible {
   border-color: rgba(201, 164, 106, 0.4);
 }
 
+/* Keep floating page controls behind modal/navigation interaction layers. */
+body.modal-open .rv4-back-top {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ---------------------------------------------------------
    10. MODAL
 --------------------------------------------------------- */
@@ -1088,12 +1099,7 @@ input:focus-visible {
   .hero-section {
     min-height: calc(100svh - 72px);
   }
-  .hero-section::before {
-    top: 18px;
-    padding-inline: 18px;
-    font-size: 7px;
-  }
-  .hero-content {
+.hero-content {
     width: min(calc(100% - 36px), var(--container-width));
     padding-block: 94px 72px;
     align-items: center;
@@ -1748,24 +1754,28 @@ input:focus-visible {
   margin-top: auto;
   padding-top: 22px;
   border-top: 1px solid var(--romano-line-soft);
-  color: rgba(242, 236, 227, 0.34);
-  font-family: var(--font-display);
-  font-size: 8px;
-  letter-spacing: 0.13em;
-  direction: ltr;
+  color: rgba(242, 236, 227, 0.62);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0;
+  direction: inherit;
+}
+html[dir="ltr"] .navigation-footer {
+  letter-spacing: 0.1em;
 }
 
 .navigation-menu-cta {
   flex: 0 0 auto;
-  min-height: 34px;
-  padding: 0 12px;
+  min-height: 40px;
+  padding: 0 14px;
   border: 1px solid var(--romano-line-gold);
   border-radius: 999px;
   background: rgba(201, 164, 106, 0.06);
   color: var(--romano-gold-light);
-  font-family: var(--font-persian);
-  font-size: 10px;
-  direction: rtl;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: normal;
+  direction: inherit;
 }
 
 .menu-toggle {
@@ -1898,4 +1908,101 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 }
 @media (max-width: 420px) {
   .site-header, .admin-header { padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right)); }
+}
+
+
+/* Language-aware typography: Persian/Arabic use Vazirmatn; LTR uses Inter. */
+html[dir="rtl"] { --font-ui: "Vazirmatn", sans-serif; --font-display: "Vazirmatn", sans-serif; }
+html[dir="ltr"] { --font-ui: "Inter", system-ui, sans-serif; --font-display: "Playfair Display", "Inter", serif; }
+body { font-family: var(--font-ui); }
+html[lang="fa"] body, html[lang="ar"] body { font-family: "Vazirmatn", sans-serif; }
+html[lang="en"] body, html[lang="tr"] body { font-family: "Inter", system-ui, sans-serif; }
+html[dir="rtl"] .hero-title,
+html[dir="rtl"] .section-title,
+html[dir="rtl"] .menu-browser-heading h2,
+html[dir="rtl"] .product-name { font-family: "Vazirmatn", sans-serif; letter-spacing: 0; }
+html[dir="rtl"] .hero-title { line-height: 1.22; }
+html[dir="ltr"] .hero-title,
+html[dir="ltr"] .section-title { font-family: "Playfair Display", "Inter", serif; letter-spacing: -.035em; }
+
+
+/* Minimum readable sizes for customer-facing metadata and navigation. */
+.brand-tagline, .hero-caption, .hero-eyebrow, .section-eyebrow,
+.romano-signature-dish__eyebrow, .product-category, .modal-category,
+.contact-label, .footer-heading, .navigation-section-label, .navigation-kicker { font-size: 11px; }
+.category-name, .product-rating, .menu-category-index, .menu-category-count,
+.footer-bottom, .navigation-label, .product-description { font-size: 12px; }
+.hero-eyebrow, .section-eyebrow, .product-category, .contact-label,
+.footer-heading, .navigation-section-label { font-size: 11px; line-height: 1.5; }
+.product-rating, .menu-category-count, .footer-bottom, .navigation-label { font-size: 12px; }
+/* ---------------------------------------------------------
+   13. DIRECTION-AWARE EDITORIAL LAYOUT
+   Keep the same visual system while mirroring composition for LTR.
+--------------------------------------------------------- */
+.hero-section,
+.story-content,
+.contact-content {
+  text-align: start;
+}
+.hero-title,
+.hero-description {
+  text-align: start;
+}
+.hero-scroll-indicator {
+  right: auto;
+  inset-inline-start: max(24px, calc((100vw - var(--container-width)) / 2 + var(--container-padding)));
+  align-items: flex-start;
+  text-align: start;
+}
+.story-description {
+  margin-inline: 0;
+  text-align: start;
+}
+.contact-item {
+  align-items: flex-start;
+  text-align: start;
+}
+.contact-item p,
+.contact-item a {
+  text-align: start;
+}
+html[dir="ltr"] .hero-overlay {
+  background:
+    linear-gradient(270deg, rgba(6, 5, 4, 0.15) 0%, rgba(6, 5, 4, 0.25) 38%, rgba(6, 5, 4, 0.78) 100%),
+    linear-gradient(180deg, rgba(6, 5, 4, 0.12) 0%, rgba(6, 5, 4, 0.52) 72%, rgba(6, 5, 4, 0.9) 100%);
+}
+html[dir="ltr"] .hero-content {
+  align-items: flex-start;
+}
+html[dir="ltr"] .hero-title {
+  letter-spacing: -0.035em;
+}
+html[dir="ltr"] .story-content,
+html[dir="ltr"] .contact-content {
+  margin-inline: 0 auto;
+}
+html[dir="rtl"] .story-content,
+html[dir="rtl"] .contact-content {
+  margin-inline: 0 auto;
+}
+html[dir="ltr"] .contact-details {
+  direction: ltr;
+}
+@media (max-width: 600px) {
+  .hero-content {
+    width: min(calc(100% - 36px), var(--container-width));
+    padding-block: 88px 76px;
+  }
+  .hero-description {
+    max-width: 36ch;
+  }
+  .story-content .section-title,
+  .contact-content .section-title {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Arabic-script typography should not use Latin tracking. */
+html[dir="rtl"] .site-footer .footer-heading {
+  letter-spacing: 0;
 }

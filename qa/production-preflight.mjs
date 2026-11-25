@@ -1,8 +1,9 @@
 /** Read-only production configuration preflight. Never prints secret values. */
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-const root = path.resolve(new URL('..', import.meta.url).pathname);
+const root = fileURLToPath(new URL('..', import.meta.url));
 const envFile = process.env.ROMANO_ENV_FILE || path.join(root, 'backend', '.env');
 const env = { ...process.env };
 if (fs.existsSync(envFile)) {

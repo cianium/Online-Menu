@@ -7,7 +7,7 @@
   let csrfToken = null;
 
   async function csrf() {
-    if (!isHttp) return null;
+    if (!backendAvailable) throw new Error("API is not available in this deployment.");
     const r = await fetch(`${API_PREFIX}/auth/csrf`, { credentials: "include", headers: { Accept: "application/json" } });
     const body = await r.json();
     if (!r.ok || !body?.data?.csrfToken) throw new Error(body?.error?.message || "Unable to initialize security token.");
@@ -35,7 +35,8 @@
       error.code = body?.error?.code || "REQUEST_ERROR";
       throw error;
     }
-    return body?.data;
+    if (!body || typeof body !== "object" || Array.isArray(body) || !("data" in body)) throw new Error("Invalid API response");
+    return body.data;
   }
 
   /**
@@ -51,10 +52,10 @@
       backendAvailable = false;
       return { available: false, session: null };
     }
-    if (response.status === 401) return { available: true, session: null };
+    if (response.status === 401) { backendAvailable = true; return { available: true, session: null }; }
     if (!response.ok || !isJson) throw new Error("Admin service unavailable");
     const body = await response.json();
-    if (!body || !("data" in body)) throw new Error("Invalid session response");
+    if (!body || typeof body !== "object" || Array.isArray(body) || !("data" in body)) throw new Error("Invalid session response");
     backendAvailable = true;
     return { available: true, session: body.data || null };
   }

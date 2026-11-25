@@ -1,4 +1,4 @@
-/* Online-Menu-vq.3 customer commerce: cart, QR session, ordering and tracking. */
+/* Online-Menu customer commerce: cart, QR session, ordering and tracking. */
 (() => {
   "use strict";
 
@@ -19,6 +19,8 @@
   let cart = read(cartKey(), {});
   let tableSession = read(`online_menu_table_vq3:${tenant()}`, null);
   let activeOrder = read(orderKey(), null);
+  let cartFocusOrigin = null;
+  let cartKeyboardBound = false;
   let pollTimer = 0;
   let submitting = false;
 
@@ -107,9 +109,9 @@
         <strong class="commerce-cart-total"></strong>
       </button>
       <div class="commerce-backdrop" data-commerce-close hidden></div>
-      <section class="commerce-drawer" id="commerce-drawer" role="dialog" aria-modal="true" aria-labelledby="commerce-title" aria-hidden="true" inert>
+      <section class="commerce-drawer" id="commerce-drawer" role="dialog" aria-modal="true" aria-labelledby="commerce-title" aria-hidden="true" tabindex="-1" inert>
         <header class="commerce-drawer-head">
-          <div><small>ONLINE-MENU · vq.3</small><h2 id="commerce-title">${safe(t("cart"))}</h2></div>
+          <div><small>ROMANO</small><h2 id="commerce-title">${safe(t("cart"))}</h2></div>
           <button class="commerce-close" type="button" data-commerce-close aria-label="${safe(t("close"))}">×</button>
         </header>
         <div class="commerce-order-status" id="commerce-order-status" hidden></div>
@@ -130,12 +132,34 @@
     document.querySelector("#commerce-cart-bar").addEventListener("click", openDrawer);
     document.querySelectorAll("[data-commerce-close]").forEach((button) => button.addEventListener("click", closeDrawer));
     document.querySelector("#commerce-submit").addEventListener("click", submitOrder);
-    document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeDrawer(); });
+    bindDrawerKeyboard();
+  }
+
+  function bindDrawerKeyboard() {
+    if (cartKeyboardBound) return;
+    cartKeyboardBound = true;
+    document.addEventListener("keydown", (event) => {
+      const drawer = document.querySelector("#commerce-drawer");
+      if (!drawer?.classList.contains("is-open")) return;
+      if (event.key === "Escape") { event.preventDefault(); closeDrawer(); return; }
+      if (event.key !== "Tab") return;
+      const focusables = Array.from(drawer.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'))
+        .filter(element => !element.closest("[hidden],[inert]") && element.getClientRects().length > 0);
+      if (!focusables.length) { event.preventDefault(); drawer.focus(); return; }
+      const first = focusables[0], last = focusables[focusables.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !drawer.contains(document.activeElement))) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !drawer.contains(document.activeElement))) {
+        event.preventDefault(); first.focus();
+      }
+    });
   }
 
   function openDrawer() {
     const drawer = document.querySelector("#commerce-drawer");
     const backdrop = document.querySelector(".commerce-backdrop");
+    if (!drawer || drawer.classList.contains("is-open")) return;
+    cartFocusOrigin = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     render();
     drawer.inert = false;
     drawer.setAttribute("aria-hidden", "false");
@@ -159,6 +183,8 @@
     document.body.classList.remove("commerce-open");
     document.querySelector("#commerce-cart-bar").setAttribute("aria-expanded", "false");
     for(const id of ["ramen-header-cart","ramen-bottom-cart"])document.getElementById(id)?.setAttribute("aria-expanded","false");
+    if (cartFocusOrigin?.isConnected && !cartFocusOrigin.closest("[inert]")) cartFocusOrigin.focus();
+    cartFocusOrigin = null;
   }
 
   function add(id) {
@@ -199,6 +225,9 @@
       </article>`;
     }).join("");
     host.innerHTML = rows || `<p class="commerce-empty">${safe(t("empty"))}</p>`;
+    host.classList.toggle("is-empty", amount === 0);
+    const checkout = document.querySelector("#commerce-checkout");
+    if (checkout) checkout.hidden = amount === 0;
     host.querySelectorAll("[data-cart-change]").forEach((button) => button.addEventListener("click", () => change(button.dataset.productId, Number(button.dataset.cartChange))));
     host.querySelectorAll("[data-cart-remove]").forEach((button) => button.addEventListener("click", () => { delete cart[button.dataset.productId]; save(cartKey(), cart); render(); }));
     const submit = document.querySelector("#commerce-submit");
@@ -392,7 +421,7 @@
       if (event.target.closest(".product-card-button,[data-signature-product]")) window.setTimeout(enhanceProducts, 20);
     });
     window.addEventListener("romano:data-updated", () => { enhanceProducts(); render(); });
-    document.addEventListener("romano:language-changed", () => window.setTimeout(() => { document.querySelector("#commerce-cart-bar")?.remove(); document.querySelector("#commerce-drawer")?.remove(); document.querySelector(".commerce-backdrop")?.remove(); document.querySelector("#commerce-session")?.remove(); document.querySelector("#commerce-live")?.remove(); document.querySelector("#commerce-payment-toast")?.remove(); buildShell(); updateCustomerNavigation(); enhanceProducts(); render(); }, 0));
+    document.addEventListener("romano:language-changed", () => window.setTimeout(() => { if (document.querySelector("#commerce-drawer")?.classList.contains("is-open")) closeDrawer(); document.querySelector("#commerce-cart-bar")?.remove(); document.querySelector("#commerce-drawer")?.remove(); document.querySelector(".commerce-backdrop")?.remove(); document.querySelector("#commerce-session")?.remove(); document.querySelector("#commerce-live")?.remove(); document.querySelector("#commerce-payment-toast")?.remove(); buildShell(); updateCustomerNavigation(); enhanceProducts(); render(); }, 0));
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
   window.RomanoCommerce = Object.freeze({ add, open: openDrawer });

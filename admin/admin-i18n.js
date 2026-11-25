@@ -1,5 +1,5 @@
 /* =========================================================
-   RAMEN ADMIN — Full UI localization
+   ROMANO ADMIN — Full UI localization
    Presentation only; saved content remains unchanged.
 ========================================================= */
 (function () {
@@ -77,8 +77,31 @@
       "تنظیمات درگاه با موفقیت ذخیره شد.": ["Gateway settings saved.","Ödeme geçidi ayarları kaydedildi.","تم حفظ إعدادات بوابة الدفع."],
       "ذخیره تنظیمات ناموفق بود.": ["Unable to save gateway settings.","Ödeme geçidi ayarları kaydedilemedi.","تعذر حفظ إعدادات بوابة الدفع."],
       "مثلاً 250000": ["e.g. 250000", "Örn. 250000", "مثلاً 250000"],
-      "ADMIN CONSOLE": ["ADMIN CONSOLE", "YÖNETİM PANELİ", "لوحة الإدارة"],
-      "طراحی و توسعه: Cian Khayat": ["Design & development: Cian Khayat", "Tasarım ve geliştirme: Cian Khayat", "تصميم وتطوير: Cian Khayat"],
+      "مدیریت رستوران": ["Restaurant management", "Restoran yönetimi", "إدارة المطعم"],
+      "جستجوی سریع": ["Quick search", "Hızlı arama", "بحث سريع"],
+      "نمای کلی": ["Overview", "Genel bakış", "نظرة عامة"],
+      "مرکز مدیریت ROMANO": ["ROMANO control center", "ROMANO kontrol merkezi", "مركز تحكم ROMANO"],
+      "وضعیت منو": ["Menu health", "Menü durumu", "حالة القائمة"],
+      "رستوران": ["Restaurant", "Restoran", "المطعم"],
+      "آخرین موارد": ["Recent", "Son öğeler", "الأخيرة"],
+      "مدیریت منو": ["Menu management", "Menü yönetimi", "إدارة القائمة"],
+      "ساختار منو": ["Menu structure", "Menü yapısı", "هيكل القائمة"],
+      "پیکربندی رستوران": ["Restaurant configuration", "Restoran yapılandırması", "تهيئة المطعم"],
+      "محصول": ["Product", "Ürün", "المنتج"],
+      "برچسب": ["Badge", "Rozet", "الشارة"],
+      "بدون برچسب": ["No badge", "Rozet yok", "بدون شارة"],
+      "دسته‌بندی": ["Category", "Kategori", "التصنيف"],
+      "شناسه پذیرنده": ["Merchant ID", "Üye işyeri kimliği", "معرّف التاجر"],
+      "احراز هویت امن سرور": ["Secure server authentication", "Güvenli sunucu kimlik doğrulaması", "مصادقة آمنة للخادم"],
+      "منوی دیجیتال ROMANO": ["ROMANO digital menu", "ROMANO dijital menüsü", "قائمة ROMANO الرقمية"],
+      "فقط کاربران مجاز": ["Authorized users only", "Yalnızca yetkili kullanıcılar", "للمستخدمين المصرح لهم فقط"],
+      "پنل مدیریت": ["Admin panel", "Yönetim paneli", "لوحة الإدارة"],
+      "ROMANO | مدیریت": ["ROMANO | Admin", "ROMANO | Yönetim", "رومانو | الإدارة"],
+      "دسترسی امن مدیریت": ["Secure admin access", "Güvenli yönetici erişimi", "وصول آمن للإدارة"],
+      "عملیات زنده · آشپزخانه": ["Live operations · Kitchen", "Canlı operasyonlar · Mutfak", "العمليات المباشرة · المطبخ"],
+      "فیلتر وضعیت سفارش": ["Order status filters", "Sipariş durumu filtreleri", "تصفية حالة الطلب"],
+      "تنظیم میز و QR": ["Table & QR setup", "Masa ve QR kurulumu", "إعداد الطاولات ورمز QR"],
+      "تسویه مستقیم": ["Direct settlement", "Doğrudan ödeme", "التسوية المباشرة"],
       "صفر یعنی بدون امتیاز": ["Zero means unrated", "Sıfır, puan yok demektir", "الصفر يعني بدون تقييم"],
       "برای این تغییر به دسترسی مدیر نیاز دارید.": ["Manager access is required for this change.", "Bu değişiklik için yönetici yetkisi gerekiyor.", "تحتاج إلى صلاحية مدير لإجراء هذا التغيير."],
       "فیلتر و مرتب‌سازی": ["Filters & sort","Filtreler ve sıralama","التصفية والترتيب"],
@@ -87,7 +110,6 @@
       "اولین محصول منو را اضافه کنید.": ["Add your first menu item.", "İlk menü ürününüzü ekleyin.", "أضف أول منتج إلى القائمة."],
       "هنوز محصولی اضافه نشده است": ["No products yet", "Henüz ürün yok", "لا توجد منتجات بعد"],
       "بر اساس اطلاعات فعلی منو": ["Based on the current menu data", "Güncel menü verilerine göre", "بناءً على بيانات القائمة الحالية"],
-      "نسخه vq.3": ["Version vq.3", "Sürüm vq.3", "الإصدار vq.3"],
       "سفارش‌ها": ["Orders", "Siparişler", "الطلبات"],
       "سفارش‌ها و آشپزخانه": ["Orders & kitchen", "Siparişler ve mutfak", "الطلبات والمطبخ"],
       "سفارش‌های QR را از پذیرش تا سرو، زنده مدیریت کنید.": ["Manage QR orders live from acceptance to service.", "QR siparişlerini kabulden servise canlı yönetin.", "أدر طلبات QR مباشرة من القبول حتى التقديم."],
@@ -165,8 +187,8 @@
       "خروج": ["Log out","Çıkış","تسجيل الخروج"],
       "خروج از پنل": ["Log out of admin panel","Yönetim panelinden çık","تسجيل الخروج من لوحة الإدارة"],
       "OVERVIEW": ["OVERVIEW","GENEL BAKIŞ","نظرة عامة"],
-      "وضعیت فعلی منوی RAMEN را مدیریت کنید.": ["Manage the current state of the RAMEN menu.","RAMEN menüsünün mevcut durumunu yönetin.","إدارة الحالة الحالية لقائمة رامن."],
-      "RAMEN · CONTROL CENTER": ["RAMEN · CONTROL CENTER","RAMEN · KONTROL MERKEZİ","رامن · مركز التحكم"],
+      "وضعیت فعلی منوی ROMANO را مدیریت کنید.": ["Manage the current state of the ROMANO menu.","ROMANO menüsünün mevcut durumunu yönetin.","إدارة الحالة الحالية لقائمة رومانو."],
+      "ROMANO · CONTROL CENTER": ["ROMANO · CONTROL CENTER","ROMANO · KONTROL MERKEZİ","رومانو · مركز التحكم"],
       "از اینجا منو، محصولات و اطلاعات نمایشی رستوران را مدیریت کنید.": ["Manage the menu, products, and restaurant display information from here.","Menüyü, ürünleri ve restoran bilgilerinin görünümünü buradan yönetin.","أدر القائمة والمنتجات ومعلومات عرض المطعم من هنا."],
       "محصولات فعال": ["Active Products","Aktif Ürünler","المنتجات النشطة"],
       "MENU HEALTH": ["MENU HEALTH","MENÜ DURUMU","حالة القائمة"],
@@ -245,7 +267,7 @@
       "برای ورود امن به پنل مدیریت، با حساب مجاز خود وارد شوید.": ["For secure admin access, sign in with an authorized account.","Yönetim paneline güvenli erişim için yetkili hesabınızla giriş yapın.","للدخول الآمن إلى لوحة الإدارة، سجّل الدخول باستخدام حساب مصرح به."],
       "ورود امن به پنل مدیریت": ["Secure Admin Sign In","Güvenli Yönetici Girişi","تسجيل دخول آمن إلى الإدارة"],
       "SECURE SERVER AUTHENTICATION": ["SECURE SERVER AUTHENTICATION","GÜVENLİ SUNUCU KİMLİK DOĞRULAMA","مصادقة الخادم الآمنة"],
-      "RAMEN DIGITAL MENU": ["RAMEN DIGITAL MENU","RAMEN DİJİTAL MENÜ","قائمة رامن الرقمية"],
+      "ROMANO DIGITAL MENU": ["ROMANO DIGITAL MENU","ROMANO DİJİTAL MENÜ","قائمة رومانو الرقمية"],
       "AUTHORIZED USERS ONLY": ["AUTHORIZED USERS ONLY","YALNIZCA YETKİLİ KULLANICILAR","للمستخدمين المصرح لهم فقط"],
       "محصولی وجود ندارد.": ["No products yet.","Henüz ürün yok.","لا توجد منتجات بعد."],
       "محصولی پیدا نشد": ["No products found","Ürün bulunamadı","لم يتم العثور على منتجات"],
@@ -446,9 +468,9 @@
             button.title = names[lang];
             button.setAttribute("aria-label", {fa:"تغییر زبان",en:"Change language",tr:"Dili değiştir",ar:"تغيير اللغة"}[lang]);
         }
-        document.title = ({fa:"RAMEN | پنل مدیریت",en:"RAMEN | Admin Panel",tr:"RAMEN | Yönetim Paneli",ar:"رامن | لوحة الإدارة"})[lang];
+        document.title = ({fa:"ROMANO | پنل مدیریت",en:"ROMANO | Admin Panel",tr:"ROMANO | Yönetim Paneli",ar:"رومانو | لوحة الإدارة"})[lang];
         const meta = document.querySelector('meta[name="description"]');
-        if (meta) meta.setAttribute("content", ({fa:"پنل مدیریت منوی دیجیتال RAMEN",en:"RAMEN digital menu admin panel",tr:"RAMEN dijital menü yönetim paneli",ar:"لوحة إدارة القائمة الرقمية لرامن"})[lang]);
+        if (meta) meta.setAttribute("content", ({fa:"پنل مدیریت منوی دیجیتال ROMANO",en:"ROMANO digital menu admin panel",tr:"ROMANO dijital menü yönetim paneli",ar:"لوحة إدارة القائمة الرقمية لرومانو"})[lang]);
         document.dispatchEvent(new CustomEvent("romano:language-changed", { detail: { lang } }));
     }
 

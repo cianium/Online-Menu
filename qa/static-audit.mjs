@@ -1,8 +1,9 @@
 import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const failures = [];
 const warnings = [];
 const required = [
@@ -54,16 +55,27 @@ check(adminPolish.includes("@media (prefers-reduced-motion: reduce)"), "Admin vi
 check(/\.icon-button\s*\{[^}]*min-width:\s*40px;[^}]*min-height:\s*40px;/s.test(adminPolish), "Admin visual polish must preserve the existing 40px icon-action target size.");
 check(/\.admin-category-actions \.icon-button\s*\{[^}]*min-width:\s*40px;[^}]*min-height:\s*40px;/s.test(adminPolish), "Admin category actions must preserve 40px touch targets.");
 
-check(read("admin/index.html").includes("نسخه vq.3"), "Admin footer version is not vq.3.");
+check(!read("admin/index.html").includes("نسخه vq.3") && !read("admin/index.html").includes("ONLINE-MENU vq.3"), "Internal release labels must not be visible in the admin UI.");
+check(!read("admin/index.html").includes("Cian Khayat") && !read("index.html").includes("Designed by Cian Khayat"), "Developer credits must not appear in customer-facing interfaces.");
 check(!/const Storage\s*=/.test(read("admin/admin.js")), "Admin custom storage object still shadows the browser Storage type.");
 check(read("admin/admin.js").includes('const instagram ='), "Admin settings Instagram field is not declared.");
 check(!/handleProductSubmit[\s\S]{0,500}const instagram\s*=/.test(read("admin/admin.js")), "Instagram validation leaked into the product-submit handler.");
 check(read("js/app.js").includes("getSafeExternalUrl"), "Customer external URL sanitizer is missing.");
 check(read("admin/rv4-admin-plus.js").includes('payload.schema !== "romano.menu-backup"'), "Backup restore is not strict-schema validated.");
 check(read("manifest.webmanifest").includes('"display": "standalone"'), "PWA manifest is incomplete.");
-check(read("manifest.webmanifest").includes('"short_name": "RAMEN"'), "PWA still uses legacy brand.");
-check(read("admin/index.html").includes("RAMEN | Admin Panel"), "Admin HTML brand was not updated.");
-check(read("js/menu-experience.js").includes('<span class="section-eyebrow">RAMEN</span>'), "Customer menu still shows legacy platform heading.");
+check(read("manifest.webmanifest").includes('"short_name": "ROMANO"'), "PWA still uses legacy brand.");
+check(read("admin/index.html").includes("<title>ROMANO | پنل مدیریت</title>"), "Admin HTML title must use the localized default.");
+check(!/>\s*(?:OVERVIEW|ROMANO · CONTROL CENTER|MENU HEALTH|MENU MANAGEMENT|MENU STRUCTURE|RESTAURANT CONFIGURATION|SECURE SERVER AUTHENTICATION|ROMANO DIGITAL MENU|AUTHORIZED USERS ONLY)\s*</.test(read("admin/index.html")), "Admin HTML still contains untranslated English section labels.");
+check(read("admin/index.html").includes('data-admin-i18n-aria-label="فیلتر وضعیت سفارش"') && adminI18n.includes('"فیلتر وضعیت سفارش": ["Order status filters", "Sipariş durumu filtreleri", "تصفية حالة الطلب"]'), "Order filter group accessible name must be localized in all four languages.");
+check(!/>\s*(?:Badge|بدون Badge|رستوران CONFIGURATION|Merchant ID)\s*</.test(read("admin/index.html")), "Admin HTML still contains mixed-language field labels.");
+check(read("index.html").includes("منوی دیجیتال ROMANO") && read("js/i18n.js").includes('"منوی دیجیتال ROMANO"'), "Customer navigation footer brand is not localized.");
+check(/\.navigation-footer\s*\{[^}]*direction:\s*inherit/s.test(read("css/romano.css")) && /\.navigation-menu-cta\s*\{[^}]*direction:\s*inherit/s.test(read("css/romano.css")), "Customer navigation footer and CTA must inherit the active language direction.");
+check(/<span class="hero-eyebrow">\s*کافه و رستوران\s*<\/span>/.test(read("index.html")) && read("js/i18n.js").includes('set(".hero-eyebrow", pick(restaurant.tagline))'), "Hero eyebrow must be semantic and localized from restaurant tagline.");
+check(!read("css/romano.css").includes("hero-section::before"), "Hero eyebrow must not be duplicated by generated CSS content.");
+check(!read("js/i18n.js").includes("Designed by Cian Khayat"), "Obsolete developer credit remains in customer localization.");
+check(read("js/menu-experience.js").includes('id="menu-browser-eyebrow"') && read("js/i18n.js").includes('"menuEyebrow"'), "Customer menu eyebrow is not localized.");
+check(read("js/app.js").split("getImageFallbackLabel(").length >= 5, "Customer product image fallbacks must use localized product initials in cards, modal and broken-image states.");
+check(!read("js/menu-experience.js").includes('class="section-eyebrow">ROMANO'), "Customer menu still contains a hard-coded platform heading.");
 check(read("sw.js").includes('url.pathname.includes("/admin/")'), "Service worker does not explicitly exclude admin.");
 
 const syntaxTargets = ["js/app.js", "js/menu-experience.js", "js/commerce.js", "js/i18n.js", "js/money.js", "admin/admin.js", "admin/admin-i18n.js", "admin/rv4-admin-plus.js", "admin/workspace.js", "admin/orders.js", "admin/vendor/qrcode.min.js", "sw.js", "qa/static-audit.mjs", "admin/api.js", "js/public-api.js", "backend/server.mjs", "backend/seed.mjs", "backend/migrate.mjs", "supabase/functions/romano-public/index.ts", "supabase/functions/romano-admin/index.ts", "supabase/functions/romano-order/core.ts", "supabase/functions/romano-order/index.ts", "supabase/functions/romano-payment/index.ts"];
@@ -151,7 +163,7 @@ check(adminFunction.includes("if (!data?.active) return null;") && adminFunction
 check(/if \(!currentPrincipal\) setCookies\.push\(\.\.\.clearAuth\(\)\)/.test(adminFunction), "Inactive admin principals must have stale auth cookies cleared.");
 check(read("supabase/migrations/20261124090000_admin_login_rate_limit.sql").includes("romano_is_auth_session_active") && read("qa/sql/admin-login-rate-limit-smoke.sql").includes("deleted/revoked Supabase Auth session"), "Supabase session revocation regression test is missing.");
 
-console.log("RAMEN static audit");
+console.log("ROMANO static audit");
 console.log(`Root: ${ROOT}`);
 console.log(`Failures: ${failures.length}`);
 for (const item of failures) console.log(`FAIL  ${item}`);

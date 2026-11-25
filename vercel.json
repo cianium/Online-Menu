@@ -60,5 +60,11 @@
       "source": "/api/v1/admin/:path*",
       "destination": "https://tjrzeourqvahtocwnzwd.supabase.co/functions/v1/romano-admin/admin/:path*"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "main": false,
+      "ux/system-redesign-vq3": false
+    }
+  }
 }

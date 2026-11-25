@@ -20,3 +20,6 @@ body.commerce-open { overflow:hidden; }
 .commerce-payment-toast{position:fixed;z-index:110;inset-block-start:calc(18px + env(safe-area-inset-top));inset-inline:50%;transform:translateX(50%);padding:13px 18px;border:1px solid rgba(214,174,112,.38);border-radius:13px;background:#17130f;color:#f2dfc1;box-shadow:0 15px 45px rgba(0,0,0,.45)}[dir="ltr"] .commerce-payment-toast{transform:translateX(-50%)}
 @media (max-width:640px){.commerce-session{inset-block-start:70px;inset-inline-end:12px}.commerce-drawer{inset-block-start:7vh;border-radius:22px 22px 0 0;width:100%;padding-inline:16px}.commerce-item{grid-template-columns:56px 1fr auto}.commerce-item img{width:56px;height:56px}.site-footer{padding-bottom:90px}}
 @media (prefers-reduced-motion:reduce){.commerce-drawer,.commerce-backdrop{transition:none}}
+
+.commerce-items.is-empty{flex:1;display:flex;align-items:center;justify-content:center}
+.commerce-items.is-empty .commerce-empty{width:100%;margin:0;padding:24px 12px}

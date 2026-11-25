@@ -1245,6 +1245,8 @@ p {
 
 
 .category-card {
+    direction: inherit;
+
     position:
         relative;
 
@@ -1267,6 +1269,9 @@ p {
         transform var(--transition),
         border-color var(--transition);
 }
+
+html[dir="rtl"] .category-card { direction: rtl; }
+html[dir="ltr"] .category-card { direction: ltr; }
 
 
 .category-card:hover {
@@ -1358,7 +1363,7 @@ p {
     top:
         12px;
 
-    left:
+    inset-inline-start:
         12px;
 
     color:
@@ -1371,7 +1376,7 @@ p {
         11px;
 
     direction:
-        ltr;
+        inherit;
 }
 
 
@@ -1571,7 +1576,7 @@ p {
         12px;
 
     direction:
-        rtl;
+        inherit;
 }
 
 
@@ -2141,7 +2146,7 @@ background-repeat:
     top:
         12px;
 
-    left:
+    inset-inline-start:
         12px;
 
     z-index:

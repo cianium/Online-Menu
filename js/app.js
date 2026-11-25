@@ -139,6 +139,13 @@ function getSafeImageSource(value) {
     return "";
 }
 
+/**
+ * Return a localized, content-derived mark when a product image is unavailable.
+ */
+function getImageFallbackLabel(value) {
+    return Array.from(String(value || "").trim())[0] || "•";
+}
+
 
 /* =========================================================
    03. APPLICATION DATA
@@ -781,7 +788,7 @@ function createCategoryCard(
         <div class="category-image">
             ${category.image
                 ? `<img src="${escapeAttribute(category.image)}" alt="${escapeAttribute(category.name)}" loading="lazy">`
-                : `<div class="image-fallback" aria-hidden="true">RAMEN</div>`}
+                : `<div class="image-fallback" aria-hidden="true">${escapeHTML(String(category.name || "").trim().charAt(0) || "•")}</div>`}
         </div>
 
 
@@ -1402,7 +1409,7 @@ function createProductCard(product) {
         <div class="product-image-wrapper">
             ${product.image
                 ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy">`
-                : `<div class="image-fallback" aria-hidden="true">RAMEN</div>`}
+                : `<div class="image-fallback" aria-hidden="true">${escapeHTML(getImageFallbackLabel(product.name))}</div>`}
             ${badge}
         </div>
 
@@ -1617,7 +1624,7 @@ function openProductModal(productId) {
                 const fallback = document.createElement("div");
                 fallback.className = "image-fallback";
                 fallback.setAttribute("aria-hidden", "true");
-                fallback.textContent = "RAMEN";
+                fallback.textContent = getImageFallbackLabel(product.name);
                 imageWrapper.appendChild(fallback);
             }
         }
@@ -2132,7 +2139,7 @@ function handleImageError(image) {
 
 
     fallback.textContent =
-        "ROMANO";
+        getImageFallbackLabel(image.alt);
 
 
     image.style.display =
@@ -2716,7 +2723,7 @@ window.addEventListener("storage", event => {
         host.hidden = false;
         host.innerHTML = `
             <div class="romano-signature-dish__media">
-                ${product.image ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy">` : `<div class="image-fallback" aria-hidden="true">RAMEN</div>`}
+                ${product.image ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy">` : `<div class="image-fallback" aria-hidden="true">${escapeHTML(getImageFallbackLabel(product.name))}</div>`}
             </div>
             <div class="romano-signature-dish__copy">
                 <span class="romano-signature-dish__eyebrow">${escapeHTML(window.ROMANO_I18N?.ui?.("signatureEyebrow", product.categoryName || "ROMANO") || `SIGNATURE DISH · ${product.categoryName || "ROMANO"}`)}</span>
