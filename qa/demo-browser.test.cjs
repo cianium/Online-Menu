@@ -25,6 +25,19 @@ const readyCustomer = async page => {
     assert.equal(await admin.locator('#admin-mode-banner').isVisible(), true);
     assert.equal(await admin.evaluate(() => state.products.length), 21);
     console.log('PASS: both applications start with no external network');
+    // Controlled lab observations only (loopback, external resources blocked).
+    for (const [label,page] of [['customer',customer],['admin',admin]]) {
+      const observation = await page.evaluate(() => {
+        const nav = performance.getEntriesByType('navigation')[0];
+        const resources = performance.getEntriesByType('resource').filter(r=>new URL(r.name).origin===location.origin);
+        const round = n=>Math.round(n);
+        return {domContentLoadedMs:round(nav.domContentLoadedEventEnd),loadMs:round(nav.loadEventEnd),localResourceCount:resources.length,encodedBodyBytes:resources.reduce((n,r)=>n+r.encodedBodySize,0),reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,referrerPolicy:document.querySelector('meta[name="referrer"]')?.content};
+      });
+      assert.equal(observation.reducedMotion,true);
+      assert.equal(observation.referrerPolicy,'no-referrer');
+      console.log('LAB '+label+' '+JSON.stringify(observation));
+    }
+    console.log('PASS: static referrer protection and reduced-motion preference');
     for (const lang of ['fa','ar','en','tr']) {
       await customer.evaluate(l => ROMANO_I18N.setLanguage(l,false),lang);
       await admin.evaluate(l => ROMANO_ADMIN_I18N.setLanguage(l),lang);

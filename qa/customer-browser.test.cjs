@@ -334,7 +334,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   await p.waitForFunction(()=>document.querySelectorAll('#menu .product-card').length===20);
   assert.equal(await p.locator('.product-modal').getAttribute('aria-hidden'),'true');await other.close();
  });
- const data={restaurant:{name:'Test Kitchen',description:'Fresh public menu',currency:'TRY'},categories:[{id:'food',name:'Food'},{id:'hidden',name:'Hidden',active:false}],products:[{id:'late',category:'food',name:'Fresh dish',price:100,rating:0},{id:'unsafe',category:'food',name:'<img src=x onerror=alert(1)>',price:0},{id:'hidden-item',category:'hidden',name:'Secret',price:10},{id:'inactive',category:'food',name:'Inactive',active:false},{id:'orphan',category:'missing',name:'Orphan'}]};
+ const data={restaurant:{name:'Test Kitchen',description:'Fresh public menu',address:'QA restaurant address',currency:'TRY'},categories:[{id:'food',name:'Food'},{id:'hidden',name:'Hidden',active:false}],products:[{id:'late',category:'food',name:'Fresh dish',price:100,rating:0},{id:'unsafe',category:'food',name:'<img src=x onerror=alert(1)>',price:0},{id:'hidden-item',category:'hidden',name:'Secret',price:10},{id:'inactive',category:'food',name:'Inactive',active:false},{id:'orphan',category:'missing',name:'Orphan'}]};
  let status=200,payload=data,delay=0;
  await ctx.route('**/api/v1/public/**',async route=>{if(delay)await new Promise(r=>setTimeout(r,delay));await route.fulfill({status,contentType:'application/json',body:JSON.stringify({data:payload})})});
  await check('Delayed public deep link preserves query; hidden items excluded and HTML escaped',async()=>{
@@ -358,7 +358,9 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   status=200;await p.reload();await ready(p);status=404;await p.reload();await ready(p);assert.equal(await p.evaluate(()=>menuDataMode),'unavailable');assert.equal(await cards.count(),0);
  });
  await check('Empty public catalog never restores seed products',async()=>{
-  status=200;payload={restaurant:data.restaurant,categories:[],products:[]};await p.reload();await ready(p);assert.equal(await p.evaluate(()=>menuDataMode),'public');assert.equal(await cards.count(),0);assert.equal(await p.locator('#menu-empty').count(),1);
+  status=200;payload={restaurant:{...data.restaurant,address:''},categories:[],products:[]};await p.reload();await ready(p);assert.equal(await p.evaluate(()=>menuDataMode),'public');assert.equal(await cards.count(),0);assert.equal(await p.locator('#menu-empty').count(),1);
+  assert.equal((await p.locator('.footer-address').textContent()).trim(),'','Missing public address must not restore demo address');
+  payload={restaurant:data.restaurant,categories:[],products:[]};await p.reload();await ready(p);
  });
  await check('Blocked storage still permits browsing and session favorites',async()=>{
   const c=await browser.newContext({serviceWorkers:'block'});await c.addInitScript(()=>{Storage.prototype.getItem=()=>{throw Error('blocked')};Storage.prototype.setItem=()=>{throw Error('blocked')}});
@@ -423,7 +425,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.equal(await p.locator('.hero-title').evaluate(n=>getComputedStyle(n).textAlign),'start',lang+' hero title alignment');
    assert.match(await p.locator('.hero-content').evaluate(n=>getComputedStyle(n).fontFamily),new RegExp(font),lang+' hero font');
    assert.equal(await p.locator('.story-section,.contact-section').count(),0);
-   assert.ok((await text('.footer-address')).length>0,lang+' actual restaurant address');
+   assert.equal(await text('.footer-address'),data.restaurant.address,lang+' actual restaurant address');
    assert.equal(await text('.footer-logo'),await text('.header-container .brand-name'));
    assert.equal(await text('.footer-brand p'),e.footerBrand,lang+' footer brand');
    const headings=p.locator('.site-footer .footer-heading');

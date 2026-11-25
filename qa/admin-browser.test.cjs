@@ -295,7 +295,7 @@ await check('Order filter group accessible name is localized in all four languag
     await page.locator('[data-select-product]').check();
     await page.locator('[data-bulk=inactive]').click();
     await page.locator('dialog[open] [value=confirm]').click();
-    await page.waitForFunction(()=>state.products.find(p=>p.name==='QA Product').active===false);
+    await page.waitForFunction(()=>!saveInProgress&&state.products.find(p=>p.name==='QA Product').active===false&&JSON.parse(localStorage.getItem('romano_products')).find(p=>p.name==='QA Product').active===false&&document.querySelectorAll('.admin-product-card').length===0);
     assert.equal(await page.locator('.admin-product-card').count(),0);
     assert.match(await page.locator('.bulk-count').innerText(),/^0/);
   });
@@ -328,13 +328,13 @@ await check('Order filter group accessible name is localized in all four languag
     await page.waitForFunction(()=>!document.querySelector('#category-modal').classList.contains('is-open'));
     await page.locator('.admin-category-card').filter({hasText:'QA Renamed'}).locator('[data-category-action=delete]').click();
     await page.locator('dialog[open] [value=confirm]').click();
-    await page.waitForFunction(()=>!state.categories.some(c=>c.name==='QA Renamed'));
+    await page.waitForFunction(()=>!saveInProgress&&!state.categories.some(c=>c.name==='QA Renamed')&&!JSON.parse(localStorage.getItem('romano_categories')).some(c=>c.name==='QA Renamed'));
     await page.evaluate(()=>navigateTo('products'));
     await page.locator('.admin-clear-filters').click();
     await page.locator('#product-search').fill('QA Product');
     await page.locator('[data-product-action=delete]').click();
     await page.locator('dialog[open] [value=confirm]').click();
-    await page.waitForFunction(()=>!state.products.some(p=>p.name==='QA Product'));
+    await page.waitForFunction(()=>!saveInProgress&&!state.products.some(p=>p.name==='QA Product')&&!JSON.parse(localStorage.getItem('romano_products')).some(p=>p.name==='QA Product'));
     assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('romano_products')).some(p=>p.name==='QA Product')),false);
   });
   // Mocked HTTP contract tests exercise frontend handling, not PostgreSQL or authorization.

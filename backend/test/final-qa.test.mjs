@@ -29,3 +29,28 @@ test('Product modal focus occurs after background inert sync; reopening does not
  assert.match(close,/target\?\.isConnected && !target.closest\("\[inert\]"\)/);assert.doesNotMatch(close,/requestAnimationFrame/);
  assert.match(read('css/style.css'),/\.product-modal\.is-open\s*\{[\s\S]*?transition: opacity var\(--transition\), visibility 0s;/);
 });
+
+
+test('Static HTML protects URL referrers and preserves indexing policy',()=>{
+ for(const name of ['index.html','admin/index.html']){
+  const html=read(name);
+  assert.match(html,/<meta name="referrer" content="no-referrer">/);
+  assert.match(html,/<html lang="fa" dir="rtl">/);
+  assert.match(html,/<title>[^<]+<\/title>/);
+  assert.match(html,/name="description"\s+content="[^"]+"/);
+  assert.match(html,/name="viewport"\s+content="[^"]*width=device-width/);
+ }
+ assert.match(read('admin/index.html'),/name="robots" content="noindex, nofollow"/);
+ assert.match(read('index.html'),/name="robots" content="index, follow"/);
+ assert.match(read('index.html'),/rel="preload" as="image" href="assets\/images\/hero\/hero.jpg" fetchpriority="high"/);
+});
+
+test('Public asset budgets prevent major regressions in the initial UI',()=>{
+ const size=p=>fs.statSync(new URL('../../'+p,import.meta.url)).size;
+ for(const [name,limit] of [['assets/images/hero/hero.jpg',80*1024],['assets/images/logo/logo.png',128*1024]]) assert.ok(size(name)<=limit,name);
+ const html=read('index.html');
+ const resources=[...html.matchAll(/(?:src|href)="((?:js|css)\/[^"]+\.(?:js|css))"/g)].map(m=>m[1]);
+ assert.ok(resources.length>10);
+ assert.ok([...new Set(resources)].reduce((sum,p)=>sum+size(p),0)<=400*1024,'Uncompressed customer JS/CSS budget');
+ assert.match(read('js/app.js'),/loading="lazy"/);
+});
