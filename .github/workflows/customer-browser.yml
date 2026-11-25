@@ -7,7 +7,13 @@ on:
       - "css/**"
       - "js/**"
       - "qa/customer-browser.test.cjs"
+      - "qa/demo-server.mjs"
+      - "qa/demo-browser.test.cjs"
+      - "admin/**"
       - ".github/workflows/customer-browser.yml"
+      - "assets/**"
+      - "sw.js"
+      - "manifest.webmanifest"
       - "package.json"
   workflow_dispatch:
 
@@ -27,9 +33,9 @@ jobs:
         run: |
           npm install --no-save --no-package-lock playwright
           npx playwright install --with-deps chromium
-      - name: Start local static preview
+      - name: Start standalone demo server
         run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/customer-preview.log 2>&1 &
+          node qa/demo-server.mjs > /tmp/customer-preview.log 2>&1 &
           echo $! > /tmp/customer-preview.pid
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:8765/ > /dev/null; then
@@ -44,6 +50,11 @@ jobs:
           ADMIN_TEST_URL: http://127.0.0.1:8765
         run: |
           CHROMIUM_EXECUTABLE_PATH="$(node -p "require('playwright').chromium.executablePath()")" npm run qa:customer
+      - name: Run standalone cross-tab browser integration
+        env:
+          ADMIN_TEST_URL: http://127.0.0.1:8765
+        run: |
+          CHROMIUM_EXECUTABLE_PATH="$(node -p "require('playwright').chromium.executablePath()")" npm run qa:demo-browser
       - name: Upload browser screenshots and results
         if: always()
         uses: actions/upload-artifact@v4

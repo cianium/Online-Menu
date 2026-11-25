@@ -1,8 +1,9 @@
 import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const failures = [];
 const warnings = [];
 const required = [

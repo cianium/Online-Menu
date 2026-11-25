@@ -5,7 +5,14 @@ on:
     paths:
       - "admin/**"
       - "qa/admin-browser.test.cjs"
+      - "qa/demo-server.mjs"
+      - "js/**"
       - ".github/workflows/admin-browser.yml"
+      - "assets/**"
+      - "sw.js"
+      - "manifest.webmanifest"
+      - "css/**"
+      - "index.html"
       - "package.json"
   workflow_dispatch:
 
@@ -25,9 +32,9 @@ jobs:
         run: |
           npm install --no-save --no-package-lock playwright
           npx playwright install --with-deps chromium
-      - name: Start local static preview
+      - name: Start standalone demo server
         run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/admin-preview.log 2>&1 &
+          node qa/demo-server.mjs > /tmp/admin-preview.log 2>&1 &
           echo $! > /tmp/admin-preview.pid
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:8765/admin/ > /dev/null; then

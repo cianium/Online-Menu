@@ -3,7 +3,10 @@
   const enabled = ["http:", "https:"].includes(location.protocol);
   const explicitRestaurant = Boolean(document.body.dataset.restaurantSlug) || new URLSearchParams(location.search).has("restaurant");
   async function load(slug, lang) {
-    if (!enabled) return null;
+    if (!enabled) {
+      if (explicitRestaurant) { const error = new Error("Menu API unavailable"); error.status = 404; throw error; }
+      return null;
+    }
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);
     try {
