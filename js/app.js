@@ -113,7 +113,7 @@ function getSafeExternalUrl(value) {
     if (!raw || raw === "#") return "";
     try {
         const url = new URL(raw, window.location.href);
-        if (!["https:", "http:"].includes(url.protocol)) return "";
+        if (!["https:", "http:"].includes(url.protocol) || url.username || url.password) return "";
         return url.href;
     } catch (_) {
         return "";
@@ -284,10 +284,10 @@ const DOM = {
         document.querySelector(".site-header"),
 
     brandName:
-        document.querySelectorAll(".brand-name"),
+        document.querySelectorAll(".brand-name, [data-restaurant-brand]"),
 
     brandTagline:
-        document.querySelectorAll(".brand-tagline"),
+        document.querySelectorAll(".brand-tagline, [data-restaurant-tagline], .hero-eyebrow"),
 
     menuToggle:
         document.querySelector(".menu-toggle"),
@@ -678,9 +678,9 @@ function renderRestaurantInformation() {
 
             element.removeAttribute("href");
 
-            if (phone) {
+            if (["public", "offline"].includes(menuDataMode) && /^\+?[\d\s().-]{5,25}$/.test(phone)) {
                 element.href =
-                    `tel:${phone.replace(/\s+/g, "")}`;
+                    `tel:${phone.replace(/[^+\d]/g, "")}`;
             }
 
         }
@@ -697,7 +697,7 @@ function renderRestaurantInformation() {
             element.removeAttribute("target");
             element.removeAttribute("rel");
 
-            if (instagram) {
+            if (instagram && ["public", "offline"].includes(menuDataMode)) {
                 element.href =
                     instagram;
                 element.target =
@@ -876,7 +876,12 @@ function renderFeaturedProducts() {
         getFeaturedProducts();
 
 
-    featured.forEach(
+    // The first featured item has its own signature card; do not repeat it.
+    const railProducts = featured.slice(1);
+    DOM.featuredProducts.hidden = railProducts.length === 0;
+    const shell = DOM.featuredProducts.closest(".products-scroll-shell");
+    if (shell) shell.hidden = railProducts.length === 0;
+    railProducts.forEach(
         product => {
 
             const card =
@@ -1514,7 +1519,9 @@ function syncBodyScrollLock() {
     DOM.mainNavigation.inert = !navigationOpen || modalOpen;
     document.querySelector("#main-content").inert = navigationOpen || modalOpen;
     document.querySelector(".site-footer").inert = navigationOpen || modalOpen;
-    DOM.header.inert = modalOpen;
+    DOM.header.inert = modalOpen || navigationOpen;
+    const bottomNav = document.querySelector(".ramen-bottom-nav");
+    if (bottomNav) bottomNav.inert = navigationOpen || modalOpen;
 
 }
 
@@ -1553,10 +1560,10 @@ function initializeModal() {
 
         const first = focusables[0];
         const last = focusables[focusables.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
+        if (event.shiftKey && (document.activeElement === first || !DOM.productModal.contains(document.activeElement))) {
             event.preventDefault();
             last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
+        } else if (!event.shiftKey && (document.activeElement === last || !DOM.productModal.contains(document.activeElement))) {
             event.preventDefault();
             first.focus();
         }
@@ -1592,7 +1599,8 @@ function openProductModal(productId) {
 
     }
 
-    if (!DOM.productModal.classList.contains("is-open")) {
+    const opening = !DOM.productModal.classList.contains("is-open");
+    if (opening) {
         productModalPreviousHash = location.hash.startsWith("#product-") ? "#menu" : location.hash;
         productModalPreviousFocus =
             document.activeElement instanceof HTMLElement
@@ -1694,13 +1702,11 @@ function openProductModal(productId) {
         "false"
     );
 
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (DOM.productModal.classList.contains("is-open")) DOM.modalClose?.focus();
-    }));
-
     syncBodyScrollLock();
     history.replaceState(null, "", `${location.pathname}${location.search}#product-${encodeURIComponent(product.id)}`);
     document.dispatchEvent(new CustomEvent("romano:product-opened", { detail: { id: product.id } }));
+    // Focus only after all synchronous overlay changes, and never steal focus on a content refresh.
+    if (opening || !DOM.productModal.contains(document.activeElement)) DOM.modalClose?.focus({preventScroll:true});
 
 }
 
@@ -1721,9 +1727,8 @@ function closeProductModal() {
     window.RomanoActiveProduct = null;
     if (location.hash.startsWith("#product-")) history.replaceState(null, "", `${location.pathname}${location.search}${productModalPreviousHash}`);
 
-    requestAnimationFrame(() => {
-        if (target && document.contains(target)) target.focus();
-    });
+    // Restore immediately; a queued callback could interfere with a newly opened overlay.
+    if (target?.isConnected && !target.closest("[inert]")) target.focus({preventScroll:true});
 }
 
 
@@ -1732,6 +1737,8 @@ function closeProductModal() {
 ========================================================= */
 
 function scrollToCategory(categoryId) {
+
+    window.RomanoMenuExperience?.selectCategory(categoryId, true);
 
     const section =
         document.querySelector(
@@ -1797,6 +1804,14 @@ function initializeMenu() {
                 return;
             }
 
+            if (link.dataset.categoryLink === "true") {
+                event.preventDefault();
+                const id = link.getAttribute("href").slice("#category-".length);
+                closeNavigation();
+                window.RomanoMenuExperience?.selectCategory(id, true);
+                document.getElementById(`category-${id}`)?.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+                return;
+            }
             closeNavigation();
         }
     );
@@ -1871,6 +1886,14 @@ function initializeMenu() {
                     });
             }
         );
+
+    // Close this drawer before opening another overlay; focus returns to the hamburger.
+    DOM.mainNavigation.querySelectorAll("[data-nav-panel]").forEach(button => {
+        button.addEventListener("click", () => {
+            closeNavigation();
+            requestAnimationFrame(() => document.dispatchEvent(new CustomEvent("romano:open-customer-panel", {detail:{panel:button.dataset.navPanel}})));
+        });
+    });
 
     // Used by open/closeNavigation for focus restoration.
     DOM.mainNavigation.__romanoFocus = {
@@ -2055,7 +2078,8 @@ function renderNavigation() {
         item.dataset.categoryLink = "true";
         item.innerHTML = `
             <a href="#category-${escapeAttribute(category.id)}" data-category-link="true">
-                ${escapeHTML(category.name)}
+                <span class="navigation-category-media">${category.image ? `<img src="${escapeAttribute(getSafeImageSource(category.image))}" alt="${escapeAttribute(category.name)}" loading="lazy" width="96" height="64">` : `<span class="image-fallback">${escapeHTML(getImageFallbackLabel(category.name))}</span>`}</span>
+                <span class="navigation-category-name">${escapeHTML(category.name)}</span>
             </a>
         `;
         categoryList.appendChild(item);
@@ -2298,12 +2322,7 @@ function updateActiveNavigation(
             link.closest(".navigation-category-list") !== null;
 
         if (isCategoryLink) {
-            if (isCategory) {
-                link.classList.toggle(
-                    "is-active",
-                    href === `#${sectionId}`
-                );
-            }
+            link.classList.toggle("is-active", isCategory && href === `#${sectionId}`);
             return;
         }
 
@@ -2332,7 +2351,7 @@ function initializePrimaryNavigationObserver() {
 
     const sections =
         document.querySelectorAll(
-            "#home, #featured, #menu, #story, #contact"
+            "#home, #featured, #menu, #contact"
         );
 
     if (!sections.length) {

@@ -1,7 +1,8 @@
 {
   "git": {
     "deploymentEnabled": {
-      "pages-demo": false
+      "pages-demo": false,
+      "pages-v2-candidate": false
     }
   }
 }

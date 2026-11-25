@@ -4,6 +4,10 @@
     let query = "", category = "all", order = "menu", onlyFavorites = false;
     let selected = new Set();
     let initialized = false;
+    let openPanel = null, railMarkup = "";
+    const byId = id => document.getElementById(id);
+    const icons = { search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>', filter: '<path d="M4 7h16M4 12h16M4 17h16"/><circle cx="8" cy="7" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="17" r="2"/>' };
+    const icon = name => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${icons[name]}</svg>`;
     const key = () => `romano_favorites:${restaurantSlug}`;
     const t = (name, value) => window.ROMANO_I18N.ui(name, value);
     const esc = value => escapeHTML(value);
@@ -55,7 +59,9 @@
         document.querySelector('#browse-title').textContent = t('menuIntro');
         document.querySelector('#browse-hint').textContent = t('menuHint');
         document.querySelector('#menu-sort-label').textContent = t('sortLabel');
-        document.querySelector('#menu-sort').innerHTML = [['menu','sortMenu'],['low','sortLow'],['high','sortHigh']].map(([value,k])=>`<option value="${value}">${esc(t(k))}</option>`).join('');
+        const sortSelect=byId('menu-sort');
+        const optionMarkup=[['menu','sortMenu'],['low','sortLow'],['high','sortHigh']].map(([value,k])=>`<option value="${value}">${esc(t(k))}</option>`).join('');
+        if(sortSelect.dataset.locale!==window.ROMANO_I18N.language){sortSelect.innerHTML=optionMarkup;sortSelect.dataset.locale=window.ROMANO_I18N.language;}
         document.querySelector('#menu-sort').value = order;
         document.querySelector('#menu-reset').textContent = t('clearFilters');
         const count = menuProducts.filter(p=>isAvailableProduct(p)&&selected.has(p.id)).length;
@@ -66,7 +72,26 @@
         if (category !== "all" && !available.some(c=>c.id===category)) category="all";
         const rail = document.querySelector('#rv4-category-rail');
         rail.setAttribute('aria-label', t('categories'));
-        rail.innerHTML = `<button type="button" data-browse-category="all" aria-pressed="${category==='all'}">${esc(t('allCategories'))}</button>` + available.map(c=>`<button type="button" data-browse-category="${esc(c.id)}" aria-pressed="${category===c.id}">${esc(window.ROMANO_I18N.localizeCategory(c).name)} <span>${numeral(getProductsByCategory(c.id).length)}</span></button>`).join('');
+        const nextMarkup = `<button type="button" data-browse-category="all" aria-pressed="false"><span class="browse-rail-all" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></span><span class="browse-rail-label">${esc(t('allCategories'))}</span></button>` + available.map(c=>{
+            const name=window.ROMANO_I18N.localizeCategory(c).name;
+            const photo=c.image ? `<img src="${escapeAttribute(c.image)}" alt="${escapeAttribute(name)}" loading="lazy" decoding="async">` : esc(getImageFallbackLabel(name));
+            return `<button type="button" data-browse-category="${esc(c.id)}" aria-pressed="false"><span class="browse-rail-photo" aria-hidden="true">${photo}</span><span class="browse-rail-label">${esc(name)}</span><span class="browse-rail-count">${numeral(getProductsByCategory(c.id).length)}</span></button>`;
+        }).join('');
+        // Keep the horizontal scroll position and keyboard focus during live search.
+        if (nextMarkup!==railMarkup) {
+            const focus=rail.contains(document.activeElement)?document.activeElement.dataset.browseCategory:null;
+            const offset=rail.scrollLeft;
+            rail.innerHTML=nextMarkup; railMarkup=nextMarkup; rail.scrollLeft=offset;
+            if(focus) [...rail.querySelectorAll('button')].find(b=>b.dataset.browseCategory===focus)?.focus({preventScroll:true});
+        }
+        rail.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.browseCategory===category)));
+        byId('menu-search-toggle').setAttribute('aria-label',t('searchSr'));
+        byId('menu-filter-toggle').setAttribute('aria-label',t(onlyFavorites||order!=='menu'?'browseFiltersActive':'browseFilters'));
+        byId('menu-filter-title').textContent=t('browseFilters');
+        byId('menu-search-toggle').classList.toggle('has-value',Boolean(query.trim()));
+        byId('menu-filter-toggle').classList.toggle('has-value',onlyFavorites||order!=='menu');
+        byId('menu-search-active').textContent=query.trim()?t('browseSearchActive',query.trim()):'';
+        byId('menu-search-active').hidden=!query.trim();
         syncHearts();
         updateStatus();
     }
@@ -94,6 +119,24 @@
         }
     }
     function redraw() { refreshLabels(); renderMenuCategories(); initializeCategoryObserver(); }
+    function setPanel(name, restoreFocus=false) {
+        const previous=openPanel;
+        openPanel=name;
+        for(const id of ['search','filter']) {
+            byId(`menu-${id}-panel`).hidden=name!==id;
+            byId(`menu-${id}-toggle`).setAttribute('aria-expanded',String(name===id));
+        }
+        if(name==='search') byId('rv4-menu-search').focus({preventScroll:true});
+        else if(name==='filter') byId('menu-sort').focus({preventScroll:true});
+        else if(restoreFocus&&previous) byId(`menu-${previous}-toggle`).focus({preventScroll:true});
+    }
+    function selectCategory(id, reset=false) {
+        if(!initialized || (id!=='all' && !menuCategories.some(c=>c.id===id && c.active!==false && getProductsByCategory(c.id).length)))return false;
+        category=id;
+        if(reset) {query='';order='menu';onlyFavorites=false;byId('rv4-menu-search').value='';setPanel(null);}
+        redraw();
+        return true;
+    }
     function init() {
         if (initialized) return;
         initialized = true;
@@ -101,20 +144,32 @@
         const section = document.querySelector('#menu');
         const controls = document.createElement('div');
         controls.className='menu-browser';
-        controls.innerHTML = `<div class="menu-browser-heading"><div><span class="section-eyebrow" id="menu-browser-eyebrow"></span><h2 id="browse-title"></h2><p id="browse-hint"></p></div></div>
-          <div id="menu-data-status" class="menu-data-status" role="status"><span></span><button type="button"></button></div>
-          <div class="menu-controls"><div class="menu-search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><label class="sr-only" for="rv4-menu-search"></label><input id="rv4-menu-search" type="search" autocomplete="off" aria-controls="menu-categories"></div><button id="menu-favorites-toggle" type="button" aria-pressed="false"></button></div>
+        controls.innerHTML = `<div class="menu-browser-heading"><div class="menu-browser-title"><span class="section-eyebrow" id="menu-browser-eyebrow"></span><h2 id="browse-title" class="sr-only"></h2><span id="menu-result-count" role="status" aria-live="polite"></span><p id="browse-hint" class="sr-only"></p></div><div class="menu-icon-actions"><button type="button" id="menu-search-toggle" aria-expanded="false" aria-controls="menu-search-panel">${icon('search')}</button><button type="button" id="menu-filter-toggle" aria-expanded="false" aria-controls="menu-filter-panel">${icon('filter')}</button></div></div>
           <div id="rv4-category-rail" class="browse-category-rail"></div>
-          <div class="menu-tools"><span id="menu-result-count" role="status" aria-live="polite"></span><label for="menu-sort" id="menu-sort-label" class="sr-only"></label><select id="menu-sort"></select><button id="menu-reset" type="button"></button></div>`;
+          <div id="menu-search-active" class="browse-query" hidden></div>
+          <div id="menu-search-panel" class="browse-panel" hidden><div class="menu-search-field">${icon('search')}<label class="sr-only" for="rv4-menu-search"></label><input id="rv4-menu-search" type="search" autocomplete="off" aria-controls="menu-categories"></div></div>
+          <div id="menu-filter-panel" class="browse-panel" hidden><h3 id="menu-filter-title"></h3><div class="menu-tools"><label for="menu-sort" id="menu-sort-label" class="sr-only"></label><select id="menu-sort"></select><button id="menu-favorites-toggle" type="button" aria-pressed="false"></button><button id="menu-reset" type="button"></button></div></div>`;
         section.prepend(controls);
+        // Status is intentionally not sticky: it must not consume the browsing viewport.
+        const status=document.createElement('div');status.id='menu-data-status';status.className='menu-data-status';status.setAttribute('role','status');status.innerHTML='<span></span><button type="button"></button>';controls.after(status);
         section.setAttribute('aria-labelledby','browse-title');
         const live=document.createElement('div');live.id='menu-announcement';live.setAttribute('role','status');live.setAttribute('aria-live','polite');document.body.appendChild(live);
+        const measure=()=>{
+            const header=document.querySelector('.site-header');
+            section.style.setProperty('--browse-header-offset',`${header?.getBoundingClientRect().height||0}px`);
+            section.style.setProperty('--browse-bar-height',`${controls.getBoundingClientRect().height}px`);
+        };
+        if('ResizeObserver' in window){const observer=new ResizeObserver(measure);observer.observe(controls);const header=document.querySelector('.site-header');if(header)observer.observe(header);}
+        window.addEventListener('resize',measure,{passive:true});measure();
+        for(const id of ['search','filter']) byId(`menu-${id}-toggle`).addEventListener('click',()=>setPanel(openPanel===id?null:id,openPanel===id));
+        controls.addEventListener('keydown',event=>{if(event.key==='Escape'&&openPanel){event.preventDefault();event.stopPropagation();setPanel(null,true);}});
+        document.addEventListener('click',event=>{if(openPanel&&!controls.contains(event.target))setPanel(null,controls.contains(document.activeElement));});
         controls.querySelector('#rv4-menu-search').addEventListener('input',event=>{query=event.target.value;redraw();});
         controls.querySelector('#menu-sort').addEventListener('change',event=>{order=event.target.value;redraw();});
         controls.querySelector('#menu-favorites-toggle').addEventListener('click',()=>{onlyFavorites=!onlyFavorites;redraw();});
-        controls.querySelector('#menu-reset').addEventListener('click',()=>{query='';category='all';onlyFavorites=false;order='menu';controls.querySelector('input').value='';redraw();controls.querySelector('input').focus();});
-        controls.querySelector('#rv4-category-rail').addEventListener('click',event=>{const button=event.target.closest('[data-browse-category]');if(!button)return;category=button.dataset.browseCategory;redraw();controls.querySelectorAll('[data-browse-category]').forEach(b=>{if(b.dataset.browseCategory===category)b.focus();});});
-        controls.querySelector('#menu-data-status button').addEventListener('click',()=>location.reload());
+        controls.querySelector('#menu-reset').addEventListener('click',()=>{query='';category='all';onlyFavorites=false;order='menu';controls.querySelector('input').value='';redraw();setPanel(null,true);});
+        controls.querySelector('#rv4-category-rail').addEventListener('click',event=>{const button=event.target.closest('[data-browse-category]');if(!button)return;setPanel(null);selectCategory(button.dataset.browseCategory);button.focus({preventScroll:true});section.scrollIntoView({behavior:'auto',block:'start'});});
+        status.querySelector('button').addEventListener('click',()=>location.reload());
         document.addEventListener('click',event=>{
             const button=event.target.closest('[data-favorite-product]');if(!button)return;
             const id=button.dataset.favoriteProduct;if(!getProductById(id))return;
@@ -124,6 +179,7 @@
             if(onlyFavorites)redraw();else refreshLabels();
         });
         document.addEventListener('romano:product-opened',()=>{
+            setPanel(null);
             const content=DOM.productModal.querySelector('.modal-content');
             content.querySelector('.modal-favorite-row')?.remove();
             const row=document.createElement('div');row.className='modal-favorite-row';row.innerHTML=favoriteButton(window.RomanoActiveProduct.id);content.appendChild(row);
@@ -132,8 +188,8 @@
         document.addEventListener('romano:language-changed',refreshLabels);
         window.addEventListener('romano:data-updated',()=>{refreshLabels();renderMenuCategories();});
         window.addEventListener('storage',event=>{if(event.key===key()||event.key===null){readFavorites();redraw();}});
-        document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.closest('input,textarea,select,[contenteditable]')&&!DOM.body.classList.contains('modal-open')){event.preventDefault();controls.querySelector('input').focus();}});
+        document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.closest('input,textarea,select,[contenteditable]')&&!DOM.body.classList.contains('modal-open')&&!DOM.body.classList.contains('commerce-open')&&!document.querySelector('dialog[open]')){event.preventDefault();section.scrollIntoView({behavior:'auto',block:'start'});setPanel('search');}});
         refreshLabels();
     }
-    window.RomanoMenuExperience=Object.freeze({init,matches,sort,favoriteButton});
+    window.RomanoMenuExperience=Object.freeze({init,matches,sort,favoriteButton,selectCategory});
 })();
