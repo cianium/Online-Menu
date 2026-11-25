@@ -60,7 +60,20 @@ docs/                             تحلیل محصول، امنیت و راهن
 
 در Production، `vercel.json` درخواست‌های `/api/v1/*` را به Edge Functionهای Supabase هدایت می‌کند. مرورگر هیچ‌وقت service-role key، Merchant ID یا حقیقت مبلغ سفارش را در اختیار ندارد.
 
-## اجرای محلی
+## اجرای Demo مستقل (پیشنهادی برای بررسی محصول)
+
+با Node.js 22، بدون نصب وابستگی یا دیتابیس:
+
+```bash
+npm run demo
+```
+
+منوی مشتری: `http://127.0.0.1:8765/`؛ پنل مدیریت: `http://127.0.0.1:8765/admin/`.
+برای خروجی مستقل وب‌سرور: `npm run demo:export` (پوشه جدید `dist/demo/public`).
+راهنمای [اجرای Demo](docs/DEMO_LOCAL.md) و [آماده‌سازی برای VPS و ارائه تجاری](docs/VPS_DEMO_FA.md) را ببینید.
+Demo از localStorage همان مرورگر استفاده می‌کند؛ سفارش، پرداخت و احراز هویت واقعی ندارد.
+
+## اجرای مسیر Backend محلی (اختیاری)
 
 پیش‌نیازها: Node.js 22+، npm، PostgreSQL 17 یا Docker.
 

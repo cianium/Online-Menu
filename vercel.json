@@ -64,7 +64,8 @@
   "git": {
     "deploymentEnabled": {
       "main": false,
-      "ux/system-redesign-vq3": false
+      "ux/system-redesign-vq3": false,
+      "release/v1.0-candidate": false
     }
   }
 }
