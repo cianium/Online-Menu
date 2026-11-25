@@ -1,0 +1,31 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const read=p=>fs.readFileSync(new URL('../../'+p,import.meta.url),'utf8');
+
+test('Payment redirects allow only existing HTTPS gateway origins and exact StartPay paths',()=>{
+ const s=read('js/commerce.js');const ctx=vm.createContext({URL});
+ vm.runInContext(s.slice(s.indexOf('  function paymentRedirect('),s.indexOf('  async function startPayment(')),ctx);
+ for(const host of ['payment.zarinpal.com','sandbox.zarinpal.com']){
+  const url=`https://${host}/pg/StartPay/A000123`;assert.equal(vm.runInContext(`paymentRedirect(${JSON.stringify(url)})`,ctx),url);
+ }
+ for(const url of ['javascript:alert(1)','http://payment.zarinpal.com/pg/StartPay/A','https://payment.zarinpal.com.evil.test/pg/StartPay/A','https://evil.test/pg/StartPay/A','https://user@payment.zarinpal.com/pg/StartPay/A','https://payment.zarinpal.com:8443/pg/StartPay/A','https://payment.zarinpal.com/pg/StartPay/','https://payment.zarinpal.com/pg/StartPay/A?redirect=evil','https://payment.zarinpal.com/pg/StartPay/A#evil','/pg/StartPay/A','https://payment.zarinpal.com/other',null,{}]){
+  assert.equal(vm.runInContext(`paymentRedirect(${JSON.stringify(url)})`,ctx),null,JSON.stringify(url));
+ }
+ assert.match(s,/const redirect = paymentRedirect\(body.data.redirectUrl\);[\s\S]*?location.assign\(redirect\)/);
+});
+
+test('Service worker does not intercept table tokens or payment callback URLs',()=>{
+ const listeners={};const ctx=vm.createContext({URL,self:{location:{origin:'https://example.test'},addEventListener:(type,fn)=>listeners[type]=fn}});
+ vm.runInContext(read('sw.js'),ctx);
+ for(const key of ['qr','payment','order','ref'])listeners.fetch({request:{method:'GET',url:`https://example.test/Online-Menu/?${key}=test`,destination:'document'},respondWith:()=>assert.fail('Sensitive navigation intercepted')});
+});
+
+test('Product modal focus occurs after background inert sync; reopening does not retain queued restoration',()=>{
+ const s=read('js/app.js'),open=s.slice(s.indexOf('function openProductModal('),s.indexOf('function closeProductModal(')),close=s.slice(s.indexOf('function closeProductModal('),s.indexOf('14. CATEGORY NAVIGATION'));
+ assert.ok(open.indexOf('syncBodyScrollLock();')<open.indexOf('DOM.modalClose?.focus({preventScroll:true})'));
+ assert.match(open,/opening \|\| !DOM.productModal.contains\(document.activeElement\)/);
+ assert.match(close,/target\?\.isConnected && !target.closest\("\[inert\]"\)/);assert.doesNotMatch(close,/requestAnimationFrame/);
+ assert.match(read('css/style.css'),/\.product-modal\.is-open\s*\{[\s\S]*?transition: opacity var\(--transition\), visibility 0s;/);
+});

@@ -1560,10 +1560,10 @@ function initializeModal() {
 
         const first = focusables[0];
         const last = focusables[focusables.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
+        if (event.shiftKey && (document.activeElement === first || !DOM.productModal.contains(document.activeElement))) {
             event.preventDefault();
             last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
+        } else if (!event.shiftKey && (document.activeElement === last || !DOM.productModal.contains(document.activeElement))) {
             event.preventDefault();
             first.focus();
         }
@@ -1599,7 +1599,8 @@ function openProductModal(productId) {
 
     }
 
-    if (!DOM.productModal.classList.contains("is-open")) {
+    const opening = !DOM.productModal.classList.contains("is-open");
+    if (opening) {
         productModalPreviousHash = location.hash.startsWith("#product-") ? "#menu" : location.hash;
         productModalPreviousFocus =
             document.activeElement instanceof HTMLElement
@@ -1701,13 +1702,11 @@ function openProductModal(productId) {
         "false"
     );
 
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (DOM.productModal.classList.contains("is-open")) DOM.modalClose?.focus();
-    }));
-
     syncBodyScrollLock();
     history.replaceState(null, "", `${location.pathname}${location.search}#product-${encodeURIComponent(product.id)}`);
     document.dispatchEvent(new CustomEvent("romano:product-opened", { detail: { id: product.id } }));
+    // Focus only after all synchronous overlay changes, and never steal focus on a content refresh.
+    if (opening || !DOM.productModal.contains(document.activeElement)) DOM.modalClose?.focus({preventScroll:true});
 
 }
 
@@ -1728,9 +1727,8 @@ function closeProductModal() {
     window.RomanoActiveProduct = null;
     if (location.hash.startsWith("#product-")) history.replaceState(null, "", `${location.pathname}${location.search}${productModalPreviousHash}`);
 
-    requestAnimationFrame(() => {
-        if (target && document.contains(target)) target.focus();
-    });
+    // Restore immediately; a queued callback could interfere with a newly opened overlay.
+    if (target?.isConnected && !target.closest("[inert]")) target.focus({preventScroll:true});
 }
 
 

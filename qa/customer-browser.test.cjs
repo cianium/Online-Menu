@@ -257,7 +257,10 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   await cards.first().locator('.product-card-button').click();assert.match(await p.evaluate(()=>location.hash),/^#product-/);
   assert.equal(await p.locator('#main-content').evaluate(n=>n.inert),true);
   await p.waitForFunction(()=>document.activeElement.classList.contains('modal-close'));
+  await p.keyboard.press('Shift+Tab');assert.equal(await p.locator('.product-modal').evaluate(n=>n.contains(document.activeElement)),true);
+  await p.keyboard.press('Tab');assert.equal(await p.locator('.modal-close').evaluate(n=>n===document.activeElement),true);
   await p.keyboard.press('Escape');assert.equal(await p.locator('.product-modal').getAttribute('aria-hidden'),'true');assert.equal(await p.locator('#main-content').evaluate(n=>n.inert),false);assert.doesNotMatch(await p.evaluate(()=>location.hash),/^#product-/);
+  assert.equal(await cards.first().locator('.product-card-button').evaluate(n=>n===document.activeElement),true);
  });
  await check('Four languages at 320, 390, 768, 1024 and 1440px: direction, overflow and modal',async()=>{
   for(const lang of ['en','tr','ar','fa'])for(const width of [320,390,768,1024,1440]){

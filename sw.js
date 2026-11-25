@@ -1,4 +1,4 @@
-const CACHE_NAME = "ramen-online-menu-vq3-8-integration2";
+const CACHE_NAME = "ramen-online-menu-vq3-9-qa1";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -36,6 +36,9 @@ self.addEventListener("fetch", event => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname.includes("/admin/") || url.pathname.endsWith("/admin") || url.pathname.includes("/api/")) return;
+
+  // Never persist navigation URLs that may contain table tokens or payment callback identifiers.
+  if (["qr", "payment", "order", "ref"].some(key => url.searchParams.has(key))) return;
 
   const isDocument = request.mode === "navigate" || request.destination === "document";
   const isStaticCode = ["script", "style"].includes(request.destination);

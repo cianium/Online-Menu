@@ -512,6 +512,16 @@
     } finally { submitting = false; render(); }
   }
 
+  function paymentRedirect(value) {
+    if (typeof value !== "string" || !value) return null;
+    try {
+      const url = new URL(value);
+      const allowed = ["https://payment.zarinpal.com", "https://sandbox.zarinpal.com"];
+      if (!allowed.includes(url.origin) || url.username || url.password || url.search || url.hash || !/^\/pg\/StartPay\/[A-Za-z0-9_-]+$/.test(url.pathname)) return null;
+      return url.href;
+    } catch { return null; }
+  }
+
   async function startPayment(orderId) {
     const storageKey = paymentRequestKey(orderId);
     try {
@@ -521,7 +531,9 @@
       });
       const body = await response.json().catch(() => null);
       if (!response.ok || !body?.data?.redirectUrl) throw new Error(body?.error?.code || "PAYMENT_FAILED");
-      location.assign(body.data.redirectUrl);
+      const redirect = paymentRedirect(body.data.redirectUrl);
+      if (!redirect) throw new Error("INVALID_PAYMENT_REDIRECT");
+      location.assign(redirect);
     } catch (error) {
       if (["PAYMENT_ATTEMPT_FINALIZED", "PAYMENT_PROVIDER_REJECTED", "ORDER_ALREADY_PAID"].includes(String(error?.message))) remove(storageKey);
       showMessage(t("paymentError"));

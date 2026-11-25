@@ -2069,16 +2069,15 @@ background-repeat:
 
     transition:
         opacity var(--transition),
-        visibility var(--transition);
+        visibility 0s linear var(--transition);
 }
 
 
 .product-modal.is-open {
-    visibility:
-        visible;
-
-    opacity:
-        1;
+    visibility: visible;
+    opacity: 1;
+    /* Visibility must be immediate so the initial keyboard focus can enter. */
+    transition: opacity var(--transition), visibility 0s;
 }
 
 

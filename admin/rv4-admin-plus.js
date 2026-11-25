@@ -332,19 +332,20 @@
         const syncBaseline = () => {
             baseline = new FormData(form);
             form.classList.remove("is-dirty");
-            status.textContent = "همه تغییرات ذخیره شده";
+            status.textContent = window.ROMANO_ADMIN_I18N.get("همه تغییرات ذخیره شده");
             status.classList.remove("is-dirty");
         };
         const update = () => {
             const dirty = serialize(new FormData(form)) !== serialize(baseline);
             form.classList.toggle("is-dirty", dirty);
-            status.textContent = dirty ? "تغییرات ذخیره‌نشده" : "همه تغییرات ذخیره شده";
+            status.textContent = window.ROMANO_ADMIN_I18N.get(dirty ? "تغییرات ذخیره‌نشده" : "همه تغییرات ذخیره شده");
             status.classList.toggle("is-dirty", dirty);
         };
         fields.forEach(field => field.addEventListener("input", update));
         fields.forEach(field => field.addEventListener("change", update));
         document.addEventListener("romano:settings-saved", syncBaseline);
         document.addEventListener("romano:settings-rendered", syncBaseline);
+        document.addEventListener("romano:language-changed", update);
         window.addEventListener("beforeunload", event => {
             if (!form.classList.contains("is-dirty")) return;
             event.preventDefault();

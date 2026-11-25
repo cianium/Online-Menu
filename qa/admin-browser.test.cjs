@@ -168,8 +168,13 @@ await check('Order filter group accessible name is localized in all four languag
     assert.equal(await form.locator('[name=phone]').getAttribute('aria-invalid'),'true');
     assert.equal(await page.locator('#settings-validation').textContent(),'Invalid phone number.');
     assert.equal(await page.evaluate(()=>localStorage.getItem('romano_restaurant')),before);
+    await page.locator('#settings-reset').click();await page.locator('dialog[open] [value=cancel]').click();
+    await page.locator('dialog[open]').waitFor({state:'hidden'});
+    assert.equal(await form.locator('[name=phone]').inputValue(),'bad phone');
     await page.locator('#settings-reset').click();await page.locator('dialog[open] [value=confirm]').click();
+    await page.waitForFunction(value=>document.querySelector('#restaurant-settings-form [name=phone]').value===value&&!document.querySelector('#restaurant-settings-form').classList.contains('is-dirty'),previous);
     assert.equal(await form.locator('[name=phone]').inputValue(),previous);
+    assert.equal(await page.evaluate(()=>localStorage.getItem('romano_restaurant')),before);
     assert.equal(await form.locator('[name=phone]').getAttribute('aria-invalid'),null);
   });
   await check('Local rating requires approval and category reorder persists', async () => {
