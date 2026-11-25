@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'qa/build-commercial-demo.mjs'
+      - 'qa/release-acceptance.cjs'
       - 'docs/COMMERCIAL_DEMO_GUIDE.md'
       - '.github/workflows/commercial-demo.yml'
       - 'qa/export-demo.mjs'
@@ -81,6 +82,7 @@ jobs:
             DEMO_BROWSER_ENGINE="$engine" ADMIN_TEST_URL=http://127.0.0.1:8765 npm run qa:demo-browser
           done
           QUALITY_BASE_URL=http://127.0.0.1:8765/ node qa/quality-audit.cjs
+          QUALITY_BASE_URL=http://127.0.0.1:8765/ node qa/release-acceptance.cjs
       - name: Preserve exact verified candidate (not published)
         uses: actions/upload-artifact@v4
         with:

@@ -107,3 +107,12 @@ test('Admin footer has a solid surface and readable secondary text',()=>{
  assert.match(css,/\.admin-footer\s*\{ background:var\(--admin-surface\); color:var\(--admin-ink-muted\); font-size:12px;/);
  assert.match(css,/\.admin-footer-brand span\s*\{ color:var\(--admin-ink-muted\); font-size:12px;/);
 });
+
+
+test('Backup restore is a native keyboard button and all new labels are translatable',()=>{
+ const js=read('admin/rv4-admin-plus.js'),panel=js.slice(js.indexOf('function initBackupTools()'),js.indexOf('function initModalFocusHandling()'));
+ assert.match(panel,/<button class="secondary-button" type="button" data-rv4-restore>/);
+ assert.match(panel,/restoreButton.addEventListener\("click", \(\) => backupInput.click\(\)\)/);
+ assert.match(panel,/restoreButton.isConnected && !restoreButton.disabled\) restoreButton.focus\(\)/);
+ for(const label of ['داده‌های منو','خروجی JSON','بازیابی JSON'])assert.ok(read('admin/admin-i18n.js').includes(JSON.stringify(label)+': ['),label);
+});
