@@ -33,7 +33,7 @@ async function check(name, action) { await action(); results.push(name); console
       const controls=header.locator('button,a[href]');
       assert.equal(await controls.count(),4);
       for(const control of await controls.all()){
-        const rect=await control.boundingBox();assert.ok(rect && rect.width>=44 && rect.height>=44,lang);
+        const rect=await control.boundingBox();assert.ok(rect && rect.width>=44 && rect.height>=44,JSON.stringify({lang,label:await control.getAttribute("aria-label"),rect}));
         assert.ok((await control.getAttribute('aria-label'))?.trim(),lang);
       }
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),lang);

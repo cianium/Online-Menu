@@ -36,6 +36,7 @@ jobs:
           npm install --no-save --no-package-lock playwright
           npx playwright install --with-deps chromium
       - name: Start standalone demo server
+        id: demo_server
         run: |
           node qa/demo-server.mjs > /tmp/customer-preview.log 2>&1 &
           echo $! > /tmp/customer-preview.pid
@@ -53,13 +54,17 @@ jobs:
         run: |
           CHROMIUM_EXECUTABLE_PATH="$(node -p "require('playwright').chromium.executablePath()")" npm run qa:customer
       - name: Run standalone cross-tab browser integration
+        if: ${{ !cancelled() && steps.demo_server.outcome == 'success' }}
         env:
           ADMIN_TEST_URL: http://127.0.0.1:8765
         run: |
           CHROMIUM_EXECUTABLE_PATH="$(node -p "require('playwright').chromium.executablePath()")" npm run qa:demo-browser
       - name: Build isolated private demo
+        id: demo_export
+        if: ${{ !cancelled() && steps.demo_server.outcome == 'success' }}
         run: npm run demo:export
       - name: Test exported private demo in Chromium
+        if: ${{ !cancelled() && steps.demo_export.outcome == 'success' }}
         env:
           ADMIN_TEST_URL: http://127.0.0.1:8766
         run: |
@@ -73,6 +78,7 @@ jobs:
           curl --fail --silent http://127.0.0.1:8766/ > /dev/null
           CHROMIUM_EXECUTABLE_PATH="$(node -p "require('playwright').chromium.executablePath()")" npm run qa:demo-browser
       - name: Test static demo at a GitHub Pages-style project path
+        if: ${{ !cancelled() && steps.demo_export.outcome == 'success' }}
         env:
           ADMIN_TEST_URL: http://127.0.0.1:8767/Online-Menu/
         run: |

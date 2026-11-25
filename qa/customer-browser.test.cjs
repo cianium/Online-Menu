@@ -228,7 +228,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
     await p.waitForFunction(()=>document.querySelector('#menu').style.getPropertyValue('--browse-bar-height'));
     assert.equal(await p.locator('#menu-search-panel').isVisible(),false);
     assert.equal(await p.locator('#menu-filter-panel').isVisible(),false);
-    for(const trigger of [searchToggle,filterToggle]){const r=await trigger.boundingBox();assert.ok(r.width>=44&&r.height>=44);assert.ok(await trigger.getAttribute('aria-label'));}
+    for(const trigger of [searchToggle,filterToggle]){const r=await trigger.boundingBox();assert.ok(r&&r.width>=44&&r.height>=44,JSON.stringify({lang,width,id:await trigger.getAttribute("id"),rect:r}));assert.ok(await trigger.getAttribute('aria-label'));}
     await p.evaluate(()=>window.scrollBy({top:260,behavior:'instant'}));
     const pinned=await p.evaluate(()=>{const h=document.querySelector('.site-header').getBoundingClientRect(),bar=document.querySelector('.menu-browser').getBoundingClientRect();return{gap:bar.top-h.bottom,height:bar.height}});
     assert.ok(Math.abs(pinned.gap)<=2,JSON.stringify({lang,width,pinned}));assert.ok(pinned.height<180);

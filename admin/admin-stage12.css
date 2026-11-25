@@ -2,6 +2,7 @@
 :root { --admin-stage-nav-height: 72px; --admin-stage-gap: 12px; }
 .admin-header.admin-header-compact { min-height: 60px; background: #101316f7; }
 .admin-header-compact .header-actions { gap: 4px; }
+.admin-header.admin-header-compact .header-actions .admin-header-link { display:flex; box-sizing:border-box; flex:0 0 44px; width:44px; height:44px; min-width:44px; min-height:44px; padding:0; }
 .admin-header-compact .admin-header-brand { color: var(--admin-ink); font-weight: 750; }
 .admin-context-strip { padding-block: 5px 0; }
 .admin-context-strip .admin-mode-banner summary { font-size: 12px; }

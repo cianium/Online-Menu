@@ -7,7 +7,7 @@ body:not(.modal-open):not(.commerce-open):not(.ramen-contact-open) { overflow-x:
 #menu-browser-eyebrow { font-size:14px; font-weight:700; letter-spacing:0; line-height:1.5; color:#f0e9dd; }
 #menu-result-count { margin:0; font-size:12px; }
 .menu-icon-actions { display:flex; flex:0 0 auto; gap:6px; }
-.menu-icon-actions button { position:relative; display:grid; place-items:center; width:44px; height:44px; border:1px solid #c9a46a38; border-radius:10px; background:#211d17; color:#e5c58c; cursor:pointer; }
+#menu .menu-icon-actions > button { position:relative; display:grid; place-items:center; box-sizing:border-box; flex:0 0 44px; width:44px; height:44px; min-width:44px; min-height:44px; padding:0; margin:0; transform:none; transition:background 150ms ease,border-color 150ms ease; border:1px solid #c9a46a38; border-radius:10px; background:#211d17; color:#e5c58c; cursor:pointer; }
 .menu-icon-actions button svg,.browse-rail-all svg { width:21px; height:21px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
 .menu-icon-actions button[aria-expanded="true"] { background:#c9a46a22; border-color:#c9a46a; }
 .menu-icon-actions button.has-value::after { content:""; position:absolute; inset-block-start:5px; inset-inline-end:5px; width:7px; height:7px; border-radius:50%; background:#e9c789; }
@@ -51,7 +51,8 @@ body:not(.modal-open):not(.commerce-open):not(.ramen-contact-open) { overflow-x:
 :is(#menu,#featured) .menu-favorite { inset-block-start:7px; inset-inline-end:7px; width:44px; height:44px; }
 :is(#menu,#featured) .menu-favorite[aria-pressed="true"] svg { animation:browse-heart 220ms ease-out; }
 @keyframes browse-heart { 50% { transform:scale(1.15); } }
-:is(#menu,#featured) :is(.product-card-button,.commerce-card-add,.menu-favorite):active,.menu-icon-actions button:active { transform:scale(.97); }
+:is(#menu,#featured) :is(.product-card-button,.commerce-card-add,.menu-favorite):active { transform:scale(.97); }
+.menu-icon-actions button:active svg { transform:scale(.97); }
 @media (max-width:767px) {
   #menu .menu-browser { padding:6px 12px 3px; }
   #menu .menu-data-status { margin-inline:12px; }
