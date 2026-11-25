@@ -60,6 +60,10 @@ const readyCustomer = async page => {
       assert.ok(!alternate.includes(expected[2]));
       assert.equal(await customer.locator('meta[name="robots"]').getAttribute('content'),originalRobots);
       assert.equal(await admin.locator('meta[name="robots"]').getAttribute('content'),'noindex, nofollow');
+      const creator=customer.locator('.footer-creator');
+      assert.equal(await creator.innerText(),{fa:'ساخته‌شده توسط کیان خیاط.',en:'Made by Kian Khayat.',tr:'Kian Khayat tarafından yapıldı.',ar:'من تصميم وتطوير كيان خياط.'}[lang]);
+      assert.equal(await creator.getAttribute('href'),'https://kiankhayat.me');
+      assert.equal(await creator.getAttribute('rel'),'noopener noreferrer');
       for (const page of [customer,admin]) {
         assert.equal(await page.locator('html').getAttribute('dir'),dir);
         for (const width of [320,768,1440]) {
@@ -67,7 +71,20 @@ const readyCustomer = async page => {
           assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${lang}/${width}/${page.url()}`);
         }
       }
+      await customer.setViewportSize({width:320,height:900});
+      await creator.scrollIntoViewIfNeeded();
+      const rect=await creator.boundingBox();
+      assert.ok(rect && rect.height>=44 && rect.x>=-1 && rect.x+rect.width<=321,lang+' footer reflow/touch target');
     }
+    await customer.setViewportSize({width:1440,height:900});
+    const image=customer.locator('#menu .product-card .product-image-wrapper img').first();
+    const duration=()=>image.evaluate(el=>getComputedStyle(el).transitionDuration);
+    assert.equal(await duration(),'0s');
+    await customer.emulateMedia({reducedMotion:'no-preference'});
+    assert.ok((await duration()).split(',').some(v=>parseFloat(v)>0),'normal motion enabled');
+    await customer.emulateMedia({reducedMotion:'reduce'});
+    assert.equal(await duration(),'0s');
+    console.log('PASS: localized creator attribution, responsive footer and reduced motion');
     console.log('PASS: four locales and three widths without external fonts');
     for (const [page,link,target] of [[customer,'.rv4-skip-link','#menu'],[admin,'.admin-skip-link','#admin-content']]) {
       const shortcut = page.locator(link);

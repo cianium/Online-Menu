@@ -137,3 +137,11 @@ test('Telephone numbers are isolated left-to-right in footer and contact dialog'
  assert.match(commerce,/appendInfo\(words.phone,[^\n]*null,'ltr'\)/);
  assert.match(read('css/interaction-system.css'),/span\[dir="ltr"\] \{ unicode-bidi:isolate/);
 });
+
+
+test('Customer footer has a safe localized creator link and motion preference guard',()=>{
+ const html=fs.readFileSync(new URL('../../index.html',import.meta.url),'utf8');
+ assert.match(html,/<a class="footer-creator" href="https:\/\/kiankhayat\.me" target="_blank" rel="noopener noreferrer" data-i18n="ساخته‌شده توسط کیان خیاط\."/);
+ const i18n=fs.readFileSync(new URL('../../js/i18n.js',import.meta.url),'utf8');
+ for(const phrase of ['Made by Kian Khayat.','Kian Khayat tarafından yapıldı.','من تصميم وتطوير كيان خياط.'])assert.ok(i18n.includes(phrase));
+});

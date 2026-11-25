@@ -53,6 +53,7 @@
         "منوی اصلی": { fa: "منوی اصلی", en: "Main Menu", tr: "Ana Menü", ar: "القائمة الرئيسية" },
         "منوی دیجیتال ROMANO": { fa: "منوی دیجیتال ROMANO", en: "ROMANO · DIGITAL MENU", tr: "ROMANO · DİJİTAL MENÜ", ar: "رومانو · القائمة الرقمية" },
         "قدرت‌گرفته از ROMANO": { fa: "قدرت‌گرفته از ROMANO", en: "Powered by ROMANO", tr: "ROMANO ile desteklenmektedir", ar: "مدعوم بواسطة رومانو" },
+        "ساخته‌شده توسط کیان خیاط.": { fa: "ساخته‌شده توسط کیان خیاط.", en: "Made by Kian Khayat.", tr: "Kian Khayat tarafından yapıldı.", ar: "من تصميم وتطوير كيان خياط." },
         "صفحه اصلی رستوران": { fa: "صفحه اصلی رستوران", en: "Restaurant home", tr: "Restoran ana sayfası", ar: "الصفحة الرئيسية للمطعم" },
         "باز کردن منوی اصلی": { fa: "باز کردن منوی اصلی", en: "Open main menu", tr: "Ana menüyü aç", ar: "فتح القائمة الرئيسية" },
         "ناوبری اصلی رستوران": { fa: "ناوبری اصلی رستوران", en: "Restaurant navigation", tr: "Restoran gezinmesi", ar: "التنقل الرئيسي للمطعم" },
@@ -526,8 +527,7 @@
         const footerHeadings = document.querySelectorAll(".site-footer .footer-heading");
         if (footerHeadings[0]) footerHeadings[0].textContent = current === "fa" ? "ارتباط با ما" : current === "en" ? "Contact" : current === "tr" ? "İletişim" : "تواصل معنا";
         if (footerHeadings[1]) footerHeadings[1].textContent = t("ما را دنبال کنید");
-        const footerCopyright = document.querySelector(".footer-bottom span");
-        if (footerCopyright) footerCopyright.textContent = t("قدرت‌گرفته از ROMANO");
+        // Footer attribution is translated by applyStatic; the creator link stays intact.
 
         const modalClose = document.querySelector(".product-modal .modal-close");
         if (modalClose) modalClose.setAttribute("aria-label", t("بستن"));

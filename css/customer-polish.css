@@ -95,3 +95,53 @@ html[dir="ltr"] .main-navigation.is-open .navigation-inner { transform:translate
 .feedback-comment { display:grid; gap:8px; font-size:14px; }
 .feedback-comment textarea { width:100%; min-width:0; resize:vertical; border:1px solid #ffffff30; border-radius:10px; background:#171510; color:inherit; padding:10px; font:inherit; }
 .feedback-comment textarea:focus-visible { outline:2px solid #d6ae70; outline-offset:2px; }
+
+
+/* Living brand: restrained motion, stronger feedback, no layout shifts. */
+.site-footer .footer-bottom {
+  flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between;
+  gap:4px 20px; font-size:13px; line-height:1.65; color:#c9bfae;
+}
+.site-footer .footer-creator {
+  color:#f0d19e; font-weight:600; text-decoration:underline;
+  text-decoration-thickness:1px; text-underline-offset:4px;
+  overflow-wrap:anywhere; min-inline-size:0;
+  transition:color var(--ui-fast) ease, text-decoration-color var(--ui-fast) ease;
+}
+.site-footer .footer-creator:hover { color:#fff0cf; text-decoration-color:currentColor; }
+@media(max-width:540px) {
+  .site-footer .footer-bottom { flex-direction:column; align-items:flex-start; gap:2px; }
+}
+:is(#menu,#featured) .product-card {
+  transition:border-color var(--ui-normal) ease, box-shadow var(--ui-normal) ease, background-color var(--ui-normal) ease;
+}
+:is(#menu,#featured) .product-card:focus-within {
+  border-color:#d6ae70; box-shadow:0 0 0 1px #d6ae7040;
+}
+:is(#menu,#featured) .product-image-wrapper { overflow:hidden; }
+:is(#menu,#featured) .product-image-wrapper img {
+  transition:transform 420ms var(--ui-ease);
+}
+:is(#menu,#featured) :is(.product-card-button,.commerce-card-add,.menu-favorite) {
+  transition:transform var(--ui-fast) var(--ui-ease),background-color var(--ui-fast) ease,border-color var(--ui-fast) ease,color var(--ui-fast) ease;
+}
+.browse-category-rail button { transition:background-color var(--ui-fast) ease,border-color var(--ui-fast) ease,color var(--ui-fast) ease; }
+.browse-category-rail button:active { background-color:#49351f; }
+@media (hover:hover) and (pointer:fine) {
+  :is(#menu,#featured) .product-card:hover {
+    border-color:#c9a46a99; box-shadow:0 12px 26px #0005;
+  }
+  :is(#menu,#featured) .product-card:hover .product-image-wrapper img { transform:scale(1.045); }
+  :is(#menu,#featured) .product-card-button:hover { background-color:#3a2e20; border-color:#d6ae70; }
+  :is(#menu,#featured) .commerce-card-add:hover { border-color:#e4c18a; }
+  .browse-category-rail button:hover { border-color:#c9a46a; }
+  .ramen-bottom-link:hover:not([aria-current="location"]) { background-color:#d6ae7014; }
+}
+/* Feedback is still visible without motion, including keyboard and touch. */
+@media (prefers-reduced-motion:reduce) {
+  :is(#menu,#featured) .product-card,
+  :is(#menu,#featured) .product-image-wrapper img,
+  :is(#menu,#featured) :is(.product-card-button,.commerce-card-add,.menu-favorite),
+  .browse-category-rail button,.site-footer .footer-creator { transition:none!important; animation:none!important; }
+  :is(#menu,#featured) .product-card:hover .product-image-wrapper img { transform:none!important; }
+}

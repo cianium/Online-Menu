@@ -443,6 +443,12 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.equal((await headings.nth(1).innerText()).trim(),e.follow,lang+' footer social heading');
    if(dir==='rtl')assert.ok(['normal','0px'].includes(await headings.first().evaluate(n=>getComputedStyle(n).letterSpacing)),lang+' footer heading must not use Latin tracking');
    assert.equal((await text('.footer-bottom span')),e.powered,lang+' footer attribution');
+   const creator=p.locator('.footer-creator');
+   assert.equal(await creator.innerText(),{fa:'ساخته‌شده توسط کیان خیاط.',en:'Made by Kian Khayat.',tr:'Kian Khayat tarafından yapıldı.',ar:'من تصميم وتطوير كيان خياط.'}[lang]);
+   assert.equal(await creator.getAttribute('href'),'https://kiankhayat.me');
+   assert.equal(await creator.getAttribute('target'),'_blank');
+   assert.match(await creator.getAttribute('rel'),/\bnoopener\b/);
+   assert.match(await creator.getAttribute('rel'),/\bnoreferrer\b/);
    assert.equal(await p.locator('.site-footer .footer-main').evaluate(n=>getComputedStyle(n).direction),dir,lang+' footer direction');
    assert.match(await p.locator('.site-footer').evaluate(n=>getComputedStyle(n).fontFamily),new RegExp(font),lang+' footer font');
    assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,lang+' hero/footer horizontal overflow');
