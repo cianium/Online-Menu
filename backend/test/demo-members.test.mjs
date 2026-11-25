@@ -30,3 +30,23 @@ test('Corrupted member/order data and inconsistent totals fail closed',()=>{
  const rows=model.read(db);rows[0].orders=[{id:'bad',total:10}];db.setItem(model.key,JSON.stringify(rows));
  assert.throws(()=>model.active(db,session),/INVALID_STORAGE/);
 });
+
+test('Same-tab sample re-entry preserves history without unlocking another tab',()=>{
+ const db=storage(),a=storage(),b=storage();
+ const member=model.register(db,a,'Sample Customer','+12025550104');
+ const order=model.addOrder(db,a,[{name:'Demo dish',quantity:1,price:5}],5);
+ model.signOut(a);
+ assert.equal(model.active(db,a),null);
+ assert.throws(()=>model.register(db,a,'Wrong name',member.phone),/EXISTING_PROFILE/);
+ assert.throws(()=>model.register(db,b,member.name,member.phone),/EXISTING_PROFILE/);
+ assert.equal(model.active(db,b),null);
+ const resumed=model.register(db,a,' Sample Customer ','+۱۲۰۲۵۵۵۰۱۰۴');
+ assert.equal(resumed.id,member.id);
+ assert.equal(resumed.orders[0].id,order.id);
+ assert.equal(model.read(db).length,1);
+ model.signOut(a);
+ assert.equal(model.active(db,a),null);
+ a.setItem=()=>{throw Error('BLOCKED')};
+ assert.throws(()=>model.register(db,a,member.name,member.phone),/BLOCKED/);
+ assert.equal(model.active(db,a),null);
+});

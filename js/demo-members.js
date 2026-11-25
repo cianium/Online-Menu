@@ -2,6 +2,7 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.RomanoDemoMembers=api;})(globalThis,()=>{
   "use strict";
   const key='online_menu_demo_members_v1:romano',activeKey='online_menu_demo_member_active_v1:romano';
+  const previousKey='online_menu_demo_member_previous_v1:romano';
   const phone=value=>String(value??'').trim().replace(/[۰-۹٠-٩]/g,ch=>String(ch.charCodeAt(0)-(ch>='۰'?1776:1632))).replace(/[\s().-]/g,'');
   const validPhone=p=>typeof p==='string'&&/^\+?[0-9]{7,15}$/.test(p);
   const validItem=i=>i&&typeof i.name==='string'&&i.name.length<=150&&Number.isSafeInteger(i.quantity)&&i.quantity>=1&&i.quantity<=99&&Number.isFinite(i.price)&&i.price>0;
@@ -23,8 +24,13 @@
     if(!name||name.length>80||!validPhone(p))throw Error('INVALID_INPUT');
     const rows=read(storage),current=active(storage,session);
     if(current&&current.phone===p)return current;
-    // No phone-only lookup of another member or order history.
-    if(rows.some(r=>r.phone===p))throw Error('EXISTING_PROFILE');
+    const existing=rows.find(r=>r.phone===p);
+    if(existing){
+      // Resume only the last signed-out sample profile bound to this tab.
+      if(current||session.getItem(previousKey)!==existing.id||existing.name!==name)throw Error('EXISTING_PROFILE');
+      session.setItem(activeKey,existing.id);
+      return existing;
+    }
     if(rows.length>=100)throw Error('LIMIT');
     const member={id:uuid(),name,phone:p,createdAt:new Date().toISOString(),orders:[]};
     const old=storage.getItem(key);
@@ -42,5 +48,10 @@
     storage.setItem(key,JSON.stringify(rows.map(r=>r.id===current.id?{...r,orders:[order,...r.orders]}:r)));
     return order;
   }
-  return Object.freeze({key,activeKey,read,active,register,addOrder,signOut:session=>session.removeItem(activeKey),phone});
+  function signOut(session){
+    const id=session.getItem(activeKey);
+    session.removeItem(activeKey);
+    if(id)session.setItem(previousKey,id);
+  }
+  return Object.freeze({key,activeKey,read,active,register,addOrder,signOut,phone});
 });
