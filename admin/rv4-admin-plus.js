@@ -395,7 +395,7 @@
         wrap.innerHTML = `
             <div class="panel-header">
                 <div>
-                    <span class="panel-eyebrow">DATA</span>
+                    <span class="panel-eyebrow">داده‌های منو</span>
                     <h2>پشتیبان‌گیری</h2>
                 </div>
             </div>
@@ -404,10 +404,8 @@
             </p>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
                 <button class="secondary-button" type="button" data-rv4-export>خروجی JSON</button>
-                <label class="secondary-button" style="cursor:pointer">
-                    بازیابی JSON
-                    <input data-rv4-import type="file" accept="application/json,.json" hidden>
-                </label>
+                <button class="secondary-button" type="button" data-rv4-restore>بازیابی JSON</button>
+                <input data-rv4-import type="file" accept="application/json,.json" hidden>
             </div>
         `;
         settings.parentElement?.appendChild(wrap);
@@ -432,7 +430,10 @@
             setTimeout(() => URL.revokeObjectURL(url), 500);
             toast("نسخه پشتیبان آماده شد.");
         });
-        wrap.querySelector("[data-rv4-import]").addEventListener("change", async event => {
+        const restoreButton = wrap.querySelector("[data-rv4-restore]");
+        const backupInput = wrap.querySelector("[data-rv4-import]");
+        restoreButton.addEventListener("click", () => backupInput.click());
+        backupInput.addEventListener("change", async event => {
             const file = event.target.files?.[0];
             if (!file || typeof state === "undefined") return;
             try {
@@ -481,6 +482,7 @@
                 toast("فایل پشتیبان معتبر نیست یا ذخیره‌سازی انجام نشد.", "danger");
             } finally {
                 event.target.value = "";
+                if (restoreButton.isConnected && !restoreButton.disabled) restoreButton.focus();
             }
         });
     }

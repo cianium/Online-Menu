@@ -9,6 +9,7 @@
     const LANGS = ["fa", "en", "tr", "ar"];
 
     const T = {
+      "رفتن به محتوای اصلی": ["Skip to main content", "Ana içeriğe geç", "الانتقال إلى المحتوى الرئيسي"],
       "ارسال واقعی نیازمند رضایت دریافت پیامک، لغو عضویت و نگهداری کلید سرویس در سرور است.": ["Live delivery requires SMS consent, opt-out and server-side credential storage.", "Gerçek gönderim SMS onayı, abonelik iptali ve sunucuda kimlik bilgisi saklama gerektirir.", "يتطلب الإرسال الفعلي موافقة الرسائل وإلغاء الاشتراك وحفظ بيانات الاعتماد على الخادم."],
       "سرویس ارسال متصل نیست. فقط متن و قوانین را آماده کنید.": ["No messaging service is connected. Prepare text and rules only.", "Mesaj hizmeti bağlı değil. Yalnızca metin ve kuralları hazırlayın.", "خدمة الرسائل غير متصلة. جهّز النص والقواعد فقط."],
       "تنظیمات پیامکی": ["SMS settings", "SMS ayarları", "إعدادات الرسائل النصية"],
@@ -394,6 +395,9 @@
       "این دسته‌بندی دارای محصول است. ابتدا محصولات آن را جابه‌جا یا حذف کنید.": ["This category contains products. Move or delete its products first.","Bu kategoride ürünler var. Önce ürünleri taşıyın veya silin.","يحتوي هذا التصنيف على منتجات. انقل منتجاته أو احذفها أولًا."],
       "نتیجه‌ای پیدا نشد.": ["No results found.","Sonuç bulunamadı.","لم يتم العثور على نتائج."],
       "پشتیبان‌گیری": ["Backup","Yedekleme","النسخ الاحتياطي"],
+      "داده‌های منو": ["Menu data","Menü verileri","بيانات القائمة"],
+      "خروجی JSON": ["Export JSON","JSON dışa aktar","تصدير JSON"],
+      "بازیابی JSON": ["Restore JSON","JSON geri yükle","استعادة JSON"],
       "از اطلاعات منو یک فایل پشتیبان محلی بگیرید یا آن را در همین مرورگر بازیابی کنید.": ["Create a local backup of your menu data or restore one in this browser.","Menü verilerinizin yerel yedeğini alın veya bu tarayıcıda geri yükleyin.","أنشئ نسخة احتياطية محلية من بيانات القائمة أو استعد نسخة في هذا المتصفح."],
       "خروجی": ["Export","Dışa Aktar","تصدير"],
       "بازیابی": ["Restore","Geri Yükle","استعادة"],

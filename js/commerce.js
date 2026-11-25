@@ -156,6 +156,11 @@
     dialog.className = 'ramen-contact-dialog';
     dialog.setAttribute('aria-labelledby','ramen-contact-title');
     document.body.append(dialog);
+    // Preserve the native contact anchor as a fallback on browsers without dialog support.
+    // The enhanced trigger acts as a button, with both Enter and Space activation.
+    trigger.setAttribute('role','button');
+    trigger.setAttribute('aria-haspopup','dialog');
+    trigger.setAttribute('aria-expanded','false');
     const updateLabel = () => document.querySelector('.ramen-bottom-nav')?.setAttribute('aria-label',(contactWords[lang()] || contactWords.fa).nav);
     const close = () => { if (dialog.open) dialog.close(); };
     let origin = null;
@@ -194,30 +199,33 @@
           content.append(field,commentLabel,button,status);
         }
       }
-      const appendInfo=(label,value,href)=>{
+      const appendInfo=(label,value,href,direction)=>{
         if(!value)return;
         const item=element(href?'a':'div',null,'ramen-contact-item');
         if(href){item.href=href;if(href.startsWith('https:')||href.startsWith('http:')){item.target='_blank';item.rel='noopener noreferrer';}}
-        item.append(element('small',label),element('span',value));content.append(item);
+        const valueNode=element('span',value);
+        if(direction)valueNode.dir=direction;
+        item.append(element('small',label),valueNode);content.append(item);
       };
       // Read only the current rendered restaurant information. Never introduce a fake chat or map destination.
       const address=document.querySelector('[data-restaurant-address]')?.textContent.trim();
       const phone=document.querySelector('[data-restaurant-phone]')?.textContent.trim();
       const social=document.querySelector('[data-restaurant-instagram]')?.getAttribute('href');
-      if((panel==='contact'||panel==='chat') && (demo || mode==='public' || mode==='offline') && phone)appendInfo(words.phone,phone,!demo && /^\+?[\d\s().-]{5,25}$/.test(phone)?'tel:'+phone.replace(/[^+\d]/g,''):null);
+      if((panel==='contact'||panel==='chat') && (demo || mode==='public' || mode==='offline') && phone)appendInfo(words.phone,phone,!demo && /^\+?[\d\s().-]{5,25}$/.test(phone)?'tel:'+phone.replace(/[^+\d]/g,''):null,'ltr');
       if(panel==='contact' && (demo || mode==='public' || mode==='offline') && address)appendInfo(words.address,address,null);
       if((panel==='contact'||panel==='chat') && social && /^https?:\/\//i.test(social) && (mode==='public' || mode==='offline')){const url=getSafeExternalUrl(social);if(url)appendInfo(words.social,words.social,url);}
       if(panel==='contact' && !content.querySelector('.ramen-contact-item'))content.append(element('p',words.missing,'ramen-contact-note'));
       dialog.replaceChildren(header,content);
-      dialog.showModal();document.body.classList.add('ramen-contact-open');if(panel==='contact')trigger.setAttribute('aria-expanded','true');dismiss.focus();
+      dialog.showModal();document.body.classList.add('ramen-contact-open');if(panel==='contact'){trigger.setAttribute('aria-controls',dialog.id);trigger.setAttribute('aria-expanded','true');}dismiss.focus();
     };
     trigger.addEventListener('click',event=>{event.preventDefault();openPanel();});
+    trigger.addEventListener('keydown',event=>{if(event.key===' '){event.preventDefault();openPanel();}});
     document.addEventListener('romano:open-customer-panel',event=>{
       const panel=event.detail?.panel;
       if(panel==='cart')openDrawer();
       else if(['contact','chat','profile','feedback'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
     });
-    dialog.addEventListener('close',()=>{document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');if(origin?.isConnected)origin.focus();origin=null;});
+    dialog.addEventListener('close',()=>{document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');if(origin?.isConnected)origin.focus();origin=null;});
     document.addEventListener('romano:language-changed',()=>{close();updateLabel();});
     updateLabel();
   }
@@ -420,8 +428,11 @@
       if (details && body) {
         const actions = document.createElement("div");
         actions.className = "commerce-card-actions";
+        const restoreDetailsFocus = document.activeElement === details;
         details.before(actions);
         actions.append(details, button);
+        // Moving a focused node between parents can reset focus in Chromium.
+        if (restoreDetailsFocus && !details.closest("[inert]")) details.focus({preventScroll:true});
       } else {
         body?.append(button);
       }
@@ -586,9 +597,11 @@
   function init() {
     buildShell(); initializeCustomerNavigation(); render(); enhanceProducts(); openQrSession(); paymentReturn();
     if (activeOrder?.id && !["completed", "rejected", "cancelled"].includes(activeOrder.status)) startPolling();
-    document.addEventListener("click", (event) => {
-      if (event.target.closest(".product-card-button,[data-signature-product]")) window.setTimeout(enhanceProducts, 20);
-    });
+    // Enhance synchronously at the actual render boundary, not on a delayed click.
+    // This keeps the cart actions present after filtering/refresh and avoids moving
+    // the opener after the product dialog has already restored keyboard focus.
+    document.addEventListener("romano:catalog-rendered", enhanceProducts);
+    document.addEventListener("romano:product-opened", enhanceProducts);
     window.addEventListener("romano:data-updated", () => { reconcileCart(); enhanceProducts(); render(); });
     window.addEventListener("storage", event => {
       if (event.key !== null && event.key !== cartKey()) return;

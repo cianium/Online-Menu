@@ -54,16 +54,26 @@
     <link rel="stylesheet" href="admin-stage12.css">
     <link rel="stylesheet" href="../css/interaction-system.css">
 
+    <noscript><link rel="stylesheet" href="../css/no-script.css"></noscript>
 </head>
 
 
 <body>
+<noscript>
+    <section class="no-script-notice" aria-label="JavaScript">
+        <p lang="fa" dir="rtl">برای استفاده از پنل مدیریت، JavaScript را در مرورگر فعال کنید.</p>
+        <p lang="ar" dir="rtl">يرجى تفعيل JavaScript في متصفحك لاستخدام لوحة الإدارة.</p>
+        <p lang="en" dir="ltr">Enable JavaScript in your browser to use the admin panel.</p>
+        <p lang="tr" dir="ltr">Yönetim panelini kullanmak için tarayıcınızda JavaScript'i etkinleştirin.</p>
+    </section>
+</noscript>
 
 <section id="admin-load-error" class="admin-load-error" role="alert" hidden>
     <h1>پنل بارگذاری نشد</h1><p>اتصال به سرور را بررسی کنید و دوباره تلاش کنید.</p>
     <button class="primary-button" type="button">تلاش دوباره</button>
 </section>
 <div class="admin-app" inert>
+    <a class="admin-skip-link" href="#admin-content">رفتن به محتوای اصلی</a>
 
 
     <!-- =========================================
@@ -242,7 +252,7 @@
              CONTENT
         ====================================== -->
 
-        <div class="admin-content">
+        <div class="admin-content" id="admin-content" tabindex="-1">
 
 
             <!-- ===================================
@@ -370,7 +380,7 @@
                     </div>
                 </section>
 
-                <div class="admin-quick-actions" aria-label="دسترسی سریع">
+                <div class="admin-quick-actions" role="group" aria-label="دسترسی سریع">
                     <button type="button" data-page-target="products" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">+</span><span><strong>مدیریت محصولات</strong><small>افزودن یا ویرایش آیتم‌های منو</small></span><span class="quick-action-arrow" aria-hidden="true">←</span></button>
                     <button type="button" data-page-target="categories" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">▤</span><span><strong>دسته‌بندی‌ها</strong><small>مرتب‌سازی ساختار منو</small></span><span class="quick-action-arrow" aria-hidden="true">←</span></button>
                     <button type="button" data-page-target="settings" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">⚙</span><span><strong>تنظیمات رستوران</strong><small>اطلاعات و راه‌های ارتباطی</small></span><span class="quick-action-arrow" aria-hidden="true">←</span></button>

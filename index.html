@@ -32,7 +32,7 @@
 
     <title>ROMANO | منوی دیجیتال</title>
 
-    <meta property="og:type" content="restaurant">
+    <meta property="og:type" content="website">
     <meta property="og:site_name" content="ROMANO">
     <meta property="og:title" content="ROMANO | منوی دیجیتال">
     <meta property="og:locale" content="fa_IR">
@@ -68,10 +68,20 @@
     <link rel="stylesheet" href="css/interaction-system.css">
     <link rel="stylesheet" href="css/catalog-browse.css">
     <link rel="stylesheet" href="css/customer-polish.css">
+    <noscript><link rel="stylesheet" href="css/no-script.css"></noscript>
 </head>
 
 
 <body>
+<noscript>
+    <section class="no-script-notice" aria-label="JavaScript">
+        <p lang="fa" dir="rtl">برای استفاده از منوی دیجیتال، JavaScript را در مرورگر فعال کنید.</p>
+        <p lang="ar" dir="rtl">يرجى تفعيل JavaScript في متصفحك لاستخدام القائمة الرقمية.</p>
+        <p lang="en" dir="ltr">Enable JavaScript in your browser to use the digital menu.</p>
+        <p lang="tr" dir="ltr">Dijital menüyü kullanmak için tarayıcınızda JavaScript'i etkinleştirin.</p>
+    </section>
+</noscript>
+    <a class="rv4-skip-link" href="#menu">رفتن به منو</a>
 
     <!-- =====================================================
          SPLASH SCREEN
@@ -438,6 +448,7 @@
             <section
                 class="menu-section"
                 id="menu"
+                tabindex="-1"
             >
 
                 <!--
@@ -569,7 +580,7 @@
                             ارتباط با ما
                         </span>
 
-                        <a href="tel:+983100000000" data-restaurant-phone>
+                        <a href="tel:+983100000000" data-restaurant-phone dir="ltr">
                             +98 31 0000 0000
                         </a>
 
@@ -595,7 +606,6 @@
                             data-restaurant-instagram
                             target="_blank"
                             rel="noopener noreferrer"
-                            aria-label="اینستاگرام رستوران"
                         >
 
                             <svg
@@ -650,9 +660,8 @@
 
                 <div class="footer-bottom">
 
-                    <span>
-                        قدرت‌گرفته از ROMANO
-                    </span>
+                    <span data-i18n="قدرت‌گرفته از ROMANO">قدرت‌گرفته از ROMANO</span>
+                    <a class="footer-creator" href="https://kiankhayat.me" target="_blank" rel="noopener noreferrer" data-i18n="ساخته‌شده توسط کیان خیاط.">ساخته‌شده توسط کیان خیاط.</a>
 
                 </div>
 
@@ -685,7 +694,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.8 6.3L22 9l-5.3 4.7 1.6 7.3L12 17.2 5.7 21l1.6-7.3L2 9l7.2-.7z"/></svg>
                 <span data-ramen-label="featured">ویژه‌ها</span>
             </a>
-            <a href="#contact" class="ramen-bottom-link" data-ramen-nav="contact" aria-haspopup="dialog" aria-controls="ramen-contact-dialog" aria-expanded="false">
+            <a href="#contact" class="ramen-bottom-link" data-ramen-nav="contact">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8.5 8.5 0 0 1-8.5 8.5H4l1.6-4A8.5 8.5 0 1 1 20 11.5z"/></svg>
                 <span data-ramen-label="contact">ارتباط</span>
             </a>

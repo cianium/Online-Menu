@@ -471,3 +471,8 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
 .sidebar-footer .admin-logout-button span:last-child { display:inline; }
 @media(max-width:760px){ .admin-header-compact .mobile-menu-button { display:flex; } .admin-header-compact .header-actions { justify-content:flex-end; } .admin-content { padding-block-start:16px; } }
 @media(max-width:350px){ .admin-header.admin-header-compact { gap:5px; padding-inline:8px; } .admin-header-compact .header-actions { gap:3px; } }
+
+/* Keep secondary footer copy legible on an opaque, contrast-testable surface. */
+.admin-footer { background:var(--admin-surface); color:var(--admin-ink-muted); font-size:12px; line-height:1.6; }
+.admin-footer-brand { flex-wrap:wrap; }
+.admin-footer-brand span { color:var(--admin-ink-muted); font-size:12px; letter-spacing:normal; }
