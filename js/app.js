@@ -271,6 +271,7 @@ normalizeApplicationData();
 ========================================================= */
 
 let productModalPreviousFocus = null;
+let productModalReturnTarget = null;
 let productModalPreviousHash = "";
 let menuDataMode = "loading";
 const restaurantSlug = document.body.dataset.restaurantSlug || new URLSearchParams(location.search).get("restaurant") || "romano";
@@ -1402,7 +1403,8 @@ function createProductCard(product) {
 
 
             openProductModal(
-                product.id
+                product.id,
+                event.currentTarget
             );
 
         }
@@ -1504,7 +1506,7 @@ function initializeModal() {
  * @param {string} productId
  */
 
-function openProductModal(productId) {
+function openProductModal(productId, opener = null) {
 
     const rawProduct =
         getProductById(
@@ -1529,10 +1531,15 @@ function openProductModal(productId) {
     const opening = !DOM.productModal.classList.contains("is-open");
     if (opening) {
         productModalPreviousHash = location.hash.startsWith("#product-") ? "#menu" : location.hash;
-        productModalPreviousFocus =
-            document.activeElement instanceof HTMLElement
-                ? document.activeElement
-                : null;
+        productModalPreviousFocus = opener instanceof HTMLElement
+            ? opener
+            : document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        // Keep the originating surface and product identity even if localization or
+        // catalog refresh replaces the original card while the dialog is open.
+        const origin = productModalPreviousFocus;
+        productModalReturnTarget = origin?.matches(".product-card-button, [data-signature-product]")
+            ? { id: String(product.id), surface: origin.closest("#featured") ? "featured" : "menu", signature: origin.matches("[data-signature-product]") }
+            : null;
     }
 
     // Public UI state for progressive enhancements (share/deep-link).
@@ -1650,12 +1657,29 @@ function closeProductModal() {
     syncBodyScrollLock();
 
     const target = productModalPreviousFocus;
+    const returnTarget = productModalReturnTarget;
     productModalPreviousFocus = null;
+    productModalReturnTarget = null;
     window.RomanoActiveProduct = null;
     if (location.hash.startsWith("#product-")) history.replaceState(null, "", `${location.pathname}${location.search}${productModalPreviousHash}`);
 
     // Restore immediately; a queued callback could interfere with a newly opened overlay.
-    if (target?.isConnected && !target.closest("[inert]")) target.focus({preventScroll:true});
+    const focus = element => {
+        if (!(element instanceof HTMLElement) || !element.isConnected || element.closest("[inert]") || element.matches(":disabled") || element === document.body) return false;
+        element.focus({preventScroll:true});
+        return document.activeElement === element;
+    };
+    if (focus(target)) return;
+    if (returnTarget) {
+        const surface = document.getElementById(returnTarget.surface);
+        const id = CSS.escape(returnTarget.id);
+        const selector = returnTarget.signature
+            ? `[data-signature-product="${id}"]`
+            : `.product-card[data-product-id="${id}"] .product-card-button`;
+        if (focus(surface?.querySelector(selector))) return;
+    }
+    // If a product disappears during a refresh, return to a stable menu landmark.
+    if (!DOM.mainNavigation?.classList.contains("is-open")) focus(document.getElementById("menu"));
 }
 
 
@@ -2593,7 +2617,7 @@ window.addEventListener("storage", event => {
         // selected product here: direct card clicks can bypass this wrapper.
         const originalOpen = window.openProductModal || (typeof openProductModal === "function" ? openProductModal : null);
         if (originalOpen && !window.__romanoRv4OpenWrapped) {
-            window.openProductModal = id => originalOpen(id);
+            window.openProductModal = (...args) => originalOpen(...args);
             window.__romanoRv4OpenWrapped = true;
         }
 
@@ -2680,8 +2704,8 @@ window.addEventListener("storage", event => {
         `;
 
         const button = host.querySelector("[data-signature-product]");
-        button?.addEventListener("click", () => {
-            if (typeof window.openProductModal === "function") window.openProductModal(product.id);
+        button?.addEventListener("click", event => {
+            if (typeof window.openProductModal === "function") window.openProductModal(product.id, event.currentTarget);
         });
     }
 

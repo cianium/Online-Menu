@@ -145,3 +145,8 @@ test('Customer footer has a safe localized creator link and motion preference gu
  const i18n=fs.readFileSync(new URL('../../js/i18n.js',import.meta.url),'utf8');
  for(const phrase of ['Made by Kian Khayat.','Kian Khayat tarafından yapıldı.','من تصميم وتطوير كيان خياط.'])assert.ok(i18n.includes(phrase));
 });
+
+
+test('Product modal records explicit opener and restores a refreshed card by product identity',()=>{
+ const js=read("js/app.js");assert.match(js,/function openProductModal\(productId, opener = null\)/);assert.match(js,/product\.id,\s*event\.currentTarget/);assert.match(js,/productModalReturnTarget/);assert.match(js,/returnTarget\.id/);assert.match(js,/document\.activeElement === element/);
+});
