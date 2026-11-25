@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   public-domain:
+    if: github.event_name == 'workflow_dispatch' || vars.ROMANO_LIVE_QA == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -21,4 +22,6 @@ jobs:
         with:
           node-version: "22"
       - name: Verify Vercel website, Supabase proxy and catalog images
+        env:
+          ROMANO_SITE_URL: ${{ vars.ROMANO_SITE_URL }}
         run: node qa/vercel-proxy-smoke.mjs

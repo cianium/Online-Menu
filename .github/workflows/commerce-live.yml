@@ -12,6 +12,7 @@ permissions:
   contents: read
 jobs:
   check:
+    if: github.event_name == 'workflow_dispatch' || vars.ROMANO_LIVE_QA == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -20,4 +21,6 @@ jobs:
         with:
           node-version: 22
       - name: Verify live health and admin authentication boundary
+        env:
+          ROMANO_FUNCTIONS_BASE_URL: ${{ vars.ROMANO_FUNCTIONS_BASE_URL }}
         run: node qa/commerce-live-smoke.mjs
