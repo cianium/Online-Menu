@@ -30,6 +30,21 @@ async function scan(page, name, lang, width, height) {
   await page.setViewportSize({width,height});
   await page.evaluate(async()=>{await document.fonts.ready;});
   if (!await page.evaluate(()=>Boolean(window.axe))) await page.addScriptTag({path:axePath});
+  if (name.startsWith('admin-')) {
+    const footer=await page.evaluate(()=>{
+      const panel=document.querySelector('.admin-footer');
+      const rgb=s=>{const m=s.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);if(!m)throw Error('Expected opaque RGB: '+s);return m.slice(1).map(Number);};
+      const luminance=s=>rgb(s).map(n=>n/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4).reduce((sum,n,i)=>sum+n*[.2126,.7152,.0722][i],0);
+      const bg=luminance(getComputedStyle(panel).backgroundColor);
+      return [...panel.querySelectorAll('.admin-footer-brand span, .admin-footer-brand strong, p, #admin-storage-mode')].map(el=>{
+        const style=getComputedStyle(el),fg=luminance(style.color);
+        return {text:el.textContent.trim(),fontPx:parseFloat(style.fontSize),ratio:(Math.max(bg,fg)+.05)/(Math.min(bg,fg)+.05)};
+      });
+    });
+    assert.equal(footer.length,4);
+    for(const entry of footer){assert.ok(entry.fontPx>=12,JSON.stringify(entry));assert.ok(entry.ratio>=4.5,JSON.stringify(entry));}
+    console.log('FOOTER CONTRAST '+JSON.stringify({name,lang,width,values:footer}));
+  }
   const result = await page.evaluate(async tags=>window.axe.run(document,{runOnly:{type:'tag',values:tags}}),tags);
   const item={name,lang,width,height,violations:result.violations.map(v=>({id:v.id,impact:v.impact,description:v.description,help:v.help,helpUrl:v.helpUrl,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))})),incomplete:result.incomplete.map(v=>({id:v.id,impact:v.impact,help:v.help,helpUrl:v.helpUrl,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary,checks:[...n.any,...n.all,...n.none].map(c=>({id:c.id,message:c.message,data:c.data}))}))})),passRules:result.passes.length};
   report.findings.push(item);

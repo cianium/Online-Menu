@@ -100,3 +100,10 @@ test('Both applications provide a localized no-script notice without inline styl
  }
  assert.match(read('css/no-script.css'),/body > :not\(noscript\) \{ display:none !important; \}/);
 });
+
+
+test('Admin footer has a solid surface and readable secondary text',()=>{
+ const css=read('admin/admin-polish.css');
+ assert.match(css,/\.admin-footer\s*\{ background:var\(--admin-surface\); color:var\(--admin-ink-muted\); font-size:12px;/);
+ assert.match(css,/\.admin-footer-brand span\s*\{ color:var\(--admin-ink-muted\); font-size:12px;/);
+});
