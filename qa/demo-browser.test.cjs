@@ -1,6 +1,9 @@
 /* Standalone demo integration: no remote API or third-party network is allowed. */
 const assert = require('node:assert/strict');
-const { chromium } = require('playwright');
+const playwright = require('playwright');
+const engine = process.env.DEMO_BROWSER_ENGINE || 'chromium';
+assert.ok(['chromium', 'firefox', 'webkit'].includes(engine), `Unsupported demo QA browser: ${engine}`);
+const browserType = playwright[engine];
 const base = new URL((process.env.ADMIN_TEST_URL || 'http://127.0.0.1:8765').replace(/\/$/, '') + '/');
 assert.ok(['127.0.0.1', 'localhost'].includes(base.hostname) && base.protocol === 'http:', 'Demo QA requires loopback HTTP');
 const readyCustomer = async page => {
@@ -8,7 +11,10 @@ const readyCustomer = async page => {
   await page.locator('#splash-screen').waitFor({state:'detached'});
 };
 (async () => {
-  const browser = await chromium.launch({headless:true, executablePath:process.env.CHROMIUM_EXECUTABLE_PATH || undefined});
+  const options = { headless: true };
+  if (engine === 'chromium' && process.env.CHROMIUM_EXECUTABLE_PATH) options.executablePath = process.env.CHROMIUM_EXECUTABLE_PATH;
+  console.log(`DEMO QA browser: ${engine}`);
+  const browser = await browserType.launch(options);
   try {
     const context = await browser.newContext({viewport:{width:1440,height:900}, serviceWorkers:'block', reducedMotion:'reduce'});
     const errors = [];

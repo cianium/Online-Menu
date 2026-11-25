@@ -100,3 +100,41 @@ jobs:
           name: customer-browser-qa
           path: docs/qa/
           if-no-files-found: ignore
+
+  standalone-cross-browser:
+    name: Standalone demo (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright browser
+        env:
+          DEMO_BROWSER_ENGINE: ${{ matrix.browser }}
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps "$DEMO_BROWSER_ENGINE"
+      - name: Export isolated standalone demo
+        run: npm run demo:export
+      - name: Run cross-browser integration at project subpath
+        env:
+          DEMO_BROWSER_ENGINE: ${{ matrix.browser }}
+          ADMIN_TEST_URL: http://127.0.0.1:8767/Online-Menu/
+        run: |
+          mkdir -p /tmp/online-menu-pages-qa
+          cp -a dist/demo/public /tmp/online-menu-pages-qa/Online-Menu
+          python3 -m http.server 8767 --bind 127.0.0.1 --directory /tmp/online-menu-pages-qa > /tmp/cross-browser-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent "$ADMIN_TEST_URL" > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent "$ADMIN_TEST_URL" > /dev/null
+          npm run qa:demo-browser
