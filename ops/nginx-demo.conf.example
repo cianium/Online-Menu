@@ -1,0 +1,32 @@
+# Example ONLY: install on a future VPS after replacing the domain/paths.
+# Serve the isolated demo export, never the Git repository. TLS is mandatory.
+server {
+    listen 443 ssl;
+    server_name demo.example.invalid;
+    ssl_certificate /etc/letsencrypt/live/demo.example.invalid/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/demo.example.invalid/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    root /srv/online-menu/demo/public;
+    index index.html;
+    autoindex off;
+    auth_basic "Private Online Menu demo";
+    auth_basic_user_file /etc/nginx/online-menu-demo.htpasswd;
+
+    # Demo data is browser-local; do not cache authenticated HTTP responses in a proxy.
+    add_header Cache-Control "private, no-store" always;
+    add_header X-Robots-Tag "noindex, nofollow" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "no-referrer" always;
+    add_header Permissions-Policy "camera=(), geolocation=(), microphone=(), payment=(), usb=()" always;
+    add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self' https://fonts.gstatic.com data:; form-action 'self'; frame-ancestors 'none'; img-src 'self' data: blob: https:; manifest-src 'self'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; worker-src 'self'" always;
+
+    # Explicitly disable real APIs; the frontend uses its existing demo fallback.
+    location = /api { return 404; }
+    location ^~ /api/ { return 404; }
+    location ~ /\. { return 404; }
+    location = /admin { return 308 /admin/; }
+    location = /manifest.webmanifest { types { } default_type application/manifest+json; try_files $uri =404; }
+    location / { try_files $uri $uri/ =404; }
+}

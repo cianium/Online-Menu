@@ -9,3 +9,6 @@ backend/uploads/
 uploads/
 *.log
 .DS_Store
+
+# Local static demo export
+/dist/

@@ -43,6 +43,7 @@ test('Standalone demo: serves public files and never exposes or proxies backend'
       assert.match(res.headers['content-type'], /^text\/html/);
       assert.match(res.body.toString(), /<html\b/i);
       assert.equal(res.headers['cache-control'], 'no-store');
+      assert.equal(res.headers['x-robots-tag'], 'noindex, nofollow');
       assert.equal(res.headers['x-content-type-options'], 'nosniff');
       assert.equal(res.headers['x-frame-options'], 'DENY');
       assert.equal(res.headers['cross-origin-resource-policy'], 'same-origin');

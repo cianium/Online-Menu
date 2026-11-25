@@ -5,7 +5,8 @@
   "description": "RAMEN multilingual digital menu, QR ordering and restaurant operations workspace",
   "scripts": {
     "demo": "node qa/demo-server.mjs",
-    "qa:demo": "node --test qa/demo-server.test.mjs qa/api-client.test.mjs",
+    "demo:export": "node qa/export-demo.mjs",
+    "qa:demo": "node --test qa/demo-server.test.mjs qa/api-client.test.mjs qa/export-demo.test.mjs",
     "qa:demo-browser": "node qa/demo-browser.test.cjs",
     "qa:static": "node qa/static-audit.mjs",
     "qa:syntax": "node --check js/app.js && node --check js/i18n.js && node --check js/money.js && node --check js/public-api.js && node --check js/menu-experience.js && node --check js/commerce.js && node --check admin/admin.js && node --check admin/api.js && node --check admin/admin-i18n.js && node --check admin/rv4-admin-plus.js && node --check admin/workspace.js && node --check admin/orders.js && node --check sw.js && node --check backend/server.mjs && node --check backend/seed.mjs && node --check backend/migrate.mjs && node --experimental-strip-types --check supabase/functions/romano-order/core.ts && node --experimental-strip-types --check supabase/functions/romano-order/index.ts && node --experimental-strip-types --check supabase/functions/romano-payment/index.ts",
