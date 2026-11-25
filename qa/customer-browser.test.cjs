@@ -274,11 +274,9 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   const id=await cards.first().getAttribute('data-product-id');
   await button.focus();await button.press('Enter');
   await p.waitForFunction(()=>document.activeElement.classList.contains('modal-close'));
-  await p.evaluate(()=>{const current=Array.from(document.querySelectorAll('#menu .product-card-button')).find(n=>n.closest('.product-card')?.dataset.productId===window.RomanoActiveProduct?.id);current.replaceWith(current.cloneNode(true));});
+  await p.evaluate(()=>renderMenuCategories());
   await p.keyboard.press('Escape');
   assert.equal(await p.locator('#menu .product-card[data-product-id="'+id+'"] .product-card-button').evaluate(n=>n===document.activeElement),true);
-  // Restore genuine event handlers before the remaining regression suite.
-  await p.evaluate(()=>renderMenu());
  });
  await check('Four languages at 320, 390, 768, 1024 and 1440px: direction, overflow and modal',async()=>{
   for(const lang of ['en','tr','ar','fa'])for(const width of [320,390,768,1024,1440]){
