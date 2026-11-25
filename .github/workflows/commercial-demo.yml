@@ -1,0 +1,98 @@
+name: Commercial demo candidate
+
+on:
+  pull_request:
+    paths:
+      - 'qa/build-commercial-demo.mjs'
+      - 'docs/COMMERCIAL_DEMO_GUIDE.md'
+      - '.github/workflows/commercial-demo.yml'
+      - 'qa/export-demo.mjs'
+      - 'qa/demo-server.mjs'
+      - 'qa/quality-audit.cjs'
+      - 'qa/private-demo-sw.js'
+      - 'index.html'
+      - 'admin/**'
+      - 'css/**'
+      - 'js/**'
+      - 'assets/**'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  delivery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build twice and verify delivery integrity
+        run: |
+          node qa/build-commercial-demo.mjs "$RUNNER_TEMP/commercial-demo"
+          node qa/build-commercial-demo.mjs "$RUNNER_TEMP/commercial-demo-repeat"
+          cmp "$RUNNER_TEMP/commercial-demo/PACKAGE-SHA256SUMS" "$RUNNER_TEMP/commercial-demo-repeat/PACKAGE-SHA256SUMS"
+          cd "$RUNNER_TEMP/commercial-demo"
+          sha256sum -c PACKAGE-SHA256SUMS
+          cd public
+          sha256sum -c ../SHA256SUMS
+      - name: Local-only rollback rehearsal
+        run: |
+          current=3a2dad7fd319f8b69ee5a273d551dec72de49258
+          previous=939f8beb25a71d9df5743dc47cad2e65d5289d2c
+          test "$(git rev-parse "$current^{tree}")" = ef00732c606bc7e08ac21fbc52292036060189ca
+          test "$(git rev-parse "$previous^{tree}")" = c2f5a86fe6758b3b55f5827c7d7ca33ce69cb1ed
+          tree=$(git rev-parse "$previous^{tree}")
+          rollback=$(printf 'Local rehearsal only\n' | git -c user.name=QA -c user.email=qa@example.invalid commit-tree "$tree" -p "$current")
+          test "$(git rev-parse "$rollback^{tree}")" = "$tree"
+          test "$(git rev-parse "$rollback^")" = "$current"
+          echo "PASS: rollback tree and parent verified locally; no ref updated"
+      - name: Install QA-only browsers
+        run: |
+          npm install --no-save --no-package-lock playwright axe-core@4.10.3
+          npx playwright install --with-deps chromium firefox webkit
+      - name: Verify exact delivery and repeat browser gates
+        run: |
+          node "$RUNNER_TEMP/commercial-demo/start.mjs" > "$RUNNER_TEMP/delivery.log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8765/ >/dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:8765/ >/dev/null
+          curl --fail --silent http://127.0.0.1:8765/admin/ >/dev/null
+          curl --fail --silent http://127.0.0.1:8765/robots.txt
+          for p in /.git/config /backend/server.mjs /VERSION.json /PACKAGE-SHA256SUMS /api/v1/auth/me; do
+            test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8765$p")" = 404
+          done
+          test "$(curl -s -H 'Host: external.invalid' -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/)" = 421
+          test "$(curl -s -X POST -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/)" = 405
+          echo "PASS: delivered launcher routes, sample mode, isolation"
+          for engine in chromium firefox webkit; do
+            DEMO_BROWSER_ENGINE="$engine" ADMIN_TEST_URL=http://127.0.0.1:8765 npm run qa:demo-browser
+          done
+          QUALITY_BASE_URL=http://127.0.0.1:8765/ node qa/quality-audit.cjs
+      - name: Preserve exact verified candidate (not published)
+        uses: actions/upload-artifact@v4
+        with:
+          name: online-menu-commercial-demo
+          path: ${{ runner.temp }}/commercial-demo/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Preserve QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: commercial-demo-quality-evidence
+          path: quality-report/
+          if-no-files-found: ignore
+          retention-days: 30
