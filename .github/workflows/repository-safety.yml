@@ -1,0 +1,38 @@
+name: Repository safety
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  repository-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check workflow trust boundaries
+        run: node qa/repository-safety.mjs
+      - name: Verify backup script syntax
+        run: bash -n qa/backup-repository.sh
+  backup-rehearsal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Rehearse full branch and tag recovery without publishing backup
+        run: |
+          work=$(mktemp -d "$RUNNER_TEMP/repo-backup-XXXXXX")
+          trap 'rm -rf -- "$work"' EXIT
+          bash qa/backup-repository.sh https://github.com/cianium/Online-Menu.git "$work/private"
+          test -s "$work/private/repository.bundle"
+          (cd "$work/private" && sha256sum -c SHA256SUMS)
+          echo "PASS: temporary recovery verified; no upload or remote mutation"
