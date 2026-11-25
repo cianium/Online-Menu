@@ -26,6 +26,24 @@ test('Local catalog uses Web Locks when available and keeps storage failure visi
   assert.ok(locked);localStorage.setItem=()=>{throw Error('quota');};
   await assert.rejects(vm.runInContext('commitLocalCatalog([[STORAGE_KEYS.products,[]]])',ctx),/Local storage write failed/);
 });
+test('Web Locks callback stays fulfilled on stale writes and quota failures; caller still rejects',async()=>{
+  const localStorage=storage();const outcomes=[];
+  const navigator={locks:{request:async(name,fn)=>{
+    assert.equal(name,'romano-demo-catalog');
+    let result;
+    assert.doesNotThrow(()=>{result=fn();},'Expected failure must not escape the Web Locks callback');
+    outcomes.push(result.ok);
+    return result;
+  }}};
+  const a=adminContext(localStorage,navigator),b=adminContext(localStorage,navigator);
+  await vm.runInContext('commitLocalCatalog([[STORAGE_KEYS.products,[{id:"new"}]]])',a);
+  await assert.rejects(vm.runInContext('commitLocalCatalog([[STORAGE_KEYS.products,[]]])',b),{code:'LOCAL_CATALOG_CONFLICT'});
+  assert.equal(localStorage.getItem('romano_products'),'[{"id":"new"}]');
+  localStorage.setItem=()=>{throw Error('quota');};
+  await assert.rejects(vm.runInContext('commitLocalCatalog([[STORAGE_KEYS.products,[]]])',a),/Local storage write failed/);
+  assert.equal(localStorage.getItem('romano_products'),'[{"id":"new"}]');
+  assert.deepEqual(outcomes,[true,false,false]);
+});
 function cartContext(mode='demo') {
   const source=read('js/commerce.js'),localStorage=storage();
   const ctx=vm.createContext({localStorage,menuDataMode:mode,menu:[{id:'a',price:10},{id:'b',price:20},{id:'zero',price:0}],saved:[],getProductById:id=>ctx.menu.find(p=>p.id===id&&p.active!==false)});

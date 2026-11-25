@@ -378,17 +378,26 @@ function readCatalogRevision(storage = localStorage) {
 }
 async function commitLocalCatalog(entries) {
     const commit = () => {
-        if (localCatalogRevision === null || readCatalogRevision() !== localCatalogRevision) {
-            const error = new Error("Local catalog changed in another tab");
-            error.code = "LOCAL_CATALOG_CONFLICT";
-            throw error;
+        try {
+            if (localCatalogRevision === null || readCatalogRevision() !== localCatalogRevision) {
+                const error = new Error("Local catalog changed in another tab");
+                error.code = "LOCAL_CATALOG_CONFLICT";
+                throw error;
+            }
+            if (!RomanoStorage.transaction(entries)) throw new Error("Local storage write failed");
+            localCatalogRevision = readCatalogRevision();
+            return { ok: true };
+        } catch (error) {
+            // Keep the lock callback fulfilled; Firefox can report a callback throw as a page error.
+            return { ok: false, error };
         }
-        if (!RomanoStorage.transaction(entries)) throw new Error("Local storage write failed");
-        localCatalogRevision = readCatalogRevision();
     };
     // Web Locks serialize cooperating tabs where supported. The comparison also works on older browsers.
-    if (navigator.locks?.request) await navigator.locks.request("romano-demo-catalog", commit);
-    else commit();
+    const result = navigator.locks?.request
+        ? await navigator.locks.request("romano-demo-catalog", commit)
+        : commit();
+    // Preserve the original error and let the caller display the existing localized failure state.
+    if (!result.ok) throw result.error;
 }
 async function loadState() {
     if (!window.RomanoAPI?.enabled) {

@@ -38,3 +38,7 @@ Chromium loopback integration observations across three baseline runs: customer 
 | Source merge, release tagging, Pages/Vercel publication | Explicit owner approval required |
 
 Recommended sequence: verify new CI, review visual/manual accessibility and real-device smoke, recheck both PR heads and file overlap, then request separate approval to merge. Do not merge static publication branches into main. No new connected configuration or customer data migration belongs in this audit.
+
+## Cross-engine finding and repair
+
+The first [Firefox run](https://github.com/cianium/Online-Menu/actions/runs/45697538418/job/139498748393) on `8e5ad94` completed the functional checks but failed the final no-page-error assertion: Firefox reported the intentionally thrown stale-catalog error inside the Web Locks callback. The stale write was rejected and the new catalog was preserved. The repair returns a fulfilled result from the lock callback and rethrows the original error outside the callback, preserving the existing caller rejection and localized status. The regression test asserts that stale and quota failures do not throw inside the lock callback, still reject at the caller, and preserve stored data. No browser assertion was removed. Fresh CI and browser results are required at the repaired head before approving release. The previously published static tree remains unchanged.
