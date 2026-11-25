@@ -1,0 +1,59 @@
+name: Standalone quality audit
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'admin/**'
+      - 'css/**'
+      - 'js/**'
+      - 'assets/**'
+      - 'qa/export-demo.mjs'
+      - 'qa/private-demo-sw.js'
+      - 'qa/quality-audit.cjs'
+      - '.github/workflows/quality-audit.yml'
+      - 'package.json'
+      - 'sw.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install QA-only dependencies
+        run: |
+          npm install --no-save --no-package-lock playwright axe-core@4.10.3
+          npx playwright install --with-deps chromium
+      - name: Export isolated demo
+        run: npm run demo:export
+      - name: Audit local export
+        env:
+          QUALITY_BASE_URL: http://127.0.0.1:8767/Online-Menu/
+        run: |
+          mkdir -p /tmp/quality-audit
+          cp -a dist/demo/public /tmp/quality-audit/Online-Menu
+          python3 -m http.server 8767 --bind 127.0.0.1 --directory /tmp/quality-audit >/tmp/quality-server.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent "$QUALITY_BASE_URL" >/dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent "$QUALITY_BASE_URL" >/dev/null
+          node qa/quality-audit.cjs
+      - name: Preserve audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: standalone-quality-audit
+          path: quality-report/
+          if-no-files-found: error
+          retention-days: 30

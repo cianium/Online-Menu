@@ -88,3 +88,15 @@ test('Splash readiness does not depend on the window load event',()=>{
  assert.match(app,/const dismissSplash = initializeSplashScreen\(\);/);
  assert.match(app,/dismissSplash\(\);/);
 });
+
+
+test('Both applications provide a localized no-script notice without inline style or script',()=>{
+ for(const name of ['index.html','admin/index.html']){
+  const html=read(name);
+  assert.match(html,/<noscript><link rel="stylesheet" href="(?:\.\.\/)?css\/no-script\.css"><\/noscript>/);
+  const notice=html.match(/<noscript>\s*<section class="no-script-notice"[\s\S]*?<\/noscript>/)?.[0];
+  assert.ok(notice,name);
+  for(const [lang,dir] of [['fa','rtl'],['ar','rtl'],['en','ltr'],['tr','ltr']]) assert.ok(notice.includes(`lang="${lang}" dir="${dir}"`),name+' '+lang);
+ }
+ assert.match(read('css/no-script.css'),/body > :not\(noscript\) \{ display:none !important; \}/);
+});
