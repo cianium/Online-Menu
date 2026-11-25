@@ -1,7 +1,7 @@
 /* Standalone demo integration: no remote API or third-party network is allowed. */
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
-const base = new URL(process.env.ADMIN_TEST_URL || 'http://127.0.0.1:8765');
+const base = new URL((process.env.ADMIN_TEST_URL || 'http://127.0.0.1:8765').replace(/\/$/, '') + '/');
 assert.ok(['127.0.0.1', 'localhost'].includes(base.hostname) && base.protocol === 'http:', 'Demo QA requires loopback HTTP');
 const readyCustomer = async page => {
   await page.waitForFunction(() => typeof menuDataMode !== 'undefined' && menuDataMode !== 'loading');
@@ -16,11 +16,11 @@ const readyCustomer = async page => {
     await context.route('**/*', route => new URL(route.request().url()).origin === base.origin ? route.continue() : route.abort('blockedbyclient'));
     const customer = await context.newPage();
     const admin = await context.newPage();
-    await customer.goto(new URL('/',base).href); await readyCustomer(customer);
+    await customer.goto(new URL('./',base).href); await readyCustomer(customer);
     assert.equal(await customer.evaluate(() => menuDataMode), 'demo');
     const cards = customer.locator('#menu .product-card');
     assert.equal(await cards.count(), 21);
-    await admin.goto(new URL('/admin/',base).href);
+    await admin.goto(new URL('admin/',base).href);
     await admin.waitForFunction(() => typeof adminInitialized !== 'undefined' && adminInitialized && !document.querySelector('.admin-app').inert);
     assert.equal(await admin.locator('#admin-mode-banner').isVisible(), true);
     assert.equal(await admin.evaluate(() => state.products.length), 21);
@@ -52,7 +52,39 @@ const readyCustomer = async page => {
     await customer.reload(); await readyCustomer(customer);
     assert.ok(await customer.evaluate(() => menuProducts.some(p => p.name === 'Standalone QA Dish')));
     console.log('PASS: local product creation syncs across tabs and persists after reload');
-    await customer.goto(new URL('/?restaurant=standalone-qa-missing',base).href); await readyCustomer(customer);
+    const stale = await context.newPage();
+    await stale.goto(new URL('admin/',base).href);
+    await stale.waitForFunction(() => adminInitialized && !document.querySelector('.admin-app').inert);
+    const productId = await admin.evaluate(() => state.products.find(p => p.name === 'Standalone QA Dish').id);
+    await customer.evaluate(id=>RomanoCommerce.add(id),productId);
+    assert.equal(await customer.locator('.commerce-cart-count').textContent(),'1');
+    await admin.evaluate(id=>toggleProduct(id),productId);
+    await customer.waitForFunction(id=>!getProductById(id)&&document.querySelector('.commerce-cart-count').textContent==='0',productId);
+    assert.equal(await customer.evaluate(id=>Object.hasOwn(JSON.parse(localStorage.getItem('online_menu_cart_vq3:romano')),id),productId),false);
+    assert.equal(await stale.evaluate(()=>saveStateBundle()),false,'stale admin must not overwrite a newer catalog');
+    assert.equal(await admin.evaluate(id=>JSON.parse(localStorage.getItem('romano_products')).find(p=>p.id===id).active,productId),false);
+    await stale.close();
+    console.log('PASS: deactivated product leaves cart; stale admin save is rejected');
+
+    await admin.evaluate(()=>{ROMANO_ADMIN_I18N.setLanguage('en');navigateTo('dashboard');});
+    await customer.evaluate(()=>ROMANO_I18N.setLanguage('en',false));
+    await customer.locator('#menu-toggle').click();
+    await customer.locator('#main-navigation [data-nav-panel="feedback"]').click();
+    const reviewDialog=customer.locator('#ramen-contact-dialog');
+    await reviewDialog.locator('input[name="demo-rating"][value="4"]').check();
+    await reviewDialog.locator('.feedback-comment textarea').fill('Standalone feedback');
+    await reviewDialog.locator('.feedback-save').click();
+    await admin.waitForFunction(()=>document.querySelector('#overview-rating-comment').textContent==='Standalone feedback');
+    await admin.locator('[data-rating-action=approve]').click();
+    await admin.waitForFunction(()=>document.querySelector('#overview-rating-value').textContent==='4 / 5');
+    await reviewDialog.locator('.feedback-comment textarea').fill('Same rating, new submission');
+    await reviewDialog.locator('.feedback-save').click();
+    await admin.waitForFunction(()=>document.querySelector('#overview-rating-comment').textContent==='Same rating, new submission'&&document.querySelector('#overview-rating-value').textContent==='—');
+    await admin.locator('[data-rating-action=reject]').click();
+    assert.equal(await admin.evaluate(()=>RomanoDemoReview.read(localStorage,'romano').status),'rejected');
+    await customer.keyboard.press('Escape');
+    console.log('PASS: local feedback moderation resets for a new submission of the same rating');
+    await customer.goto(new URL('./?restaurant=standalone-qa-missing',base).href); await readyCustomer(customer);
     assert.equal(await customer.evaluate(() => menuDataMode), 'unavailable');
     assert.equal(await cards.count(),0);
     assert.deepEqual(errors,[]);

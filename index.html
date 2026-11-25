@@ -64,6 +64,9 @@
     <link rel="stylesheet" href="css/menu-experience.css">
     <link rel="stylesheet" href="css/commerce.css">
     <link rel="stylesheet" href="css/ramen-navigation.css">
+    <link rel="stylesheet" href="css/interaction-system.css">
+    <link rel="stylesheet" href="css/catalog-browse.css">
+    <link rel="stylesheet" href="css/customer-polish.css">
 </head>
 
 
@@ -211,7 +214,7 @@
                     <div class="navigation-header">
 
                         <div>
-                            <span class="navigation-kicker">
+                            <span class="navigation-kicker" data-restaurant-brand>
                                 ROMANO
                             </span>
                             <span class="navigation-label">
@@ -219,6 +222,9 @@
                             </span>
                         </div>
 
+                        <div class="navigation-actions">
+                            <button class="navigation-icon" type="button" data-nav-panel="profile" aria-label="پروفایل" data-i18n-aria="پروفایل"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></button>
+                            <button class="navigation-icon" type="button" data-nav-panel="cart" aria-label="سبد سفارش" data-i18n-aria="سبد سفارش"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h3l3 12h12l2-9H6"/><circle cx="9" cy="20" r="1"/><circle cx="19" cy="20" r="1"/></svg><span class="navigation-cart-count" hidden>0</span></button>
                         <button
                             class="navigation-close"
                             id="navigation-close"
@@ -228,18 +234,7 @@
                             <span aria-hidden="true"></span>
                             <span aria-hidden="true"></span>
                         </button>
-
-                    </div>
-
-                    <div class="navigation-main-links">
-                        <span class="navigation-section-label">مسیرهای سریع</span>
-                        <ul class="navigation-list">
-                            <li><a href="#home"><span>خانه</span><small>01</small></a></li>
-                            <li><a href="#menu"><span>منوی رستوران</span><small>02</small></a></li>
-                            <li><a href="#featured"><span>انتخاب ویژه</span><small>03</small></a></li>
-                            <li><a href="#story"><span>درباره رستوران</span><small>04</small></a></li>
-                            <li><a href="#contact"><span>تماس با رستوران</span><small>05</small></a></li>
-                        </ul>
+                        </div>
                     </div>
 
                     <div class="navigation-categories">
@@ -251,8 +246,12 @@
                     </div>
 
                     <div class="navigation-footer">
-                        <span>منوی دیجیتال ROMANO</span>
-                        <button type="button" class="navigation-menu-cta" data-navigation-menu-cta>مشاهده منو</button>
+                        <div class="navigation-contact-actions">
+                            <button type="button" data-nav-panel="contact" data-i18n="تماس با رستوران">تماس با رستوران</button>
+                            <button type="button" data-nav-panel="chat" data-i18n="چت">چت</button>
+                            <button type="button" data-nav-panel="feedback" data-i18n="ثبت امتیاز و رضایت">ثبت امتیاز و رضایت</button>
+                        </div>
+                        <div class="navigation-footer-meta"><span>منوی دیجیتال ROMANO</span><button type="button" class="navigation-menu-cta" data-navigation-menu-cta>مشاهده منو</button></div>
                     </div>
 
                 </div>
@@ -453,128 +452,6 @@
             </section>
 
 
-            <!-- =================================================
-                 STORY
-            ================================================== -->
-
-            <section
-                class="story-section section"
-                id="story"
-            >
-
-                <div class="container">
-
-                    <div class="story-content">
-
-                        <span class="section-eyebrow">
-                            داستان رستوران
-                        </span>
-
-
-                        <h2 class="section-title">
-
-                            ساده <em>نیست</em>
-
-                            <br>
-
-                            <span>
-                                خاص است
-                            </span>
-
-                        </h2>
-
-
-                        <p class="story-description">
-                            هر رستوران داستان خودش را دارد؛
-                            از مواد اولیه تا آخرین جزئیات تجربه شما.
-                        </p>
-
-                        <div class="romano-story-grid" aria-label="ارزش‌های رستوران">
-                            <div class="romano-story-point">
-                                <span>01</span>
-                                <strong>مواد اولیه</strong>
-                            </div>
-                            <div class="romano-story-point">
-                                <span>02</span>
-                                <strong>دقت در جزئیات</strong>
-                            </div>
-                            <div class="romano-story-point">
-                                <span>03</span>
-                                <strong>تجربه‌ی ماندگار</strong>
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- =================================================
-                 CONTACT
-            ================================================== -->
-
-            <section
-                class="contact-section section"
-                id="contact"
-            >
-
-                <div class="container">
-
-                    <div class="contact-content">
-
-                        <span class="section-eyebrow">
-                            موقعیت رستوران
-                        </span>
-
-
-                        <h2 class="section-title">
-                            منتظر <em>شما</em> هستیم.
-                        </h2>
-
-
-                        <div class="contact-details">
-
-                            <div class="contact-item">
-
-                                <span class="contact-label">
-                                    آدرس
-                                </span>
-
-                                <p data-restaurant-address>
-                                    اصفهان میدان انقلاب، ابتدای چهارباغ عباسی بر چهارباغ عباسی کافه رستوران رمانو
-                                </p>
-
-                            </div>
-
-
-                            <div class="contact-item">
-
-                                <span class="contact-label">
-                                    تلفن
-                                </span>
-
-                                <a href="tel:+983100000000" data-restaurant-phone>
-                                    +98 31 0000 0000
-                                </a>
-
-                            </div>
-
-                        </div>
-
-                        <div class="romano-contact-actions">
-                            <a class="romano-contact-action romano-contact-action--primary" href="#menu">مشاهده منو</a>
-                            <a class="romano-contact-action" href="tel:+983100000000" data-restaurant-phone>تماس با رستوران</a>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
         </main>
 
 
@@ -661,9 +538,8 @@
             id="footer"
         >
 
-            <div class="container">
-
-                <div class="footer-main">
+            <div class="container" id="contact">
+                <div class="footer-main" id="story">
 
 
                     <!-- Brand -->
@@ -672,12 +548,12 @@
 
                         <a
                             href="#home"
-                            class="footer-logo"
+                            class="footer-logo" data-restaurant-brand
                         >
                             ROMANO
                         </a>
 
-                        <p>
+                        <p data-restaurant-tagline>
                         کافه و رستوران
                         </p>
 
@@ -696,7 +572,7 @@
                             +98 31 0000 0000
                         </a>
 
-                        <span data-restaurant-address>
+                        <span class="footer-address" data-restaurant-address>
                             آدرس رستوران
                         </span>
 
@@ -787,23 +663,7 @@
     </div>
 
 
-        <nav class="ramen-bottom-nav" aria-label="ناوبری سریع">
-            <a href="#home" class="ramen-bottom-link is-current" data-ramen-nav="home" aria-current="page">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>
-                <span data-ramen-label="home">خانه</span>
-            </a>
-            <a href="#menu" class="ramen-bottom-link" data-ramen-nav="menu">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
-                <span data-ramen-label="menu">منو</span>
-            </a>
-            <a href="#featured" class="ramen-bottom-link" data-ramen-nav="featured">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.8 6.3L22 9l-5.3 4.7 1.6 7.3L12 17.2 5.7 21l1.6-7.3L2 9l7.2-.7z"/></svg>
-                <span data-ramen-label="featured">ویژه‌ها</span>
-            </a>
-            <a href="#contact" class="ramen-bottom-link" data-ramen-nav="contact">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8.5 8.5 0 0 1-8.5 8.5H4l1.6-4A8.5 8.5 0 1 1 20 11.5z"/></svg>
-                <span data-ramen-label="contact">ارتباط</span>
-            </a>
+        <nav class="ramen-bottom-nav" aria-label="ناوبری سریع" dir="ltr">
             <button class="ramen-bottom-link ramen-bottom-cart" id="ramen-bottom-cart" type="button"
                 aria-controls="commerce-drawer" aria-expanded="false" aria-label="سبد سفارش">
                 <span class="ramen-bottom-icon-wrap">
@@ -812,6 +672,22 @@
                 </span>
                 <span data-ramen-label="cart">سبد</span>
             </button>
+            <a href="#menu" class="ramen-bottom-link" data-ramen-nav="menu">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+                <span data-ramen-label="menu">منو</span>
+            </a>
+            <a href="#home" class="ramen-bottom-link is-current" data-ramen-nav="home" aria-current="location">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>
+                <span data-ramen-label="home">خانه</span>
+            </a>
+            <a href="#featured" class="ramen-bottom-link" data-ramen-nav="featured">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.8 6.3L22 9l-5.3 4.7 1.6 7.3L12 17.2 5.7 21l1.6-7.3L2 9l7.2-.7z"/></svg>
+                <span data-ramen-label="featured">ویژه‌ها</span>
+            </a>
+            <a href="#contact" class="ramen-bottom-link" data-ramen-nav="contact" aria-haspopup="dialog" aria-controls="ramen-contact-dialog" aria-expanded="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8.5 8.5 0 0 1-8.5 8.5H4l1.6-4A8.5 8.5 0 1 1 20 11.5z"/></svg>
+                <span data-ramen-label="contact">ارتباط</span>
+            </a>
         </nav>
 
     <!-- =====================================================
@@ -824,6 +700,7 @@
     <script src="js/money.js"></script>
     <script src="js/app.js"></script>
 <script src="js/menu-experience.js"></script>
+<script src="js/demo-review.js"></script>
 <script src="js/commerce.js"></script>
 
 </body>

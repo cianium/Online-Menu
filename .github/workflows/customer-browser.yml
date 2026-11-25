@@ -72,6 +72,21 @@ jobs:
           done
           curl --fail --silent http://127.0.0.1:8766/ > /dev/null
           CHROMIUM_EXECUTABLE_PATH="$(node -p "require('playwright').chromium.executablePath()")" npm run qa:demo-browser
+      - name: Test static demo at a GitHub Pages-style project path
+        env:
+          ADMIN_TEST_URL: http://127.0.0.1:8767/Online-Menu/
+        run: |
+          mkdir -p /tmp/online-menu-pages-qa
+          cp -a dist/demo/public /tmp/online-menu-pages-qa/Online-Menu
+          python3 -m http.server 8767 --bind 127.0.0.1 --directory /tmp/online-menu-pages-qa > /tmp/pages-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent "$ADMIN_TEST_URL" > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent "$ADMIN_TEST_URL" > /dev/null
+          CHROMIUM_EXECUTABLE_PATH="$(node -p "require('playwright').chromium.executablePath()")" npm run qa:demo-browser
       - name: Upload browser screenshots and results
         if: always()
         uses: actions/upload-artifact@v4

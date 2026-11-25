@@ -1,4 +1,4 @@
-const CACHE_NAME = "ramen-online-menu-vq3-4";
+const CACHE_NAME = "ramen-online-menu-vq3-8-integration1";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,9 @@ const CORE_ASSETS = [
   "./css/menu-experience.css",
   "./css/commerce.css",
   "./css/ramen-navigation.css",
+  "./css/interaction-system.css",
+  "./css/catalog-browse.css",
+  "./css/customer-polish.css",
   "./js/data.js",
   "./js/public-api.js",
   "./js/i18n.js",
@@ -14,6 +17,7 @@ const CORE_ASSETS = [
   "./js/app.js",
   "./js/menu-experience.js",
   "./js/commerce.js",
+  "./js/demo-review.js",
   "./assets/images/logo/logo.png",
   "./assets/images/hero/hero.jpg"
 ];

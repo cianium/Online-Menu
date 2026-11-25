@@ -14,6 +14,67 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
  const p=await ctx.newPage();await p.goto(base);await ready(p);
  const cards=p.locator('#menu .product-card');
  await check('Static demo boots with 21 products',async()=>{assert.equal(await cards.count(),21);assert.equal(await p.evaluate(()=>menuDataMode),'demo')});
+ await check('Bottom navigation keeps the requested physical order and opens an independent contact dialog',async()=>{
+  const expected=['cart','menu','home','featured','contact'];
+  for(const lang of ['fa','ar','en','tr']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   for(const width of [320,390]){
+    await p.setViewportSize({width,height:844});
+    const actual=await p.locator('.ramen-bottom-link').evaluateAll(nodes=>nodes.map(n=>({id:n.dataset.ramenNav||'cart',x:n.getBoundingClientRect().left})).sort((a,b)=>a.x-b.x).map(n=>n.id));
+    assert.deepEqual(actual,expected,lang+'/'+width);
+   }
+   const trigger=p.locator('[data-ramen-nav="contact"]');
+   await trigger.click();
+   const dialog=p.locator('#ramen-contact-dialog');
+   assert.equal(await dialog.evaluate(d=>d.open),true);
+   assert.equal(await trigger.getAttribute('aria-expanded'),'true');
+   assert.ok((await dialog.locator('h2').innerText()).trim());
+   assert.equal(await dialog.locator('a[href^="tel:"]').count(),0,'sample phone must not initiate a call');
+   await p.keyboard.press('Escape');
+   await p.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open && document.querySelector('[data-ramen-nav="contact"]').getAttribute('aria-expanded')==='false');
+   assert.equal(await trigger.evaluate(n=>document.activeElement===n),true);
+  }
+  await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));
+  await p.setViewportSize({width:390,height:844});
+ });
+ await check('Bottom navigation follows native section anchors and manual scrolling',async()=>{
+  const featured=p.locator('[data-ramen-nav="featured"]');
+  await featured.click();
+  await p.waitForFunction(()=>document.querySelector('[data-ramen-nav="featured"]').getAttribute('aria-current')==='location');
+  assert.equal(await p.evaluate(()=>location.hash),'#featured');
+  await p.evaluate(()=>document.getElementById('menu').scrollIntoView({behavior:'instant'}));
+  await p.waitForFunction(()=>document.querySelector('[data-ramen-nav="menu"]').getAttribute('aria-current')==='location');
+  await p.evaluate(()=>{history.replaceState(null,'',location.pathname+location.search);window.scrollTo({top:0,behavior:'instant'});});
+ });
+ await check('Category-first hamburger, guest profile and local-only rating in four languages',async()=>{
+  for(const lang of ['fa','ar','en','tr']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   await p.setViewportSize({width:390,height:844});
+   await p.locator('#menu-toggle').click();
+   const nav=p.locator('#main-navigation');
+   await nav.locator('.navigation-category-list a').first().waitFor({state:'visible'});
+   assert.equal(await nav.locator('.navigation-category-media img').count(),7);
+   const bounds=await nav.locator('.navigation-categories').boundingBox();
+   assert.ok(bounds && bounds.height<=844*.53);
+   assert.equal(await nav.locator('[data-nav-panel="profile"]').getAttribute('aria-label')!==null,true);
+   await nav.locator('[data-nav-panel="profile"]').click();
+   const dialog=p.locator('#ramen-contact-dialog');await dialog.waitFor({state:'visible'});
+   assert.equal(await nav.getAttribute('aria-hidden'),'true');
+   assert.equal(await dialog.locator('input[type="password"]').count(),0);
+   await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
+   await p.locator('#menu-toggle').click();await nav.locator('[data-nav-panel="feedback"]').click();
+   await dialog.waitFor({state:'visible'});
+   await dialog.locator('input[name="demo-rating"][value="4"]').check();
+   await dialog.locator('.feedback-comment textarea').fill('<b>Demo comment</b>');
+   await dialog.locator('.feedback-save').click();
+   const review=await p.evaluate(()=>JSON.parse(localStorage.getItem('online_menu_demo_review_v2:romano')));assert.equal(review.rating,4);assert.equal(review.status,'pending');assert.equal(review.comment,'<b>Demo comment</b>');
+   await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
+   await p.locator('#menu-toggle').click();await nav.locator('[data-nav-panel="chat"]').click();
+   await dialog.waitFor({state:'visible'});assert.ok((await dialog.locator('.ramen-contact-note').last().innerText()).trim());
+   await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
+  }
+  await p.evaluate(()=>{localStorage.removeItem('online_menu_demo_rating:romano');localStorage.removeItem('online_menu_demo_review_v2:romano');ROMANO_I18N.setLanguage('fa',false);});
+ });
  await check('Category image fallback uses localized category initials, not brand/developer copy',async()=>{
   const fallback=await p.evaluate(()=>{
    const category=menuCategories.find(item=>item.active!==false);
@@ -69,10 +130,10 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
  });
  await check('Image-first card CTA and favorite remain accessible',async()=>{
   const card=cards.first(),button=card.locator('.product-card-button'),favorite=card.locator('[data-favorite-product]');
-  await card.scrollIntoViewIfNeeded();
+  await card.evaluate(node=>node.scrollIntoView({block:'start',behavior:'instant'}));
   assert.ok((await button.textContent()).trim());assert.equal(await button.isVisible(),true);
   const geometry=await card.evaluate(node=>{const card=node.getBoundingClientRect(),image=node.querySelector('.product-image-wrapper').getBoundingClientRect(),cta=node.querySelector('.product-card-button').getBoundingClientRect(),heart=node.querySelector('[data-favorite-product]').getBoundingClientRect(),hit=document.elementFromPoint(heart.left+heart.width/2,heart.top+heart.height/2);return{card:{width:card.width,height:card.height},image:{width:image.width,height:image.height},ctaWidth:cta.width,heartHit:Boolean(hit&&hit.closest('[data-favorite-product]'))}});
-  assert.ok(Math.abs(geometry.card.width-geometry.image.width)<1&&Math.abs(geometry.card.height-geometry.image.height)<1);assert.ok(geometry.ctaWidth>geometry.card.width*.35);assert.equal(geometry.heartHit,true);
+  assert.ok(Math.abs(geometry.card.width-geometry.image.width)<=3&&geometry.image.height<geometry.card.height&&geometry.image.height>60);assert.ok(geometry.ctaWidth>geometry.card.width*.35);assert.equal(geometry.heartHit,true);
   await button.click();await p.waitForTimeout(450);const modal=await p.locator('.product-modal .modal-container').boundingBox();assert.ok(modal);assert.ok(Math.abs((modal.y+modal.height/2)-844/2)<2,JSON.stringify(modal));await p.keyboard.press('Escape');
  });
  await check('Product card metadata and modal close control follow RTL/LTR direction',async()=>{
@@ -118,6 +179,10 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    await cartButton.click();
   });
   await p.locator('.commerce-quantity button[data-cart-change="1"]').click();assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
+  assert.equal(await p.evaluate(()=>document.activeElement.dataset.cartChange),'1');
+  assert.equal(await p.locator('.site-wrapper').evaluate(n=>n.inert),true);
+  assert.equal(await p.locator('#commerce-options').isVisible(),true);
+  const summary=await p.locator('#commerce-submit').boundingBox();assert.ok(summary && summary.y+summary.height<=844);
   await p.screenshot({path:path.join(out,'customer-cart-filled-fa-390.png')});
   await p.locator('#commerce-submit').click();assert.ok((await p.locator('#commerce-message').textContent()).trim());
   await p.locator('[data-cart-remove]').click();
@@ -133,20 +198,60 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'true');
   assert.equal(await p.evaluate(()=>document.activeElement?.id),'ramen-bottom-cart');
  });
+ const searchToggle=p.locator('#menu-search-toggle'),filterToggle=p.locator('#menu-filter-toggle');
+ const openSearch=async()=>{if(await searchToggle.getAttribute('aria-expanded')!=='true')await searchToggle.click();};
+ const openFilters=async()=>{if(await filterToggle.getAttribute('aria-expanded')!=='true')await filterToggle.click();};
+ const resetFilters=async()=>{await openFilters();await p.locator('#menu-reset').click();};
  await check('Search, category, price order and reset',async()=>{
   await p.evaluate(()=>ROMANO_I18N.setLanguage('en'));
+  await openSearch();assert.equal(await p.locator('#rv4-menu-search').evaluate(n=>n===document.activeElement),true);
   await p.locator('#rv4-menu-search').fill('pizza');assert.equal(await cards.count(),3);
+  await openFilters();assert.equal(await searchToggle.getAttribute('aria-expanded'),'false');
   await p.locator('#menu-sort').selectOption('low');
   const prices=await p.evaluate(()=>[...document.querySelectorAll('#menu .product-card')].map(c=>getProductById(c.dataset.productId).price));assert.deepEqual(prices,[...prices].sort((a,b)=>a-b));
-  await p.locator('#rv4-menu-search').fill('no-product-xyz');assert.equal(await cards.count(),0);assert.equal(await p.locator('#menu-empty').count(),1);
-  await p.locator('#menu-reset').click();assert.equal(await cards.count(),21);
-  await p.locator('[data-browse-category]').nth(1).click();assert.equal(await cards.count(),3);await p.locator('#menu-reset').click();
+  await openSearch();await p.locator('#rv4-menu-search').fill('no-product-xyz');assert.equal(await cards.count(),0);assert.equal(await p.locator('#menu-empty').count(),1);
+  await resetFilters();assert.equal(await cards.count(),21);
+  await p.locator('[data-browse-category]').nth(1).click();assert.equal(await cards.count(),3);await resetFilters();
  });
  await check('Favorites persist, filter and clear',async()=>{
   await cards.first().locator('[data-favorite-product]').click();assert.equal(await p.locator('.product-modal').getAttribute('aria-hidden'),'true');
-  await p.locator('#menu-favorites-toggle').click();assert.equal(await cards.count(),1);
-  await p.reload();await ready(p);await p.locator('#menu-favorites-toggle').click();assert.equal(await cards.count(),1);
-  await cards.first().locator('[data-favorite-product]').click();assert.equal(await cards.count(),0);assert.equal(await p.locator('#menu-empty').count(),1);await p.locator('#menu-reset').click();
+  await openFilters();await p.locator('#menu-favorites-toggle').click();assert.equal(await cards.count(),1);
+  await p.reload();await ready(p);await openFilters();await p.locator('#menu-favorites-toggle').click();assert.equal(await cards.count(),1);
+  await p.keyboard.press('Escape');await cards.first().locator('[data-favorite-product]').click();assert.equal(await cards.count(),0);assert.equal(await p.locator('#menu-empty').count(),1);await resetFilters();
+ });
+ await check('Compact catalog toolbar, disclosures and card layout remain accessible in four languages',async()=>{
+  for(const lang of ['fa','ar','en','tr']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   for(const width of [320,390,768,1440]){
+    await p.setViewportSize({width,height:844});
+    await p.evaluate(()=>document.querySelector('#menu').scrollIntoView({block:'start',behavior:'instant'}));
+    await p.waitForFunction(()=>document.querySelector('#menu').style.getPropertyValue('--browse-bar-height'));
+    assert.equal(await p.locator('#menu-search-panel').isVisible(),false);
+    assert.equal(await p.locator('#menu-filter-panel').isVisible(),false);
+    for(const trigger of [searchToggle,filterToggle]){const r=await trigger.boundingBox();assert.ok(r.width>=44&&r.height>=44);assert.ok(await trigger.getAttribute('aria-label'));}
+    await p.evaluate(()=>window.scrollBy({top:260,behavior:'instant'}));
+    const pinned=await p.evaluate(()=>{const h=document.querySelector('.site-header').getBoundingClientRect(),bar=document.querySelector('.menu-browser').getBoundingClientRect();return{gap:bar.top-h.bottom,height:bar.height}});
+    assert.ok(Math.abs(pinned.gap)<=2,JSON.stringify({lang,width,pinned}));assert.ok(pinned.height<180);
+    const grid=await cards.first().evaluate(n=>getComputedStyle(n.parentElement).gridTemplateColumns.split(' ').length);
+    assert.equal(grid,width<360?1:width<=767?2:3);
+    await openSearch();await p.locator('#rv4-menu-search').fill('xyz$&<test>');
+    assert.ok((await p.locator('#menu-search-active').textContent()).includes('xyz$&<test>'));
+    await p.keyboard.press('Escape');assert.equal(await searchToggle.getAttribute('aria-expanded'),'false');assert.equal(await searchToggle.evaluate(n=>n===document.activeElement),true);
+    await resetFilters();assert.equal(await cards.count(),21);
+    assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+   }
+  }
+  await p.setViewportSize({width:390,height:844});
+ });
+ await check('Featured signature and product rail do not duplicate the same dish',async()=>{
+  const ids=await p.evaluate(()=>[document.querySelector('[data-signature-product]')?.dataset.signatureProduct,...Array.from(document.querySelectorAll('#featured-products .product-card'),n=>n.dataset.productId)].filter(Boolean));
+  assert.equal(ids.length,new Set(ids).size);assert.equal(ids.length,await p.evaluate(()=>getFeaturedProducts().length));
+ });
+ await check('Category shortcut restores results even after a conflicting search',async()=>{
+  await openSearch();await p.locator('#rv4-menu-search').fill('no-product-xyz');assert.equal(await cards.count(),0);
+  await p.keyboard.press('Escape');await p.locator('#categories-grid .category-card').first().click();
+  assert.equal(await cards.count(),3);assert.equal(await p.locator('#rv4-menu-search').inputValue(),'');
+  await resetFilters();assert.equal(await cards.count(),21);
  });
  await check('Modal focus, inert background, Escape and URL restoration',async()=>{
   await cards.first().locator('.product-card-button').click();assert.match(await p.evaluate(()=>location.hash),/^#product-/);
@@ -172,7 +277,8 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.equal(await p.locator('#menu-browser-eyebrow').textContent(),labels.menuEyebrow);
    assert.equal(await normalizedText('#categories .section-title'),labels.categories);
    assert.equal(await normalizedText('#featured .section-title'),labels.featuredTitle);
-   assert.equal(await normalizedText('#story .section-title'),labels.story);
+   assert.equal(await p.locator('.story-section,.contact-section').count(),0);
+   assert.equal(await p.locator('footer #contact').count(),1);
    assert.equal(await p.locator('#ramen-header-cart').getAttribute('aria-label'),labels.cartAria);
    const headerBoxes=await p.locator('.header-container .brand, #romano-language-toggle, #ramen-header-cart, #menu-toggle').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {name:node.className||node.id,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};}));
    assert.equal(headerBoxes.length,4,JSON.stringify(headerBoxes));
@@ -298,7 +404,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    await p.waitForFunction(()=>document.querySelector('#main-navigation')?.getAttribute('aria-hidden')==='true');
   }
  });
- await check('Hero, story, contact and footer content stay localized and direction-aware',async()=>{
+ await check('Hero and consolidated footer stay localized and direction-aware',async()=>{
   const expected={
    fa:{tagline:'کافه و رستوران',footerBrand:'کافه و رستوران',contact:'ارتباط با ما',follow:'ما را دنبال کنید',powered:'قدرت‌گرفته از ROMANO',story:'ساده نیست خاص است',contactTitle:'منتظر شما هستیم.'},
    en:{tagline:'Cafe & Restaurant',footerBrand:'Cafe & Restaurant',contact:'Contact',follow:'Follow us',powered:'Powered by ROMANO',story:'It is not ordinary.',contactTitle:'We are waiting for you.'},
@@ -313,8 +419,9 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.equal(await p.locator('.hero-content').evaluate(n=>getComputedStyle(n).direction),dir,lang+' hero direction');
    assert.equal(await p.locator('.hero-title').evaluate(n=>getComputedStyle(n).textAlign),'start',lang+' hero title alignment');
    assert.match(await p.locator('.hero-content').evaluate(n=>getComputedStyle(n).fontFamily),new RegExp(font),lang+' hero font');
-   assert.equal(await text('#story .section-title'),e.story,lang+' story title');
-   assert.equal(await text('#contact .section-title'),e.contactTitle,lang+' contact title');
+   assert.equal(await p.locator('.story-section,.contact-section').count(),0);
+   assert.ok((await text('.footer-address')).length>0,lang+' actual restaurant address');
+   assert.equal(await text('.footer-logo'),await text('.header-container .brand-name'));
    assert.equal(await text('.footer-brand p'),e.footerBrand,lang+' footer brand');
    const headings=p.locator('.site-footer .footer-heading');
    assert.equal((await headings.nth(0).innerText()).trim(),e.contact,lang+' footer contact heading');

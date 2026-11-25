@@ -8,6 +8,8 @@
   let audioContext = null;
   let soundEnabled = false;
   let orderBaselineReady = false;
+  let orderDataAvailable = false;
+  let refreshVersion = 0;
 
   function updateSoundButton() {
     const button=document.querySelector("#orders-sound");
@@ -75,11 +77,18 @@
   function render() {
     const board = document.querySelector("#orders-board");
     if (!board) return;
-    const active = orders.filter((order) => !terminal.has(order.status));
-    const counts = { submitted:0, preparing:0, ready:0 };
-    active.forEach((order) => { if (order.status === "submitted") counts.submitted++; if (["accepted","preparing"].includes(order.status)) counts.preparing++; if (order.status === "ready") counts.ready++; });
-    document.querySelector("#orders-summary").innerHTML = `<span>${number(active.length)} ${safe(t("سفارش فعال"))}</span><span>${number(counts.submitted)} ${safe(t("جدید"))}</span><span>${number(counts.preparing)} ${safe(t("در آشپزخانه"))}</span><span>${number(counts.ready)} ${safe(t("آماده"))}</span>`;
+    const summary=orderDataAvailable && window.RomanoAPI?.enabled === true ? window.AdminStage12Model.summarizeOrders(orders) : null;
     const badge = document.querySelector("#orders-nav-badge");
+    if(!summary){
+      document.dispatchEvent(new CustomEvent("romano:orders-summary",{detail:{available:false}}));
+      badge.hidden=true;badge.textContent='';
+      document.querySelector('#orders-summary').textContent=t('داده زنده در دسترس نیست.');
+      board.innerHTML=`<div class="orders-empty">${safe(t(window.RomanoAPI?.enabled ? "دریافت سفارش‌ها ناموفق بود." : "برای مشاهده سفارش‌های زنده، پنل را به سرویس سرور متصل کنید."))}</div>`;
+      return;
+    }
+    const {counts,count}=summary;
+    document.dispatchEvent(new CustomEvent("romano:orders-summary",{detail:{available:true,...summary}}));
+    document.querySelector("#orders-summary").innerHTML = `<span>${number(count)} ${safe(t("سفارش فعال"))}</span><span>${number(counts.submitted)} ${safe(t("جدید"))}</span><span>${number(counts.preparing)} ${safe(t("در آشپزخانه"))}</span><span>${number(counts.ready)} ${safe(t("آماده"))}</span>`;
     badge.hidden = counts.submitted === 0;
     badge.textContent = String(counts.submitted);
     const rows = selectedOrders();
@@ -98,21 +107,26 @@
     board.querySelectorAll(".order-next").forEach((button) => button.addEventListener("click", () => transition(button)));
   }
 
-  async function refresh(silent = false) {
+  async function refresh() {
+    const version=++refreshVersion;
     if (!window.RomanoAPI?.enabled) {
-      if (!silent) document.querySelector("#orders-board").innerHTML = `<div class="orders-empty">${safe(t("برای مشاهده سفارش‌های زنده، پنل را به سرویس سرور متصل کنید."))}</div>`;
-      return;
+      orderDataAvailable=false;orders=[];orderBaselineReady=false;render();return;
     }
     try {
       const data = await window.RomanoAPI.orders();
+      if(version!==refreshVersion)return;
+      if(!window.RomanoAPI?.enabled)throw Error('Order session unavailable');
+      const incoming=data?.orders;
+      if(!window.AdminStage12Model.summarizeOrders(incoming))throw Error('Invalid order response');
       const previous=new Set(orders.map(item=>item.id));
-      const incoming=Array.isArray(data?.orders) ? data.orders : [];
       if(orderBaselineReady && incoming.some(item=>item.status==="submitted" && !previous.has(item.id)))alertNewOrder();
       orders=incoming;
       orderBaselineReady=true;
+      orderDataAvailable=true;
       render();
     } catch (error) {
-      if (!silent) document.querySelector("#orders-board").innerHTML = `<div class="orders-empty">${safe(t("دریافت سفارش‌ها ناموفق بود."))}</div>`;
+      if(version!==refreshVersion)return;
+      orderDataAvailable=false;orders=[];orderBaselineReady=false;render();
     }
   }
 
@@ -348,8 +362,8 @@
     document.querySelector("#ops-save-branch")?.addEventListener("click", saveOrderingStatus);
     document.querySelector("#gateway-branch")?.addEventListener("change", syncGateway);
     document.querySelector("#gateway-settings-form")?.addEventListener("submit", saveGateway);
-    window.setTimeout(() => { refresh(true); loadBranches(); }, 900);
-    timer = window.setInterval(() => { if (document.querySelector("#page-orders")?.classList.contains("is-active")) refresh(true); }, 10_000);
+    window.setTimeout(() => { refresh(); loadBranches(); }, 900);
+    timer = window.setInterval(() => { if (document.querySelector("#page-orders.is-active, #page-dashboard.is-active")) refresh(); }, 10_000);
     window.addEventListener("beforeunload", () => window.clearInterval(timer));
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();

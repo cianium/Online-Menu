@@ -10,6 +10,9 @@
     const LANGUAGES = ["fa", "en", "tr", "ar"];
 
     const staticText = {
+        "پروفایل": {fa:"پروفایل",en:"Profile",tr:"Profil",ar:"الملف الشخصي"},
+        "چت": {fa:"چت",en:"Chat",tr:"Sohbet",ar:"محادثة"},
+        "ثبت امتیاز و رضایت": {fa:"ثبت امتیاز و رضایت",en:"Rating & feedback",tr:"Puan ve geri bildirim",ar:"التقييم والملاحظات"},
         "ROMANO | منوی دیجیتال": { fa: "ROMANO | منوی دیجیتال", en: "ROMANO | Digital Menu", tr: "ROMANO | Dijital Menü", ar: "رومانو | القائمة الرقمية" },
         "منوی دیجیتال رستوران با ROMANO": { fa: "منوی دیجیتال رستوران با ROMANO", en: "Digital restaurant menus powered by ROMANO", tr: "ROMANO ile dijital restoran menüleri", ar: "قوائم المطاعم الرقمية بواسطة رومانو" },
         "رمانو": { fa: "رمانو", en: "ROMANO", tr: "ROMANO", ar: "رومانو" },
@@ -472,6 +475,9 @@
         "Yeni favorinizi keşfedin",
         "اكتشف طبقك المفضل"
     ],
+    "browseFilters": ["فیلتر و مرتب‌سازی", "Filter and sort", "Filtrele ve sırala", "التصفية والترتيب"],
+    "browseFiltersActive": ["فیلتر فعال است؛ فیلتر و مرتب‌سازی", "Active filters; filter and sort", "Etkin filtreler; filtrele ve sırala", "تصفية نشطة؛ التصفية والترتيب"],
+    "browseSearchActive": ["جست‌وجو: {n}", "Search: {n}", "Arama: {n}", "البحث: {n}"],
     "menuHint": [
         "جست‌وجو کنید، دسته را انتخاب کنید و جزئیات را ببینید.",
         "Search, choose a category and explore each dish.",
@@ -481,7 +487,7 @@
 };
 
     function ui(key, value = "") {
-        if (menuUI[key]) return menuUI[key][LANGUAGES.indexOf(current)].replace("{n}", String(value));
+        if (menuUI[key]) return menuUI[key][LANGUAGES.indexOf(current)].replace("{n}", () => String(value));
         const fn = dynamicText[current]?.[key] || dynamicText.fa[key];
         return typeof fn === "function" ? fn(value) : value;
     }
@@ -517,30 +523,9 @@
 
         set("#featured .section-title", current === "fa" ? "انتخاب <em>ویژه.</em>" : current === "en" ? "<em>Featured</em> Selection." : current === "tr" ? "<em>Özel</em> Seçim." : "<em>اختيار مميز.</em>", true);
 
-        set("#story .section-eyebrow", t("داستان رستوران"));
-        set("#story .section-title", current === "fa" ? "ساده <em>نیست</em><br><span>خاص است</span>" : current === "en" ? "It is <em>not</em><br><span>ordinary.</span>" : current === "tr" ? "Sıradan <em>değil</em><br><span>özel.</span>" : "الأمر <em>ليس</em><br><span>عاديًا.</span>", true);
-        set("#story .story-description", t("هر رستوران داستان خودش را دارد؛ از مواد اولیه تا آخرین جزئیات تجربه شما."));
-        const points = document.querySelectorAll("#story .romano-story-point strong");
-        ["مواد اولیه", "دقت در جزئیات", "تجربه‌ی ماندگار"].forEach((key, i) => { if (points[i]) points[i].textContent = t(key); });
-        const storyGrid = document.querySelector("#story .romano-story-grid");
-        if (storyGrid) storyGrid.setAttribute("aria-label", t("ارزش‌های رستوران"));
-
-        set("#contact .section-eyebrow", t("موقعیت رستوران"));
-        set("#contact .section-title", current === "fa" ? "منتظر <em>شما</em> هستیم." : current === "en" ? "We are waiting for <em>you.</em>" : current === "tr" ? "<em>Sizi</em> bekliyoruz." : "<em>بانتظاركم.</em>", true);
-        const contactLabels = document.querySelectorAll("#contact .contact-label");
-        if (contactLabels[0]) contactLabels[0].textContent = t("آدرس");
-        if (contactLabels[1]) contactLabels[1].textContent = t("تلفن");
-        const contactActions = document.querySelectorAll("#contact .romano-contact-action");
-        if (contactActions[0]) contactActions[0].textContent = t("مشاهده منو");
-        if (contactActions[1]) contactActions[1].textContent = t("تماس با رستوران");
-
-        const footerBrand = document.querySelector(".footer-brand p");
-        if (footerBrand) footerBrand.textContent = t("کافه و رستوران");
         const footerHeadings = document.querySelectorAll(".site-footer .footer-heading");
         if (footerHeadings[0]) footerHeadings[0].textContent = current === "fa" ? "ارتباط با ما" : current === "en" ? "Contact" : current === "tr" ? "İletişim" : "تواصل معنا";
         if (footerHeadings[1]) footerHeadings[1].textContent = t("ما را دنبال کنید");
-        const footerAddress = document.querySelector(".site-footer [data-restaurant-address]");
-        if (footerAddress && !footerAddress.closest("#contact")) footerAddress.textContent = t("آدرس رستوران");
         const footerCopyright = document.querySelector(".footer-bottom span");
         if (footerCopyright) footerCopyright.textContent = t("قدرت‌گرفته از ROMANO");
 

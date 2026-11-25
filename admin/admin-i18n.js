@@ -9,6 +9,75 @@
     const LANGS = ["fa", "en", "tr", "ar"];
 
     const T = {
+      "ارسال واقعی نیازمند رضایت دریافت پیامک، لغو عضویت و نگهداری کلید سرویس در سرور است.": ["Live delivery requires SMS consent, opt-out and server-side credential storage.", "Gerçek gönderim SMS onayı, abonelik iptali ve sunucuda kimlik bilgisi saklama gerektirir.", "يتطلب الإرسال الفعلي موافقة الرسائل وإلغاء الاشتراك وحفظ بيانات الاعتماد على الخادم."],
+      "سرویس ارسال متصل نیست. فقط متن و قوانین را آماده کنید.": ["No messaging service is connected. Prepare text and rules only.", "Mesaj hizmeti bağlı değil. Yalnızca metin ve kuralları hazırlayın.", "خدمة الرسائل غير متصلة. جهّز النص والقواعد فقط."],
+      "تنظیمات پیامکی": ["SMS settings", "SMS ayarları", "إعدادات الرسائل النصية"],
+      "بر اساس حداکثر ۱۰۰ سفارش اخیر": ["Based on up to 100 recent orders", "En fazla son 100 siparişe göre", "بناءً على أحدث 100 طلب كحد أقصى"],
+      "سرو یا تحویل‌شده": ["Served or delivered", "Servis edildi veya teslim edildi", "تم التقديم أو التسليم"],
+      "بازگردانی تغییرات ذخیره‌نشده": ["Reset unsaved changes", "Kaydedilmemiş değişiklikleri sıfırla", "إعادة ضبط التغييرات غير المحفوظة"],
+      "راه‌های ارتباطی": ["Contact channels", "İletişim kanalları", "قنوات التواصل"],
+      "هویت رستوران": ["Restaurant identity", "Restoran kimliği", "هوية المطعم"],
+      "پیش‌نویس ذخیره‌نشده کنار گذاشته شود؟": ["Discard the unsaved draft?", "Kaydedilmemiş taslak atılsın mı?", "هل تريد تجاهل المسودة غير المحفوظة؟"],
+      "پیش‌نمایش محلی؛ هزینه و ارسال پیامک محاسبه نمی‌شود.": ["Local preview; SMS delivery and cost are not calculated.", "Yerel önizleme; SMS gönderimi ve maliyeti hesaplanmaz.", "معاينة محلية؛ لا يُحتسب الإرسال أو التكلفة."],
+      "تعداد نویسه‌ها": ["Character count", "Karakter sayısı", "عدد الأحرف"],
+      "پیش‌نمایش متن پیامک": ["SMS text preview", "SMS metni önizlemesi", "معاينة نص الرسالة"],
+      "نظر تغییر کرده است؛ دوباره بررسی کنید.": ["The review changed; check it again.", "Yorum değişti; tekrar inceleyin.", "تغير التعليق؛ راجعه مجددًا."],
+      "خانه": ["Home", "Ana sayfa", "الرئيسية"],
+      "تنظیمات": ["Settings", "Ayarlar", "الإعدادات"],
+      "باشگاه مشتریان": ["Customer club", "Müşteri kulübü", "نادي العملاء"],
+      "ناوبری سریع مدیریت": ["Quick admin navigation", "Hızlı yönetim menüsü", "التنقل السريع للإدارة"],
+      "خلاصه عملیات": ["Operations overview", "Operasyon özeti", "ملخص العمليات"],
+      "درآمد": ["Revenue", "Gelir", "الإيرادات"],
+      "گزارش درآمد نیازمند تاریخچه پرداخت معتبر است.": ["Revenue reporting requires verified payment history.", "Gelir raporu doğrulanmış ödeme geçmişi gerektirir.", "يتطلب تقرير الإيرادات سجل دفع موثوقًا."],
+      "داده کافی برای نمودار وجود ندارد.": ["Not enough data for a chart.", "Grafik için yeterli veri yok.", "لا توجد بيانات كافية للرسم البياني."],
+      "سفارش‌های در جریان": ["Orders in progress", "Devam eden siparişler", "الطلبات الجارية"],
+      "داده زنده در دسترس نیست.": ["Live data is unavailable.", "Canlı veriler kullanılamıyor.", "البيانات المباشرة غير متاحة."],
+      "امتیاز رستوران": ["Restaurant rating", "Restoran puanı", "تقييم المطعم"],
+      "امتیاز تأییدشده در دسترس نیست.": ["No approved rating available.", "Onaylı puan bulunmuyor.", "لا يوجد تقييم معتمد."],
+      "تأیید امتیاز آزمایشی": ["Approve demo rating", "Deneme puanını onayla", "اعتماد التقييم التجريبي"],
+      "رد امتیاز آزمایشی": ["Reject demo rating", "Deneme puanını reddet", "رفض التقييم التجريبي"],
+      "بر اساس سفارش‌های دریافت‌شده": ["Based on retrieved orders", "Alınan siparişlere göre", "بناءً على الطلبات المسترجعة"],
+      "یک امتیاز آزمایشی تأییدشده در همین مرورگر": ["One approved demo rating in this browser", "Bu tarayıcıda onaylanan bir deneme puanı", "تقييم تجريبي واحد معتمد في هذا المتصفح"],
+      "امتیاز آزمایشی رد شد.": ["Demo rating rejected.", "Deneme puanı reddedildi.", "تم رفض التقييم التجريبي."],
+      "امتیاز آزمایشی در انتظار بررسی": ["Demo rating pending review", "Deneme puanı inceleme bekliyor", "التقييم التجريبي قيد المراجعة"],
+      "خواندن داده محلی ممکن نیست.": ["Local data could not be read.", "Yerel veriler okunamadı.", "تعذرت قراءة البيانات المحلية."],
+      "قوانین و کمپین‌ها": ["Rules & campaigns", "Kurallar ve kampanyalar", "القواعد والحملات"],
+      "پیش‌نویس قوانین تخفیف و پیامک را مدیریت کنید.": ["Manage draft discount and SMS rules.", "İndirim ve SMS kural taslaklarını yönetin.", "إدارة مسودات قواعد الخصومات والرسائل النصية."],
+      "+ قانون جدید": ["+ New rule", "+ Yeni kural", "+ قاعدة جديدة"],
+      "این بخش فقط پیش‌نویس محلی است؛ ارسال پیامک، اعمال تخفیف و اطلاعات اعضا به سرویس سرور نیاز دارد.": ["Local drafts only. SMS delivery, discount redemption and member records require a server.", "Yalnızca yerel taslaklar. SMS gönderimi, indirim kullanımı ve üye kayıtları sunucu gerektirir.", "مسودات محلية فقط. إرسال الرسائل وتطبيق الخصومات وسجلات الأعضاء تتطلب خادمًا."],
+      "مدیریت قوانین در حالت متصل هنوز فعال نیست.": ["Rule management is not enabled in connected mode.", "Bağlı modda kural yönetimi henüz etkin değil.", "إدارة القواعد غير مفعلة في الوضع المتصل."],
+      "ویرایش قانون": ["Edit rule", "Kuralı düzenle", "تعديل القاعدة"],
+      "نام قانون": ["Rule name", "Kural adı", "اسم القاعدة"],
+      "محرک اجرا": ["Trigger", "Tetikleyici", "المحفز"],
+      "تولد": ["Birthday", "Doğum günü", "عيد الميلاد"],
+      "سال نو": ["New year", "Yeni yıl", "العام الجديد"],
+      "اولین خرید": ["First purchase", "İlk alışveriş", "أول عملية شراء"],
+      "حداقل مبلغ خرید": ["Minimum purchase amount", "Minimum alışveriş tutarı", "الحد الأدنى لمبلغ الشراء"],
+      "مناسبت دلخواه": ["Custom occasion", "Özel etkinlik", "مناسبة مخصصة"],
+      "شرط دلخواه": ["Custom condition", "Özel koşul", "شرط مخصص"],
+      "نوع پاداش": ["Reward type", "Ödül türü", "نوع المكافأة"],
+      "بدون پاداش": ["No reward", "Ödül yok", "دون مكافأة"],
+      "درصد تخفیف": ["Discount percentage", "İndirim yüzdesi", "نسبة الخصم"],
+      "مبلغ تخفیف": ["Fixed discount", "Sabit indirim", "خصم ثابت"],
+      "هدیه": ["Gift", "Hediye", "هدية"],
+      "مقدار تخفیف": ["Discount value", "İndirim değeri", "قيمة الخصم"],
+      "شرح هدیه": ["Gift description", "Hediye açıklaması", "وصف الهدية"],
+      "تاریخ انقضا": ["Expiry date", "Son geçerlilik tarihi", "تاريخ الانتهاء"],
+      "متن پیامک (پیش‌نویس)": ["SMS text (draft)", "SMS metni (taslak)", "نص الرسالة (مسودة)"],
+      "ذخیره پیش‌نویس": ["Save draft", "Taslağı kaydet", "حفظ المسودة"],
+      "لغو": ["Cancel", "İptal", "إلغاء"],
+      "هنوز پیش‌نویسی ثبت نشده است.": ["No drafts yet.", "Henüz taslak yok.", "لا توجد مسودات بعد."],
+      "پیش‌نویس فعال": ["Enabled draft", "Etkin taslak", "مسودة مفعلة"],
+      "پیش‌نویس غیرفعال": ["Disabled draft", "Devre dışı taslak", "مسودة معطلة"],
+      "پیش‌نویس در تب دیگری تغییر کرده است. دوباره صفحه را باز کنید.": ["Drafts changed in another tab. Reload this page.", "Taslaklar başka bir sekmede değişti. Sayfayı yeniden yükleyin.", "تغيرت المسودات في علامة تبويب أخرى. أعد تحميل الصفحة."],
+      "پیش‌نویس فقط در این مرورگر ذخیره شد.": ["Draft saved in this browser only.", "Taslak yalnızca bu tarayıcıya kaydedildi.", "حُفظت المسودة في هذا المتصفح فقط."],
+      "حداکثر ۱۰۰ پیش‌نویس مجاز است.": ["A maximum of 100 drafts is allowed.", "En fazla 100 taslağa izin verilir.", "يُسمح بحد أقصى 100 مسودة."],
+      "اطلاعات قانون معتبر نیست.": ["Rule details are invalid.", "Kural bilgileri geçersiz.", "تفاصيل القاعدة غير صالحة."],
+      "این پیش‌نویس حذف شود؟": ["Delete this draft?", "Bu taslak silinsin mi?", "حذف هذه المسودة؟"],
+      "شماره تلفن معتبر نیست.": ["Invalid phone number.", "Geçersiz telefon numarası.", "رقم الهاتف غير صالح."],
+      "انتقال به بالا": ["Move up", "Yukarı taşı", "نقل لأعلى"],
+      "انتقال به پایین": ["Move down", "Aşağı taşı", "نقل لأسفل"],
+
       "فعال‌سازی اعلان صوتی": ["Enable sound alerts","Sesli bildirimleri aç","تفعيل التنبيهات الصوتية"],
       "قطع اعلان صوتی": ["Mute sound alerts","Sesli bildirimleri kapat","كتم التنبيهات الصوتية"],
       "اعلان صوتی در این مرورگر پشتیبانی نمی‌شود.": ["Sound alerts are not supported in this browser.","Bu tarayıcı sesli bildirimi desteklemiyor.","هذا المتصفح لا يدعم التنبيهات الصوتية."],
@@ -147,6 +216,7 @@
       "رونوشت محصول": ["Duplicate product", "Ürünü kopyala", "نسخ المنتج"],
       "رونوشت": ["Copy", "Kopya", "نسخة"],
       "تغییرات ذخیره‌نشده کنار گذاشته شود؟": ["Discard unsaved changes?", "Kaydedilmemiş değişiklikler silinsin mi?", "هل تريد تجاهل التغييرات غير المحفوظة؟"],
+      "داده‌ها در تب دیگری تغییر کرده‌اند. پیش از بارگذاری مجدد، تغییرات فرم را یادداشت کنید.": ["Data changed in another tab. Note your form edits before reloading.", "Veriler başka bir sekmede değişti. Yenilemeden önce form düzenlemelerinizi not edin.", "تغيرت البيانات في تبويب آخر. دوّن تعديلات النموذج قبل إعادة التحميل."],
       "ذخیره انجام نشد. اطلاعات فرم حفظ شده است؛ دوباره تلاش کنید.": ["Save failed. Your form is preserved; please retry.", "Kayıt başarısız. Formunuz korundu; tekrar deneyin.", "تعذر الحفظ. تم الاحتفاظ بمحتوى النموذج؛ حاول مجددًا."],
       "نشست شما پایان یافته است. دوباره وارد شوید.": ["Your session expired. Sign in again.", "Oturumunuz sona erdi. Tekrar giriş yapın.", "انتهت جلستك. سجّل الدخول مجددًا."],
       "نسخه آزمایشی محلی": ["Local demo", "Yerel demo", "نسخة تجريبية محلية"],
@@ -417,7 +487,7 @@
     const nodeKeys = new WeakMap();
 
     function translateTextNode(node) {
-        if (!node || node.nodeType !== Node.TEXT_NODE) return;
+        if (!node || node.nodeType !== Node.TEXT_NODE || node.parentElement?.closest("[data-admin-user-text]")) return;
         const raw = node.nodeValue || "";
         const value = raw.trim();
         if (!value) return;
@@ -432,7 +502,7 @@
     }
 
     function applyElement(el) {
-        if (!el || el.nodeType !== Node.ELEMENT_NODE || el.closest("script,style")) return;
+        if (!el || el.nodeType !== Node.ELEMENT_NODE || el.closest("script,style,[data-admin-user-text]")) return;
 
         if (el.matches("input, textarea")) {
             const val = el.getAttribute("placeholder");
