@@ -64,6 +64,21 @@ The included Node.js preview server binds only to loopback and serves the public
 > [!NOTE]
 > The standalone demo is for evaluation, not a production admin login or a shared database. Use sample data only. Changes remain in the current browser/origin; real table sessions, order fulfillment and payments require the connected services. Optional external fonts may be requested by the UI, but the demo browser test blocks external traffic.
 
+### Export a private demo for a future VPS
+
+Create a portable static bundle without deploying anything:
+
+```bash
+npm run qa
+npm run demo:export
+cd dist/demo/public
+sha256sum -c ../SHA256SUMS
+```
+
+The export writes only the public application assets plus a separate SHA-256 manifest. It does not overwrite an existing bundle, install a web server or publish the site. The private export marks the customer page as noindex and disables the public PWA cache behavior. These measures do not replace authentication: a future private VPS demo requires HTTPS and access control for both interfaces.
+
+See [local demo guidance](docs/DEMO_LOCAL.md) and the [VPS demo checklist (FA)](docs/VPS_DEMO_FA.md) before sharing or installing the bundle.
+
 ## The experience
 
 ### 01 — A menu made for discovery
@@ -76,7 +91,7 @@ A dedicated admin interface for catalog management. The local demo supports edit
 
 ### 03 — From table to kitchen
 
-The vq.3 commerce source includes signed table QR sessions, server-priced orders, an order queue and kitchen display (KDS), and a branch-level ZarinPal payment adapter. These flows need real server configuration and staging validation before use with guests.
+The vq.3 commerce source includes signed table QR sessions, server-priced orders, an order queue and kitchen display (KDS), and a branch-level ZarinPal payment adapter. The intended settlement model routes payment directly through the branch merchant account rather than holding restaurant funds on the platform. These flows need real server configuration and staging validation before use with guests.
 
 ```mermaid
 flowchart LR
@@ -184,7 +199,7 @@ The repository includes explicit quality gates for static assets, JavaScript/Typ
 | Command | Scope |
 | :--- | :--- |
 | `npm run qa` | Syntax, static audit, backend unit/contract and demo tests |
-| `npm run qa:demo` | Local preview server and API client contracts |
+| `npm run qa:demo` | Local preview server, API client and static export contracts |
 | `npm run qa:demo-browser` | Standalone customer/admin integration |
 | `npm run qa:customer` | Customer browser scenarios |
 | `npm run qa:browser` | Admin browser scenarios |
@@ -214,6 +229,7 @@ Report vulnerabilities privately through the [security policy](SECURITY.md).
 | Capability | Current source scope |
 | :--- | :--- |
 | Standalone customer and admin demo | Included; no mandatory backend |
+| Static demo export for future private VPS hosting | Included; hosting and access controls not configured by export |
 | Four-language catalog experience | Included in both interfaces |
 | Local Fastify/PostgreSQL backend | Included; local setup required |
 | QR ordering, KDS and branch payments | Connected implementation; feature flags and setup required |
@@ -234,6 +250,8 @@ Before enabling live ordering or payment, follow the [deployment guide](docs/DEP
 | [Product and market overview (FA)](docs/ONLINE_MENU_VQ3_FA.md) | Product positioning and commercial model |
 | [Architecture](docs/ARCHITECTURE.md) | Architectural boundaries and target model |
 | [API contract](docs/API_CONTRACT.md) | API routes, authorization and response conventions |
+| [Standalone demo](docs/DEMO_LOCAL.md) | Local startup, integration checks and demo limits |
+| [Private VPS demo (FA)](docs/VPS_DEMO_FA.md) | Static export, checksum verification and future hosting |
 | [Local backend](backend/README.md) | Setup, configuration and security model |
 | [Deployment guide (FA)](docs/DEPLOY_VQ3_FA.md) | Hosted setup, preflight and acceptance |
 | [vq.3 release notes (FA)](docs/releases/ONLINE_MENU_VQ3_FA.md) | Commerce changes and release requirements |
@@ -247,11 +265,11 @@ Before enabling live ordering or payment, follow the [deployment guide](docs/DEP
 
 **رامن (RAMEN)** یک منوی دیجیتال چندزبانه و محیط مدیریت رستوران است؛ از تجربه مشاهده منو برای مهمان تا مدیریت کاتالوگ، سفارش میز، صف آشپزخانه و پرداخت مستقیم شعبه در حالت متصل.
 
-برای تجربه نسخه مستقل، کافی است پس از دریافت مخزن، دستور <code>npm run demo</code> را اجرا کنید. منوی مشتری و پنل مدیریت بدون نیاز به دیتابیس، حساب ابری یا کلید API قابل مشاهده هستند. تغییرات نمونه در مرورگر ذخیره می‌شوند.
+برای تجربه نسخه مستقل، کافی است پس از دریافت مخزن، دستور <code>npm run demo</code> را اجرا کنید. منوی مشتری و پنل مدیریت بدون نیاز به دیتابیس، حساب ابری یا کلید API قابل مشاهده هستند. تغییرات نمونه در مرورگر ذخیره می‌شوند. برای ساخت بسته مستقل نصب آینده روی VPS، دستور <code>npm run demo:export</code> در دسترس است؛ این دستور انتشار یا نصب روی سرور انجام نمی‌دهد.
 
 پشتیبانی از فارسی، عربی، انگلیسی و ترکی در هر دو رابط وجود دارد. سفارش واقعی، پرداخت و مدیریت چندکاربره به پیکربندی سرور و تأیید محیط عملیاتی نیاز دارند.
 
-[راهنمای استقرار](docs/DEPLOY_VQ3_FA.md) · [معرفی محصول](docs/ONLINE_MENU_VQ3_FA.md) · [یادداشت انتشار](docs/releases/ONLINE_MENU_VQ3_FA.md)
+[راهنمای Demo و VPS](docs/VPS_DEMO_FA.md) · [راهنمای استقرار](docs/DEPLOY_VQ3_FA.md) · [معرفی محصول](docs/ONLINE_MENU_VQ3_FA.md) · [یادداشت انتشار](docs/releases/ONLINE_MENU_VQ3_FA.md)
 
 </div>
 
