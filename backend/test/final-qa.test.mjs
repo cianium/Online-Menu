@@ -26,7 +26,12 @@ test('Product modal focus occurs after background inert sync; reopening does not
  const s=read('js/app.js'),open=s.slice(s.indexOf('function openProductModal('),s.indexOf('function closeProductModal(')),close=s.slice(s.indexOf('function closeProductModal('),s.indexOf('14. CATEGORY NAVIGATION'));
  assert.ok(open.indexOf('syncBodyScrollLock();')<open.indexOf('DOM.modalClose?.focus({preventScroll:true})'));
  assert.match(open,/opening \|\| !DOM.productModal.contains\(document.activeElement\)/);
- assert.match(close,/target\?\.isConnected && !target.closest\("\[inert\]"\)/);assert.doesNotMatch(close,/requestAnimationFrame/);
+ assert.match(close,/!element\.isConnected \|\| element\.closest\("\[inert\]"\)/);
+ assert.match(close,/element\.focus\(\{preventScroll:true\}\)/);
+ assert.match(close,/return document\.activeElement === element/);
+ assert.ok(close.indexOf('syncBodyScrollLock();')<close.indexOf('if (focus(target)) return;'));
+ assert.match(close,/if \(focus\(surface\?\.querySelector\(selector\)\)\) return;/);
+ assert.doesNotMatch(close,/requestAnimationFrame/);
  assert.match(read('css/style.css'),/\.product-modal\.is-open\s*\{[\s\S]*?transition: opacity var\(--transition\), visibility 0s;/);
 });
 
