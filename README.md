@@ -1,27 +1,49 @@
 <div align="center">
 
-<img src="docs/showcase/cover.svg" alt="RAMEN — Dining, reimagined. A multilingual digital menu and restaurant workspace." width="100%">
+<img src="docs/showcase/cover.svg" alt="RAMEN — Dining, reimagined. A multilingual digital menu and restaurant workspace." width="100%" />
 
 # RAMEN · Online Menu
 
 **From the first scan to the last bite.**
 
-A multilingual digital menu and restaurant operations workspace.<br>
-Explore the guest experience and the management panel in one standalone demo.
+A multilingual digital dining experience.<br />
+Designed for guests. Built for restaurant teams.
 
-[![Version](https://img.shields.io/badge/source-vq.3%20%7C%203.0.0-D97706?style=flat-square)](package.json)
-[![CI](https://github.com/cianium/Online-Menu/actions/workflows/ci.yml/badge.svg)](https://github.com/cianium/Online-Menu/actions/workflows/ci.yml)
+[![Source version](https://img.shields.io/badge/vq.3-3.0.0-B8753C?style=for-the-badge&labelColor=211610)](package.json)
+[![Standalone demo](https://img.shields.io/badge/DEMO-Backend%20optional-187A68?style=for-the-badge&labelColor=211610)](#quick-start)
+[![Locales](https://img.shields.io/badge/LANGUAGES-FA%20%7C%20AR%20%7C%20EN%20%7C%20TR-B8753C?style=for-the-badge&labelColor=211610)](#four-languages-one-experience)
+
+[![CI](https://github.com/cianium/Online-Menu/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/cianium/Online-Menu/actions/workflows/ci.yml)
 [![Node.js](https://img.shields.io/badge/Node.js-22%2B-339933?style=flat-square&logo=nodedotjs&logoColor=white)](#quick-start)
-[![Demo](https://img.shields.io/badge/demo-no_database_required-0F766E?style=flat-square)](#quick-start)
-[![Languages](https://img.shields.io/badge/languages-FA%20%7C%20AR%20%7C%20EN%20%7C%20TR-475569?style=flat-square)](#built-for-four-languages)
+[![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](#technology)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17%20QA-4169E1?style=flat-square&logo=postgresql&logoColor=white)](#quality-engineering)
 
-[**Run the demo**](#quick-start) · [Product gallery](#product-gallery) · [Flagship library](docs/flagship/README.md) · [Architecture](#architecture) · [Documentation](#documentation)
+[**Quick start**](#quick-start) · [Product gallery](#product-gallery) · [Features](#product-capabilities) · [Architecture](#architecture) · [Documentation](#documentation)
 
-[English](docs/flagship/en.md) · [فارسی](docs/flagship/fa.md) · [العربية](docs/flagship/ar.md) · [Türkçe](docs/flagship/tr.md)
+[English](#english) · [فارسی](#فارسی) · [العربية](#العربية) · [Türkçe](#türkçe)
 
 </div>
 
 ---
+
+## English
+
+**A menu worth exploring. A workspace worth working in.**
+
+RAMEN brings together a visual, mobile-first guest menu and a dedicated restaurant management workspace. Its standalone demo makes the product easy to explore without a database or cloud account. A separate connected implementation provides the foundation for signed table QR sessions, ordering, kitchen workflows and direct branch payments.
+
+<table>
+<tr>
+<td width="50%" valign="top">
+<h3>01 · The guest experience</h3>
+<p>Discover dishes, search the catalog, browse categories, switch languages, explore favorites and build a cart.</p>
+</td>
+<td width="50%" valign="top">
+<h3>02 · The restaurant workspace</h3>
+<p>Manage sample products, prices, categories and restaurant content. Evaluate connected operational features separately.</p>
+</td>
+</tr>
+</table>
 
 ## Product gallery
 
@@ -44,28 +66,32 @@ Explore the guest experience and the management panel in one standalone demo.
 
 *Actual screenshots tracked from earlier browser QA, not freshly captured from the current revision. The restaurant photograph is a real project asset, not a customer UI screenshot.*
 
-[**Watch the real product showcase — successful capture**](https://github.com/cianium/Online-Menu/actions/runs/45645429531) · [Download screenshots, GIF and social cover](https://github.com/cianium/Online-Menu/actions/runs/45645429531/artifacts/15037840953) · [Regenerate media](docs/showcase/README.md)
+[**View the successful real product capture**](https://github.com/cianium/Online-Menu/actions/runs/45646282827) · [Download screenshots, GIF and social cover](https://github.com/cianium/Online-Menu/actions/runs/45646282827/artifacts/15037593433) · [Regenerate media](docs/showcase/README.md)
 
-The showcase job captures the current standalone menu and admin workspace in Chromium with all external requests blocked. Its artifact contains customer/admin screenshots, an animated walkthrough, a social preview PNG and revision provenance. No production deployment or real merchant data is involved. The linked artifact was generated at revision `cae5e815` and expires on 25 December 2026; sign-in may be required. Regenerate it from the workflow for newer revisions.
+The showcase job captures the current standalone menu and admin workspace in Chromium with all external requests blocked. Its artifact contains customer/admin screenshots, an animated walkthrough, a social preview PNG and revision provenance. No production deployment or real merchant data is involved. The linked artifact was generated at revision `5447926b` and expires on 25 December 2026; sign-in may be required. Regenerate it from the workflow for newer revisions.
 
 ---
 
-## More than a menu
+## Product capabilities
 
-RAMEN brings the digital dining journey into a single product: guests discover dishes on their phones, while restaurant teams manage the catalog and, in a configured connected environment, handle table orders and payments.
+| Capability | Standalone demo | Connected implementation |
+| :--- | :---: | :---: |
+| Visual catalog, categories and search | Available | Included |
+| Favorites and cart experience | Available | Included |
+| Four languages and RTL/LTR | Available | Included |
+| Catalog management and local persistence | Available | Server-backed catalog |
+| Signed table QR sessions | — | Configuration required |
+| Server-authoritative orders and tracking | — | Configuration required |
+| Order queue and kitchen display (KDS) | — | Configuration required |
+| Direct branch payment via ZarinPal | — | Merchant setup & validation |
+| Server-side roles and tenant isolation | — | Staging validation required |
 
-Designed for restaurants, cafés and multi-branch hospitality businesses. Built around a mobile-first guest interface, a dedicated management workspace and a clear separation between **local demonstration** and **connected restaurant operations**.
-
-| Guest experience | Restaurant workspace |
-| :--- | :--- |
-| Browse a visual, searchable menu | Manage products, categories and prices |
-| Discover dishes with filters and favorites | Maintain multilingual content and media |
-| Switch between four languages | Configure restaurants, branches and tables in connected mode |
-| Build a cart and follow orders when ordering is enabled | Operate the order queue and kitchen display in connected mode |
+**Connected** means the implementation exists in the source, not that a production service is active or certified. The local Fastify API is not assumed to have full parity with hosted commerce APIs.
 
 ## Quick start
 
-**Try the standalone experience without a database, API credentials, cloud account or payment provider.**
+> [!TIP]
+> **The fastest way to experience RAMEN:** Git and Node.js 22+ are all you need. No dependency installation, database, cloud account or API credentials are required for the standalone demo.
 
 Prerequisites: Git and Node.js 22+ (with npm).
 
@@ -95,6 +121,9 @@ The included Node.js preview server binds only to loopback and serves the public
 
 ### Export a private demo for a future VPS
 
+<details>
+<summary><strong>Build and verify a portable static bundle</strong></summary>
+
 Create a portable static bundle without deploying anything:
 
 ```bash
@@ -107,6 +136,8 @@ sha256sum -c ../SHA256SUMS
 The export writes only the public application assets plus a separate SHA-256 manifest. It does not overwrite an existing bundle, install a web server or publish the site. The private export marks the customer page as noindex and disables the public PWA cache behavior. These measures do not replace authentication: a future private VPS demo requires HTTPS and access control for both interfaces.
 
 See [local demo guidance](docs/DEMO_LOCAL.md) and the [VPS demo checklist (FA)](docs/VPS_DEMO_FA.md) before sharing or installing the bundle.
+
+</details>
 
 ## The experience
 
@@ -136,14 +167,16 @@ flowchart LR
 
 *Connected-mode concept: the exact ordering and payment path depends on branch configuration.*
 
-## Built for four languages
+## Four languages, one experience
 
-| Locale | Language | Direction |
-| :--- | :--- | :---: |
-| `fa` | فارسی · Persian | RTL |
-| `ar` | العربية · Arabic | RTL |
-| `en` | English | LTR |
-| `tr` | Türkçe · Turkish | LTR |
+<table>
+<tr>
+<td align="center" width="25%"><strong>فارسی</strong><br /><sub>Persian · FA · RTL</sub></td>
+<td align="center" width="25%"><strong>العربية</strong><br /><sub>Arabic · AR · RTL</sub></td>
+<td align="center" width="25%"><strong>English</strong><br /><sub>EN · LTR</sub></td>
+<td align="center" width="25%"><strong>Türkçe</strong><br /><sub>TR · LTR</sub></td>
+</tr>
+</table>
 
 Both the customer and admin applications include localization support. The standalone browser test exercises all four locales at 320, 768 and 1440 pixel viewport widths.
 
@@ -165,6 +198,25 @@ flowchart TD
 ```
 
 The Fastify and hosted Supabase paths are not assumed to have identical capabilities. The hosted commerce implementation lives in the Edge Functions and associated database migrations.
+
+### Technology
+
+<div align="center">
+
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Fastify](https://img.shields.io/badge/Fastify-202020?style=for-the-badge&logo=fastify&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-1C1C1C?style=for-the-badge&logo=supabase&logoColor=3FCF8E)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Deno](https://img.shields.io/badge/Deno-202020?style=for-the-badge&logo=deno&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-202020?style=for-the-badge&logo=vercel&logoColor=white)
+![Playwright](https://img.shields.io/badge/Playwright-B8753C?style=for-the-badge)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+
+</div>
 
 | Layer | Technology |
 | :--- | :--- |
@@ -201,6 +253,9 @@ Online-Menu/
 
 ## Connected local development
 
+<details>
+<summary><strong>Start the optional Fastify/PostgreSQL backend</strong></summary>
+
 Use this path to explore the local Fastify/PostgreSQL backend. It is separate from the standalone demo and is not a complete substitute for hosted commerce staging.
 
 Prerequisites: Node.js 22+, npm and Docker Compose (or a locally configured PostgreSQL instance).
@@ -220,6 +275,8 @@ npm run backend:start
 ```
 
 Open [localhost:3000/](http://localhost:3000/) and [localhost:3000/admin/](http://localhost:3000/admin/). See the [backend guide](backend/README.md) for setup and security details.
+
+</details>
 
 ## Quality engineering
 
@@ -304,7 +361,7 @@ Choose the material that fits your role: discover the product, evaluate the engi
 | [Repository health — 2026-10-25](docs/REPOSITORY_HEALTH_2026-10-25.md) | Dated maintenance snapshot, not current CI status |
 | [Security policy](SECURITY.md) | Private vulnerability disclosure |
 
-## معرفی فارسی
+## فارسی
 
 <div dir="rtl" align="right">
 
@@ -314,9 +371,31 @@ Choose the material that fits your role: discover the product, evaluate the engi
 
 پشتیبانی از فارسی، عربی، انگلیسی و ترکی در هر دو رابط وجود دارد. سفارش واقعی، پرداخت و مدیریت چندکاربره به پیکربندی سرور و تأیید محیط عملیاتی نیاز دارند.
 
-[راهنمای Demo و VPS](docs/VPS_DEMO_FA.md) · [راهنمای استقرار](docs/DEPLOY_VQ3_FA.md) · [معرفی محصول](docs/ONLINE_MENU_VQ3_FA.md) · [یادداشت انتشار](docs/releases/ONLINE_MENU_VQ3_FA.md)
+[راهنمای کامل فارسی](docs/flagship/fa.md) · [راهنمای Demo و VPS](docs/VPS_DEMO_FA.md) · [راهنمای استقرار](docs/DEPLOY_VQ3_FA.md) · [معرفی محصول](docs/ONLINE_MENU_VQ3_FA.md) · [یادداشت انتشار](docs/releases/ONLINE_MENU_VQ3_FA.md)
 
 </div>
+
+## العربية
+
+<div dir="rtl" align="right">
+
+<strong>رامن؛ من أول مسح للرمز إلى آخر لقمة.</strong>
+
+قائمة طعام رقمية متعددة اللغات ومساحة لإدارة المطعم، مع تجربة مصممة للهواتف وإدارة المنتجات والفئات والأسعار. يمكن تشغيل العرض المستقل باستخدام <code>npm run demo</code> دون قاعدة بيانات أو حساب سحابي. يتطلب الطلب الحقيقي وشاشة المطبخ والدفع إعداد الخدمات المتصلة والتحقق منها.
+
+<a href="docs/flagship/ar.md">دليل المنتج والمستخدم</a>
+
+</div>
+
+## Türkçe
+
+**RAMEN — İlk taramadan son lokmaya.**
+
+Mobil öncelikli, çok dilli dijital menü ve restoran yönetim alanı. Ürünleri, kategorileri ve fiyatları keşfedin ve yönetin. Bağımsız demo `npm run demo` komutuyla veritabanı veya bulut hesabı olmadan çalışır. Gerçek masa siparişi, mutfak ekranı ve ödeme için bağlantılı hizmetlerin yapılandırılması ve doğrulanması gerekir.
+
+[Türkçe ürün ve kullanıcı rehberi](docs/flagship/tr.md)
+
+---
 
 ## Project identity and licensing
 
@@ -328,11 +407,12 @@ This is a public source repository with no selected open-source license at the t
 
 <div align="center">
 
-**RAMEN**<br>
-Designed for guests. Built for restaurant teams.
+### RAMEN
+
+**A better digital dining experience starts at the table.**
 
 Maintained by [Kian Khayat · @cianium](https://github.com/cianium)
 
-[Repository](https://github.com/cianium/Online-Menu) · [Issues](https://github.com/cianium/Online-Menu/issues) · [Releases](https://github.com/cianium/Online-Menu/releases)
+[Repository](https://github.com/cianium/Online-Menu) · [Issues](https://github.com/cianium/Online-Menu/issues) · [Actions](https://github.com/cianium/Online-Menu/actions) · [Releases](https://github.com/cianium/Online-Menu/releases)
 
 </div>
