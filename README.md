@@ -15,7 +15,9 @@ Explore the guest experience and the management panel in one standalone demo.
 [![Demo](https://img.shields.io/badge/demo-no_database_required-0F766E?style=flat-square)](#quick-start)
 [![Languages](https://img.shields.io/badge/languages-FA%20%7C%20AR%20%7C%20EN%20%7C%20TR-475569?style=flat-square)](#built-for-four-languages)
 
-[**Run the demo**](#quick-start) · [Product gallery](#product-gallery) · [Architecture](#architecture) · [Documentation](#documentation) · [فارسی](#معرفی-فارسی)
+[**Run the demo**](#quick-start) · [Product gallery](#product-gallery) · [Flagship library](docs/flagship/README.md) · [Architecture](#architecture) · [Documentation](#documentation)
+
+[English](docs/flagship/en.md) · [فارسی](docs/flagship/fa.md) · [العربية](docs/flagship/ar.md) · [Türkçe](docs/flagship/tr.md)
 
 </div>
 
@@ -42,9 +44,9 @@ Explore the guest experience and the management panel in one standalone demo.
 
 *Actual screenshots tracked from earlier browser QA, not freshly captured from the current revision. The restaurant photograph is a real project asset, not a customer UI screenshot.*
 
-[**Generate the current product gallery and animated admin tour**](docs/showcase/README.md) · [Showcase workflow](https://github.com/cianium/Online-Menu/actions/workflows/product-showcase.yml)
+[**Watch the real product showcase — successful capture**](https://github.com/cianium/Online-Menu/actions/runs/45645429531) · [Download screenshots, GIF and social cover](https://github.com/cianium/Online-Menu/actions/runs/45645429531/artifacts/15037840953) · [Regenerate media](docs/showcase/README.md)
 
-The showcase job captures the current standalone menu and admin workspace in Chromium with all external requests blocked. Its artifact contains customer/admin screenshots, an animated walkthrough, a social preview PNG and revision provenance. No production deployment or real merchant data is involved.
+The showcase job captures the current standalone menu and admin workspace in Chromium with all external requests blocked. Its artifact contains customer/admin screenshots, an animated walkthrough, a social preview PNG and revision provenance. No production deployment or real merchant data is involved. The linked artifact was generated at revision `cae5e815` and expires on 25 December 2026; sign-in may be required. Regenerate it from the workflow for newer revisions.
 
 ---
 
@@ -269,6 +271,21 @@ Report vulnerabilities privately through the [security policy](SECURITY.md).
 The documented deployment target is [food.kiankhayat.me](https://food.kiankhayat.me). Its availability and deployed revision are not independently verified here.
 
 Before enabling live ordering or payment, follow the [deployment guide](docs/DEPLOY_VQ3_FA.md), verify tenant isolation, configure currency conversion and signed table sessions, and validate PSP request/callback/retry handling in a controlled environment.
+
+## Flagship library
+
+Choose the material that fits your role: discover the product, evaluate the engineering, or prepare a restaurant pilot.
+
+| For | Open the guide |
+| :--- | :--- |
+| Restaurant owners and customers | [Product catalog & seven-minute tour](docs/flagship/PRODUCT.md) |
+| Guests and restaurant managers | [English](docs/flagship/en.md) · [فارسی](docs/flagship/fa.md) · [العربية](docs/flagship/ar.md) · [Türkçe](docs/flagship/tr.md) |
+| Designers and marketing teams | [Brand guidelines](docs/flagship/BRAND.md) |
+| Engineers and technical buyers | [System architecture & acceptance gates](docs/flagship/ENGINEERING.md) |
+| Partners and investors | [Investor briefing](docs/flagship/INVESTOR.md) |
+| Maintainers | [Release communication & approval checklist](docs/flagship/RELEASE.md) |
+
+[Explore the complete library →](docs/flagship/README.md)
 
 ## Documentation
 
