@@ -1,3 +1,4 @@
+const {loginDemoAdmin}=require('./demo-admin-login.cjs');
 /* Repeatable offline-safe quality audit. Chromium lab only, not field CWV or WCAG certification. */
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
@@ -23,14 +24,14 @@ async function open(page, surface) {
     await page.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode==='demo');
     await page.locator('#splash-screen').waitFor({state:'detached'});
   } else {
-    await page.waitForFunction(()=>typeof adminInitialized!=='undefined'&&adminInitialized&&!document.querySelector('.admin-app').inert);
+    await loginDemoAdmin(page);
   }
 }
 async function scan(page, name, lang, width, height) {
   await page.setViewportSize({width,height});
   await page.evaluate(async()=>{await document.fonts.ready;});
   if (!await page.evaluate(()=>Boolean(window.axe))) await page.addScriptTag({path:axePath});
-  if (name.startsWith('admin-')) {
+  if (name.startsWith('admin-') && name!=='admin-entry') {
     const footer=await page.evaluate(()=>{
       const panel=document.querySelector('.admin-footer');
       const rgb=s=>{const m=s.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);if(!m)throw Error('Expected opaque RGB: '+s);return m.slice(1).map(Number);};
@@ -110,7 +111,22 @@ async function measure(browser,surface) {
     const context=await setup(browser);
     try {
       const customer=await context.newPage(),admin=await context.newPage();
-      await open(customer,'customer');await open(admin,'admin');
+      await open(customer,'customer');
+      await admin.goto(new URL('admin/',base).href);
+      await admin.locator('#admin-gate').waitFor({state:'visible'});
+      for(const lang of locales){
+        await admin.locator('#admin-gate-language').selectOption(lang);
+        await scan(admin,'admin-entry',lang,390,844);
+      }
+      await loginDemoAdmin(admin);
+      const entry=await context.newPage();
+      await entry.goto(new URL('./?qr=demo',base).href);
+      await entry.locator('#customer-entry').waitFor({state:'visible'});
+      for(const lang of locales){
+        await entry.locator('#customer-entry select').selectOption(lang);
+        await scan(entry,'customer-entry',lang,390,844);
+      }
+      await entry.close();
       for(const lang of locales){
         await customer.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
         await admin.evaluate(l=>{ROMANO_ADMIN_I18N.setLanguage(l);navigateTo('dashboard');},lang);
@@ -146,7 +162,7 @@ async function measure(browser,surface) {
     } finally {await context.close();}
     for(const surface of ['customer','admin']) await measure(browser,surface);
     assert.deepEqual(report.errors,[],'Unexpected JavaScript errors during audit');
-    assert.equal(report.findings.length,25);
+    assert.equal(report.findings.length,33);
     assert.equal(report.lab.length,2);
     const severe=report.findings.flatMap(s=>s.violations.filter(v=>['critical','serious'].includes(v.impact)).map(v=>({surface:s.name,lang:s.lang,width:s.width,id:v.id})));
     console.log('QUALITY SUMMARY '+JSON.stringify({scans:report.findings.length,severe:severe.length,violations:report.findings.reduce((n,s)=>n+s.violations.length,0)}));

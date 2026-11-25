@@ -21,3 +21,9 @@ Node.js نسخه ۲۲ یا جدیدتر را نصب کنید؛ فایل ZIP را
 
 ## Türkçe
 Node.js 22 veya daha yeni bir sürüm kurun, ZIP dosyasının tamamını çıkarın ve klasörde `node start.mjs` komutunu çalıştırın. Yukarıdaki bağlantıları aynı tarayıcı profilinde açın. Değişiklikler yalnızca tarayıcıda saklanır. Gerçek müşteri verisi, sipariş, ödeme veya SMS kullanmayın. Ctrl+C ile durdurun; temiz başlangıç için yeni bir tarayıcı profili kullanın.
+
+## Sample entry / ورود آزمایشی
+Open http://127.0.0.1:8765/?qr=demo to preview the scan flow (synthetic marker, not a live table token). Use fictional name and phone only; the same tab retains its sample profile across reloads. A phone number alone cannot unlock another profile. Sample orders and club memberships stay in the browser; no live order, payment, SMS or OTP. Admin demo ID: `demo-admin`, password: `Demo-Only-2026` (public sample credentials, NOT real access control). Connected admin still uses server-owned email ID and password.
+فارسی: لینک نمونه بالا فرم ورود مشتری را نشان می‌دهد؛ فقط اطلاعات ساختگی وارد کنید. رمز و شناسه مدیریت بالا عمومی‌اند و امنیت واقعی نیستند.
+العربية: الرابط أعلاه يعرض تسجيل العميل التجريبي؛ استخدم بيانات وهمية فقط. بيانات دخول الإدارة عامة وليست حماية فعلية.
+Türkçe: Yukarıdaki bağlantı demo müşteri girişini gösterir; yalnızca kurgusal veriler kullanın. Yönetim kimliği ve şifresi herkese açıktır, gerçek güvenlik değildir.

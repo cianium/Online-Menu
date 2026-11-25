@@ -1,3 +1,4 @@
+const {loginDemoAdmin}=require('./demo-admin-login.cjs');
 /* Standalone demo integration: no remote API or third-party network is allowed. */
 const assert = require('node:assert/strict');
 const playwright = require('playwright');
@@ -27,7 +28,7 @@ const readyCustomer = async page => {
     const cards = customer.locator('#menu .product-card');
     assert.equal(await cards.count(), 21);
     await admin.goto(new URL('admin/',base).href);
-    await admin.waitForFunction(() => typeof adminInitialized !== 'undefined' && adminInitialized && !document.querySelector('.admin-app').inert);
+    await loginDemoAdmin(admin);
     assert.equal(await admin.locator('#admin-mode-banner').isVisible(), true);
     assert.equal(await admin.evaluate(() => state.products.length), 21);
     console.log('PASS: both applications start with no external network');
@@ -111,7 +112,7 @@ const readyCustomer = async page => {
     console.log('PASS: local product creation syncs across tabs and persists after reload');
     const stale = await context.newPage();
     await stale.goto(new URL('admin/',base).href);
-    await stale.waitForFunction(() => adminInitialized && !document.querySelector('.admin-app').inert);
+    await loginDemoAdmin(stale);
     const productId = await admin.evaluate(() => state.products.find(p => p.name === 'Standalone QA Dish').id);
     await customer.evaluate(id=>RomanoCommerce.add(id),productId);
     assert.equal(await customer.locator('.commerce-cart-count').textContent(),'1');
@@ -141,6 +142,52 @@ const readyCustomer = async page => {
     assert.equal(await admin.evaluate(()=>RomanoDemoReview.read(localStorage,'romano').status),'rejected');
     await customer.keyboard.press('Escape');
     console.log('PASS: local feedback moderation resets for a new submission of the same rating');
+    // Use an explicit synthetic QR marker, not a live table token.
+    await customer.goto(new URL('./?qr=demo',base).href);await readyCustomer(customer);
+    const entry=customer.locator('#customer-entry');
+    await entry.waitFor({state:'visible'});
+    assert.equal(await entry.locator('input').count(),2);
+    assert.equal(await entry.locator('input[type=password]').count(),0);
+    await customer.keyboard.press('Escape');assert.equal(await entry.isVisible(),true);
+    for(const lang of ['fa','ar','tr','en']){
+      await entry.locator('select').selectOption(lang);
+      assert.equal(await customer.locator('html').getAttribute('dir'),['fa','ar'].includes(lang)?'rtl':'ltr');
+      await customer.setViewportSize({width:320,height:844});
+      assert.ok(await entry.evaluate(d=>d.scrollWidth<=d.clientWidth+1));
+    }
+    await entry.locator('input[name=name]').fill('Sample Customer');
+    await entry.locator('input[name=phone]').fill('abc');
+    await entry.locator('button[type=submit]').click();
+    assert.equal(await entry.locator('[role=alert]').isVisible(),true);
+    await entry.locator('input[name=phone]').fill('+12025550101');
+    await entry.locator('button[type=submit]').click();
+    await entry.waitFor({state:'hidden'});
+    assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().name),'Sample Customer');
+    assert.equal(await customer.evaluate(()=>new URL(location.href).searchParams.has('qr')),false);
+    await admin.evaluate(()=>{ROMANO_ADMIN_I18N.setLanguage('en');navigateTo('loyalty');});
+    await admin.waitForFunction(()=>document.querySelector('#demo-members-list').textContent.includes('Sample Customer'));
+    await customer.evaluate(()=>RomanoCommerce.add(menuProducts.find(p=>p.active!==false&&p.price>0).id));
+    await customer.evaluate(()=>RomanoCommerce.open());
+    await customer.locator('#commerce-submit').click();
+    await customer.waitForFunction(()=>RomanoCustomerEntry.current()?.orders.length===1);
+    await admin.waitForFunction(()=>document.querySelector('#demo-members-list').textContent.includes('Sample order count: 1'));
+    await customer.reload();await readyCustomer(customer);
+    assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders.length),1);
+    await customer.locator('#menu-toggle').click();
+    await customer.locator('[data-nav-panel=profile]').click();
+    await customer.locator('#ramen-contact-dialog').waitFor({state:'visible'});
+    assert.ok((await customer.locator('#ramen-contact-dialog').innerText()).includes('Sample order history'));
+    await customer.keyboard.press('Escape');
+    const other=await context.newPage();
+    await other.goto(new URL('./?qr=demo',base).href);await readyCustomer(other);
+    const otherEntry=other.locator('#customer-entry');
+    await otherEntry.locator('input[name=name]').fill('Other sample');
+    await otherEntry.locator('input[name=phone]').fill('+12025550101');
+    await otherEntry.locator('button[type=submit]').click();
+    assert.equal(await otherEntry.isVisible(),true);
+    assert.equal(await other.evaluate(()=>RomanoCustomerEntry.current()),null);
+    await other.close();
+    console.log('PASS: QR demo entry, four locales, local membership/order history, isolated phone lookup and admin club sync');
     await customer.goto(new URL('./?restaurant=standalone-qa-missing',base).href); await readyCustomer(customer);
     assert.equal(await customer.evaluate(() => menuDataMode), 'unavailable');
     assert.equal(await cards.count(),0);

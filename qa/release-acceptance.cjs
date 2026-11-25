@@ -1,3 +1,4 @@
+const {loginDemoAdmin}=require('./demo-admin-login.cjs');
 /* Release acceptance on the exact extracted delivery, no external requests or real data. */
 const assert=require('node:assert/strict');
 const fs=require('node:fs/promises');
@@ -17,7 +18,7 @@ async function context(browser,options={}){
 async function boot(ctx){
  const admin=await ctx.newPage(),customer=await ctx.newPage();
  await admin.goto(new URL('admin/',base).href);
- await admin.waitForFunction(()=>typeof adminInitialized!=='undefined'&&adminInitialized&&!document.querySelector('.admin-app').inert);
+ await loginDemoAdmin(admin);
  await customer.goto(base.href);
  await customer.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode==='demo');
  await customer.locator('#splash-screen').waitFor({state:'detached'});

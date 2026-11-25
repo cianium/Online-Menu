@@ -62,8 +62,10 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    const nav=p.locator('#main-navigation');
    await nav.locator('.navigation-category-list a').first().waitFor({state:'visible'});
    assert.equal(await nav.locator('.navigation-category-media img').count(),7);
-   const bounds=await nav.locator('.navigation-categories').boundingBox();
-   assert.ok(bounds && bounds.height<=844*.53);
+   const bounds=await nav.locator('.navigation-inner').boundingBox();
+   assert.ok(bounds && bounds.height>=843 && bounds.width>=389);
+   const categoryBounds=await nav.locator('.navigation-categories').boundingBox();
+   assert.ok(categoryBounds && categoryBounds.height>0);
    assert.equal(await nav.locator('[data-nav-panel="profile"]').getAttribute('aria-label')!==null,true);
    await nav.locator('[data-nav-panel="profile"]').click();
    const dialog=p.locator('#ramen-contact-dialog');await dialog.waitFor({state:'visible'});
@@ -240,8 +242,8 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
     await p.evaluate(()=>window.scrollBy({top:260,behavior:'instant'}));
     const pinned=await p.evaluate(()=>{const h=document.querySelector('.site-header').getBoundingClientRect(),bar=document.querySelector('.menu-browser').getBoundingClientRect();return{gap:bar.top-h.bottom,height:bar.height}});
     assert.ok(Math.abs(pinned.gap)<=2,JSON.stringify({lang,width,pinned}));assert.ok(pinned.height<180);
-    const grid=await cards.first().evaluate(n=>getComputedStyle(n.parentElement).gridTemplateColumns.split(' ').length);
-    assert.equal(grid,width<360?1:width<=767?2:3);
+    const grid=await cards.first().evaluate(n=>{const rail=n.parentElement,style=getComputedStyle(rail);return {flow:style.gridAutoFlow,overflow:style.overflowX,scroll:rail.scrollWidth,client:rail.clientWidth,card:n.getBoundingClientRect().width};});
+    assert.equal(grid.flow,'column');assert.equal(grid.overflow,'auto');assert.ok(grid.card<=grid.client);if(width<=767)assert.ok(grid.scroll>grid.client);
     await openSearch();await p.locator('#rv4-menu-search').fill('xyz$&<test>');
     assert.ok((await p.locator('#menu-search-active').textContent()).includes('xyz$&<test>'));
     await p.keyboard.press('Escape');assert.equal(await searchToggle.getAttribute('aria-expanded'),'false');assert.equal(await searchToggle.evaluate(n=>n===document.activeElement),true);

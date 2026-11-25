@@ -145,3 +145,50 @@ html[dir="ltr"] .main-navigation.is-open .navigation-inner { transform:translate
   .browse-category-rail button,.site-footer .footer-creator { transition:none!important; animation:none!important; }
   :is(#menu,#featured) .product-card:hover .product-image-wrapper img { transform:none!important; }
 }
+
+
+/* R7: image-led horizontal catalog, fully scrollable navigation and glass entry. */
+#menu .menu-category-products {
+  display:grid; grid-template-columns:none; grid-auto-flow:column;
+  grid-auto-columns:clamp(240px,31%,360px); gap:14px;
+  overflow-x:auto; overflow-y:hidden; overscroll-behavior-inline:contain;
+  scroll-snap-type:x proximity; scroll-padding-inline:6px;
+  padding:4px 4px 12px; scrollbar-width:thin; scrollbar-color:#a98651 #1c1813;
+}
+#menu .product-card { min-width:0; display:flex; flex-direction:column; border-radius:22px; overflow:hidden; background:#211c16; scroll-snap-align:start; }
+#menu .product-card .product-image-wrapper { aspect-ratio:4/3; height:auto; width:100%; border-radius:0; }
+#menu .product-card .product-body { background:linear-gradient(145deg,#28221b,#1a1713); padding:13px; }
+#menu .product-description { display:block; }
+#menu .product-card-button { border-radius:999px; }
+#menu .commerce-card-add { border-radius:999px; }
+#menu .menu-favorite { inset-inline-start:auto; inset-inline-end:8px; }
+#menu .product-badge { display:block; }
+@media(max-width:767px) {
+ #menu .menu-category-products { grid-auto-columns:min(78%,300px); gap:10px; }
+ #menu .product-card .product-body { padding:12px; }
+}
+@media(max-width:359px) { #menu .menu-category-products {grid-auto-columns:calc(100% - 8px);} }
+.main-navigation .navigation-inner { width:50vw; max-width:680px; min-width:360px; height:100%; height:100dvh; max-height:100dvh; }
+.main-navigation .navigation-categories { max-height:none; min-height:0; overflow:hidden; }
+.main-navigation .navigation-category-list { flex:1; min-height:0; overflow-y:auto; }
+@media(max-width:720px) { .main-navigation .navigation-inner {width:100%;min-width:0;max-width:none;} }
+@media(max-height:490px) { .main-navigation .navigation-inner {display:flex;flex-direction:column;overflow-y:auto;} .main-navigation .navigation-categories {min-height:180px;} }
+.customer-entry { position:fixed; inset:0; width:100%; max-width:none; height:100%; max-height:none; margin:0; border:0; padding:clamp(12px,4vw,36px); box-sizing:border-box; overflow:auto; background:linear-gradient(120deg,#170c08a8,#110d0b9e),url("../assets/images/hero/hero.jpg") center/cover; color:#fff8ef; }
+.customer-entry[open] { display:flex; align-items:center; justify-content:center; }
+.customer-entry::backdrop {background:#100b08;}
+.customer-entry-panel { width:min(100%,460px); box-sizing:border-box; margin:auto; padding:clamp(20px,5vw,36px); background:#2b201bea; border:1px solid #f3d8b65e; border-radius:28px; box-shadow:0 22px 80px #0006; backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+.customer-entry-panel h1 {font-family:inherit;font-size:clamp(25px,5vw,36px);line-height:1.3;margin:18px 0 10px;color:#fff8ef;}
+.customer-entry-panel p {font-size:14px;line-height:1.7;color:#f1dfcd;margin:0 0 16px;}
+.customer-entry-top {display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.customer-entry-panel form,.customer-entry-panel label {display:grid;gap:8px;}
+.customer-entry-panel form {gap:14px;}
+.customer-entry-panel label {font-size:14px;color:#f5e8d8;}
+.customer-entry-panel input,.customer-entry-panel select {font:inherit;min-height:48px;border-radius:14px;border:1px solid #d7bba085;background:#fff4e9;color:#2b211b;padding:10px 12px;box-sizing:border-box;min-width:0;width:100%;}
+.customer-entry-panel select {width:auto;}
+.customer-entry-submit,.customer-entry-guest {font:inherit;font-weight:650;min-height:48px;width:100%;border-radius:999px;cursor:pointer;}
+.customer-entry-submit {background:#e9c58a;color:#26190e;border:0;}
+.customer-entry-guest {background:transparent;color:#fff1dc;border:1px solid #e9c58a90;}
+.customer-entry-panel .customer-entry-notice {margin:12px 0;font-size:12px;}
+.customer-entry-panel .customer-entry-error:empty {display:none;}
+.customer-entry-panel .customer-entry-error {color:#ffd5cb;margin:0;}
+@media(prefers-reduced-motion:no-preference){.customer-entry[open] .customer-entry-panel {animation:customer-enter 260ms var(--ui-ease) both;}}

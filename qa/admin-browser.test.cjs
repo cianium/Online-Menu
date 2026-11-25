@@ -1,3 +1,4 @@
+const {loginDemoAdmin}=require('./demo-admin-login.cjs');
 /* Run with a local preview at ADMIN_TEST_URL (default: http://127.0.0.1:8765).
    Install playwright and its Chromium first. Optional CHROMIUM_EXECUTABLE_PATH. */
 const assert = require('node:assert/strict');
@@ -21,7 +22,25 @@ async function check(name, action) { await action(); results.push(name); console
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   await page.goto(base + '/admin/');
-  await page.waitForFunction(() => typeof adminInitialized !== 'undefined' && adminInitialized && !document.querySelector('.admin-app').inert);
+  await page.locator('#admin-gate').waitFor({state:'visible'});
+  await check('Demo admin ID/password gate rejects incorrect credentials and localizes form',async()=>{
+    assert.equal(await page.locator('.admin-app').evaluate(n=>n.inert),true);
+    for(const lang of ['fa','ar','en','tr']){
+      await page.locator('#admin-gate-language').selectOption(lang);
+      assert.equal(await page.locator('html').getAttribute('dir'),['fa','ar'].includes(lang)?'rtl':'ltr');
+      for(const width of [320,390,1440]){
+        await page.setViewportSize({width,height:844});
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+      }
+    }
+    await page.locator('#admin-gate-email').fill('demo-admin');
+    await page.locator('#admin-gate-password').fill('wrong-password');
+    await page.locator('#admin-gate-submit').click();
+    assert.equal(await page.locator('#admin-gate-error').isVisible(),true);
+    assert.equal(await page.locator('.admin-app').evaluate(n=>n.inert),true);
+    await page.locator('#admin-gate-language').selectOption('fa');
+    await loginDemoAdmin(page);
+  });
   await check('Local demo boot and seed catalog', async () => assert.equal(await page.evaluate(() => state.products.length), 21));
   await check('Compact admin header keeps only the requested controls and preserves logout',async()=>{
     await page.setViewportSize({width:320,height:900});

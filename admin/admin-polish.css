@@ -476,3 +476,18 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
 .admin-footer { background:var(--admin-surface); color:var(--admin-ink-muted); font-size:12px; line-height:1.6; }
 .admin-footer-brand { flex-wrap:wrap; }
 .admin-footer-brand span { color:var(--admin-ink-muted); font-size:12px; letter-spacing:normal; }
+
+
+/* Glass access screen; the local demo credentials are explicitly public. */
+.admin-gate.is-open { overflow-y:auto; align-items:safe center; }
+.admin-gate-panel { background:#2b201be8; border-color:#f3d8b65e; border-radius:28px; padding:clamp(20px,4vw,36px); max-width:460px; text-align:start; }
+.admin-gate-panel h1 {font-family:inherit;line-height:1.25;}
+.admin-gate-field {font-size:14px;color:#f5e8d8;}
+.admin-gate-field input,.admin-gate-field select {background:#fff4e9;color:#2b211b;border:1px solid #d7bba0;border-radius:14px;min-height:48px;padding:10px 12px;font:inherit;min-width:0;width:100%;box-sizing:border-box;}
+.admin-gate-submit {border-radius:999px;}
+#admin-gate-language {max-width:100%;}
+#admin-demo-credentials {font-size:13px;line-height:1.7;color:#f1dfcd;margin-block:12px;overflow-wrap:anywhere;}
+#admin-gate-server-auth[hidden],#admin-demo-credentials[hidden],#demo-members-panel[hidden]{display:none!important;}
+.demo-member-row {display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px 0;border-bottom:1px solid var(--admin-border,#ffffff22);}
+.demo-member-row strong {overflow-wrap:anywhere;}
+@media(prefers-reduced-motion:reduce){.admin-gate,.admin-gate-panel,.admin-gate-ambient{animation:none!important;transition:none!important;}}

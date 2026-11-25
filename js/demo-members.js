@@ -1,0 +1,42 @@
+/* Browser-local sample membership only. Never used as server authentication. */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.RomanoDemoMembers=api;})(globalThis,()=>{
+  "use strict";
+  const key='online_menu_demo_members_v1:romano',activeKey='online_menu_demo_member_active_v1:romano';
+  const phone=value=>String(value??'').trim().replace(/[۰-۹٠-٩]/g,ch=>String(ch.charCodeAt(0)-(ch>='۰'?1776:1632))).replace(/[\s().-]/g,'');
+  const validPhone=p=>/^\+?[0-9]{7,15}$/.test(p);
+  const uuid=()=>globalThis.crypto.randomUUID();
+  function read(storage){
+    const raw=storage.getItem(key);
+    if(raw===null)return [];
+    const rows=JSON.parse(raw);
+    if(!Array.isArray(rows)||rows.length>100||rows.some(r=>!r||typeof r.id!=='string'||typeof r.name!=='string'||r.name.length>80||!validPhone(r.phone)||!Array.isArray(r.orders)||r.orders.length>100))throw Error('INVALID_STORAGE');
+    return rows;
+  }
+  function active(storage,session){
+    const id=session.getItem(activeKey);return id?read(storage).find(r=>r.id===id)||null:null;
+  }
+  function register(storage,session,nameValue,phoneValue){
+    const name=String(nameValue??'').trim(),p=phone(phoneValue);
+    if(!name||name.length>80||!validPhone(p))throw Error('INVALID_INPUT');
+    const rows=read(storage),current=active(storage,session);
+    if(current&&current.phone===p)return current;
+    // No phone-only lookup of another member or order history.
+    if(rows.some(r=>r.phone===p))throw Error('EXISTING_PROFILE');
+    if(rows.length>=100)throw Error('LIMIT');
+    const member={id:uuid(),name,phone:p,createdAt:new Date().toISOString(),orders:[]};
+    const old=storage.getItem(key);
+    try{storage.setItem(key,JSON.stringify([...rows,member]));session.setItem(activeKey,member.id);}
+    catch(e){try{if(old===null)storage.removeItem(key);else storage.setItem(key,old);}catch{}throw e;}
+    return member;
+  }
+  function addOrder(storage,session,items,total){
+    const rows=read(storage),current=active(storage,session);
+    if(!current)throw Error('NO_PROFILE');
+    if(!Array.isArray(items)||!items.length||items.length>100||!Number.isFinite(total)||total<=0||items.some(i=>!i||typeof i.name!=='string'||!Number.isSafeInteger(i.quantity)||i.quantity<1||i.quantity>99||!Number.isFinite(i.price)||i.price<=0))throw Error('INVALID_ORDER');
+    if(current.orders.length>=100)throw Error('LIMIT');
+    const order={id:uuid(),createdAt:new Date().toISOString(),items:items.map(i=>({name:i.name.slice(0,150),quantity:i.quantity,price:i.price})),total};
+    storage.setItem(key,JSON.stringify(rows.map(r=>r.id===current.id?{...r,orders:[order,...r.orders]}:r)));
+    return order;
+  }
+  return Object.freeze({key,activeKey,read,active,register,addOrder,signOut:session=>session.removeItem(activeKey),phone});
+});

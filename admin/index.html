@@ -644,7 +644,8 @@
 
             <section class="admin-page" id="page-loyalty" aria-labelledby="loyalty-title">
                 <div class="page-heading page-heading-row"><div><span class="page-eyebrow">باشگاه مشتریان</span><h1 id="loyalty-title">قوانین و کمپین‌ها</h1><p>پیش‌نویس قوانین تخفیف و پیامک را مدیریت کنید.</p></div><button type="button" class="primary-button" id="loyalty-add">+ قانون جدید</button></div>
-                <p class="panel loyalty-notice">این بخش فقط پیش‌نویس محلی است؛ ارسال پیامک، اعمال تخفیف و اطلاعات اعضا به سرویس سرور نیاز دارد.</p>
+                <p class="panel loyalty-notice">این بخش فقط پیش‌نویس محلی است؛ ارسال پیامک، اعمال تخفیف و اطلاعات اعضای واقعی به سرویس سرور نیاز دارد.</p>
+                <section class="panel" id="demo-members-panel" hidden aria-labelledby="demo-members-title"><h2 id="demo-members-title">اعضای آزمایشی باشگاه مشتریان</h2><p>فقط اطلاعات ساختگی همین مرورگر؛ عضویت و سفارش واقعی نیست.</p><div id="demo-members-list"></div></section>
                 <section class="panel loyalty-sms-readiness" aria-labelledby="loyalty-sms-title"><h2 id="loyalty-sms-title">تنظیمات پیامکی</h2><p>سرویس ارسال متصل نیست. فقط متن و قوانین را آماده کنید.</p><p>ارسال واقعی نیازمند رضایت دریافت پیامک، لغو عضویت و نگهداری کلید سرویس در سرور است.</p></section>
                 <p class="panel" id="loyalty-connected" hidden>مدیریت قوانین در حالت متصل هنوز فعال نیست.</p>
                 <form class="settings-form" id="loyalty-form" hidden>
@@ -1376,8 +1377,8 @@
             <form class="admin-gate-form" id="admin-gate-form" novalidate>
 
                 <label class="admin-gate-field" for="admin-gate-email">
-                    <span>ایمیل</span>
-                    <input id="admin-gate-email" name="email" type="email" inputmode="email" autocomplete="username" dir="ltr" required maxlength="254">
+                    <span id="admin-gate-id-label">شناسه ورود (ایمیل)</span>
+                    <input id="admin-gate-email" name="email" type="text" autocomplete="username" dir="ltr" required maxlength="254">
                 </label>
 
                 <label class="admin-gate-field" for="admin-gate-password">
@@ -1389,7 +1390,9 @@
 
             </form>
 
-            <div class="admin-gate-secure-line" aria-hidden="true">
+            <label class="admin-gate-field" for="admin-gate-language"><span>زبان</span><select id="admin-gate-language"><option value="fa">فارسی</option><option value="en">English</option><option value="tr">Türkçe</option><option value="ar">العربية</option></select></label>
+            <p id="admin-demo-credentials" hidden>ورود آزمایشی؛ امنیت واقعی نیست. <bdi dir="ltr">demo-admin / Demo-Only-2026</bdi></p>
+            <div class="admin-gate-secure-line" id="admin-gate-server-auth" aria-hidden="true">
                 <span class="admin-gate-secure-dot"></span>
                 <span>احراز هویت امن سرور</span>
                 <span class="admin-gate-secure-dot"></span>
@@ -1426,7 +1429,9 @@
 <script src="vendor/qrcode.min.js"></script>
 <script src="orders.js"></script>
 <script src="../js/demo-review.js"></script>
+<script src="../js/demo-members.js"></script>
 <script src="admin-stage12.js"></script>
+<script src="demo-members-panel.js"></script>
 
 </body>
 

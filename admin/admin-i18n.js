@@ -9,6 +9,17 @@
     const LANGS = ["fa", "en", "tr", "ar"];
 
     const T = {
+      "زبان": ["Language","Dil","اللغة"],
+      "عضو نمونه‌ای ثبت نشده است.": ["No sample members yet.","Henüz örnek üye yok.","لا يوجد أعضاء تجريبيون بعد."],
+      "تعداد سفارش‌های نمونه": ["Sample order count","Örnek sipariş sayısı","عدد الطلبات التجريبية"],
+      "این بخش فقط پیش‌نویس محلی است؛ ارسال پیامک، اعمال تخفیف و اطلاعات اعضای واقعی به سرویس سرور نیاز دارد.": ["Local drafts only; SMS, discounts and real members require a server.","Yalnızca yerel taslaklar; SMS, indirimler ve gerçek üyeler sunucu gerektirir.","مسودات محلية فقط؛ الرسائل والخصومات والأعضاء الحقيقيون يتطلبون خادمًا."],
+      "فقط اطلاعات ساختگی همین مرورگر؛ عضویت و سفارش واقعی نیست.": ["Fictional data in this browser only; no real memberships or orders.","Yalnızca bu tarayıcıdaki kurgusal veriler; gerçek üyelik veya sipariş değildir.","بيانات وهمية في هذا المتصفح فقط؛ لا عضويات أو طلبات حقيقية."],
+      "اعضای آزمایشی باشگاه مشتریان": ["Demo customer club members","Demo müşteri kulübü üyeleri","أعضاء نادي العملاء التجريبيون"],
+      "ورود آزمایشی؛ امنیت واقعی نیست.": ["Demo login; not real security.","Demo girişi; gerçek güvenlik değildir.","دخول تجريبي؛ ليس حماية حقيقية."],
+      "شناسه یا رمز عبور آزمایشی نادرست است.": ["Incorrect demo ID or password.","Demo kimliği veya şifresi hatalı.","معرّف أو كلمة مرور التجربة غير صحيحة."],
+      "شناسه و رمز عبور را وارد کنید.": ["Enter your ID and password.","Kimlik ve şifrenizi girin.","أدخل المعرّف وكلمة المرور."],
+      "شناسه ورود": ["Login ID","Giriş kimliği","معرّف الدخول"],
+      "شناسه ورود (ایمیل)": ["Login ID (email)","Giriş kimliği (e-posta)","معرّف الدخول (البريد الإلكتروني)"],
       "رفتن به محتوای اصلی": ["Skip to main content", "Ana içeriğe geç", "الانتقال إلى المحتوى الرئيسي"],
       "ارسال واقعی نیازمند رضایت دریافت پیامک، لغو عضویت و نگهداری کلید سرویس در سرور است.": ["Live delivery requires SMS consent, opt-out and server-side credential storage.", "Gerçek gönderim SMS onayı, abonelik iptali ve sunucuda kimlik bilgisi saklama gerektirir.", "يتطلب الإرسال الفعلي موافقة الرسائل وإلغاء الاشتراك وحفظ بيانات الاعتماد على الخادم."],
       "سرویس ارسال متصل نیست. فقط متن و قوانین را آماده کنید.": ["No messaging service is connected. Prepare text and rules only.", "Mesaj hizmeti bağlı değil. Yalnızca metin ve kuralları hazırlayın.", "خدمة الرسائل غير متصلة. جهّز النص والقواعد فقط."],
