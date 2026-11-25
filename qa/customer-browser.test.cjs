@@ -494,8 +494,11 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.equal((await p.locator('.footer-brand p').textContent()).trim(),custom[lang]);
   }
  });
- await check('No developer credits or internal release labels remain',async()=>{
-  assert.equal(await p.locator('.footer-bottom a[href*="kiankhayat.me"]').count(),0);
+ await check('Only the requested localized creator credit appears in the footer; commerce remains ROMANO',async()=>{
+  assert.equal(await p.locator('a[href*="kiankhayat.me"]').count(),1);
+  const credit=p.locator('.footer-bottom a.footer-creator[href="https://kiankhayat.me"]');
+  assert.equal(await credit.count(),1);
+  assert.equal(await credit.getAttribute('rel'),'noopener noreferrer');
   assert.equal(await p.locator('.commerce-drawer small').textContent(),'ROMANO');
  });
  await check('No uncaught browser errors',async()=>assert.deepEqual(errors,[]));
