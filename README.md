@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/showcase/cover.svg" alt="RAMEN — Dining, reimagined. A multilingual digital menu and restaurant workspace." width="100%">
+
 # RAMEN · Online Menu
 
 **From the first scan to the last bite.**
@@ -13,11 +15,36 @@ Explore the guest experience and the management panel in one standalone demo.
 [![Demo](https://img.shields.io/badge/demo-no_database_required-0F766E?style=flat-square)](#quick-start)
 [![Languages](https://img.shields.io/badge/languages-FA%20%7C%20AR%20%7C%20EN%20%7C%20TR-475569?style=flat-square)](#built-for-four-languages)
 
-<img src="assets/images/hero/hero.jpg" alt="Restaurant photography from the RAMEN menu" width="100%">
-
-[**Run the demo**](#quick-start) · [Explore the product](#the-experience) · [Architecture](#architecture) · [Documentation](#documentation) · [فارسی](#معرفی-فارسی)
+[**Run the demo**](#quick-start) · [Product gallery](#product-gallery) · [Architecture](#architecture) · [Documentation](#documentation) · [فارسی](#معرفی-فارسی)
 
 </div>
+
+---
+
+## Product gallery
+
+<p align="center"><img src="assets/images/hero/hero.jpg" alt="Original restaurant photography used in the guest menu" width="100%"></p>
+
+<table>
+  <tr>
+    <td width="70%" align="center"><b>Restaurant workspace</b></td>
+    <td width="30%" align="center"><b>Mobile management</b></td>
+  </tr>
+  <tr>
+    <td valign="top"><img src="docs/qa/admin-desktop-en.png" alt="Previously captured English admin dashboard" width="100%"></td>
+    <td valign="top"><img src="docs/qa/admin-mobile-fa.png" alt="Previously captured Persian mobile product management interface" width="100%"></td>
+  </tr>
+  <tr>
+    <td>Desktop · English · LTR</td>
+    <td>Mobile · فارسی · RTL</td>
+  </tr>
+</table>
+
+*Actual screenshots tracked from earlier browser QA, not freshly captured from the current revision. The restaurant photograph is a real project asset, not a customer UI screenshot.*
+
+[**Generate the current product gallery and animated admin tour**](docs/showcase/README.md) · [Showcase workflow](https://github.com/cianium/Online-Menu/actions/workflows/product-showcase.yml)
+
+The showcase job captures the current standalone menu and admin workspace in Chromium with all external requests blocked. Its artifact contains customer/admin screenshots, an animated walkthrough, a social preview PNG and revision provenance. No production deployment or real merchant data is involved.
 
 ---
 
@@ -250,6 +277,7 @@ Before enabling live ordering or payment, follow the [deployment guide](docs/DEP
 | [Product and market overview (FA)](docs/ONLINE_MENU_VQ3_FA.md) | Product positioning and commercial model |
 | [Architecture](docs/ARCHITECTURE.md) | Architectural boundaries and target model |
 | [API contract](docs/API_CONTRACT.md) | API routes, authorization and response conventions |
+| [Product showcase](docs/showcase/README.md) | Brand cover, screenshot capture, animated tour and repository presentation |
 | [Standalone demo](docs/DEMO_LOCAL.md) | Local startup, integration checks and demo limits |
 | [Private VPS demo (FA)](docs/VPS_DEMO_FA.md) | Static export, checksum verification and future hosting |
 | [Local backend](backend/README.md) | Setup, configuration and security model |
@@ -284,7 +312,7 @@ This is a public source repository with no selected open-source license at the t
 <div align="center">
 
 **RAMEN**<br>
-A digital dining experience, built around the restaurant.
+Designed for guests. Built for restaurant teams.
 
 Maintained by [Kian Khayat · @cianium](https://github.com/cianium)
 
