@@ -24,6 +24,12 @@
 
 The [successful Product showcase run](https://github.com/cianium/Online-Menu/actions/runs/45645429531) captured the standalone application at revision `cae5e8158b25dbe585f50573bd652190a96c8937`. Its [ramen-product-showcase artifact](https://github.com/cianium/Online-Menu/actions/runs/45645429531/artifacts/15037840953) includes customer/admin screenshots, an admin GIF, a social preview PNG and capture provenance. GitHub may require sign-in; this artifact expires on 25 December 2026. For a fresh package, use the [showcase instructions](../showcase/README.md).
 
+## Published R5 standalone demo
+
+[Guest menu](https://cianium.github.io/Online-Menu/) · [Demo admin](https://cianium.github.io/Online-Menu/admin/) · [Successful Pages deployment](https://github.com/cianium/Online-Menu/actions/runs/45696554167).
+
+`main` remains the canonical source; `pages-demo` publishes the static R5 snapshot. The redesigned source is tracked separately in [PR #25](https://github.com/cianium/Online-Menu/pull/25). Use sample data only. The legacy connected services have not passed production verification; the public static demo does not provide real staff authentication or shared customer data.
+
 ## Scope
 
 This library describes the vq.3 / 3.0.0 source and standalone demo; it does not certify a production deployment. The four locale guides intentionally share the same feature boundaries. The repository has no selected open-source license. Commercial terms and brand proposals are not approved contracts.

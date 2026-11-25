@@ -88,6 +88,14 @@ The showcase job captures the current standalone menu and admin workspace in Chr
 
 **Connected** means the implementation exists in the source, not that a production service is active or certified. The local Fastify API is not assumed to have full parity with hosted commerce APIs.
 
+## Public standalone demo
+
+[Open the guest menu](https://cianium.github.io/Online-Menu/) · [Open the demo admin workspace](https://cianium.github.io/Online-Menu/admin/) · [Pages deployment evidence](https://github.com/cianium/Online-Menu/actions/runs/45696554167)
+
+The published R5 static snapshot (`3a2dad7fd319f8b69ee5a273d551dec72de49258`) is served from `pages-demo`. The canonical source branch is `main`; the redesign source is under review in [PR #25](https://github.com/cianium/Online-Menu/pull/25). These are different branches and may show different revisions until source review is complete. The public demo is for sample data only, not a private staff login, real payment service or shared customer database.
+
+[R5 CI](https://github.com/cianium/Online-Menu/actions/runs/45690438360) · [Customer browser QA](https://github.com/cianium/Online-Menu/actions/runs/45690438461) · [Admin browser QA](https://github.com/cianium/Online-Menu/actions/runs/45690438492). These runs verify the R5 source; they do not certify the old connected Supabase/Vercel services. Historical showcase images retain their own revision provenance.
+
 ## Quick start
 
 > [!TIP]

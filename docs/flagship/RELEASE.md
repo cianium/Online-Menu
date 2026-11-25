@@ -12,6 +12,8 @@
 
 This is a documentation change proposal, not a new application release, tag or production readiness certificate.
 
+Separately, the R5 standalone demo was published from `pages-demo` at `3a2dad7fd319f8b69ee5a273d551dec72de49258` ([deployment evidence](https://github.com/cianium/Online-Menu/actions/runs/45696554167)). This publication did not merge the source or change historical tags. The redesign source remains under review in [PR #25](https://github.com/cianium/Online-Menu/pull/25); connected production is not certified.
+
 ## Proposed announcement (publish only after owner approval)
 
 RAMEN introduces a refined product presentation, four-language user guides, a commercial catalog, brand guidelines and an engineering brief. Explore the independent customer and admin demo, and see the connected architecture for table ordering, kitchen operations and branch payment. Connected services require separate configuration and acceptance testing.
