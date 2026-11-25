@@ -35,7 +35,11 @@ test('Bottom navigation has the requested physical DOM order and contact remains
  const html=read('index.html'),js=read('js/commerce.js'),css=read('css/interaction-system.css');
  const nav=html.match(/<nav class="ramen-bottom-nav"[\s\S]*?<\/nav>/)[0];
  assert.deepEqual([...nav.matchAll(/data-ramen-label="([^"]+)"/g)].map(m=>m[1]),['cart','menu','home','featured','contact']);
- assert.match(nav,/dir="ltr"/);assert.match(nav,/aria-controls="ramen-contact-dialog"/);
+ assert.match(nav,/dir="ltr"/);assert.match(nav,/<a href="#contact"[^>]*data-ramen-nav="contact">/);
+ assert.match(js,/trigger\.setAttribute\('role','button'\)/);
+ assert.match(js,/trigger\.setAttribute\('aria-controls',dialog\.id\)/);
+ assert.match(js,/trigger\.removeAttribute\('aria-controls'\)/);
+ assert.match(js,/event\.key===' '/);
  assert.match(js,/document\.createElement\('dialog'\)/);assert.match(js,/dialog\.showModal\(\)/);
  assert.match(js,/mode==='public' \|\| mode==='offline'/);assert.match(js,/if\(demo\)content\.append/);
  assert.match(css,/prefers-reduced-motion:reduce/);assert.match(css,/--ui-touch:44px/);
@@ -114,4 +118,13 @@ test('Profile, chat and local feedback labels are translated in all four languag
  const js=read('js/commerce.js'),panel=js.slice(js.indexOf('function initializeContactPanel()'),js.indexOf('function buildShell()'));
  assert.match(panel,/if\(demo\) \{/);assert.match(panel,/review\.submit\(localStorage,tenant\(\),selected,comment\.value,id\)/);
  assert.doesNotMatch(panel,/\bfetch\(/);assert.match(panel,/labels\.storageError/);
+});
+
+
+test('Named action collections have group semantics; the Instagram placeholder needs no prohibited label',()=>{
+ const html=read('index.html'),admin=read('admin/index.html'),browse=read('js/menu-experience.js');
+ assert.match(admin,/<div class="admin-quick-actions" role="group" aria-label=/);
+ assert.match(browse,/<div id="rv4-category-rail" class="browse-category-rail" role="group">/);
+ const social=html.match(/<a\s+href=""\s+class="social-link"[\s\S]*?<\/a>/)?.[0];
+ assert.ok(social);assert.doesNotMatch(social,/aria-label=/);assert.match(social,/Instagram/);
 });

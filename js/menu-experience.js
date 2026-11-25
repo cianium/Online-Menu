@@ -145,7 +145,7 @@
         const controls = document.createElement('div');
         controls.className='menu-browser';
         controls.innerHTML = `<div class="menu-browser-heading"><div class="menu-browser-title"><span class="section-eyebrow" id="menu-browser-eyebrow"></span><h2 id="browse-title" class="sr-only"></h2><span id="menu-result-count" role="status" aria-live="polite"></span><p id="browse-hint" class="sr-only"></p></div><div class="menu-icon-actions"><button type="button" id="menu-search-toggle" aria-expanded="false" aria-controls="menu-search-panel">${icon('search')}</button><button type="button" id="menu-filter-toggle" aria-expanded="false" aria-controls="menu-filter-panel">${icon('filter')}</button></div></div>
-          <div id="rv4-category-rail" class="browse-category-rail"></div>
+          <div id="rv4-category-rail" class="browse-category-rail" role="group"></div>
           <div id="menu-search-active" class="browse-query" hidden></div>
           <div id="menu-search-panel" class="browse-panel" hidden><div class="menu-search-field">${icon('search')}<label class="sr-only" for="rv4-menu-search"></label><input id="rv4-menu-search" type="search" autocomplete="off" aria-controls="menu-categories"></div></div>
           <div id="menu-filter-panel" class="browse-panel" hidden><h3 id="menu-filter-title"></h3><div class="menu-tools"><label for="menu-sort" id="menu-sort-label" class="sr-only"></label><select id="menu-sort"></select><button id="menu-favorites-toggle" type="button" aria-pressed="false"></button><button id="menu-reset" type="button"></button></div></div>`;

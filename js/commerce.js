@@ -156,6 +156,11 @@
     dialog.className = 'ramen-contact-dialog';
     dialog.setAttribute('aria-labelledby','ramen-contact-title');
     document.body.append(dialog);
+    // Preserve the native contact anchor as a fallback on browsers without dialog support.
+    // The enhanced trigger acts as a button, with both Enter and Space activation.
+    trigger.setAttribute('role','button');
+    trigger.setAttribute('aria-haspopup','dialog');
+    trigger.setAttribute('aria-expanded','false');
     const updateLabel = () => document.querySelector('.ramen-bottom-nav')?.setAttribute('aria-label',(contactWords[lang()] || contactWords.fa).nav);
     const close = () => { if (dialog.open) dialog.close(); };
     let origin = null;
@@ -209,15 +214,16 @@
       if((panel==='contact'||panel==='chat') && social && /^https?:\/\//i.test(social) && (mode==='public' || mode==='offline')){const url=getSafeExternalUrl(social);if(url)appendInfo(words.social,words.social,url);}
       if(panel==='contact' && !content.querySelector('.ramen-contact-item'))content.append(element('p',words.missing,'ramen-contact-note'));
       dialog.replaceChildren(header,content);
-      dialog.showModal();document.body.classList.add('ramen-contact-open');if(panel==='contact')trigger.setAttribute('aria-expanded','true');dismiss.focus();
+      dialog.showModal();document.body.classList.add('ramen-contact-open');if(panel==='contact'){trigger.setAttribute('aria-controls',dialog.id);trigger.setAttribute('aria-expanded','true');}dismiss.focus();
     };
     trigger.addEventListener('click',event=>{event.preventDefault();openPanel();});
+    trigger.addEventListener('keydown',event=>{if(event.key===' '){event.preventDefault();openPanel();}});
     document.addEventListener('romano:open-customer-panel',event=>{
       const panel=event.detail?.panel;
       if(panel==='cart')openDrawer();
       else if(['contact','chat','profile','feedback'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
     });
-    dialog.addEventListener('close',()=>{document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');if(origin?.isConnected)origin.focus();origin=null;});
+    dialog.addEventListener('close',()=>{document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');if(origin?.isConnected)origin.focus();origin=null;});
     document.addEventListener('romano:language-changed',()=>{close();updateLabel();});
     updateLabel();
   }

@@ -29,12 +29,12 @@ async function open(page, surface) {
 async function scan(page, name, lang, width, height) {
   await page.setViewportSize({width,height});
   await page.evaluate(async()=>{await document.fonts.ready;});
-  await page.addScriptTag({path:axePath});
+  if (!await page.evaluate(()=>Boolean(window.axe))) await page.addScriptTag({path:axePath});
   const result = await page.evaluate(async tags=>window.axe.run(document,{runOnly:{type:'tag',values:tags}}),tags);
-  const item={name,lang,width,height,violations:result.violations.map(v=>({id:v.id,impact:v.impact,description:v.description,help:v.help,helpUrl:v.helpUrl,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))})),incomplete:result.incomplete.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)})),passRules:result.passes.length};
+  const item={name,lang,width,height,violations:result.violations.map(v=>({id:v.id,impact:v.impact,description:v.description,help:v.help,helpUrl:v.helpUrl,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))})),incomplete:result.incomplete.map(v=>({id:v.id,impact:v.impact,help:v.help,helpUrl:v.helpUrl,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary,checks:[...n.any,...n.all,...n.none].map(c=>({id:c.id,message:c.message,data:c.data}))}))})),passRules:result.passes.length};
   report.findings.push(item);
   await page.screenshot({path:path.join(out,[name,lang,width].join('-')+'.png'),animations:'disabled'});
-  console.log('AXE '+JSON.stringify({name,lang,width,rules:item.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.length})),incomplete:item.incomplete.length}));
+  console.log('AXE '+JSON.stringify({name,lang,width,rules:item.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.length})),incomplete:item.incomplete.map(v=>({id:v.id,nodes:v.nodes.length}))}));
 }
 async function measure(browser,surface) {
   const context=await setup(browser,{viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
@@ -103,6 +103,20 @@ async function measure(browser,surface) {
           await scan(customer,'customer',lang,width,height);
           await scan(admin,'admin-dashboard',lang,width,height);
         }
+        await customer.setViewportSize({width:390,height:844});
+        const contact=customer.locator('[data-ramen-nav="contact"]');
+        assert.equal(await contact.getAttribute('role'),'button');
+        assert.equal(await contact.getAttribute('aria-controls'),null);
+        await contact.focus();
+        await contact.press('Space');
+        await customer.locator('#ramen-contact-dialog').waitFor({state:'visible'});
+        assert.equal(await contact.getAttribute('aria-expanded'),'true');
+        assert.equal(await contact.getAttribute('aria-controls'),'ramen-contact-dialog');
+        await scan(customer,'customer-contact',lang,390,844);
+        await customer.keyboard.press('Escape');
+        await customer.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open && document.querySelector('[data-ramen-nav="contact"]').getAttribute('aria-expanded')==='false');
+        assert.equal(await contact.getAttribute('aria-controls'),null);
+        assert.equal(await contact.evaluate(el=>el===document.activeElement),true);
       }
       await admin.evaluate(()=>ROMANO_ADMIN_I18N.setLanguage('en'));
       for(const view of ['orders','products','categories','settings','loyalty']){
@@ -112,10 +126,12 @@ async function measure(browser,surface) {
     } finally {await context.close();}
     for(const surface of ['customer','admin']) await measure(browser,surface);
     assert.deepEqual(report.errors,[],'Unexpected JavaScript errors during audit');
-    assert.equal(report.findings.length,21);
+    assert.equal(report.findings.length,25);
     assert.equal(report.lab.length,2);
     const severe=report.findings.flatMap(s=>s.violations.filter(v=>['critical','serious'].includes(v.impact)).map(v=>({surface:s.name,lang:s.lang,width:s.width,id:v.id})));
     console.log('QUALITY SUMMARY '+JSON.stringify({scans:report.findings.length,severe:severe.length,violations:report.findings.reduce((n,s)=>n+s.violations.length,0)}));
+    const structural = report.findings.flatMap(s=>s.incomplete.filter(v=>['aria-prohibited-attr','aria-valid-attr-value'].includes(v.id)).map(v=>({surface:s.name,lang:s.lang,width:s.width,id:v.id,nodes:v.nodes.map(n=>n.target)})));
+    console.log('ARIA REVIEW '+JSON.stringify(structural));
     // A finding is not suppressed or treated as a successful accessibility gate.
     assert.equal(severe.length,0,'Serious/critical accessibility findings: '+JSON.stringify(severe));
   } finally {

@@ -24,15 +24,20 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
     assert.deepEqual(actual,expected,lang+'/'+width);
    }
    const trigger=p.locator('[data-ramen-nav="contact"]');
-   await trigger.click();
+   assert.equal(await trigger.getAttribute('role'),'button');
+   assert.equal(await trigger.getAttribute('aria-controls'),null);
+   await trigger.focus();
+   await trigger.press('Space');
    const dialog=p.locator('#ramen-contact-dialog');
    assert.equal(await dialog.evaluate(d=>d.open),true);
    assert.equal(await trigger.getAttribute('aria-expanded'),'true');
+   assert.equal(await trigger.getAttribute('aria-controls'),'ramen-contact-dialog');
    assert.ok((await dialog.locator('h2').innerText()).trim());
    assert.equal(await dialog.locator('a[href^="tel:"]').count(),0,'sample phone must not initiate a call');
    await p.keyboard.press('Escape');
    await p.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open && document.querySelector('[data-ramen-nav="contact"]').getAttribute('aria-expanded')==='false');
    assert.equal(await trigger.evaluate(n=>document.activeElement===n),true);
+   assert.equal(await trigger.getAttribute('aria-controls'),null);
   }
   await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));
   await p.setViewportSize({width:390,height:844});
