@@ -233,11 +233,15 @@ const readyCustomer = async page => {
     await otherEntry.locator('input[name=name]').fill('Sample Customer');
     await otherEntry.locator('input[name=phone]').fill('+12025550101');
     await otherEntry.locator('button[type=submit]').click();
-    await otherEntry.locator('[role=alert]').waitFor({state:'visible'});
-    assert.equal(await otherEntry.isVisible(),true);
-    assert.equal(await other.evaluate(()=>RomanoCustomerEntry.current()),null);
+    await otherEntry.waitFor({state:'hidden'});
+    assert.equal(await other.evaluate(()=>RomanoCustomerEntry.current()?.name),'Sample Customer');
+    assert.equal(await other.evaluate(()=>RomanoCustomerEntry.current()?.orders.length),1);
+    assert.equal(
+      await other.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey)),
+      await customer.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey))
+    );
     await other.close();
-    console.log('PASS: QR demo entry, four locales, local membership/order history, same-tab re-entry, isolated name/phone lookup and admin club sync');
+    console.log('PASS: QR demo entry, four locales, local membership/order history, returning-member re-entry and admin club sync');
     const registrants=await Promise.all([context.newPage(),context.newPage()]);
     try {
       await Promise.all(registrants.map(page=>page.goto(new URL('./?qr=demo',base).href)));
