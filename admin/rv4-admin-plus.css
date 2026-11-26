@@ -1238,7 +1238,7 @@ textarea { min-height: 112px; line-height: 1.9; }
     .header-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .header-actions { flex: 0 0 auto; flex-wrap: nowrap; gap: 6px; }
     .admin-command-trigger,
-    .admin-header-link:not(#admin-language-toggle),
+    .admin-header:not(.admin-header-compact) .admin-header-link:not(#admin-language-toggle),
     .admin-status-chip,
     .admin-user-chip { display: none; }
     .admin-header-link,

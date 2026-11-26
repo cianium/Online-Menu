@@ -4,6 +4,7 @@
 <head>
 
     <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer">
 
     <meta
         name="viewport"
@@ -23,21 +24,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>ROMANO | پنل مدیریت</title>
 
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin
-    >
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Vazirmatn:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet"
-    >
+    <link rel="stylesheet" href="../css/fonts.css">
 
     <link rel="icon" type="image/png" href="../assets/images/logo/logo.png">
 
@@ -50,17 +37,29 @@
     <link rel="stylesheet" href="workspace.css">
     <link rel="stylesheet" href="orders.css">
     <link rel="stylesheet" href="admin-polish.css">
+    <link rel="stylesheet" href="admin-stage12.css">
+    <link rel="stylesheet" href="../css/interaction-system.css">
 
+    <noscript><link rel="stylesheet" href="../css/no-script.css"></noscript>
 </head>
 
 
 <body>
+<noscript>
+    <section class="no-script-notice" aria-label="JavaScript">
+        <p lang="fa" dir="rtl">برای استفاده از پنل مدیریت، JavaScript را در مرورگر فعال کنید.</p>
+        <p lang="ar" dir="rtl">يرجى تفعيل JavaScript في متصفحك لاستخدام لوحة الإدارة.</p>
+        <p lang="en" dir="ltr">Enable JavaScript in your browser to use the admin panel.</p>
+        <p lang="tr" dir="ltr">Yönetim panelini kullanmak için tarayıcınızda JavaScript'i etkinleştirin.</p>
+    </section>
+</noscript>
 
 <section id="admin-load-error" class="admin-load-error" role="alert" hidden>
     <h1>پنل بارگذاری نشد</h1><p>اتصال به سرور را بررسی کنید و دوباره تلاش کنید.</p>
     <button class="primary-button" type="button">تلاش دوباره</button>
 </section>
 <div class="admin-app" inert>
+    <a class="admin-skip-link" href="#admin-content">رفتن به محتوای اصلی</a>
 
 
     <!-- =========================================
@@ -78,16 +77,15 @@
             <a
                 class="admin-brand"
                 href="#"
-                aria-label="ROMANO | مدیریت"
-                data-admin-i18n-aria-label="ROMANO | مدیریت"
+                aria-labelledby="admin-brand-name admin-brand-label"
                 data-page-target="dashboard"
             >
 
-                <span class="admin-brand-name">
+                <span class="admin-brand-name" id="admin-brand-name">
                     ROMANO
                 </span>
 
-                <span class="admin-brand-label">
+                <span class="admin-brand-label" id="admin-brand-label">
                     مدیریت
                 </span>
 
@@ -168,10 +166,16 @@
                 <span>تنظیمات رستوران</span>
             </button>
 
+            <button class="nav-item" data-page="loyalty" type="button"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5v1"/></svg></span><span>باشگاه مشتریان</span></button>
         </nav>
 
 
         <div class="sidebar-footer">
+            <button class="admin-logout-button" id="admin-logout-button" type="button" title="خروج از پنل">
+                    <span aria-hidden="true">↪</span>
+                    <span>خروج</span>
+                </button>
+
 
             <a
                 href="../index.html"
@@ -208,79 +212,32 @@
 
     <main class="admin-main">
 
-        <div class="admin-mode-banner" id="admin-mode-banner" role="status" hidden>
-            حالت آزمایشی محلی: تغییرات فقط در همین مرورگر ذخیره می‌شود و با سرور همگام نمی‌شود.
-        </div>
-
-
-        <!-- =====================================
-             HEADER
-        ====================================== -->
-
-        <header class="admin-header">
-
-            <button
-                class="mobile-menu-button"
-                id="mobile-menu-button"
-                type="button"
-                aria-label="باز کردن منو"
-                aria-controls="sidebar"
-                aria-expanded="false"
-            >
-                ☰
-            </button>
-
-
-            <div class="header-title">
-
-                <span>
-                    مدیریت
-                </span>
-
-                <strong id="current-page-title">
-                    داشبورد
-                </strong>
-
-            </div>
-
-
+        <header class="admin-header admin-header-compact">
+            <button class="mobile-menu-button" id="mobile-menu-button" type="button" aria-label="باز کردن منو" aria-controls="sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+            <div class="header-title"><strong class="admin-header-brand" dir="auto">ROMANO</strong><span id="current-page-title" class="sr-only">داشبورد</span></div>
             <div class="header-actions">
-
-                <button class="admin-header-link" id="admin-language-toggle" type="button" aria-label="تغییر زبان" title="فارسی"><svg class="header-globe" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z"></path></svg> <span id="admin-language-label">FA</span></button>
-
-                <a class="admin-header-link" href="../index.html" target="_blank" rel="noopener noreferrer" aria-label="پیش‌نمایش منوی مشتری">
-                    <span aria-hidden="true">↗</span><span>پیش‌نمایش منو</span>
-                </a>
-
-                <button class="admin-header-action" id="admin-add-product-shortcut" type="button" aria-label="افزودن محصول جدید">
-                    <span aria-hidden="true">+</span><span>محصول جدید</span>
-                </button>
-
-                <div class="admin-status-chip" role="status" aria-live="polite">
+                <a class="admin-header-link" href="../index.html" target="_blank" rel="noopener noreferrer" aria-label="پیش‌نمایش منوی مشتری" title="پیش‌نمایش منوی مشتری"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 5h6v6m0-6L10 14M19 13v6H5V5h6"/></svg></a>
+                <button class="admin-header-link" type="button" data-page-target="settings" aria-label="تنظیمات رستوران" title="تنظیمات رستوران"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m10 3 4 0 1 3 3 1 3 3-2 2 2 2-3 3-3 1-1 3h-4l-1-3-3-1-3-3 2-2-2-2 3-3 3-1z"/></svg></button>
+                <button class="admin-header-link" id="admin-language-toggle" type="button" aria-label="تغییر زبان" title="فارسی"><svg class="header-globe" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z"></path></svg> <span id="admin-language-label" class="sr-only">FA</span></button>
+            </div>
+        </header>
+        <div class="admin-context-strip">
+            <details class="admin-mode-banner" id="admin-mode-banner" hidden>
+                <summary>نسخه آزمایشی محلی</summary>
+                <p>حالت آزمایشی محلی: تغییرات فقط در همین مرورگر ذخیره می‌شود و با سرور همگام نمی‌شود.</p>
+            </details>
+            <div class="admin-status-chip" role="status" aria-live="polite">
                     <span class="status-indicator" aria-hidden="true"></span>
                     <span class="admin-status-copy">سیستم آماده</span>
                 </div>
-
-                <div class="admin-user-chip" aria-label="حساب مدیر">
-                    <span class="admin-user-avatar" aria-hidden="true">م</span>
-                    <span class="admin-user">مدیر</span>
-                </div>
-
-                <button class="admin-logout-button" id="admin-logout-button" type="button" title="خروج از پنل">
-                    <span aria-hidden="true">↪</span>
-                    <span>خروج</span>
-                </button>
-
-            </div>
-
-        </header>
+        </div>
 
 
         <!-- =====================================
              CONTENT
         ====================================== -->
 
-        <div class="admin-content">
+        <div class="admin-content" id="admin-content" tabindex="-1">
 
 
             <!-- ===================================
@@ -322,7 +279,26 @@
                     <div class="welcome-date" id="admin-current-date" aria-live="off">—</div>
                 </div>
 
-                <section id="workspace-review" class="workspace-review panel" aria-labelledby="workspace-review-title"></section>
+                <section class="admin-overview" aria-label="خلاصه عملیات">
+                    <article class="panel overview-revenue" aria-labelledby="revenue-title">
+                        <div class="revenue-heading"><div><h2 id="revenue-title">درآمد</h2><p>مبلغ سفارش‌های نمونه؛ درآمد یا پرداخت واقعی نیست.</p></div><button id="revenue-export" class="secondary-button" type="button" disabled>خروجی CSV</button></div>
+                        <p id="revenue-status" role="status">گزارش درآمد نیازمند تاریخچه پرداخت معتبر است.</p>
+                        <div id="revenue-filters" class="revenue-filters" hidden>
+                            <label><span>بازه گزارش</span><select id="revenue-period"><option value="1">امروز</option><option value="7">۷ روز اخیر</option><option value="30" selected>۳۰ روز اخیر</option><option value="365">۳۶۵ روز اخیر</option></select></label>
+                            <label><span>واحد پول</span><select id="revenue-currency"></select></label>
+                        </div>
+                        <div id="revenue-content" hidden>
+                            <p id="revenue-range-label" dir="auto" data-admin-user-text="true"></p>
+                            <dl class="revenue-kpis"><div><dt>مجموع مبلغ سفارش‌های نمونه</dt><dd id="revenue-total" dir="auto" data-admin-user-text="true"></dd></div><div><dt>تعداد سفارش‌های نمونه</dt><dd id="revenue-count" data-admin-user-text="true"></dd></div><div><dt>میانگین مبلغ سفارش</dt><dd id="revenue-average" dir="auto" data-admin-user-text="true"></dd></div><div><dt>تغییر نسبت به دوره قبل</dt><dd id="revenue-change" dir="ltr" data-admin-user-text="true"></dd><dd id="revenue-previous" data-admin-user-text="true"></dd></div></dl>
+                            <div class="revenue-chart" aria-hidden="true" dir="ltr"><span id="revenue-axis-max" data-admin-user-text="true"></span><div id="revenue-bars"></div><div class="revenue-axis"><span id="revenue-axis-start" data-admin-user-text="true"></span><span id="revenue-axis-end" data-admin-user-text="true"></span></div></div>
+                            <label class="revenue-detail-label"><span>جزئیات بازه نمودار</span><select id="revenue-bucket" data-admin-user-text="true"></select></label><p id="revenue-detail" data-admin-user-text="true" role="status"></p>
+                            <p id="revenue-excluded" data-admin-user-text="true"></p>
+                            <details class="revenue-table"><summary>جدول داده‌های نمودار</summary><div class="revenue-table-scroll" tabindex="0" role="region" aria-label="جدول داده‌های نمودار"><table><thead><tr><th scope="col">بازه گزارش</th><th scope="col">مبلغ سفارش</th><th scope="col">تعداد سفارش‌های نمونه</th><th scope="col">میانگین مبلغ سفارش</th></tr></thead><tbody id="revenue-table-body" data-admin-user-text="true"></tbody></table></div></details>
+                        </div>
+                    </article>
+                    <article class="panel overview-orders"><h2>سفارش‌های در جریان</h2><strong id="overview-order-count" class="stat-value">—</strong><p id="overview-order-note">داده زنده در دسترس نیست.</p><dl class="overview-order-breakdown" id="overview-order-breakdown" hidden><div><dt>جدید</dt><dd data-order-metric="submitted">—</dd></div><div><dt>در آشپزخانه</dt><dd data-order-metric="preparing">—</dd></div><div><dt>آماده</dt><dd data-order-metric="ready">—</dd></div><div><dt>سرو یا تحویل‌شده</dt><dd data-order-metric="other">—</dd></div></dl><button type="button" class="secondary-button" data-page-target="orders">سفارش‌ها</button></article>
+                    <article class="panel overview-rating"><h2>امتیاز رستوران</h2><strong id="overview-rating-value" class="stat-value">—</strong><p id="overview-rating-note">امتیاز تأییدشده در دسترس نیست.</p><p id="overview-rating-comment" data-admin-user-text="true" class="review-comment" hidden></p><div id="overview-rating-actions" hidden><button type="button" class="secondary-button" data-rating-action="approve">تأیید امتیاز آزمایشی</button><button type="button" class="secondary-button" data-rating-action="reject">رد امتیاز آزمایشی</button></div></article>
+                </section>
                 <div class="stats-grid">
 
                     <article class="stat-card">
@@ -391,6 +367,7 @@
                 </div>
 
 
+                <section id="workspace-review" class="workspace-review panel" aria-labelledby="workspace-review-title"></section>
                 <section class="admin-integrity-panel" aria-labelledby="admin-integrity-title">
                     <div class="integrity-heading">
                         <div><span class="panel-eyebrow">وضعیت منو</span><h2 id="admin-integrity-title">نمای کلی وضعیت منو</h2></div>
@@ -403,7 +380,7 @@
                     </div>
                 </section>
 
-                <div class="admin-quick-actions" aria-label="دسترسی سریع">
+                <div class="admin-quick-actions" role="group" aria-label="دسترسی سریع">
                     <button type="button" data-page-target="products" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">+</span><span><strong>مدیریت محصولات</strong><small>افزودن یا ویرایش آیتم‌های منو</small></span><span class="quick-action-arrow" aria-hidden="true">←</span></button>
                     <button type="button" data-page-target="categories" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">▤</span><span><strong>دسته‌بندی‌ها</strong><small>مرتب‌سازی ساختار منو</small></span><span class="quick-action-arrow" aria-hidden="true">←</span></button>
                     <button type="button" data-page-target="settings" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">⚙</span><span><strong>تنظیمات رستوران</strong><small>اطلاعات و راه‌های ارتباطی</small></span><span class="quick-action-arrow" aria-hidden="true">←</span></button>
@@ -492,9 +469,9 @@
             <section class="admin-page" id="page-orders" aria-labelledby="orders-title">
                 <div class="page-heading page-heading-row">
                     <div>
-                        <span class="page-eyebrow">عملیات زنده · آشپزخانه</span>
+                        <span class="page-eyebrow" id="orders-mode-label">عملیات زنده · آشپزخانه</span>
                         <h1 id="orders-title">سفارش‌ها و آشپزخانه</h1>
-                        <p>سفارش‌های QR را از پذیرش تا سرو، زنده مدیریت کنید.</p>
+                        <p id="orders-mode-description">سفارش‌های QR را از پذیرش تا سرو، زنده مدیریت کنید.</p>
                     </div>
                     <div class="orders-toolbar">
                       <button class="secondary-button" id="orders-sound" type="button" aria-pressed="false" data-admin-i18n="فعال‌سازی اعلان صوتی">فعال‌سازی اعلان صوتی</button>
@@ -665,6 +642,29 @@
                  SETTINGS
             ==================================== -->
 
+            <section class="admin-page" id="page-loyalty" aria-labelledby="loyalty-title">
+                <div class="page-heading page-heading-row"><div><span class="page-eyebrow">باشگاه مشتریان</span><h1 id="loyalty-title">قوانین و کمپین‌ها</h1><p>پیش‌نویس قوانین تخفیف و پیامک را مدیریت کنید.</p></div><button type="button" class="primary-button" id="loyalty-add">+ قانون جدید</button></div>
+                <p class="panel loyalty-notice">این بخش فقط پیش‌نویس محلی است؛ ارسال پیامک، اعمال تخفیف و اطلاعات اعضای واقعی به سرویس سرور نیاز دارد.</p>
+                <section class="panel" id="demo-members-panel" hidden aria-labelledby="demo-members-title"><h2 id="demo-members-title">اعضای آزمایشی باشگاه مشتریان</h2><p>فقط اطلاعات ساختگی همین مرورگر؛ عضویت و سفارش واقعی نیست.</p><p><a class="secondary-button" id="demo-customer-entry-link" href="../?qr=demo" target="_blank" rel="noopener noreferrer">باز کردن ورود آزمایشی مشتری</a></p><div id="demo-members-list"></div></section>
+                <section class="panel loyalty-sms-readiness" aria-labelledby="loyalty-sms-title"><h2 id="loyalty-sms-title">تنظیمات پیامکی</h2><p>سرویس ارسال متصل نیست. فقط متن و قوانین را آماده کنید.</p><p>ارسال واقعی نیازمند رضایت دریافت پیامک، لغو عضویت و نگهداری کلید سرویس در سرور است.</p></section>
+                <p class="panel" id="loyalty-connected" hidden>مدیریت قوانین در حالت متصل هنوز فعال نیست.</p>
+                <form class="settings-form" id="loyalty-form" hidden>
+                    <h2>ویرایش قانون</h2><div class="form-grid">
+                    <label class="form-field full"><span>نام قانون</span><input name="name" required maxlength="100"></label>
+                    <label class="form-field"><span>محرک اجرا</span><select name="trigger"><option value="birthday">تولد</option><option value="new-year">سال نو</option><option value="first-purchase">اولین خرید</option><option value="threshold">حداقل مبلغ خرید</option><option value="custom">مناسبت دلخواه</option></select></label>
+                    <label class="form-field" id="loyalty-threshold" hidden><span>حداقل مبلغ خرید</span><input name="threshold" type="number" min="1" max="1000000000000" step="1" inputmode="numeric"></label>
+                    <label class="form-field" id="loyalty-custom" hidden><span>شرط دلخواه</span><input name="condition" maxlength="200"></label>
+                    <label class="form-field"><span>نوع پاداش</span><select name="reward"><option value="none">بدون پاداش</option><option value="percent">درصد تخفیف</option><option value="fixed">مبلغ تخفیف</option><option value="gift">هدیه</option></select></label>
+                    <label class="form-field" id="loyalty-value" hidden><span>مقدار تخفیف</span><input name="value" type="number" min="1" max="1000000000000" step="1" inputmode="numeric"></label>
+                    <label class="form-field" id="loyalty-gift" hidden><span>شرح هدیه</span><input name="gift" maxlength="200"></label>
+                    <label class="form-field"><span>تاریخ انقضا</span><input type="date" name="expires"></label>
+                    <label class="form-field full"><span>متن پیامک (پیش‌نویس)</span><textarea name="message" rows="4" maxlength="500" required></textarea></label>
+                    <div class="form-field full sms-preview-panel"><h3>پیش‌نمایش متن پیامک</h3><p id="loyalty-message-preview" data-admin-user-text="true" class="sms-preview-text"></p><small id="loyalty-message-count" aria-label="تعداد نویسه‌ها"></small><p>پیش‌نمایش محلی؛ هزینه و ارسال پیامک محاسبه نمی‌شود.</p></div>
+                    </div><div class="form-actions"><button type="submit" class="primary-button">ذخیره پیش‌نویس</button><button type="button" class="secondary-button" id="loyalty-cancel">لغو</button></div>
+                </form>
+                <p id="loyalty-status" role="status" aria-live="polite"></p><div id="loyalty-list" class="loyalty-list"></div>
+            </section>
+
             <section
                 class="admin-page"
                 id="page-settings"
@@ -697,7 +697,7 @@
                     id="restaurant-settings-form"
                 >
 
-                    <div class="form-grid">
+                    <fieldset class="settings-group"><legend>هویت رستوران</legend><div class="form-grid">
 
                         <label class="form-field">
 
@@ -707,7 +707,7 @@
 
                             <input
                                 type="text"
-                                name="name"
+                                name="name" maxlength="120"
                                 autocomplete="organization"
                                 required
                             >
@@ -723,7 +723,7 @@
 
                             <input
                                 type="text"
-                                name="tagline"
+                                name="tagline" maxlength="180"
                             >
 
                         </label>
@@ -736,13 +736,15 @@
                             </span>
 
                             <textarea
-                                name="description"
+                                name="description" maxlength="1200"
                                 rows="4"
                             ></textarea>
 
                         </label>
 
 
+                    </div></fieldset>
+                    <fieldset class="settings-group"><legend>راه‌های ارتباطی</legend><div class="form-grid">
                         <label class="form-field">
 
                             <span>
@@ -751,7 +753,7 @@
 
                             <input
                                 type="tel"
-                                name="phone"
+                                name="phone" maxlength="40"
                                 autocomplete="tel"
                             >
 
@@ -766,7 +768,7 @@
 
                             <input
                                 type="url"
-                                name="instagram"
+                                name="instagram" maxlength="500"
                                 placeholder="https://instagram.com/..."
                                 inputmode="url"
                             >
@@ -781,16 +783,15 @@
                             </span>
 
                             <textarea
-                                name="address"
+                                name="address" maxlength="500"
                                 rows="3"
                                 autocomplete="street-address"
                             ></textarea>
 
                         </label>
 
-                    </div>
-
-
+                    </div></fieldset>
+                    <p id="settings-validation" role="status" aria-live="polite" class="settings-validation"></p>
                     <div class="form-actions">
 
                         <button
@@ -799,38 +800,35 @@
                         >
                             ذخیره تغییرات
                         </button>
-
+                        <button type="button" class="secondary-button" id="settings-reset">بازگردانی تغییرات ذخیره‌نشده</button>
                     </div>
 
                 </form>
 
                 <section class="gateway-settings" id="branch-management" aria-labelledby="branch-management-title">
                     <div><span class="page-eyebrow">تنظیم میز و QR</span>
-                        <h2 id="branch-management-title" data-admin-i18n="شعبه‌ها و میزها">شعبه‌ها و میزها</h2>
-                        <p data-admin-i18n="پیش از فعال‌سازی سفارش، ارزش ریالی هر واحد قیمت منو را مشخص کنید.">پیش از فعال‌سازی سفارش، ارزش ریالی هر واحد قیمت منو را مشخص کنید.</p>
+                        <h2 id="branch-management-title" data-admin-i18n="میزها و سفارش QR">میزها و سفارش QR</h2>
+                        <p data-admin-i18n="میزها و سفارش‌گیری برای رستوران از قبل پیکربندی‌شده مدیریت می‌شوند.">میزها و سفارش‌گیری برای رستوران از قبل پیکربندی‌شده مدیریت می‌شوند.</p>
                     </div>
-                    <form id="create-branch-form" class="gateway-settings-form">
-                        <label><span data-admin-i18n="نام شعبه">نام شعبه</span><input name="branchName" required maxlength="120" autocomplete="off"></label>
-                        <label><span data-admin-i18n="شناسه شعبه (لاتین)">شناسه شعبه (لاتین)</span><input name="branchSlug" required maxlength="80" pattern="[a-z0-9]+(-[a-z0-9]+)*" autocomplete="off" dir="ltr"></label>
-                        <label><span data-admin-i18n="ضریب تبدیل قیمت به ریال">ضریب تبدیل قیمت به ریال</span>
-                            <select name="priceMultiplier" required>
-                                <option value="1" data-admin-i18n="۱ (اگر قیمت منو ریال است)">۱ (اگر قیمت منو ریال است)</option>
-                                <option value="10" data-admin-i18n="۱۰ (اگر قیمت منو تومان است)">۱۰ (اگر قیمت منو تومان است)</option>
-                            </select>
-                        </label>
-                        <button class="primary-button" type="submit" data-admin-i18n="افزودن شعبه">افزودن شعبه</button>
-                    </form>
                     <div class="gateway-settings-form">
-                        <label><span data-admin-i18n="انتخاب شعبه">انتخاب شعبه</span><select id="ops-branch"></select></label>
-                        <label class="gateway-check"><input id="ops-qr-enabled" type="checkbox"><span data-admin-i18n="فعال‌سازی سفارش QR">فعال‌سازی سفارش QR</span></label>
-                        <button class="secondary-button" id="ops-save-branch" type="button" data-admin-i18n="ذخیره وضعیت سفارش‌گیری">ذخیره وضعیت سفارش‌گیری</button>
+                        <label><span data-admin-i18n="انتخاب شعبه">انتخاب شعبه</span><select id="ops-branch" disabled></select></label>
+                        <label class="gateway-check"><input id="ops-qr-enabled" type="checkbox" disabled><span data-admin-i18n="فعال‌سازی سفارش QR">فعال‌سازی سفارش QR</span></label>
+                        <button class="secondary-button" id="ops-save-branch" type="button" disabled data-admin-i18n="ذخیره وضعیت سفارش‌گیری">ذخیره وضعیت سفارش‌گیری</button>
                     </div>
                     <form id="create-table-form" class="gateway-settings-form">
                         <label><span data-admin-i18n="کد میز (لاتین)">کد میز (لاتین)</span><input name="tableCode" required maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_-]*" dir="ltr"></label>
                         <label><span data-admin-i18n="نام میز">نام میز</span><input name="tableName" required maxlength="80"></label>
-                        <button class="primary-button" type="submit" data-admin-i18n="افزودن میز">افزودن میز</button>
+                        <button class="primary-button" type="submit" disabled data-admin-i18n="افزودن میز">افزودن میز</button>
                     </form>
-                    <div id="ops-tables" class="ops-tables" aria-live="polite"></div>
+                    <div id="ops-tables" class="ops-tables" aria-live="polite">تنظیمات عملیاتی در نسخه مستقل در دسترس نیست.</div>
+                    <div class="ops-qr-result" id="sample-qr-preview" hidden>
+                        <div class="ops-qr-image" aria-hidden="true"></div>
+                        <div>
+                            <h3>QR ورود آزمایشی</h3>
+                            <p>برای باز کردن فرم عضویت نمونه اسکن کنید.</p>
+                            <a class="secondary-button" href="../?qr=demo" target="_blank" rel="noopener noreferrer">باز کردن ورود آزمایشی مشتری</a>
+                        </div>
+                    </div>
                     <p id="ops-message" role="status" aria-live="polite"></p>
                 </section>
 
@@ -841,12 +839,12 @@
                         <p>مبالغ سفارش مستقیماً به پذیرنده خود رستوران واریز می‌شود.</p>
                     </div>
                     <form id="gateway-settings-form" class="gateway-settings-form">
-                        <label><span>شعبه</span><select id="gateway-branch" required></select></label>
+                        <label><span>شعبه</span><select id="gateway-branch" required disabled></select></label>
                         <label><span>درگاه</span><select id="gateway-provider"><option value="zarinpal">زرین‌پال</option></select></label>
                         <label class="gateway-merchant"><span>شناسه پذیرنده</span><input id="gateway-merchant-id" type="text" inputmode="latin" autocomplete="off" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label>
                         <label class="gateway-check"><input id="gateway-sandbox" type="checkbox" checked><span>محیط آزمایشی</span></label>
                         <label class="gateway-check"><input id="gateway-active" type="checkbox"><span>فعال‌سازی پرداخت آنلاین</span></label>
-                        <button class="primary-button" type="submit">ذخیره درگاه</button>
+                        <button class="primary-button" type="submit" disabled>ذخیره درگاه</button>
                         <p id="gateway-message" role="status"></p>
                     </form>
                 </section>
@@ -855,6 +853,14 @@
 
         </div>
 
+
+        <nav class="admin-bottom-nav" aria-label="ناوبری سریع مدیریت">
+            <button type="button" data-page="loyalty"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5v1"/></svg><span dir="auto">باشگاه مشتریان</span></button>
+            <button type="button" data-page="products"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M10 4v5"/></svg><span dir="auto">محصولات</span></button>
+            <button type="button" data-page="dashboard" class="is-active" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10h-6v-6H9v6H3z"/></svg><span dir="auto">خانه</span></button>
+            <button type="button" data-page="categories"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span dir="auto">دسته‌بندی‌ها</span></button>
+            <button type="button" data-page="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m10 3 4 0 1 3 3 1 3 3-2 2 2 2-3 3-3 1-1 3h-4l-1-3-3-1-3-3 2-2-2-2 3-3 3-1z"/></svg><span dir="auto">تنظیمات</span></button>
+        </nav>
         <footer class="admin-footer">
             <div class="admin-footer-brand"><strong>ROMANO</strong><span>پنل مدیریت</span></div>
             <p>مدیریت منوی دیجیتال رستوران</p>
@@ -1352,13 +1358,13 @@
         </div>
 
         <div class="admin-gate-heading">
-            <span class="admin-gate-eyebrow">دسترسی امن مدیریت</span>
+            <span class="admin-gate-eyebrow" id="admin-gate-eyebrow">دسترسی امن مدیریت</span>
 
             <h1 id="admin-gate-title">
                 خوش آمدید
             </h1>
 
-            <p>
+            <p id="admin-gate-description">
                 برای ورود امن به پنل مدیریت، با حساب مجاز خود وارد شوید.
             </p>
         </div>
@@ -1368,8 +1374,8 @@
             <form class="admin-gate-form" id="admin-gate-form" novalidate>
 
                 <label class="admin-gate-field" for="admin-gate-email">
-                    <span>ایمیل</span>
-                    <input id="admin-gate-email" name="email" type="email" inputmode="email" autocomplete="username" dir="ltr" required maxlength="254">
+                    <span id="admin-gate-id-label">شناسه ورود (ایمیل)</span>
+                    <input id="admin-gate-email" name="email" type="text" autocomplete="username" dir="ltr" required maxlength="254">
                 </label>
 
                 <label class="admin-gate-field" for="admin-gate-password">
@@ -1381,7 +1387,9 @@
 
             </form>
 
-            <div class="admin-gate-secure-line" aria-hidden="true">
+            <label class="admin-gate-field" for="admin-gate-language"><span>زبان</span><select id="admin-gate-language"><option value="fa">فارسی</option><option value="en">English</option><option value="tr">Türkçe</option><option value="ar">العربية</option></select></label>
+            <p id="admin-demo-credentials" hidden>ورود آزمایشی؛ امنیت واقعی نیست. <bdi dir="ltr">demo-admin / Demo-Only-2026</bdi></p>
+            <div class="admin-gate-secure-line" id="admin-gate-server-auth" aria-hidden="true">
                 <span class="admin-gate-secure-dot"></span>
                 <span>احراز هویت امن سرور</span>
                 <span class="admin-gate-secure-dot"></span>
@@ -1399,7 +1407,7 @@
         <div class="admin-gate-footer">
             <span>منوی دیجیتال ROMANO</span>
             <span aria-hidden="true">•</span>
-            <span>فقط کاربران مجاز</span>
+            <span id="admin-gate-footer-mode">فقط کاربران مجاز</span>
         </div>
 
     </div>
@@ -1411,11 +1419,18 @@
 <script src="../js/money.js"></script>
 <script src="admin-i18n.js"></script>
 <script src="api.js"></script>
+<script src="admin-stage12-model.js"></script>
 <script src="admin.js"></script>
 <script src="rv4-admin-plus.js"></script>
 <script src="workspace.js"></script>
 <script src="vendor/qrcode.min.js"></script>
 <script src="orders.js"></script>
+<script src="../js/demo-review.js"></script>
+<script src="../js/demo-members.js"></script>
+<script src="admin-stage12.js"></script>
+<script src="demo-members-panel.js"></script>
+<script src="revenue-model.js"></script>
+<script src="revenue.js"></script>
 
 </body>
 

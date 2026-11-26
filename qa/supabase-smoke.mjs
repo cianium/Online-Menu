@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 
-const base = (process.env.ROMANO_PUBLIC_API_URL || "https://tjrzeourqvahtocwnzwd.supabase.co/functions/v1/romano-public").replace(/\/$/, "");
+import { requireLiveUrl } from "./live-targets.mjs";
+const base = requireLiveUrl("ROMANO_PUBLIC_API_URL");
 
 async function read(path, expected = 200) {
   const response = await fetch(base + path, {

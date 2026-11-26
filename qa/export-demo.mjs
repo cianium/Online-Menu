@@ -9,6 +9,18 @@ const ROOT_FILES = ['index.html', 'manifest.webmanifest', 'sw.js'];
 const PUBLIC_DIRS = ['admin', 'assets', 'css', 'js'];
 const EXTENSIONS = new Set(['.html', '.js', '.css', '.json', '.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.txt']);
 
+function demoDocument(html, customer) {
+  const end = '</head>';
+  let result = html;
+  if (customer) {
+    const robots = '<meta name="robots" content="index, follow">';
+    if (result.split(robots).length !== 2) throw new Error('Unexpected customer robots metadata');
+    result = result.replace(robots, '<meta name="robots" content="noindex, nofollow">');
+  }
+  if (result.split(end).length !== 2) throw new Error('Unexpected document head');
+  return result.replace(end, '    <meta name="online-menu-mode" content="standalone">\n' + end);
+}
+
 export async function exportDemo(source, destination) {
   const root = await realpath(source);
   const output = path.resolve(destination);
@@ -39,11 +51,8 @@ export async function exportDemo(source, destination) {
       if (!info.isFile() || (!ROOT_FILES.includes(relative) && !EXTENSIONS.has(path.extname(relative).toLowerCase()))) throw new Error(`Unexpected public file: ${relative}`);
       let bytes = await readFile(src);
       // The private export must not be indexed or persist protected pages in a PWA cache.
-      if (relative === 'index.html') {
-        const html = bytes.toString('utf8');
-        const robots = '<meta name="robots" content="index, follow">';
-        if (html.split(robots).length !== 2) throw new Error('Unexpected customer robots metadata');
-        bytes = Buffer.from(html.replace(robots, '<meta name="robots" content="noindex, nofollow">'));
+      if (relative === 'index.html' || relative === 'admin/index.html') {
+        bytes = Buffer.from(demoDocument(bytes.toString('utf8'), relative === 'index.html'));
       } else if (relative === 'sw.js') {
         bytes = await readFile(new URL('./private-demo-sw.js', import.meta.url));
       }

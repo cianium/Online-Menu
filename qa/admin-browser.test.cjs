@@ -1,3 +1,4 @@
+const {loginDemoAdmin}=require('./demo-admin-login.cjs');
 /* Run with a local preview at ADMIN_TEST_URL (default: http://127.0.0.1:8765).
    Install playwright and its Chromium first. Optional CHROMIUM_EXECUTABLE_PATH. */
 const assert = require('node:assert/strict');
@@ -9,20 +10,113 @@ try { pw = require('playwright'); } catch (e) {
   pw = require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES + '/playwright');
 }
 const base = process.env.ADMIN_TEST_URL || 'http://127.0.0.1:8765';
-const out = path.resolve(__dirname, '../docs/qa');
+const out = path.resolve(process.env.BROWSER_EVIDENCE_DIR || path.join(__dirname, '../docs/qa'));
 fs.mkdirSync(out, { recursive: true });
 const results = [];
 let browser;
 async function check(name, action) { await action(); results.push(name); console.log('PASS', name); }
 (async () => {
   browser = await pw.chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined), args: ['--no-sandbox', '--disable-dev-shm-usage'] });
-  const context = await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
+  // Axe is injected by this test suite. The standalone integration suite enforces CSP.
+  const context = await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce',bypassCSP:true});
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   await page.goto(base + '/admin/');
-  await page.waitForFunction(() => typeof adminInitialized !== 'undefined' && adminInitialized && !document.querySelector('.admin-app').inert);
+  await page.locator('#admin-gate').waitFor({state:'visible'});
+  await check('Demo admin ID/password gate rejects incorrect credentials and localizes form',async()=>{
+    assert.equal(await page.locator('.admin-app').evaluate(n=>n.inert),true);
+    for(const lang of ['fa','ar','en','tr']){
+      await page.locator('#admin-gate-language').selectOption(lang);
+      assert.equal(await page.locator('html').getAttribute('dir'),['fa','ar'].includes(lang)?'rtl':'ltr');
+      for(const width of [320,390,1440]){
+        await page.setViewportSize({width,height:844});
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+      }
+    }
+    await page.locator('#admin-gate-email').fill('demo-admin');
+    await page.locator('#admin-gate-password').fill('wrong-password');
+    await page.locator('#admin-gate-submit').click();
+    assert.equal(await page.locator('#admin-gate-error').isVisible(),true);
+    assert.equal(await page.locator('.admin-app').evaluate(n=>n.inert),true);
+    await page.locator('#admin-gate-language').selectOption('fa');
+    await loginDemoAdmin(page);
+  });
   await check('Local demo boot and seed catalog', async () => assert.equal(await page.evaluate(() => state.products.length), 21));
+  await check('Sample revenue filters and accessible empty state in four locales',async()=>{
+    await page.evaluate(()=>navigateTo('dashboard'));
+    for(const lang of ['fa','en','tr','ar']){
+      await page.evaluate(l=>ROMANO_ADMIN_I18N.setLanguage(l),lang);
+      await page.locator('#revenue-period').selectOption('7');
+      assert.equal(await page.locator('#revenue-content').isVisible(),true);
+      assert.equal(await page.locator('#revenue-table-body tr').count(),7);
+      assert.equal(await page.locator('#revenue-bars span').count(),7);
+      assert.equal(await page.locator('#revenue-export').isEnabled(),true);
+    }
+    await page.locator('#revenue-period').selectOption('30');
+  });
+  await check('Sample revenue populated chart, currency filter, CSV download and no customer identity in export',async()=>{
+    await page.evaluate(()=>{
+      ROMANO_ADMIN_I18N.setLanguage('en');navigateTo('dashboard');
+      const now=new Date(),before=new Date(now);before.setDate(now.getDate()-7);
+      const order=(id,createdAt,total,currency)=>({id,createdAt:createdAt.toISOString(),total,currency,items:[{name:'Synthetic QA dish',price:total,quantity:1}]});
+      const key=RomanoDemoMembers.key;
+      localStorage.setItem(key,JSON.stringify([{id:'qa-revenue',name:'Synthetic QA member',phone:'12025550199',createdAt:before.toISOString(),orders:[order('qa-a',now,100,'IRT'),order('qa-b',before,50,'IRT'),order('qa-c',now,25,'TRY')]}]));
+      document.dispatchEvent(new CustomEvent('romano:demo-membership-changed'));
+    });
+    try{
+      await page.locator('#revenue-period').selectOption('7');
+      await page.locator('#revenue-currency').selectOption('IRT');
+      assert.equal(await page.locator('#revenue-total').textContent(),'100 Toman');
+      assert.equal(await page.locator('#revenue-count').textContent(),'1');
+      assert.equal(await page.locator('#revenue-change').textContent(),'+100%');
+      await page.locator('#revenue-bucket').selectOption('6');
+      assert.match(await page.locator('#revenue-detail').textContent(),/100 Toman/);
+      const downloadPromise=page.waitForEvent('download');
+      await page.locator('#revenue-export').click();
+      const download=await downloadPromise;
+      assert.match(download.suggestedFilename(),/^ramen-sample-orders-IRT-/);
+      const csv=fs.readFileSync(await download.path(),'utf8');
+      assert.match(csv,/,IRT,100,1,100/);
+      assert.doesNotMatch(csv,/Synthetic QA member|12025550199|Synthetic QA dish|TRY/);
+      await page.locator('#revenue-currency').selectOption('TRY');
+      assert.equal(await page.locator('#revenue-count').textContent(),'1');
+      assert.equal(await page.locator('#revenue-change').textContent(),'—');
+      await page.locator('#revenue-currency').selectOption('IRT');
+      for(const width of [320,1440]){
+        await page.setViewportSize({width,height:900});
+        await page.locator('.overview-revenue').scrollIntoViewIfNeeded();
+        assert.ok(await page.locator('.overview-revenue').evaluate(el=>el.scrollWidth<=el.clientWidth+1));
+        await page.locator('.overview-revenue').screenshot({path:path.join(out,'admin-revenue-'+width+'.png')});
+      }
+    }finally{
+      await page.evaluate(()=>{localStorage.removeItem(RomanoDemoMembers.key);document.dispatchEvent(new CustomEvent('romano:demo-membership-changed'));});
+      await page.locator('#revenue-period').selectOption('30');
+    }
+  });
+  await check('Compact admin header keeps only the requested controls and preserves logout',async()=>{
+    await page.setViewportSize({width:320,height:900});
+    for(const lang of ['fa','ar','en','tr']){
+      await page.evaluate(l=>ROMANO_ADMIN_I18N.setLanguage(l),lang);
+      const header=page.locator('.admin-header');
+      assert.equal(await header.locator('.admin-header-brand').textContent(),'ROMANO');
+      assert.equal(await header.locator('#admin-add-product-shortcut,#admin-logout-button').count(),0);
+      const controls=header.locator('button,a[href]');
+      assert.equal(await controls.count(),4);
+      for(const control of await controls.all()){
+        const rect=await control.boundingBox();assert.ok(rect && rect.width>=44 && rect.height>=44,JSON.stringify({lang,label:await control.getAttribute("aria-label"),rect}));
+        assert.ok((await control.getAttribute('aria-label'))?.trim(),lang);
+      }
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),lang);
+      await header.locator('[data-page-target="settings"]').click();
+      assert.equal(await page.locator('#page-settings').isVisible(),true);
+      await page.locator('#mobile-menu-button').click();
+      assert.equal(await page.locator('#sidebar #admin-logout-button').isVisible(),true);
+      await page.locator('#sidebar-close').click();
+    }
+    await page.evaluate(()=>{ROMANO_ADMIN_I18N.setLanguage('fa');navigateTo('dashboard');});
+    await page.setViewportSize({width:1440,height:1000});
+  });
 await check('Admin interface contains no developer credits or internal release labels', async () => {
  assert.equal(await page.locator('.creator-signature').count(), 0);
  const visibleText = await page.locator('.admin-app').innerText();
@@ -44,7 +138,7 @@ await check('Order filter group accessible name is localized in all four languag
   assert.equal(await page.locator('.orders-filters').getAttribute('aria-label'), expected[lang]);
  }
 });
-  await check('4 languages × 5 widths × 5 admin pages: direction and horizontal overflow', async () => {
+  await check('4 languages × 9 widths × 6 admin pages: direction and horizontal overflow', async () => {
     for (const lang of ['en','tr','ar','fa']) {
       await page.evaluate(lang => window.ROMANO_ADMIN_I18N.setLanguage(lang), lang);
       assert.equal(await page.getAttribute('html','dir'), ['fa','ar'].includes(lang) ? 'rtl' : 'ltr');
@@ -54,13 +148,13 @@ await check('Order filter group accessible name is localized in all four languag
       assert.match(await page.locator('#dashboard-title').evaluate(node => getComputedStyle(node).fontFamily), new RegExp(expectedDisplay));
       const expectedBrand = {fa:'مدیریت',en:'Management',tr:'Yönetim',ar:'الإدارة'}[lang];
       assert.equal(await page.locator('.admin-brand-label').textContent().then(value=>value.trim()), expectedBrand);
-      assert.equal(await page.locator('.admin-brand').getAttribute('aria-label'), ({fa:'ROMANO | مدیریت',en:'ROMANO | Admin',tr:'ROMANO | Yönetim',ar:'رومانو | الإدارة'})[lang]);
+      assert.equal(await page.locator('.admin-brand').getAttribute('aria-labelledby'), 'admin-brand-name admin-brand-label');
       assert.equal(await page.locator('.admin-brand-name').textContent().then(value=>value.trim()), 'ROMANO');
       assert.equal(await page.locator('.admin-footer-brand strong').textContent().then(value=>value.trim()), 'ROMANO');
       assert.match(await page.title(), /ROMANO|رومانو/);
-      for (const width of [1440,1024,768,390,320]) {
+      for (const width of [1920,1440,1024,768,430,390,375,360,320]) {
         await page.setViewportSize({width,height:900});
-        for (const section of ['dashboard','orders','products','categories','settings']) {
+        for (const section of ['dashboard','orders','products','categories','settings','loyalty']) {
           await page.evaluate(section => navigateTo(section),section);
           await page.waitForTimeout(50);
           if(width < 1000) assert.equal(await page.locator("#sidebar").isVisible(),false);
@@ -89,6 +183,101 @@ await check('Order filter group accessible name is localized in all four languag
         }
       }
     }
+  });
+  await check('Mobile bottom navigation, drawer focus and requested physical order', async () => {
+    await page.setViewportSize({width:390,height:844});
+    for (const lang of ['fa','en','ar','tr']) {
+      await page.evaluate(l=>ROMANO_ADMIN_I18N.setLanguage(l),lang);
+      const nav=page.locator('.admin-bottom-nav');
+      const buttons=nav.locator('button');
+      assert.deepEqual(await buttons.evaluateAll(nodes=>nodes.map(n=>n.dataset.page)),['loyalty','products','dashboard','categories','settings']);
+      const boxes=await Promise.all((await buttons.all()).map(b=>b.boundingBox()));
+      assert.ok(boxes.every((b,i)=>b&&b.height>=44&&(i===0||b.x>boxes[i-1].x)),lang);
+      await nav.locator('[data-page=loyalty]').click();
+      assert.equal(await page.locator('#page-loyalty').isVisible(),true);
+      assert.equal(await nav.locator('[data-page=loyalty]').getAttribute('aria-current'),'page');
+      await page.locator('#mobile-menu-button').click();
+      assert.equal(await page.locator('.admin-main').evaluate(el=>el.inert),true);
+      await page.keyboard.press('Escape');
+      assert.equal(await page.locator('.admin-main').evaluate(el=>el.inert),false);
+      await page.waitForFunction(()=>document.activeElement.id==='mobile-menu-button');
+    }
+  });
+  await check('Local rule drafts create, edit, toggle, persist and delete without sending SMS', async () => {
+    await page.evaluate(()=>{ROMANO_ADMIN_I18N.setLanguage('en');navigateTo('loyalty');});
+    await page.locator('#loyalty-add').click();
+    const form=page.locator('#loyalty-form');
+    await form.locator('[name=name]').fill('QA birthday');
+    await form.locator('[name=reward]').selectOption('percent');
+    await form.locator('[name=value]').fill('15');
+    await form.locator('[name=message]').fill('<b>Local only</b>');
+    assert.equal(await page.locator('#loyalty-message-preview').textContent(),'<b>Local only</b>');
+    assert.equal(await page.locator('#loyalty-message-preview b').count(),0);
+    assert.equal(await page.locator('#loyalty-add').isDisabled(),true);
+    await form.locator('[type=submit]').click();
+    await page.waitForFunction(()=>document.querySelector('#loyalty-form').hidden);
+    assert.equal(await page.locator('.loyalty-preview').textContent(),'<b>Local only</b>');
+    assert.equal(await page.locator('.loyalty-preview b').count(),0);
+    await page.locator('[data-rule-action=edit]').click();
+    await form.locator('[name=value]').fill('20');
+    await form.locator('[type=submit]').click();
+    await page.locator('[data-rule-action=toggle]').click();
+    await page.reload();
+    await page.waitForFunction(()=>adminInitialized&&!document.querySelector('.admin-app').inert);
+    await page.evaluate(()=>navigateTo('loyalty'));
+    assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('online_menu_loyalty_drafts_v1:romano'))[0].value),20);
+    assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('online_menu_loyalty_drafts_v1:romano'))[0].enabled),true);
+    await page.locator('[data-rule-action=delete]').click();
+    await page.locator('dialog[open] [value=confirm]').click();
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem('online_menu_loyalty_drafts_v1:romano')).length===0);
+  });
+  await check('Branch creation removed; standalone settings cannot submit live operations in any locale',async()=>{
+    await page.evaluate(()=>navigateTo('settings'));
+    for(const lang of ['fa','en','tr','ar']){
+      await page.evaluate(l=>ROMANO_ADMIN_I18N.setLanguage(l),lang);
+      assert.equal(await page.locator('#create-branch-form,[name=branchName],[name=branchSlug],[name=priceMultiplier]').count(),0);
+      assert.equal(await page.evaluate(()=>typeof RomanoAPI.createBranch),'undefined');
+      assert.equal(await page.locator('#ops-branch').isDisabled(),true);
+      assert.equal(await page.locator('#create-table-form button').isDisabled(),true);
+      assert.equal(await page.locator('#ops-save-branch').isDisabled(),true);
+      assert.equal(await page.locator('#gateway-settings-form button').isDisabled(),true);
+      assert.ok((await page.locator('#ops-tables').innerText()).trim());
+    }
+  });
+  await check('Grouped settings validate contact and discard unsaved input without writing',async()=>{
+    await page.evaluate(()=>{ROMANO_ADMIN_I18N.setLanguage('en');navigateTo('settings');});
+    const form=page.locator('#restaurant-settings-form');const previous=await form.locator('[name=phone]').inputValue();
+    const before=await page.evaluate(()=>localStorage.getItem('romano_restaurant'));
+    await form.locator('[name=phone]').fill('bad phone');await form.locator('[type=submit]').click();
+    assert.equal(await form.locator('[name=phone]').getAttribute('aria-invalid'),'true');
+    assert.equal(await page.locator('#settings-validation').textContent(),'Invalid phone number.');
+    assert.equal(await page.evaluate(()=>localStorage.getItem('romano_restaurant')),before);
+    await page.locator('#settings-reset').click();await page.locator('dialog[open] [value=cancel]').click();
+    await page.locator('dialog[open]').waitFor({state:'hidden'});
+    assert.equal(await form.locator('[name=phone]').inputValue(),'bad phone');
+    await page.locator('#settings-reset').click();await page.locator('dialog[open] [value=confirm]').click();
+    await page.waitForFunction(value=>document.querySelector('#restaurant-settings-form [name=phone]').value===value&&!document.querySelector('#restaurant-settings-form').classList.contains('is-dirty'),previous);
+    assert.equal(await form.locator('[name=phone]').inputValue(),previous);
+    assert.equal(await page.evaluate(()=>localStorage.getItem('romano_restaurant')),before);
+    assert.equal(await form.locator('[name=phone]').getAttribute('aria-invalid'),null);
+  });
+  await check('Local rating requires approval and category reorder persists', async () => {
+    await page.evaluate(()=>{RomanoDemoReview.submit(localStorage,'romano',4,'<b>Local comment</b>','test-review-1');navigateTo('dashboard');});
+    assert.equal(await page.locator('#overview-rating-value').textContent(),'—');
+    assert.equal(await page.locator('#overview-rating-comment').textContent(),'<b>Local comment</b>');assert.equal(await page.locator('#overview-rating-comment b').count(),0);
+    await page.locator('[data-rating-action=approve]').click();
+    assert.match(await page.locator('#overview-rating-value').textContent(),/4.*5/);
+    await page.evaluate(()=>{RomanoDemoReview.submit(localStorage,'romano',4,'Same score, new review','test-review-2');navigateTo('dashboard');});
+    assert.equal(await page.locator('#overview-rating-value').textContent(),'—');
+    await page.locator('[data-rating-action=reject]').click();
+    assert.equal(await page.locator('#overview-rating-value').textContent(),'—');
+    await page.evaluate(()=>{localStorage.removeItem('online_menu_demo_rating:romano');localStorage.removeItem('online_menu_demo_rating_moderation:romano');localStorage.removeItem('online_menu_demo_review_v2:romano');navigateTo('categories');});
+    const ids=await page.evaluate(()=>state.categories.map(c=>c.id));
+    await page.locator('.admin-category-card').nth(1).locator('[data-category-action=up]').click();
+    await page.waitForFunction(ids=>state.categories[0].id===ids[1]&&!saveInProgress,ids);
+    assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('romano_categories'))[0].id),ids[1]);
+    await page.locator('.admin-category-card').first().locator('[data-category-action=down]').click();
+    await page.waitForFunction(ids=>state.categories[0].id===ids[0]&&!saveInProgress,ids);
   });
   await page.setViewportSize({width:1440,height:1000});
   await page.evaluate(() => { window.ROMANO_ADMIN_I18N.setLanguage('en'); navigateTo('products'); });
@@ -190,7 +379,7 @@ await check('Order filter group accessible name is localized in all four languag
     await page.locator('[data-select-product]').check();
     await page.locator('[data-bulk=inactive]').click();
     await page.locator('dialog[open] [value=confirm]').click();
-    await page.waitForFunction(()=>state.products.find(p=>p.name==='QA Product').active===false);
+    await page.waitForFunction(()=>!saveInProgress&&state.products.find(p=>p.name==='QA Product').active===false&&JSON.parse(localStorage.getItem('romano_products')).find(p=>p.name==='QA Product').active===false&&document.querySelectorAll('.admin-product-card').length===0);
     assert.equal(await page.locator('.admin-product-card').count(),0);
     assert.match(await page.locator('.bulk-count').innerText(),/^0/);
   });
@@ -223,23 +412,28 @@ await check('Order filter group accessible name is localized in all four languag
     await page.waitForFunction(()=>!document.querySelector('#category-modal').classList.contains('is-open'));
     await page.locator('.admin-category-card').filter({hasText:'QA Renamed'}).locator('[data-category-action=delete]').click();
     await page.locator('dialog[open] [value=confirm]').click();
-    await page.waitForFunction(()=>!state.categories.some(c=>c.name==='QA Renamed'));
+    await page.waitForFunction(()=>!saveInProgress&&!state.categories.some(c=>c.name==='QA Renamed')&&!JSON.parse(localStorage.getItem('romano_categories')).some(c=>c.name==='QA Renamed'));
     await page.evaluate(()=>navigateTo('products'));
     await page.locator('.admin-clear-filters').click();
     await page.locator('#product-search').fill('QA Product');
     await page.locator('[data-product-action=delete]').click();
     await page.locator('dialog[open] [value=confirm]').click();
-    await page.waitForFunction(()=>!state.products.some(p=>p.name==='QA Product'));
+    await page.waitForFunction(()=>!saveInProgress&&!state.products.some(p=>p.name==='QA Product')&&!JSON.parse(localStorage.getItem('romano_products')).some(p=>p.name==='QA Product'));
     assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('romano_products')).some(p=>p.name==='QA Product')),false);
   });
   // Mocked HTTP contract tests exercise frontend handling, not PostgreSQL or authorization.
   const remote={restaurant:{name:'Remote',currency:'TRY'},categories:[],products:[]};
-  let writes=0,failSave=false,delaySave=0,uploads=0;
+  let writes=0,failSave=false,delaySave=0,uploads=0,branchPosts=0;
   await context.route('**/api/v1/**',async route=>{
     const u=new URL(route.request().url());let data;
     if(u.pathname.endsWith('/auth/me'))data={user:{id:'u'}};
     else if(u.pathname.endsWith('/auth/csrf'))data={csrfToken:'test'};
     else if(u.pathname.endsWith('/admin/data'))data=remote;
+    else if(u.pathname.endsWith('/admin/branches')){
+      if(route.request().method()==='POST')branchPosts++;
+      data={branches:[{id:'existing',name:'Configured restaurant',qr_ordering_enabled:true}]};
+    }
+    else if(u.pathname.endsWith('/admin/branches/existing/tables'))data={tables:[{id:'t1',code:'T1',display_name:'Table 1',active:true}]};
     else if(u.pathname.endsWith('/admin/media')){uploads++;data={url:'/uploads/test.png'};}
     else if(u.pathname.endsWith('/admin/snapshot')){
       writes++;if(delaySave)await new Promise(r=>setTimeout(r,delaySave));
@@ -253,6 +447,18 @@ await check('Order filter group accessible name is localized in all four languag
     assert.equal(await page.evaluate(()=>state.products.length),0);
     assert.equal(await page.evaluate(()=>state.categories.length),0);
     assert.equal(writes,0);
+    assert.equal(await page.locator('#revenue-content').isVisible(),false);
+    assert.equal(await page.locator('#revenue-export').isDisabled(),true);
+  });
+  await check('Connected settings retain preconfigured restaurant, table and gateway controls',async()=>{
+    await page.evaluate(()=>navigateTo('settings'));
+    await page.waitForFunction(()=>document.querySelector('#ops-branch').value==='existing'&&document.querySelector('#ops-tables').textContent.includes('Table 1'));
+    assert.equal(await page.locator('#create-branch-form').count(),0);
+    assert.equal(await page.locator('#ops-qr-enabled').isChecked(),true);
+    assert.equal(await page.locator('#create-table-form button').isEnabled(),true);
+    assert.equal(await page.locator('#gateway-branch').inputValue(),'existing');
+    assert.equal(await page.locator('#gateway-settings-form button').isEnabled(),true);
+    assert.equal(branchPosts,0);
   });
   await check('Server failure keeps category form and rolls back state; retry saves once',async()=>{
     await page.evaluate(()=>navigateTo('categories'));

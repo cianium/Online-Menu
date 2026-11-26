@@ -9,6 +9,12 @@ const port = Number(process.env.DEMO_PORT ?? 8765);
 if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('Invalid DEMO_PORT');
 const rootFiles = new Set(['index.html', 'manifest.webmanifest', 'sw.js']);
 const folders = new Set(['admin', 'assets', 'css', 'js']);
+const csp = [
+  "default-src 'self'", "base-uri 'self'", "connect-src 'self'", "font-src 'self'",
+  "form-action 'self'", "frame-ancestors 'none'", "img-src 'self' data: blob: https:",
+  "manifest-src 'self'", "object-src 'none'", "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'", "worker-src 'self'"
+].join('; ');
 const mime = new Map(Object.entries({
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
@@ -24,6 +30,8 @@ const server = createServer(async (req, res) => {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
   res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Content-Security-Policy', csp);
+  res.setHeader('Permissions-Policy', 'camera=(), geolocation=(), microphone=(), payment=(), usb=()');
   const finish = status => { res.writeHead(status, {'Content-Type': 'text/plain; charset=utf-8'}); res.end(); };
   const authority = req.headers.host;
   const listeningPort = server.address().port;

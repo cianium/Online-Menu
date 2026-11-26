@@ -1,5 +1,6 @@
 // Production endpoint smoke test. Does not create orders, payments or sessions.
-const base = "https://tjrzeourqvahtocwnzwd.supabase.co/functions/v1";
+import { requireLiveUrl } from "./live-targets.mjs";
+const base = requireLiveUrl("ROMANO_FUNCTIONS_BASE_URL");
 const services = ["romano-admin", "romano-order", "romano-payment"];
 for (const slug of services) {
   const response = await fetch(`${base}/${slug}/health`, { signal:AbortSignal.timeout(20000) });

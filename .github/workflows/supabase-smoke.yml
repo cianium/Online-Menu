@@ -13,12 +13,17 @@ permissions:
 
 jobs:
   live-api:
+    if: github.event_name == 'workflow_dispatch' || vars.ROMANO_LIVE_QA == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
       - name: Verify published menu API and language contract
+        env:
+          ROMANO_PUBLIC_API_URL: ${{ vars.ROMANO_PUBLIC_API_URL }}
         run: node qa/supabase-smoke.mjs

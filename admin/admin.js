@@ -125,7 +125,7 @@ const DOM = {
         document.querySelector("#current-page-title"),
 
     navItems:
-        document.querySelectorAll(".nav-item"),
+        document.querySelectorAll(".nav-item, .admin-bottom-nav [data-page]"),
 
     adminPages:
         document.querySelectorAll(".admin-page"),
@@ -229,20 +229,6 @@ const DOM = {
 };
 
 
-/* =========================================================
-   ACCESS GATE
-
-   Google-first admin access UI. This release deliberately
-   removes the client-side password form from the interface.
-
-   IMPORTANT:
-   This is still a frontend gate until server-side auth/RBAC
-   is connected. The Google ID token is verified against
-   Google's tokeninfo endpoint, but the allowed-email check
-   remains client-side for this static build.
-========================================================= */
-
-
 /*
  * Authentication is server-owned (Argon2id + HttpOnly session + CSRF).
  * The gate below is only a login form; it never decides authorization.
@@ -269,6 +255,9 @@ function showGateError(message) {
 }
 
 let adminInitialized = false;
+let adminDemoMode = false;
+const demoAdminSessionKey = 'online_menu_demo_admin_session_v1';
+function demoAdminSignedIn(){try{return sessionStorage.getItem(demoAdminSessionKey)==='1';}catch{return false;}}
 
 async function startAdmin() {
     if (adminInitialized) return;
@@ -279,19 +268,27 @@ async function startAdmin() {
 function initializeAccessGate() {
     const form = document.querySelector("#admin-gate-form");
     if (!form) return;
+    const language = document.querySelector("#admin-gate-language");
+    language.value = window.ROMANO_ADMIN_I18N.language;
+    language.addEventListener("change",()=>window.ROMANO_ADMIN_I18N.setLanguage(language.value));
+    document.addEventListener("romano:language-changed",()=>{language.value=window.ROMANO_ADMIN_I18N.language;});
     form.addEventListener("submit", async event => {
         event.preventDefault();
         const email = String(form.elements.email.value || "").trim();
         const password = String(form.elements.password.value || "");
         const button = form.querySelector("#admin-gate-submit");
         showGateError("");
-        if (!email || !password) { showGateError("ایمیل و رمز عبور را وارد کنید."); return; }
+        if (!email || !password) { showGateError("شناسه و رمز عبور را وارد کنید."); return; }
 
         const idle = button.textContent;
         button.disabled = true;
         button.textContent = window.ROMANO_ADMIN_I18N?.translate?.("در حال ورود…") || "…";
         try {
-            await window.RomanoAPI.login(email, password);
+            if (adminDemoMode && !window.RomanoAPI.enabled) {
+                if(email!=="demo-admin" || password!=="Demo-Only-2026") {showGateError("شناسه یا رمز عبور آزمایشی نادرست است.");return;}
+                // Public demonstration gate, not authorization or a secret.
+                try{sessionStorage.setItem(demoAdminSessionKey,"1");}catch{}
+            } else await window.RomanoAPI.login(email, password);
             form.reset();
             setGateOpen(false);
             await startAdmin();
@@ -321,7 +318,16 @@ async function bootAdmin() {
     document.querySelector(".admin-app").inert = true;
     try {
         const { available, session } = await window.RomanoAPI.detect();
-        if (!available) document.querySelector("#admin-mode-banner").hidden = false;
+        if (!available) {
+            adminDemoMode=true;
+            document.querySelector("#admin-mode-banner").hidden=false;
+            document.querySelector("#admin-demo-credentials").hidden=false;
+            document.querySelector("#admin-gate-server-auth").hidden=true;
+            for(const [selector,label] of Object.entries({"#admin-gate-id-label":"شناسه ورود","#admin-gate-eyebrow":"دسترسی آزمایشی مدیریت","#admin-gate-description":"با شناسه و رمز عمومی نمونه وارد شوید؛ این حساب واقعی نیست.","#admin-gate-footer-mode":"فقط داده آزمایشی"})) {
+                document.querySelector(selector).textContent=window.ROMANO_ADMIN_I18N.get(label);
+            }
+            if(!demoAdminSignedIn()){setGateOpen(true);return;}
+        }
         if (available && !session?.user) { setGateOpen(true); return; }
         await startAdmin();
     } catch (error) {
@@ -363,6 +369,7 @@ async function initializeAdmin() {
     renderAll();
     document.querySelector(".admin-app").inert = false;
     setSaveStatus(window.RomanoAPI?.enabled ? "server" : "local");
+    document.dispatchEvent(new CustomEvent("romano:demo-membership-changed"));
 
 }
 
@@ -371,7 +378,38 @@ async function initializeAdmin() {
    LOAD STATE
 ========================================================= */
 
+// Capture the exact persisted catalog before editing. Older tabs must not replace newer saves.
+let localCatalogRevision = null;
+function readCatalogRevision(storage = localStorage) {
+    return JSON.stringify(Object.values(STORAGE_KEYS).map(key => storage.getItem(key)));
+}
+async function commitLocalCatalog(entries) {
+    const commit = () => {
+        try {
+            if (localCatalogRevision === null || readCatalogRevision() !== localCatalogRevision) {
+                const error = new Error("Local catalog changed in another tab");
+                error.code = "LOCAL_CATALOG_CONFLICT";
+                throw error;
+            }
+            if (!RomanoStorage.transaction(entries)) throw new Error("Local storage write failed");
+            localCatalogRevision = readCatalogRevision();
+            return { ok: true };
+        } catch (error) {
+            // Keep the lock callback fulfilled; Firefox can report a callback throw as a page error.
+            return { ok: false, error };
+        }
+    };
+    // Web Locks serialize cooperating tabs where supported. The comparison also works on older browsers.
+    const result = navigator.locks?.request
+        ? await navigator.locks.request("romano-demo-catalog", commit)
+        : commit();
+    // Preserve the original error and let the caller display the existing localized failure state.
+    if (!result.ok) throw result.error;
+}
 async function loadState() {
+    if (!window.RomanoAPI?.enabled) {
+        try { localCatalogRevision = readCatalogRevision(); } catch { localCatalogRevision = null; }
+    }
     let restaurant = RomanoStorage.get(STORAGE_KEYS.restaurant, structuredClone(restaurantData));
     let categoriesState = RomanoStorage.get(STORAGE_KEYS.categories, structuredClone(categories));
     let productsState = RomanoStorage.get(STORAGE_KEYS.products, structuredClone(products));
@@ -472,8 +510,7 @@ async function saveStateBundle({ restaurant = state.restaurant, categories = sta
             // Never report a local cache write as a successful server save.
             await syncRemoteSnapshot({ restaurant, categories, products });
         } else {
-            const success = RomanoStorage.transaction([[STORAGE_KEYS.restaurant, restaurant], [STORAGE_KEYS.categories, categories], [STORAGE_KEYS.products, products]]);
-            if (!success) throw new Error("Local storage write failed");
+            await commitLocalCatalog([[STORAGE_KEYS.restaurant, restaurant], [STORAGE_KEYS.categories, categories], [STORAGE_KEYS.products, products]]);
         }
         setSaveStatus("saved");
         window.RomanoToast?.("تغییرات ذخیره شد");
@@ -481,7 +518,8 @@ async function saveStateBundle({ restaurant = state.restaurant, categories = sta
     } catch (error) {
         console.error("Admin save failed:", error);
         setSaveStatus("error");
-        const message = error?.status === 403 ? "برای این تغییر به دسترسی مدیر نیاز دارید." : error?.status === 401 ? "نشست شما پایان یافته است. دوباره وارد شوید." : "ذخیره انجام نشد. اطلاعات فرم حفظ شده است؛ دوباره تلاش کنید.";
+        const message = error?.code === "LOCAL_CATALOG_CONFLICT" ? "داده‌ها در تب دیگری تغییر کرده‌اند. پیش از بارگذاری مجدد، تغییرات فرم را یادداشت کنید." : error?.status === 403 ? "برای این تغییر به دسترسی مدیر نیاز دارید." : error?.status === 401 ? "نشست شما پایان یافته است. دوباره وارد شوید." : "ذخیره انجام نشد. اطلاعات فرم حفظ شده است؛ دوباره تلاش کنید.";
+        if (error?.code === "LOCAL_CATALOG_CONFLICT") document.querySelector(".admin-status-chip").title = window.ROMANO_ADMIN_I18N.translate(message);
         window.RomanoToast?.(message, "danger");
         return false;
     } finally {
@@ -631,7 +669,8 @@ function navigateTo(page) {
         "orders",
         "products",
         "categories",
-        "settings"
+        "settings",
+        "loyalty"
 
     ];
 
@@ -641,6 +680,7 @@ function navigateTo(page) {
     }
 
 
+    const changedPage = state.currentPage !== page;
     state.currentPage =
         page;
 
@@ -683,16 +723,21 @@ function navigateTo(page) {
             "دسته‌بندی‌ها",
 
         settings:
-            "تنظیمات رستوران"
+            "تنظیمات رستوران",
+
+        loyalty:
+            "باشگاه مشتریان"
 
     };
 
 
     DOM.currentPageTitle.textContent =
-        titles[page];
+        window.ROMANO_ADMIN_I18N.translate(titles[page]);
 
 
     closeSidebar();
+    if (changedPage) window.scrollTo(0, 0);
+    document.dispatchEvent(new CustomEvent("romano:admin-page-changed", { detail: { page } }));
 
 }
 
@@ -722,7 +767,15 @@ function initializeSidebar() {
         closeSidebar
     );
 
+    window.addEventListener("resize", () => { if (innerWidth >= 1000 && DOM.sidebar?.classList.contains("is-open")) closeSidebar(); });
     document.addEventListener("keydown", event => {
+        if (event.key === "Tab" && DOM.sidebar?.classList.contains("is-open") && innerWidth < 1000 && !document.querySelector("dialog[open]")) {
+            const controls = [...DOM.sidebar.querySelectorAll("button:not(:disabled), a[href]")].filter(el => el.getClientRects().length);
+            const first = controls[0], last = controls.at(-1);
+            if (first && last && (event.shiftKey ? document.activeElement === first : document.activeElement === last)) {
+                event.preventDefault(); (event.shiftKey ? last : first).focus();
+            }
+        }
         if (event.key === "Escape" &&
                 !document.querySelector("dialog[open]") && DOM.sidebar?.classList.contains("is-open")) {
             event.preventDefault();
@@ -735,6 +788,7 @@ function initializeSidebar() {
 
 function openSidebar() {
 
+    if (innerWidth >= 1000 || DOM.sidebar?.classList.contains("is-open")) return;
     sidebarPreviousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : DOM.mobileMenuButton;
 
     DOM.sidebar?.classList.add(
@@ -749,11 +803,21 @@ function openSidebar() {
         "aria-expanded",
         "true"
     );
+    DOM.sidebar.inert = false;
+    DOM.sidebar.setAttribute("aria-hidden", "false");
+    DOM.sidebar.setAttribute("role", "dialog");
+    DOM.sidebar.setAttribute("aria-modal", "true");
+    document.querySelector(".admin-main").inert = true;
+    DOM.sidebarClose?.focus();
 
 }
 
 
 function closeSidebar() {
+    if (!DOM.sidebar?.classList.contains("is-open")) return;
+    document.querySelector(".admin-main").inert = false;
+    DOM.sidebar.removeAttribute("role");
+    DOM.sidebar.removeAttribute("aria-modal");
 
     DOM.sidebar?.classList.remove(
         "is-open"
@@ -1823,6 +1887,7 @@ function renderCategories() {
 
 
                         <div class="admin-category-actions">
+                            ${!categoryQuery && categorySort === "order" ? `<button class="icon-button" type="button" aria-label="انتقال به بالا" data-category-action="up" data-category-id="${escapeAttribute(category.id)}" ${category.__originalIndex === 0 ? 'disabled' : ''}><span aria-hidden="true">↑</span></button><button class="icon-button" type="button" aria-label="انتقال به پایین" data-category-action="down" data-category-id="${escapeAttribute(category.id)}" ${category.__originalIndex === state.categories.length - 1 ? 'disabled' : ''}><span aria-hidden="true">↓</span></button>` : ''}
 
                             <button class="icon-button" type="button" aria-label="ویرایش ${escapeAttribute(category.name)}" data-category-action="edit" data-category-id="${escapeAttribute(category.id)}">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.5 16.8-.8 3.5 3.5-.8L18.6 8.1a1.8 1.8 0 0 0 0-2.5l-.2-.2a1.8 1.8 0 0 0-2.5 0L4.5 16.8Z"></path><path d="m14.8 6.2 3 3"></path></svg><span class="action-label">ویرایش</span>
@@ -1865,6 +1930,8 @@ function renderCategories() {
 
                         }
 
+
+                        if (action === "up" || action === "down") moveCategory(id, action === "up" ? -1 : 1);
 
                         if (action === "delete") {
 
@@ -2083,7 +2150,7 @@ async function handleCategorySubmit(event) {
             product.category === state.editingCategoryId ? { ...product, categoryName: name } : product
         );
     } else {
-        state.categories = [...state.categories, { id: createId(name), name, image }];
+        state.categories = [...state.categories, { id: createId(name), name, image }].map((item,sortOrder)=>({...item,sortOrder}));
     }
 
     if (!(await saveStateBundle())) {
@@ -2457,6 +2524,19 @@ function compressImageFile(
    DELETE CATEGORY
 ========================================================= */
 
+async function moveCategory(categoryId, delta) {
+    if (saveInProgress || document.querySelector("#rv4-category-search")?.value.trim() || document.querySelector("#rv4-category-sort")?.value !== "order") return;
+    const previous = state.categories;
+    const next = window.AdminStage12Model.moveCategory(previous, categoryId, delta);
+    if (!next) return;
+    state.categories = next;
+    if (!(await saveCategories())) { state.categories = previous; return; }
+    renderAll();
+    const action = delta < 0 ? "up" : "down";
+    const controls = [...DOM.categoriesList.querySelectorAll("[data-category-action]")];
+    (controls.find(el => el.dataset.categoryId === categoryId && el.dataset.categoryAction === action && !el.disabled) || controls.find(el => el.dataset.categoryId === categoryId && el.dataset.categoryAction === "edit"))?.focus();
+}
+
 async function deleteCategory(categoryId) {
     if (saveInProgress) return;
 
@@ -2523,6 +2603,13 @@ function initializeSettings() {
         "submit",
         handleSettingsSubmit
     );
+    DOM.settingsForm?.addEventListener('input',event=>{
+        if(event.target.hasAttribute('aria-invalid')){event.target.removeAttribute('aria-invalid');event.target.removeAttribute('aria-describedby');document.getElementById('settings-validation').textContent='';}
+    });
+    document.getElementById('settings-reset')?.addEventListener('click',async()=>{
+        if(saveInProgress||!DOM.settingsForm.classList.contains('is-dirty'))return;
+        if(await window.RomanoConfirm('تغییرات ذخیره‌نشده کنار گذاشته شود؟'))renderSettings();
+    });
 
 }
 
@@ -2561,6 +2648,8 @@ function renderSettings() {
     form.elements.instagram.value =
         state.restaurant.instagram === "#" ? "" : (state.restaurant.instagram || "");
 
+    document.getElementById('settings-validation').textContent='';
+    form.querySelectorAll('[aria-invalid]').forEach(field=>{field.removeAttribute('aria-invalid');field.removeAttribute('aria-describedby');});
     document.dispatchEvent(new CustomEvent("romano:settings-rendered"));
 
 }
@@ -2590,39 +2679,28 @@ async function handleSettingsSubmit(event) {
         ).trim();
 
 
-    if (instagram && instagram !== "#") {
-
-        try {
-
-            const url = new URL(instagram);
-
-            if (!["https:", "http:"].includes(url.protocol)) {
-                throw new Error("invalid-protocol");
-            }
-
-        } catch (_) {
-
-            window.alert(
-                "لینک Instagram معتبر نیست."
-            );
-
-            return;
-
-        }
-
+    const showError = (field,key) => {
+        DOM.settingsForm.querySelectorAll('[aria-invalid]').forEach(el=>{el.removeAttribute('aria-invalid');el.removeAttribute('aria-describedby');});
+        const input=DOM.settingsForm.elements[field];input.setAttribute('aria-invalid','true');input.setAttribute('aria-describedby','settings-validation');
+        document.getElementById('settings-validation').textContent=window.ROMANO_ADMIN_I18N.get(key);input.focus();
+    };
+    if (!window.AdminStage12Model.validSocialUrl(instagram)) {
+        showError('instagram','لینک Instagram معتبر نیست.');
+        return;
     }
 
 
     if (!name) {
 
-        window.alert(
-            "نام رستوران الزامی است."
-        );
+        showError('name','نام رستوران الزامی است.');
 
         return;
 
     }
 
+
+    const phone = String(form.get("phone") || "").trim();
+    if (!window.AdminStage12Model.validPhone(phone)) { showError('phone','شماره تلفن معتبر نیست.'); return; }
 
     const previousRestaurant = state.restaurant;
     state.restaurant = {
@@ -2640,6 +2718,7 @@ async function handleSettingsSubmit(event) {
         return;
     }
 
+    renderSettings();
     renderDashboard();
     document.dispatchEvent(new CustomEvent("romano:settings-saved"));
 
@@ -2651,6 +2730,7 @@ async function handleSettingsSubmit(event) {
 ========================================================= */
 
 async function logoutAdmin() {
+    try{sessionStorage.removeItem(demoAdminSessionKey);}catch{}
     try {
         if (window.RomanoAPI?.enabled) await window.RomanoAPI.logout();
     } catch (error) { console.error("Admin logout error:", error); }

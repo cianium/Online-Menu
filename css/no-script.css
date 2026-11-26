@@ -1,0 +1,6 @@
+/* Only loaded by the noscript element, never in the normal application. */
+body { min-height:100vh; display:grid; place-items:center; padding:16px; box-sizing:border-box; background:#100e0c; color:#f2ece3; }
+body > :not(noscript) { display:none !important; }
+.no-script-notice { box-sizing:border-box; width:min(100%,36rem); padding:clamp(16px,4vw,32px); border:1px solid #9a8060; border-radius:16px; background:#1c1713; color:#f2ece3; font:1rem/1.8 system-ui,sans-serif; overflow-wrap:anywhere; }
+.no-script-notice p { margin:0; }
+.no-script-notice p + p { border-block-start:1px solid #594936; padding-block-start:12px; margin-block-start:12px; }

@@ -375,11 +375,6 @@ html[lang="ar"] .hero-eyebrow {
   min-height: 156px;
   padding: 16px;
 }
-.category-index {
-  top: 12px;
-  left: 13px;
-  color: rgba(242, 236, 227, 0.55);
-}
 .category-name {
   font-size: 16px;
   font-weight: 500;
@@ -388,6 +383,7 @@ html[lang="ar"] .hero-eyebrow {
   margin-top: 5px;
   opacity: 0.78;
 }
+[dir="rtl"] .category-arrow { transform: scaleX(-1); }
 
 /* ---------------------------------------------------------
    6. FEATURED / SIGNATURE
