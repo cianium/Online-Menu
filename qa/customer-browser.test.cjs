@@ -64,6 +64,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.equal(await nav.locator('.navigation-category-media img').count(),7);
    const bounds=await nav.locator('.navigation-inner').boundingBox(),overlay=await nav.boundingBox();
    assert.ok(bounds&&overlay&&Math.abs(bounds.height-overlay.height)<=2&&Math.abs(bounds.width-overlay.width)<=2,JSON.stringify({bounds,overlay}));
+   assert.ok(Math.abs(bounds.x)<=1&&Math.abs(overlay.x)<=1&&Math.abs(bounds.width-390)<=2&&Math.abs(overlay.width-390)<=2,JSON.stringify({bounds,overlay}));
    if(lang==='fa')await p.screenshot({path:path.join(out,'customer-navigation-fa-390.png')});
    const categoryBounds=await nav.locator('.navigation-categories').boundingBox();
    assert.ok(categoryBounds && categoryBounds.height>0);
