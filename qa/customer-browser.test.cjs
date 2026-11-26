@@ -6,7 +6,10 @@ const base=process.env.ADMIN_TEST_URL||'http://127.0.0.1:8765';
 const out=path.resolve(process.env.BROWSER_EVIDENCE_DIR||path.join(__dirname,'../docs/qa'));fs.mkdirSync(out,{recursive:true});
 const results=[],errors=[];let browser;
 async function check(name,fn){await fn();results.push(name);console.log('PASS',name)}
-async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode!=='loading');await p.locator('#splash-screen').waitFor({state:'detached'});}
+async function ready(p){
+ await p.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode!=='loading'&&Boolean(document.querySelector('.main-navigation')?.__romanoFocus));
+ await p.locator('#splash-screen').waitFor({state:'detached'});
+}
 (async()=>{
  browser=await pw.chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox','--disable-dev-shm-usage']});
  const ctx=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
