@@ -347,6 +347,10 @@ html[dir="ltr"] .main-navigation.is-open .navigation-inner { transform:translate
 }
 
 /* R14 — coherent full-screen navigation, unified cards, focused modal and cart. */
+.main-navigation {
+  top:0!important;right:auto!important;bottom:auto!important;left:0!important;
+  inline-size:100vw!important;block-size:100dvh!important;
+}
 .main-navigation .navigation-inner {
   inset:0!important;inline-size:100vw!important;block-size:100dvh!important;
   min-inline-size:0!important;max-inline-size:none!important;max-block-size:none!important;
