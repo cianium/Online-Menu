@@ -64,6 +64,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.equal(await nav.locator('.navigation-category-media img').count(),7);
    const bounds=await nav.locator('.navigation-inner').boundingBox(),overlay=await nav.boundingBox();
    assert.ok(bounds&&overlay&&Math.abs(bounds.height-overlay.height)<=2&&Math.abs(bounds.width-overlay.width)<=2,JSON.stringify({bounds,overlay}));
+   if(lang==='fa')await p.screenshot({path:path.join(out,'customer-navigation-fa-390.png')});
    const categoryBounds=await nav.locator('.navigation-categories').boundingBox();
    assert.ok(categoryBounds && categoryBounds.height>0);
    assert.equal(await nav.locator('[data-nav-panel="profile"]').getAttribute('aria-label')!==null,true);
@@ -200,6 +201,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   const entry=p.locator('#customer-entry');
   await entry.waitFor({state:'visible'});
   assert.equal(await entry.locator('input').count(),2);
+  await p.screenshot({path:path.join(out,'customer-entry-fa-390.png')});
   await p.keyboard.press('Escape');
   await entry.waitFor({state:'hidden'});
   await cartButton.click();
