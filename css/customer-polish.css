@@ -256,6 +256,7 @@ html[dir="ltr"] .main-navigation.is-open .navigation-inner { transform:translate
 .brand-name {letter-spacing:.045em;}
 .language-button,.menu-toggle,.ramen-header-cart {border-color:#d6ae7045;background:#17130fbd;}
 .language-button:hover,.menu-toggle:hover,.ramen-header-cart:hover {border-color:#d6ae70;background:#2b2117;}
+@media(max-width:360px) {.brand-name{letter-spacing:0;}}
 
 @media(max-width:900px) {
   .main-navigation {
