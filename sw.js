@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r14-experience-3`;
+const CACHE_NAME = `${menuCachePrefix}r14-experience-4`;
 const CORE_ASSETS = [
   "./",
   "./index.html",
