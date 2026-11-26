@@ -61,9 +61,14 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    await p.locator('#menu-toggle').click();
    const nav=p.locator('#main-navigation');
    await nav.locator('.navigation-category-list a').first().waitFor({state:'visible'});
+   await p.waitForFunction(()=>Math.abs(document.querySelector('#main-navigation .navigation-inner')?.getBoundingClientRect().x||0)<=1);
    assert.equal(await nav.locator('.navigation-category-media img').count(),7);
    const bounds=await nav.locator('.navigation-inner').boundingBox(),overlay=await nav.boundingBox();
    assert.ok(bounds&&overlay&&Math.abs(bounds.height-overlay.height)<=2&&Math.abs(bounds.width-overlay.width)<=2,JSON.stringify({bounds,overlay}));
+   assert.ok(Math.abs(bounds.x)<=1&&Math.abs(overlay.x)<=1&&Math.abs(bounds.width-390)<=2&&Math.abs(overlay.width-390)<=2,JSON.stringify({bounds,overlay}));
+   const contentBounds=await nav.locator('.navigation-inner').evaluate(node=>{const outer=node.getBoundingClientRect(),style=getComputedStyle(node),left=outer.left+parseFloat(style.paddingLeft),right=outer.right-parseFloat(style.paddingRight);return {left,right,children:[...node.children].map(child=>{const rect=child.getBoundingClientRect();return {className:child.className,left:rect.left,right:rect.right};})};});
+   assert.ok(contentBounds.children.every(child=>child.left>=contentBounds.left-1&&child.right<=contentBounds.right+1),'Navigation content escapes viewport padding '+lang+': '+JSON.stringify(contentBounds));
+   if(lang==='fa')await p.screenshot({path:path.join(out,'customer-navigation-fa-390.png')});
    const categoryBounds=await nav.locator('.navigation-categories').boundingBox();
    assert.ok(categoryBounds && categoryBounds.height>0);
    assert.equal(await nav.locator('[data-nav-panel="profile"]').getAttribute('aria-label')!==null,true);
@@ -136,12 +141,16 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.ok(await buttons.first().evaluate(node=>node.getBoundingClientRect().height>=44),lang+' category filter touch target');
   }
  });
- await check('Image-first card CTA and favorite remain accessible',async()=>{
+ await check('Compact full-bleed product card matches the premium reference and remains accessible',async()=>{
   const card=cards.first(),button=card.locator('.product-card-button'),favorite=card.locator('[data-favorite-product]');
   await card.evaluate(node=>node.scrollIntoView({block:'start',behavior:'instant'}));
   assert.ok((await button.textContent()).trim());assert.equal(await button.isVisible(),true);
-  const geometry=await card.evaluate(node=>{const card=node.getBoundingClientRect(),image=node.querySelector('.product-image-wrapper').getBoundingClientRect(),cta=node.querySelector('.product-card-button').getBoundingClientRect(),heart=node.querySelector('[data-favorite-product]').getBoundingClientRect(),hit=document.elementFromPoint(heart.left+heart.width/2,heart.top+heart.height/2);return{card:{width:card.width,height:card.height},image:{width:image.width,height:image.height},ctaWidth:cta.width,heartHit:Boolean(hit&&hit.closest('[data-favorite-product]'))}});
-  assert.ok(Math.abs(geometry.card.width-geometry.image.width)<=3&&geometry.image.height<geometry.card.height&&geometry.image.height>60);assert.ok(geometry.ctaWidth>geometry.card.width*.35);assert.equal(geometry.heartHit,true);
+  const geometry=await card.evaluate(node=>{const card=node.getBoundingClientRect(),image=node.querySelector('.product-image-wrapper').getBoundingClientRect(),body=node.querySelector('.product-body').getBoundingClientRect(),heading=node.querySelector('.product-heading-row').getBoundingClientRect(),price=node.querySelector('.product-price').getBoundingClientRect(),cta=node.querySelector('.product-card-button').getBoundingClientRect(),heart=node.querySelector('[data-favorite-product]').getBoundingClientRect(),hit=document.elementFromPoint(heart.left+heart.width/2,heart.top+heart.height/2);return{card:{top:card.top,bottom:card.bottom,width:card.width,height:card.height},image:{width:image.width,height:image.height},body:{top:body.top,bottom:body.bottom},heading:{top:heading.top,bottom:heading.bottom},price:{top:price.top,bottom:price.bottom},ctaWidth:cta.width,heartHit:Boolean(hit&&hit.closest('[data-favorite-product]'))}});
+  assert.ok(Math.abs(geometry.card.width-geometry.image.width)<=3&&Math.abs(geometry.card.height-geometry.image.height)<=3,JSON.stringify(geometry));
+  assert.ok(geometry.card.height/geometry.card.width>=1.3&&geometry.card.height/geometry.card.width<=1.45,JSON.stringify(geometry));
+  assert.ok(geometry.card.height<=430&&geometry.body.top>=geometry.card.top-2&&geometry.body.bottom<=geometry.card.bottom+2,JSON.stringify(geometry));
+  assert.ok(geometry.price.top<geometry.heading.bottom&&geometry.price.bottom>geometry.heading.top);
+  assert.ok(geometry.ctaWidth>geometry.card.width*.25);assert.equal(geometry.heartHit,true);
   await button.click();await p.waitForTimeout(450);const modal=await p.locator('.product-modal .modal-container').boundingBox();assert.ok(modal);assert.ok(Math.abs((modal.y+modal.height/2)-844/2)<2,JSON.stringify(modal));await p.keyboard.press('Escape');
  });
  await check('Product card metadata and modal close control follow RTL/LTR direction',async()=>{
@@ -196,6 +205,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   const entry=p.locator('#customer-entry');
   await entry.waitFor({state:'visible'});
   assert.equal(await entry.locator('input').count(),2);
+  await p.screenshot({path:path.join(out,'customer-entry-fa-390.png')});
   await p.keyboard.press('Escape');
   await entry.waitFor({state:'hidden'});
   await cartButton.click();

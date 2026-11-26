@@ -10,13 +10,37 @@
   const validDate=d=>typeof d==='string'&&Number.isFinite(Date.parse(d));
   const validOrder=o=>o&&typeof o.id==='string'&&(o.currency===undefined||(typeof o.currency==='string'&&o.currency===catalogCurrency(o.currency)))&&validDate(o.createdAt)&&Array.isArray(o.items)&&o.items.length>0&&o.items.length<=100&&o.items.every(validItem)&&Number.isFinite(o.total)&&o.total>0&&Math.abs(o.items.reduce((sum,i)=>sum+i.price*i.quantity,0)-o.total)<0.000001;
   const uuid=()=>globalThis.crypto.randomUUID();
+  const lockKey=key+':mutation-lock';
+  const delay=ms=>new Promise(resolve=>globalThis.setTimeout(resolve,ms));
+  async function fallbackMutate(write){
+    const storage=globalThis.localStorage,token=uuid(),deadline=Date.now()+3000;
+    while(Date.now()<deadline){
+      let lock=null;
+      try{lock=JSON.parse(storage.getItem(lockKey)||'null');}catch{}
+      if(!lock||!Number.isFinite(lock.expires)||lock.expires<Date.now()){
+        storage.setItem(lockKey,JSON.stringify({token,expires:Date.now()+2000}));
+        // localStorage has no atomic compare-and-set. Give simultaneous tabs a
+        // short election window, then only the surviving token may write.
+        await delay(32);
+        let confirmed=null;
+        try{confirmed=JSON.parse(storage.getItem(lockKey)||'null');}catch{}
+        if(confirmed?.token===token){
+          try{return write();}
+          finally{
+            try{if(JSON.parse(storage.getItem(lockKey)||'null')?.token===token)storage.removeItem(lockKey);}catch{}
+          }
+        }
+      }
+      await delay(8+Math.floor(Math.random()*12));
+    }
+    throw Error('STORAGE_BUSY');
+  }
   async function mutate(write){
     const locks=globalThis.navigator?.locks;
-    if(!locks?.request)return write();
-    const result=await locks.request('romano-demo-members-v1',()=>{
-      try{return {value:write()};}
-      catch(error){return {error};}
-    });
+    const commit=async()=>{try{return {value:await fallbackMutate(write)};}catch(error){return {error};}};
+    // The storage lease remains necessary: some standalone/browser contexts
+    // expose Web Locks without reliably coordinating every tab process.
+    const result=locks?.request?await locks.request('romano-demo-members-v1',commit):await commit();
     if('error' in result)throw result.error;
     return result.value;
   }
