@@ -31,15 +31,17 @@ test('Corrupted member/order data and inconsistent totals fail closed',()=>{
  assert.throws(()=>model.active(db,session),/INVALID_STORAGE/);
 });
 
-test('Same-tab sample re-entry preserves history without unlocking another tab',()=>{
+test('Matching sample name and phone resume history in another browser tab',()=>{
  const db=storage(),a=storage(),b=storage();
  const member=model.register(db,a,'Sample Customer','+12025550104');
  const order=model.addOrder(db,a,[{name:'Demo dish',quantity:1,price:5}],5);
  model.signOut(a);
  assert.equal(model.active(db,a),null);
  assert.throws(()=>model.register(db,a,'Wrong name',member.phone),/EXISTING_PROFILE/);
- assert.throws(()=>model.register(db,b,member.name,member.phone),/EXISTING_PROFILE/);
- assert.equal(model.active(db,b),null);
+ const crossTab=model.register(db,b,' Sample   Customer ',member.phone);
+ assert.equal(crossTab.id,member.id);
+ assert.equal(crossTab.orders[0].id,order.id);
+ model.signOut(b);
  const resumed=model.register(db,a,' Sample Customer ','+۱۲۰۲۵۵۵۰۱۰۴');
  assert.equal(resumed.id,member.id);
  assert.equal(resumed.orders[0].id,order.id);

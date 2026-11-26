@@ -3,6 +3,7 @@
   "use strict";
   const key='online_menu_demo_members_v1:romano',activeKey='online_menu_demo_member_active_v1:romano';
   const previousKey='online_menu_demo_member_previous_v1:romano';
+  const name=value=>String(value??'').normalize('NFKC').trim().replace(/\s+/g,' ');
   const phone=value=>String(value??'').trim().replace(/[۰-۹٠-٩]/g,ch=>String(ch.charCodeAt(0)-(ch>='۰'?1776:1632))).replace(/[\s().-]/g,'');
   const validPhone=p=>typeof p==='string'&&/^\+?[0-9]{7,15}$/.test(p);
   const validItem=i=>i&&typeof i.name==='string'&&i.name.length<=150&&Number.isSafeInteger(i.quantity)&&i.quantity>=1&&i.quantity<=99&&Number.isFinite(i.price)&&i.price>0;
@@ -55,19 +56,21 @@
     const id=session.getItem(activeKey);return id?read(storage).find(r=>r.id===id)||null:null;
   }
   function register(storage,session,nameValue,phoneValue){
-    const name=String(nameValue??'').trim(),p=phone(phoneValue);
-    if(!name||name.length>80||!validPhone(p))throw Error('INVALID_INPUT');
+    const memberName=name(nameValue),p=phone(phoneValue);
+    if(!memberName||memberName.length>80||!validPhone(p))throw Error('INVALID_INPUT');
     const rows=read(storage),current=rows.find(r=>r.id===session.getItem(activeKey));
     if(current&&current.phone===p)return current;
     const existing=rows.find(r=>r.phone===p);
     if(existing){
-      // Resume only the last signed-out sample profile bound to this tab.
-      if(current||session.getItem(previousKey)!==existing.id||existing.name!==name)throw Error('EXISTING_PROFILE');
+      // This is browser-local demo data, not authentication. Matching the exact
+      // normalized sample name and phone is enough to resume from another tab.
+      if(current||name(existing.name)!==memberName)throw Error('EXISTING_PROFILE');
       session.setItem(activeKey,existing.id);
+      session.removeItem(previousKey);
       return existing;
     }
     if(rows.length>=100)throw Error('LIMIT');
-    const member={id:uuid(),name,phone:p,createdAt:new Date().toISOString(),orders:[]};
+    const member={id:uuid(),name:memberName,phone:p,createdAt:new Date().toISOString(),orders:[]};
     const old=storage.getItem(key);
     try{storage.setItem(key,JSON.stringify([...rows,member]));session.setItem(activeKey,member.id);}
     catch(e){try{if(old===null)storage.removeItem(key);else storage.setItem(key,old);}catch{}throw e;}
