@@ -451,3 +451,73 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
 .text-button, .view-menu, .admin-user { font-size: 12px; }
 .admin-gate-brand-label { font-size: 11px; letter-spacing: .16em; }
 .admin-gate-eyebrow, .admin-gate-secure-line { font-size: 11px; letter-spacing: .12em; }
+
+
+/* Stage 11/12 foundations: compact application chrome, without changing admin authorization. */
+.admin-header.admin-header-compact { height:auto; min-height:64px; display:flex; flex-wrap:nowrap; gap:8px; padding:8px clamp(10px,2vw,24px); }
+.admin-header-compact .header-title { flex:1 1 auto; min-width:0; }
+.admin-header-compact .admin-header-brand { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:clamp(15px,3.6vw,20px); letter-spacing:.05em; }
+.admin-header-compact .header-actions { display:flex; flex:0 0 auto; flex-wrap:nowrap; gap:5px; width:auto; }
+.admin-header-compact .admin-header-link,.admin-header-compact .mobile-menu-button { width:44px; min-width:44px; min-height:44px; height:44px; padding:0; align-items:center; justify-content:center; border-radius:var(--ui-radius,12px); }
+.admin-header-compact svg { width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linejoin:round; stroke-linecap:round; }
+.admin-context-strip { display:flex; flex-wrap:wrap; align-items:flex-start; gap:8px; padding:8px clamp(12px,2.5vw,24px) 0; }
+.admin-context-strip .admin-mode-banner { margin:0; padding:0; font-size:12px; max-width:100%; }
+.admin-context-strip .admin-mode-banner summary { cursor:pointer; min-height:32px; padding:5px 9px; }
+.admin-context-strip .admin-mode-banner p { margin:0; padding:4px 10px 10px; max-width:58ch; }
+.admin-context-strip .admin-status-chip { display:flex; min-height:32px; align-items:center; gap:6px; padding:4px 8px; max-width:100%; }
+.admin-context-strip .admin-status-copy { white-space:normal; overflow-wrap:anywhere; }
+.admin-context-strip .admin-mode-banner[hidden] { display:none; }
+.sidebar-footer .admin-logout-button { width:100%; min-height:44px; justify-content:center; margin-block-end:8px; }
+.sidebar-footer .admin-logout-button span:last-child { display:inline; }
+@media(max-width:760px){ .admin-header-compact .mobile-menu-button { display:flex; } .admin-header-compact .header-actions { justify-content:flex-end; } .admin-content { padding-block-start:16px; } }
+@media(max-width:350px){ .admin-header.admin-header-compact { gap:5px; padding-inline:8px; } .admin-header-compact .header-actions { gap:3px; } }
+
+/* Keep secondary footer copy legible on an opaque, contrast-testable surface. */
+.admin-footer { background:var(--admin-surface); color:var(--admin-ink-muted); font-size:12px; line-height:1.6; }
+.admin-footer-brand { flex-wrap:wrap; }
+.admin-footer-brand span { color:var(--admin-ink-muted); font-size:12px; letter-spacing:normal; }
+
+
+/* Glass access screen; the local demo credentials are explicitly public. */
+.admin-gate.is-open { overflow-y:auto; align-items:safe center; }
+.admin-gate-panel { background:#2b201be8; border-color:#f3d8b65e; border-radius:28px; padding:clamp(20px,4vw,36px); max-width:460px; text-align:start; }
+.admin-gate-panel h1 {font-family:inherit;line-height:1.25;}
+.admin-gate-field {font-size:14px;color:#f5e8d8;}
+.admin-gate-field input,.admin-gate-field select {background:#fff4e9;color:#2b211b;border:1px solid #d7bba0;border-radius:14px;min-height:48px;padding:10px 12px;font:inherit;min-width:0;width:100%;box-sizing:border-box;}
+.admin-gate-submit {border-radius:999px;}
+#admin-gate-language {max-width:100%;}
+#admin-demo-credentials {font-size:13px;line-height:1.7;color:#f1dfcd;margin-block:12px;overflow-wrap:anywhere;}
+#admin-gate-server-auth[hidden],#admin-demo-credentials[hidden],#demo-members-panel[hidden]{display:none!important;}
+.demo-member-row {display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px 0;border-bottom:1px solid var(--admin-border,#ffffff22);}
+.demo-member-row strong {overflow-wrap:anywhere;}
+@media(prefers-reduced-motion:reduce){.admin-gate,.admin-gate-panel,.admin-gate-ambient{animation:none!important;transition:none!important;}}
+
+/* R9 — access screen shares the customer's warm glass treatment. */
+.admin-gate {
+  background:linear-gradient(145deg,#20120c48,#110c08ad),url("../assets/images/hero/hero.jpg") center/cover;
+}
+.admin-gate-panel {background:#32251b;border:1px solid #ead2af80;border-radius:30px;}
+@supports ((backdrop-filter:blur(16px)) or (-webkit-backdrop-filter:blur(16px))) {
+  .admin-gate-panel {background:linear-gradient(145deg,#3c2c20d9,#211810e8);backdrop-filter:blur(20px) saturate(115%);-webkit-backdrop-filter:blur(20px) saturate(115%);}
+}
+.admin-gate.is-open .admin-gate-panel {box-shadow:0 24px 70px #0007,inset 0 1px 0 #fff3;}
+.admin-gate-brand-label,.admin-gate-panel p,.admin-gate-footer {color:#f1dfcd;}
+.admin-gate-field input,.admin-gate-field select {font-size:16px;min-height:52px;border-color:#e8ceb2;}
+.admin-gate-field :is(input,select):focus-visible,.admin-gate-submit:focus-visible {outline:2px solid #fff1d8;outline-offset:3px;}
+.admin-gate-submit {min-height:52px;background:linear-gradient(100deg,#f0d49d,#d6ae70);color:#21190f;}
+.admin-gate-auth {margin-block-start:20px;}
+@media(max-width:720px) {
+  .admin-gate-panel {padding:20px;}
+  .admin-gate-brand {margin-block-end:18px;}
+  .admin-gate-logo-shell {width:54px;height:54px;flex-basis:54px;}
+  .admin-gate-logo {width:40px;height:40px;}
+}
+@media(max-height:500px) {
+  .admin-gate.is-open {align-items:flex-start;}
+  .admin-gate-panel {margin-block:auto;}
+}
+
+/* Decorative layers must not enlarge the scrollable login surface. */
+.admin-gate-grain {inset:0;transform:none;}
+.admin-gate-ambient-one {top:0;left:0;}
+.admin-gate-ambient-two {bottom:0;right:0;}

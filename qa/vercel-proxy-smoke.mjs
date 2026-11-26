@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 
-const site = (process.env.ROMANO_SITE_URL || "https://food.kiankhayat.me").replace(/\/$/, "");
+import { requireLiveUrl } from "./live-targets.mjs";
+const site = requireLiveUrl("ROMANO_SITE_URL", { originOnly: true });
 async function fetchChecked(path, expectedType, expectedStatus = 200) {
   const response = await fetch(site + path, { headers: { Accept: expectedType }, signal: AbortSignal.timeout(20000) });
   assert.equal(response.status, expectedStatus, `${path}: received HTTP ${response.status} instead of ${expectedStatus}`);

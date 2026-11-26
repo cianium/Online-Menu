@@ -10,7 +10,7 @@
 
 **Positioning:** a digital dining experience built around guests and restaurant teams.
 
-**Primary tagline:** From the first scan to the last bite.  
+**Primary tagline:** From the first scan to the last bite.
 **Editorial headline:** Dining, reimagined.
 
 | Voice | Do | Avoid |

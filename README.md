@@ -90,11 +90,11 @@ The showcase job captures the current standalone menu and admin workspace in Chr
 
 ## Public standalone demo
 
-[Open the guest menu](https://cianium.github.io/Online-Menu/) · [Open the demo admin workspace](https://cianium.github.io/Online-Menu/admin/) · [Pages deployment evidence](https://github.com/cianium/Online-Menu/actions/runs/45696554167)
+[Open customer entry](https://cianium.github.io/Online-Menu/?qr=demo) · [Open the demo admin workspace](https://cianium.github.io/Online-Menu/admin/) · [Published source identity](https://cianium.github.io/Online-Menu/VERSION.json)
 
-The published R5 static snapshot (`3a2dad7fd319f8b69ee5a273d551dec72de49258`) is served from `pages-demo`. The canonical source branch is `main`; the redesign source is under review in [PR #25](https://github.com/cianium/Online-Menu/pull/25). These are different branches and may show different revisions until source review is complete. The public demo is for sample data only, not a private staff login, real payment service or shared customer database.
+The audited R12 standalone snapshot is served from `pages-demo`; `main` is the canonical source branch. The public site is for sample data only, not a private staff login, real payment service or shared customer database. Customer entry uses a fictional name and phone number. Demo admin credentials are `demo-admin` / `Demo-Only-2026`; these public values are not real authentication.
 
-[R5 CI](https://github.com/cianium/Online-Menu/actions/runs/45690438360) · [Customer browser QA](https://github.com/cianium/Online-Menu/actions/runs/45690438461) · [Admin browser QA](https://github.com/cianium/Online-Menu/actions/runs/45690438492). These runs verify the R5 source; they do not certify the old connected Supabase/Vercel services. Historical showcase images retain their own revision provenance.
+The standalone R12 release gates cover Node tests, PostgreSQL contracts, Edge Function type checks, Chromium/Firefox/WebKit flows, four-language responsive views and automated accessibility scans. They do not certify the optional connected Supabase/Vercel services, real payments, native Safari or field Core Web Vitals. Historical showcase images retain their own revision provenance.
 
 ## Quick start
 
@@ -125,7 +125,9 @@ The included Node.js preview server binds only to loopback and serves the public
 5. Reload both tabs to explore browser-local persistence.
 
 > [!NOTE]
-> The standalone demo is for evaluation, not a production admin login or a shared database. Use sample data only. Changes remain in the current browser/origin; real table sessions, order fulfillment and payments require the connected services. Optional external fonts may be requested by the UI, but the demo browser test blocks external traffic.
+> The standalone demo is for evaluation, not a production admin login or a shared database. Use sample data only. Changes remain in the current browser/origin; real table sessions, order fulfillment and payments require the connected services. Fonts and sample imagery are bundled locally, so the core demo does not depend on third-party assets.
+
+The admin workspace manages the existing restaurant demo. Creating new restaurant branches is intentionally unavailable.
 
 ### Export a private demo for a future VPS
 

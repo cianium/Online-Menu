@@ -1,0 +1,9 @@
+# Customer experience and author attribution
+
+Based on tested RC2 `fa3be8aca865f3ed52c1f55b92b27eddd937e57e`. The customer footer preserves ROMANO attribution and adds the owner-requested link to https://kiankhayat.me with four locale translations and noopener/noreferrer. Layout wraps on narrow screens, 44px link target, visible keyboard focus. Existing customer theme, catalog, cart and Admin retained. Product image hover motion, focus feedback, action transitions, rail and navigation feedback are scoped; reduced motion disables new transitions. No new runtime dependencies, imagery, external scripts or continuous motion. Existing sample data and noindex publication policy retained. No production service enablement. Full redesign, native device/screen reader, full contrast, legal/asset review and owner-controlled protection/private backup remain separate.
+
+Release gate: validate CI, full customer/admin and three-engine delivery, exact static export. Public Pages tree must use exported noindex index and non-caching worker plus existing .nojekyll and Pages-only Vercel disable config, not source backend configuration. Preserve old Pages commit for rollback; do not merge source PRs without explicit authorization.
+
+Regression gate found a product dialog focus restoration failure in Chromium run 45708924232, so publication was held. Capture explicit opener from card/signature clicks, preserve source surface/product ID when cards are replaced, return to menu landmark if the product disappears. Retain original focus assertion and add refreshed-card test. No payment or data changes.
+
+Follow-up refreshed-card test exposed delayed commerce action wrapping. Replace click timeout with synchronous catalog/product render events, preserve focus during actual DOM reparenting, assert rebuilt add action and focus stability across frames. No change to cart, price or payment semantics.

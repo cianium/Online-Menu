@@ -8,6 +8,8 @@
   let audioContext = null;
   let soundEnabled = false;
   let orderBaselineReady = false;
+  let orderDataAvailable = false;
+  let refreshVersion = 0;
 
   function updateSoundButton() {
     const button=document.querySelector("#orders-sound");
@@ -72,14 +74,57 @@
     return orders.filter((order) => order.status === filter);
   }
 
+  function renderSampleOrders(board) {
+    const status = document.querySelector('#orders-summary');
+    board.replaceChildren();
+    status.textContent = '';
+    if (!adminInitialized || document.querySelector('.admin-app').inert) return;
+    try {
+      const members = window.RomanoDemoMembers.read(localStorage);
+      const rows = window.RomanoRevenueModel.orders(members).sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt));
+      status.textContent = `${t('تعداد سفارش‌های نمونه')} · ${number(rows.length)}`;
+      if (rows.length > 50) status.append(` · ${t('نمایش ۵۰ سفارش اخیر')}`);
+      if (!rows.length) {
+        board.innerHTML = `<p class="orders-empty">${safe(t('هنوز سفارش نمونه‌ای ثبت نشده است.'))}</p>`;
+        return;
+      }
+      const date = new Intl.DateTimeFormat(locale(),{dateStyle:'medium',timeStyle:'short'});
+      board.innerHTML = rows.slice(0,50).map(order=>{
+        const total = order.currency
+          ? window.OnlineMenuMoney.formatCatalog(order.total,{currency:order.currency,language:locale()})
+          : `${number(order.total)} · ${t('واحد پول ثبت نشده')}`;
+        return `<article class="order-ticket sample-order-ticket">
+          <time datetime="${safe(order.createdAt)}" dir="auto">${safe(date.format(new Date(order.createdAt)))}</time>
+          <ul class="order-ticket-items" data-admin-user-text="true">${order.items.map(item=>`<li><bdi>${safe(item.name)}</bdi> × ${number(item.quantity)}</li>`).join('')}</ul>
+          <footer class="order-ticket-footer"><strong dir="auto">${safe(total)}</strong></footer>
+        </article>`;
+      }).join('');
+    } catch {
+      status.textContent = t('خواندن داده محلی ممکن نیست.');
+    }
+  }
+
   function render() {
     const board = document.querySelector("#orders-board");
     if (!board) return;
-    const active = orders.filter((order) => !terminal.has(order.status));
-    const counts = { submitted:0, preparing:0, ready:0 };
-    active.forEach((order) => { if (order.status === "submitted") counts.submitted++; if (["accepted","preparing"].includes(order.status)) counts.preparing++; if (order.status === "ready") counts.ready++; });
-    document.querySelector("#orders-summary").innerHTML = `<span>${number(active.length)} ${safe(t("سفارش فعال"))}</span><span>${number(counts.submitted)} ${safe(t("جدید"))}</span><span>${number(counts.preparing)} ${safe(t("در آشپزخانه"))}</span><span>${number(counts.ready)} ${safe(t("آماده"))}</span>`;
+    const sample = !window.RomanoAPI.enabled;
+    document.querySelector('#orders-mode-label').textContent = t(sample?'فقط داده آزمایشی مرورگر':'عملیات زنده · آشپزخانه');
+    document.querySelector('#orders-mode-description').textContent = t(sample?'سفارش‌های نمونه ثبت‌شده در همین مرورگر.':'سفارش‌های QR را از پذیرش تا سرو، زنده مدیریت کنید.');
+    document.querySelector('.orders-filters').hidden = sample;
+    document.querySelector('#orders-sound').hidden = sample;
+    const summary=orderDataAvailable && window.RomanoAPI?.enabled === true ? window.AdminStage12Model.summarizeOrders(orders) : null;
     const badge = document.querySelector("#orders-nav-badge");
+    if(!summary){
+      document.dispatchEvent(new CustomEvent("romano:orders-summary",{detail:{available:false}}));
+      badge.hidden=true;badge.textContent='';
+      if (sample) {renderSampleOrders(board);return;}
+      document.querySelector('#orders-summary').textContent=t('داده زنده در دسترس نیست.');
+      board.innerHTML=`<div class="orders-empty">${safe(t(window.RomanoAPI?.enabled ? "دریافت سفارش‌ها ناموفق بود." : "برای مشاهده سفارش‌های زنده، پنل را به سرویس سرور متصل کنید."))}</div>`;
+      return;
+    }
+    const {counts,count}=summary;
+    document.dispatchEvent(new CustomEvent("romano:orders-summary",{detail:{available:true,...summary}}));
+    document.querySelector("#orders-summary").innerHTML = `<span>${number(count)} ${safe(t("سفارش فعال"))}</span><span>${number(counts.submitted)} ${safe(t("جدید"))}</span><span>${number(counts.preparing)} ${safe(t("در آشپزخانه"))}</span><span>${number(counts.ready)} ${safe(t("آماده"))}</span>`;
     badge.hidden = counts.submitted === 0;
     badge.textContent = String(counts.submitted);
     const rows = selectedOrders();
@@ -98,21 +143,26 @@
     board.querySelectorAll(".order-next").forEach((button) => button.addEventListener("click", () => transition(button)));
   }
 
-  async function refresh(silent = false) {
+  async function refresh() {
+    const version=++refreshVersion;
     if (!window.RomanoAPI?.enabled) {
-      if (!silent) document.querySelector("#orders-board").innerHTML = `<div class="orders-empty">${safe(t("برای مشاهده سفارش‌های زنده، پنل را به سرویس سرور متصل کنید."))}</div>`;
-      return;
+      orderDataAvailable=false;orders=[];orderBaselineReady=false;render();return;
     }
     try {
       const data = await window.RomanoAPI.orders();
+      if(version!==refreshVersion)return;
+      if(!window.RomanoAPI?.enabled)throw Error('Order session unavailable');
+      const incoming=data?.orders;
+      if(!window.AdminStage12Model.summarizeOrders(incoming))throw Error('Invalid order response');
       const previous=new Set(orders.map(item=>item.id));
-      const incoming=Array.isArray(data?.orders) ? data.orders : [];
       if(orderBaselineReady && incoming.some(item=>item.status==="submitted" && !previous.has(item.id)))alertNewOrder();
       orders=incoming;
       orderBaselineReady=true;
+      orderDataAvailable=true;
       render();
     } catch (error) {
-      if (!silent) document.querySelector("#orders-board").innerHTML = `<div class="orders-empty">${safe(t("دریافت سفارش‌ها ناموفق بود."))}</div>`;
+      if(version!==refreshVersion)return;
+      orderDataAvailable=false;orders=[];orderBaselineReady=false;render();
     }
   }
 
@@ -128,21 +178,29 @@
   }
 
   async function loadBranches() {
-    if (!window.RomanoAPI?.enabled) return;
+    if (!window.RomanoAPI?.enabled) {branches=[];syncGateway();syncBranchManagement();return;}
     try {
       const data = await window.RomanoAPI.branches();
       branches = Array.isArray(data?.branches) ? data.branches : [];
       const select = document.querySelector("#gateway-branch");
+      const selected=select.value;
       select.innerHTML = branches.map((branch) => `<option value="${safe(branch.id)}">${safe(branch.name)}</option>`).join("");
+      if(branches.some(item=>item.id===selected)) select.value=selected;
       syncGateway();
       syncBranchManagement();
-    } catch { /* Settings remain unavailable until the server is connected. */ }
+    } catch { branches=[];syncGateway();syncBranchManagement(); }
   }
 
   function syncGateway() {
     const id = document.querySelector("#gateway-branch")?.value;
     const branch = branches.find((item) => item.id === id);
-    if (!branch) return;
+    const form=document.querySelector("#gateway-settings-form");
+    const enabled=Boolean(branch&&window.RomanoAPI?.enabled);
+    if(form)for(const input of form.querySelectorAll("input,select,button"))input.disabled=!enabled;
+    if(!enabled){
+      if(form){document.querySelector("#gateway-branch").replaceChildren();document.querySelector("#gateway-merchant-id").value="";document.querySelector("#gateway-active").checked=false;}
+      return;
+    }
     document.querySelector("#gateway-merchant-id").value = "";
     document.querySelector("#gateway-merchant-id").placeholder = branch.gateway?.merchantMasked || "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
     document.querySelector("#gateway-sandbox").checked = branch.gateway?.sandbox !== false;
@@ -154,7 +212,8 @@
     const message = document.querySelector("#gateway-message");
     const branchId = document.querySelector("#gateway-branch").value;
     const merchantId = document.querySelector("#gateway-merchant-id").value.trim();
-    if (!branchId || !merchantId) { message.textContent = t("برای تغییر تنظیمات، Merchant ID کامل را وارد کنید."); return; }
+    if (!window.RomanoAPI?.enabled || !branches.some(item=>item.id===branchId)) return;
+    if (!merchantId) { message.textContent = t("برای تغییر تنظیمات، Merchant ID کامل را وارد کنید."); return; }
     try {
       await window.RomanoAPI.saveGateway(branchId, {
         provider:"zarinpal", merchantId,
@@ -175,15 +234,24 @@
   function syncBranchManagement() {
     const select=document.querySelector("#ops-branch");
     if(!select) return;
+    const preview=document.querySelector('#sample-qr-preview');
+    preview.hidden=window.RomanoAPI.enabled;
+    const image=preview.querySelector('.ops-qr-image');
+    if(!preview.hidden && !image.firstChild && typeof window.QRCode==='function') {
+      const link=preview.querySelector('a');
+      try {new window.QRCode(image,{text:link.href,width:192,height:192,correctLevel:window.QRCode.CorrectLevel.M});}
+      catch {image.replaceChildren();image.hidden=true;}
+    }
     const selected=select.value;
     select.innerHTML=branches.map((branch) => `<option value="${safe(branch.id)}">${safe(branch.name)}</option>`).join("");
     if(branches.some((item)=>item.id===selected)) select.value=selected;
-    const branch=branches.find((item)=>item.id===select.value);
+    const branch=window.RomanoAPI?.enabled?branches.find((item)=>item.id===select.value):null;
+    select.disabled=!branch;
     const checkbox=document.querySelector("#ops-qr-enabled");
     checkbox.checked=branch?.qr_ordering_enabled===true;
     checkbox.disabled=!branch;
     document.querySelector("#ops-save-branch").disabled=!branch;
-    document.querySelector("#create-table-form button[type=submit]").disabled=!branch;
+    for(const input of document.querySelectorAll("#create-table-form input,#create-table-form button"))input.disabled=!branch;
     refreshTables();
   }
 
@@ -229,7 +297,7 @@
     const host=document.querySelector("#ops-tables");
     if(!host) return;
     const selected=select?.value || "";
-    if(!selected) {host.textContent=t("برای شروع یک شعبه بسازید.");return;}
+    if(!window.RomanoAPI?.enabled||!selected) {host.textContent=t(window.RomanoAPI?.enabled?"رستوران عملیاتی هنوز پیکربندی نشده است.":"تنظیمات عملیاتی در نسخه مستقل در دسترس نیست.");return;}
     try {
       const result=await window.RomanoAPI.tables(selected);
       if(select.value!==selected) return;
@@ -280,32 +348,12 @@
     } catch { host.textContent=t("عملیات انجام نشد."); }
   }
 
-  async function addBranch(event) {
-    event.preventDefault();
-    const form=event.currentTarget;
-    const button=form.querySelector("button");
-    button.disabled=true;opsMessage("");
-    try {
-      const input=new FormData(form);
-      await window.RomanoAPI.createBranch({
-        name:String(input.get("branchName")||"").trim(),
-        slug:String(input.get("branchSlug")||"").trim(),
-        priceMultiplier:Number(input.get("priceMultiplier")),
-        currencyCode:"IRR",currencyExponent:0
-      });
-      form.reset();
-      await loadBranches();
-      opsMessage("شعبه ایجاد شد.");
-    }catch{opsMessage("عملیات انجام نشد.");}
-    finally{button.disabled=false;}
-  }
-
   async function addTable(event) {
     event.preventDefault();
     const form=event.currentTarget;
     const button=form.querySelector("button");
     const branchId=document.querySelector("#ops-branch")?.value;
-    if(!branchId)return;
+    if(!window.RomanoAPI?.enabled||!branches.some(item=>item.id===branchId))return;
     button.disabled=true;opsMessage("");
     try {
       const input=new FormData(form);
@@ -321,7 +369,7 @@
   async function saveOrderingStatus() {
     const branchId=document.querySelector("#ops-branch")?.value;
     const enabled=document.querySelector("#ops-qr-enabled")?.checked===true;
-    if(!branchId)return;
+    if(!window.RomanoAPI?.enabled||!branches.some(item=>item.id===branchId))return;
     const button=document.querySelector("#ops-save-branch");
     button.disabled=true;opsMessage("");
     try{
@@ -335,21 +383,26 @@
     document.querySelector("#orders-refresh")?.addEventListener("click", () => refresh());
     document.querySelector("#orders-sound")?.addEventListener("click", toggleSound);
     updateSoundButton();
-    document.querySelector('[data-page="orders"]')?.addEventListener("click", () => refresh());
     document.querySelectorAll("[data-order-filter]").forEach((button) => button.addEventListener("click", () => {
       filter = button.dataset.orderFilter;
       document.querySelectorAll("[data-order-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
       render();
     }));
     document.addEventListener("romano:language-changed", () => { render(); syncBranchManagement(); updateSoundButton(); });
+    document.addEventListener("romano:admin-page-changed", event => {
+      if(event.detail?.page==="settings")loadBranches();
+      if(event.detail?.page==="orders")refresh();
+    });
+    window.addEventListener('storage',event=>{
+      if(!window.RomanoAPI.enabled&&(event.key===window.RomanoDemoMembers.key||event.key===null)&&document.querySelector('#page-orders.is-active'))render();
+    });
     document.querySelector("#ops-branch")?.addEventListener("change", syncBranchManagement);
-    document.querySelector("#create-branch-form")?.addEventListener("submit", addBranch);
     document.querySelector("#create-table-form")?.addEventListener("submit", addTable);
     document.querySelector("#ops-save-branch")?.addEventListener("click", saveOrderingStatus);
     document.querySelector("#gateway-branch")?.addEventListener("change", syncGateway);
     document.querySelector("#gateway-settings-form")?.addEventListener("submit", saveGateway);
-    window.setTimeout(() => { refresh(true); loadBranches(); }, 900);
-    timer = window.setInterval(() => { if (document.querySelector("#page-orders")?.classList.contains("is-active")) refresh(true); }, 10_000);
+    window.setTimeout(() => { refresh(); loadBranches(); }, 900);
+    timer = window.setInterval(() => { if (window.RomanoAPI.enabled && document.querySelector("#page-orders.is-active, #page-dashboard.is-active")) refresh(); }, 10_000);
     window.addEventListener("beforeunload", () => window.clearInterval(timer));
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();

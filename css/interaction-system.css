@@ -1,0 +1,50 @@
+/* Shared interaction foundations. App surfaces retain their existing brand palettes. */
+:root { --ui-touch:44px; --ui-fast:150ms; --ui-normal:240ms; --ui-ease:cubic-bezier(.2,.8,.2,1); --ui-focus:#e4c28b; --ui-radius:12px; }
+:where(button,a,input,select,textarea,[tabindex]):focus-visible { outline:2px solid var(--ui-focus); outline-offset:3px; }
+.ramen-bottom-nav { direction:ltr; }
+html[dir="rtl"] .ramen-bottom-link { direction:rtl; }
+html[dir="ltr"] .ramen-bottom-link { direction:ltr; }
+.ramen-bottom-link { transition:color var(--ui-fast) ease, background var(--ui-fast) ease, transform var(--ui-fast) var(--ui-ease); min-height:52px; }
+.ramen-bottom-link[data-ramen-nav="home"] { border:1px solid #d6ae7040; }
+.ramen-bottom-link:is(.is-current,[aria-current="location"]) { color:#f0cb8c; background:#d6ae7026; font-weight:700; }
+.ramen-bottom-link:active,.ramen-header-cart:active,.commerce-quantity button:active,.commerce-card-add:active { transform:scale(.96); }
+.ramen-bottom-link span:last-child { text-align:center; overflow-wrap:anywhere; }
+.ramen-contact-open { overflow:hidden; }
+.ramen-contact-dialog { position:fixed; inset:auto 0 0; margin:0 auto; width:min(100%,480px); max-width:100%; max-height:85dvh; padding:20px 18px calc(20px + env(safe-area-inset-bottom)); background:#171410; color:#f2ece3; border:1px solid #c9a46a44; border-radius:22px 22px 0 0; overflow:auto; overscroll-behavior:contain; }
+.ramen-contact-dialog[open] { animation:ui-sheet-in var(--ui-normal) var(--ui-ease) both; }
+.ramen-contact-dialog::backdrop { background:#0009; backdrop-filter:blur(3px); }
+.ramen-contact-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+.ramen-contact-head h2 { font-family:inherit; font-weight:700; font-size:20px; line-height:1.5; margin:0; }
+.ramen-contact-close { min-width:var(--ui-touch); min-height:var(--ui-touch); border:1px solid #ffffff22; border-radius:50%; background:#ffffff08; color:inherit; font-size:24px; cursor:pointer; }
+.ramen-contact-content { display:grid; gap:10px; }
+.ramen-contact-item { display:grid; gap:4px; padding:14px; min-height:var(--ui-touch); border:1px solid #ffffff15; background:#ffffff05; border-radius:var(--ui-radius); text-decoration:none; color:inherit; overflow-wrap:anywhere; }
+.ramen-contact-item small { color:#dfc08b; font-size:12px; }
+.ramen-contact-item span,.ramen-contact-note { font-size:14px; line-height:1.7; }
+.ramen-contact-note { margin:0; color:#c4b8a7; }
+@keyframes ui-sheet-in { from{opacity:0; transform:translateY(18px)} to{opacity:1; transform:none} }
+.commerce-quantity button { min-width:var(--ui-touch); min-height:var(--ui-touch); transition:transform var(--ui-fast) var(--ui-ease); }
+.commerce-remove { min-width:var(--ui-touch); min-height:var(--ui-touch); font-size:12px; }
+.commerce-item { grid-template-columns:56px minmax(0,1fr) auto; gap:8px; padding:9px; }
+.commerce-item img { width:56px; height:56px; }
+.commerce-item h3 { overflow-wrap:anywhere; line-height:1.5; }
+.commerce-quantity { gap:6px; }
+@media(max-width:720px) {
+  html:has(.ramen-bottom-nav) { scroll-padding-bottom:calc(92px + env(safe-area-inset-bottom)); }
+  .ramen-bottom-nav { border-radius:20px; padding:5px; }
+  .ramen-bottom-link { border-radius:14px; }
+  .hero-section { min-height: min(480px,75svh); height: auto; }
+  .hero-title { font-size:clamp(40px,11vw,66px); }
+}
+@media(min-width:721px) { .ramen-contact-dialog { inset:0; margin:auto; border-radius:22px; } }
+@media(prefers-reduced-motion:reduce) { .ramen-bottom-link,.ramen-contact-dialog,.commerce-quantity button { animation:none!important; transition:none!important; } }
+
+/* Keyboard access to the admin content, independent of the sidebar. */
+.admin-skip-link { position:fixed; inset-block-start:max(12px,env(safe-area-inset-top)); inset-inline-start:max(12px,env(safe-area-inset-left)); z-index:9999; max-inline-size:calc(100% - 24px); min-block-size:44px; display:flex; align-items:center; padding:10px 16px; background:#f2ece3; color:#17120c; border-radius:12px; font-weight:700; text-decoration:none; box-sizing:border-box; }
+.admin-skip-link:not(:focus) { clip-path:inset(50%); inline-size:1px; block-size:1px; min-block-size:0; padding:0; overflow:hidden; white-space:nowrap; }
+.admin-skip-link:focus { outline:2px solid #17120c; outline-offset:-4px; }
+#admin-content:focus-visible,#menu:focus-visible { outline:2px solid var(--ui-focus); outline-offset:-2px; }
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto!important; } .rv4-skip-link { transition:none; } }
+
+/* International telephone numbers retain their reading order in RTL locales. */
+.ramen-contact-item > span[dir="ltr"] { unicode-bidi:isolate; text-align:left; }
+html[dir="rtl"] .ramen-contact-item > span[dir="ltr"] { text-align:right; }

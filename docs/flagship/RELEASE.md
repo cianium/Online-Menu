@@ -8,13 +8,13 @@
 | Source package | vq.3 / 3.0.0 |
 | Documentation change | Flagship presentation and user library |
 | Prior showcase evidence | [Run 45645429531](https://github.com/cianium/Online-Menu/actions/runs/45645429531) |
-| Deployment | No deployment authorized by this documentation |
+| Deployment | R12 standalone demo published separately on GitHub Pages |
 
-This is a documentation change proposal, not a new application release, tag or production readiness certificate.
+This documentation accompanies the R12 standalone publication; it is not a production-readiness certificate for connected services and does not create a new historical tag.
 
-Separately, the R5 standalone demo was published from `pages-demo` at `3a2dad7fd319f8b69ee5a273d551dec72de49258` ([deployment evidence](https://github.com/cianium/Online-Menu/actions/runs/45696554167)). This publication did not merge the source or change historical tags. The redesign source remains under review in [PR #25](https://github.com/cianium/Online-Menu/pull/25); connected production is not certified.
+The R12 standalone demo is published from `pages-demo`, with its exact source recorded in the public `VERSION.json`. `main` remains the canonical source and connected production is not certified. Publishing the standalone sample does not enable real ordering, payment, shared customer data or branch creation.
 
-## Proposed announcement (publish only after owner approval)
+## Release summary
 
 RAMEN introduces a refined product presentation, four-language user guides, a commercial catalog, brand guidelines and an engineering brief. Explore the independent customer and admin demo, and see the connected architecture for table ordering, kitchen operations and branch payment. Connected services require separate configuration and acceptance testing.
 

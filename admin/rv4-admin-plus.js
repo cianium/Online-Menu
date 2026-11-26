@@ -109,14 +109,14 @@
     }
 
     function initCommandPalette() {
-        const headerActions = document.querySelector(".header-actions");
+        const headerActions = document.querySelector(".sidebar-navigation");
         if (!headerActions || document.querySelector(".admin-command-trigger")) return;
         const trigger = document.createElement("button");
         trigger.type = "button";
         trigger.className = "admin-command-trigger";
         const shortcutLabel = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K";
         trigger.innerHTML = `جستجوی سریع <kbd>${shortcutLabel}</kbd>`;
-        headerActions.prepend(trigger);
+        headerActions.append(trigger);
 
         const backdrop = document.createElement("div");
         backdrop.className = "rv4-command-backdrop";
@@ -138,10 +138,12 @@
             ["dashboard", "داشبورد", "صفحه"],
             ["products", "محصولات", "صفحه"],
             ["categories", "دسته‌بندی‌ها", "صفحه"],
-            ["settings", "تنظیمات رستوران", "صفحه"]
+            ["settings", "تنظیمات رستوران", "صفحه"],
+            ["loyalty", "باشگاه مشتریان", "صفحه"],
+            ["orders", "سفارش‌ها", "صفحه"]
         ];
         let previousFocus = null;
-        const open = () => { if (saveInProgress || !adminInitialized || document.querySelector(".admin-app").inert || document.querySelector(".admin-modal.is-open, dialog[open]")) return; previousFocus = document.activeElement; activeIndex = -1; panel.classList.add("is-open"); backdrop.classList.add("is-open"); input.value=""; render(""); setTimeout(()=>input.focus(),0); };
+        const open = () => { if (saveInProgress || !adminInitialized || document.querySelector(".admin-app").inert || document.querySelector(".admin-modal.is-open, dialog[open]") || panel.classList.contains("is-open")) return; if (innerWidth < 1000 && document.querySelector("#sidebar.is-open")) { closeSidebar(); requestAnimationFrame(open); return; } previousFocus = document.activeElement; activeIndex = -1; panel.classList.add("is-open"); backdrop.classList.add("is-open"); input.value=""; render(""); setTimeout(()=>input.focus(),0); };
         const close = () => { panel.classList.remove("is-open"); backdrop.classList.remove("is-open"); const target = previousFocus; previousFocus = null; target?.focus?.(); };
         const getState = () => (typeof state !== "undefined" ? state : { products: [] });
         const render = query => {
@@ -183,9 +185,9 @@
             const current = items.indexOf(e.target.closest(".rv4-command__item"));
             if (e.key === "ArrowDown") { e.preventDefault(); focusItem(current + 1); }
             if (e.key === "ArrowUp") { e.preventDefault(); focusItem(current - 1); }
-            if (e.key === "Escape") { e.preventDefault(); close(); trigger.focus(); }
+            if (e.key === "Escape") { e.preventDefault(); close(); }
         });
-        trigger.addEventListener("click", open);
+        trigger.addEventListener("click", () => { if (innerWidth < 1000 && document.querySelector("#sidebar.is-open")) { closeSidebar(); requestAnimationFrame(open); } else open(); });
         backdrop.addEventListener("click", close);
         panel.addEventListener("click", e => {
             const item = e.target.closest("[data-kind]");
@@ -330,19 +332,20 @@
         const syncBaseline = () => {
             baseline = new FormData(form);
             form.classList.remove("is-dirty");
-            status.textContent = "همه تغییرات ذخیره شده";
+            status.textContent = window.ROMANO_ADMIN_I18N.get("همه تغییرات ذخیره شده");
             status.classList.remove("is-dirty");
         };
         const update = () => {
             const dirty = serialize(new FormData(form)) !== serialize(baseline);
             form.classList.toggle("is-dirty", dirty);
-            status.textContent = dirty ? "تغییرات ذخیره‌نشده" : "همه تغییرات ذخیره شده";
+            status.textContent = window.ROMANO_ADMIN_I18N.get(dirty ? "تغییرات ذخیره‌نشده" : "همه تغییرات ذخیره شده");
             status.classList.toggle("is-dirty", dirty);
         };
         fields.forEach(field => field.addEventListener("input", update));
         fields.forEach(field => field.addEventListener("change", update));
         document.addEventListener("romano:settings-saved", syncBaseline);
         document.addEventListener("romano:settings-rendered", syncBaseline);
+        document.addEventListener("romano:language-changed", update);
         window.addEventListener("beforeunload", event => {
             if (!form.classList.contains("is-dirty")) return;
             event.preventDefault();
@@ -392,7 +395,7 @@
         wrap.innerHTML = `
             <div class="panel-header">
                 <div>
-                    <span class="panel-eyebrow">DATA</span>
+                    <span class="panel-eyebrow">داده‌های منو</span>
                     <h2>پشتیبان‌گیری</h2>
                 </div>
             </div>
@@ -401,10 +404,8 @@
             </p>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
                 <button class="secondary-button" type="button" data-rv4-export>خروجی JSON</button>
-                <label class="secondary-button" style="cursor:pointer">
-                    بازیابی JSON
-                    <input data-rv4-import type="file" accept="application/json,.json" hidden>
-                </label>
+                <button class="secondary-button" type="button" data-rv4-restore>بازیابی JSON</button>
+                <input data-rv4-import type="file" accept="application/json,.json" hidden>
             </div>
         `;
         settings.parentElement?.appendChild(wrap);
@@ -429,7 +430,10 @@
             setTimeout(() => URL.revokeObjectURL(url), 500);
             toast("نسخه پشتیبان آماده شد.");
         });
-        wrap.querySelector("[data-rv4-import]").addEventListener("change", async event => {
+        const restoreButton = wrap.querySelector("[data-rv4-restore]");
+        const backupInput = wrap.querySelector("[data-rv4-import]");
+        restoreButton.addEventListener("click", () => backupInput.click());
+        backupInput.addEventListener("change", async event => {
             const file = event.target.files?.[0];
             if (!file || typeof state === "undefined") return;
             try {
@@ -478,6 +482,7 @@
                 toast("فایل پشتیبان معتبر نیست یا ذخیره‌سازی انجام نشد.", "danger");
             } finally {
                 event.target.value = "";
+                if (restoreButton.isConnected && !restoreButton.disabled) restoreButton.focus();
             }
         });
     }
@@ -505,16 +510,7 @@
         if (!Array.isArray(payload.products) || payload.products.length > 2000) return false;
 
         const stringField = (value, max) => typeof value === "string" && value.length <= max;
-        const urlField = (value) => {
-            if (value == null || value === "" || value === "#") return true;
-            if (typeof value !== "string" || value.length > 500) return false;
-            try {
-                const url = new URL(value, location.href);
-                return ["https:", "http:"].includes(url.protocol);
-            } catch (_) {
-                return false;
-            }
-        };
+        const urlField = window.AdminStage12Model.validSocialUrl;
         const imageField = (value) => {
             if (value == null || value === "") return true;
             if (typeof value !== "string" || value.length > 1200000) return false;

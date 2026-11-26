@@ -24,11 +24,11 @@
 
 The [successful Product showcase run](https://github.com/cianium/Online-Menu/actions/runs/45645429531) captured the standalone application at revision `cae5e8158b25dbe585f50573bd652190a96c8937`. Its [ramen-product-showcase artifact](https://github.com/cianium/Online-Menu/actions/runs/45645429531/artifacts/15037840953) includes customer/admin screenshots, an admin GIF, a social preview PNG and capture provenance. GitHub may require sign-in; this artifact expires on 25 December 2026. For a fresh package, use the [showcase instructions](../showcase/README.md).
 
-## Published R5 standalone demo
+## Published R12 standalone demo
 
-[Guest menu](https://cianium.github.io/Online-Menu/) · [Demo admin](https://cianium.github.io/Online-Menu/admin/) · [Successful Pages deployment](https://github.com/cianium/Online-Menu/actions/runs/45696554167).
+[Customer entry](https://cianium.github.io/Online-Menu/?qr=demo) · [Demo admin](https://cianium.github.io/Online-Menu/admin/) · [Published source identity](https://cianium.github.io/Online-Menu/VERSION.json).
 
-`main` remains the canonical source; `pages-demo` publishes the static R5 snapshot. The redesigned source is tracked separately in [PR #25](https://github.com/cianium/Online-Menu/pull/25). Use sample data only. The legacy connected services have not passed production verification; the public static demo does not provide real staff authentication or shared customer data.
+`main` is the canonical source; `pages-demo` publishes the audited static R12 snapshot. Use sample data only. Demo admin credentials are public sample values, not staff authentication. The optional connected services have not passed production verification, and the static demo has no shared customer database. Creating new restaurant branches remains unavailable.
 
 ## Scope
 

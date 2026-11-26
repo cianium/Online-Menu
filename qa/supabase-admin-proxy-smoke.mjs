@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 
-const direct = "https://tjrzeourqvahtocwnzwd.supabase.co/functions/v1/romano-admin";
-const production = "https://food.kiankhayat.me/api/v1";
-const base = (process.env.ROMANO_ADMIN_TEST_BASE || production).replace(/\/$/, "");
+import { requireLiveUrl } from "./live-targets.mjs";
+const site = requireLiveUrl("ROMANO_SITE_URL", { originOnly: true });
+const direct = process.env.ROMANO_ADMIN_TEST_DIRECT === "1";
+const base = direct ? requireLiveUrl("ROMANO_ADMIN_TEST_URL") : `${site}/api/v1`;
 const headers = { Accept: "application/json" };
 async function call(path, expected, options = {}) {
   const response = await fetch(base + path, {
@@ -19,7 +20,7 @@ async function call(path, expected, options = {}) {
   return { body, response };
 }
 
-if (base === direct) {
+if (direct) {
   const health = await call("/health", 200);
   assert.equal(health.body.data?.status, "ok");
 }
@@ -36,7 +37,7 @@ assert.match(cookie, /Path=\/api\/v1/i);
 assert.match(cookie, /Secure/i);
 assert.match(cookie, /SameSite=Lax/i);
 const browser = {
-  Origin: "https://food.kiankhayat.me",
+  Origin: site,
   Cookie: `romano_csrf=${token}`,
   "X-CSRF-Token": token,
   "Content-Type": "application/json"
