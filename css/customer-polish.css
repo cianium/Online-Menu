@@ -256,7 +256,14 @@ html[dir="ltr"] .main-navigation.is-open .navigation-inner { transform:translate
 .brand-name {letter-spacing:.045em;}
 .language-button,.menu-toggle,.ramen-header-cart {border-color:#d6ae7045;background:#17130fbd;}
 .language-button:hover,.menu-toggle:hover,.ramen-header-cart:hover {border-color:#d6ae70;background:#2b2117;}
-@media(max-width:360px) {.brand-name{letter-spacing:0;}}
+@media(max-width:360px) {
+  .header-container {grid-template-columns:minmax(0,1fr) 42px 42px 42px;gap:4px;}
+  .header-container .brand {gap:7px;}
+  .header-container .brand-name {letter-spacing:0;}
+  .header-container .language-toggle,
+  .header-container #romano-language-toggle {width:42px;min-width:42px;flex-basis:42px;padding-inline:0;}
+  .header-container #romano-language-label {display:none;}
+}
 
 @media(max-width:900px) {
   .main-navigation {
