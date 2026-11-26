@@ -90,6 +90,38 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   }
   await p.evaluate(()=>{localStorage.removeItem('online_menu_demo_rating:romano');localStorage.removeItem('online_menu_demo_review_v2:romano');ROMANO_I18N.setLanguage('fa',false);});
  });
+ await check('Hamburger navigation covers the complete desktop viewport',async()=>{
+  await p.setViewportSize({width:1440,height:900});
+  await p.locator('#menu-toggle').click();
+  await p.waitForFunction(()=>document.querySelector('#main-navigation')?.classList.contains('is-open'));
+  const geometry=await p.locator('#main-navigation .navigation-inner').evaluate(node=>{const r=node.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,scrollWidth:node.scrollWidth,clientWidth:node.clientWidth}});
+  assert.ok(Math.abs(geometry.x)<=1&&Math.abs(geometry.y)<=1,JSON.stringify(geometry));
+  assert.ok(Math.abs(geometry.width-1440)<=2&&Math.abs(geometry.height-900)<=2,JSON.stringify(geometry));
+  assert.equal(geometry.scrollWidth,geometry.clientWidth);
+  await p.locator('#navigation-close').click();
+  await p.setViewportSize({width:390,height:844});
+ });
+ await check('Existing demo member can resume in another tab with the same name and phone',async()=>{
+  const memberContext=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
+  const first=await memberContext.newPage();
+  await first.goto(base+'/?qr=demo');await ready(first);
+  const firstEntry=first.locator('#customer-entry');await firstEntry.waitFor({state:'visible'});
+  await firstEntry.locator('input[name="name"]').fill('Sample Customer');
+  await firstEntry.locator('input[name="phone"]').fill('+12025550140');
+  await firstEntry.locator('button[type="submit"]').click();
+  await firstEntry.waitForFunction(()=>!document.querySelector('#customer-entry')?.open);
+  const memberId=await first.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey));assert.ok(memberId);
+  const second=await memberContext.newPage();
+  await second.goto(base+'/?qr=demo');await ready(second);
+  const secondEntry=second.locator('#customer-entry');await secondEntry.waitFor({state:'visible'});
+  await secondEntry.locator('input[name="name"]').fill(' Sample   Customer ');
+  await secondEntry.locator('input[name="phone"]').fill('+12025550140');
+  await secondEntry.locator('button[type="submit"]').click();
+  await second.waitForFunction(()=>!document.querySelector('#customer-entry')?.open);
+  assert.equal(await second.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey)),memberId);
+  assert.equal(await secondEntry.locator('[role="alert"]').textContent(),'');
+  await memberContext.close();
+ });
  await check('Category image fallback uses localized category initials, not brand/developer copy',async()=>{
   const fallback=await p.evaluate(()=>{
    const category=menuCategories.find(item=>item.active!==false);
@@ -151,7 +183,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   assert.ok(geometry.card.height<=430&&geometry.body.top>=geometry.card.top-2&&geometry.body.bottom<=geometry.card.bottom+2,JSON.stringify(geometry));
   assert.ok(geometry.price.top<geometry.heading.bottom&&geometry.price.bottom>geometry.heading.top);
   assert.ok(geometry.ctaWidth>geometry.card.width*.25);assert.equal(geometry.heartHit,true);
-  await button.click();await p.waitForTimeout(450);const modal=await p.locator('.product-modal .modal-container').boundingBox();assert.ok(modal);assert.ok(Math.abs((modal.y+modal.height/2)-844/2)<2,JSON.stringify(modal));await p.keyboard.press('Escape');
+  await button.click();await p.waitForTimeout(450);const modal=await p.locator('.product-modal .modal-container').boundingBox();assert.ok(modal);assert.ok(Math.abs((modal.y+modal.height)-844)<2,JSON.stringify(modal));await p.keyboard.press('Escape');
  });
  await check('Product card metadata and modal close control follow RTL/LTR direction',async()=>{
   const expected={fa:'rtl',ar:'rtl',en:'ltr',tr:'ltr'};

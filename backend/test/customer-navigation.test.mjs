@@ -95,7 +95,9 @@ test('Customer polish consolidates footer and retains contact fragments and safe
  assert.match(html,/data-restaurant-brand/);assert.match(html,/data-restaurant-address/);
  assert.match(app,/escapeAttribute\(getSafeImageSource\(category.image\)\)/);
  for(const panel of ['profile','cart','contact','chat','feedback'])assert.match(html,new RegExp(`data-nav-panel="${panel}"`));
- assert.match(css,/\.main-navigation \.navigation-inner \{ width:50vw/);assert.match(css,/\.main-navigation \.navigation-inner \{width:100%/);assert.match(css,/overflow-y:auto/);assert.match(css,/prefers-reduced-motion:reduce/);
+ assert.match(css,/\.main-navigation \.navigation-inner \{[\s\S]*inline-size:100vw!important/);
+ assert.doesNotMatch(css,/\.main-navigation \.navigation-inner \{ width:50vw/);
+ assert.match(css,/overflow-y:auto/);assert.match(css,/prefers-reduced-motion:reduce/);
  assert.match(html,/css\/customer-polish\.css/);assert.match(sw,/css\/customer-polish\.css/);
 });
 test('Cart uses a bounded scroll area, accessible controls and restores inert state and focus',()=>{

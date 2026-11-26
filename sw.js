@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r12-audit`;
+const CACHE_NAME = `${menuCachePrefix}r14-experience`;
 const CORE_ASSETS = [
   "./",
   "./index.html",
