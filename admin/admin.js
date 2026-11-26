@@ -229,20 +229,6 @@ const DOM = {
 };
 
 
-/* =========================================================
-   ACCESS GATE
-
-   Google-first admin access UI. This release deliberately
-   removes the client-side password form from the interface.
-
-   IMPORTANT:
-   This is still a frontend gate until server-side auth/RBAC
-   is connected. The Google ID token is verified against
-   Google's tokeninfo endpoint, but the allowed-email check
-   remains client-side for this static build.
-========================================================= */
-
-
 /*
  * Authentication is server-owned (Argon2id + HttpOnly session + CSRF).
  * The gate below is only a login form; it never decides authorization.

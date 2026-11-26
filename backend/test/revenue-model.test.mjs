@@ -27,6 +27,12 @@ test('CSV contains only aggregate fields and the selected currency, not customer
  assert.doesNotMatch(csv,/Private name|123456789/);
  assert.throws(()=>model.orders([{orders:[rows[0],rows[0]]}]),/DUPLICATE_ORDER/);
 });
+test('Decimal sample amounts stay exact in bucket totals and CSV',()=>{
+ const r=model.report([order('a',26,0.1,'USD'),order('b',26,0.2,'USD')],'USD',7,now);
+ assert.equal(r.total,0.3);
+ assert.equal(r.buckets.at(-1).total,0.3);
+ assert.match(model.csv(r),/,USD,0\.3,2,0\.15\r\n/);
+});
 test('New sample orders snapshot catalog currency; old records remain readable without attribution',()=>{
  const store=()=>{const map=new Map();return {getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)};};
  const db=store(),session=store();members.register(db,session,'Sample','123456789');
