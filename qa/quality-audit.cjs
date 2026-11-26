@@ -52,6 +52,32 @@ async function scan(page, name, lang, width, height) {
   await page.screenshot({path:path.join(out,[name,lang,width].join('-')+'.png'),animations:'disabled'});
   console.log('AXE '+JSON.stringify({name,lang,width,rules:item.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.length})),incomplete:item.incomplete.map(v=>({id:v.id,nodes:v.nodes.length}))}));
 }
+// Decode only the visible product photographs before recording visual evidence.
+async function settleCatalog(page) {
+  return page.locator('#menu .menu-category-products').first().evaluate(async rail=>{
+    const bounds=rail.getBoundingClientRect();
+    const images=[...rail.querySelectorAll('.product-image-wrapper img')].filter(img=>{
+      const r=img.getBoundingClientRect();
+      return r.width>0&&r.height>0&&r.right>Math.max(0,bounds.left)&&r.left<Math.min(innerWidth,bounds.right);
+    });
+    for(const img of images)img.loading='eager';
+    await Promise.all(images.map(img=>img.decode()));
+    return {visible:images.length,decoded:images.filter(img=>img.complete&&img.naturalWidth>0).length,
+      flow:getComputedStyle(rail).gridAutoFlow,scrollWidth:rail.scrollWidth,clientWidth:rail.clientWidth};
+  });
+}
+async function entryGeometry(page,selector,submit,lang,surface){
+  for(const [width,height] of [[320,568],[844,390]]){
+    await page.setViewportSize({width,height});
+    const box=page.locator(selector);
+    assert.ok(await box.evaluate(el=>el.scrollWidth<=el.clientWidth+1),surface+' '+lang+' horizontal overflow');
+    const button=page.locator(submit);
+    await button.scrollIntoViewIfNeeded();
+    const rect=await button.boundingBox();
+    assert.ok(rect&&rect.y>=-1&&rect.y+rect.height<=height+1&&rect.height>=44,JSON.stringify({surface,lang,width,height,rect}));
+    if(['en','fa'].includes(lang)) await page.screenshot({path:path.join(out,[surface,'compact',lang,width].join('-')+'.png'),animations:'disabled'});
+  }
+}
 async function measure(browser,surface) {
   const context=await setup(browser,{viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
   try {
@@ -117,7 +143,9 @@ async function measure(browser,surface) {
       for(const lang of locales){
         await admin.locator('#admin-gate-language').selectOption(lang);
         await scan(admin,'admin-entry',lang,390,844);
+        await entryGeometry(admin,'#admin-gate','#admin-gate-submit',lang,'admin-entry');
       }
+      await admin.setViewportSize({width:390,height:844});
       await loginDemoAdmin(admin);
       const entry=await context.newPage();
       await entry.goto(new URL('./?qr=demo',base).href);
@@ -125,6 +153,7 @@ async function measure(browser,surface) {
       for(const lang of locales){
         await entry.locator('#customer-entry select').selectOption(lang);
         await scan(entry,'customer-entry',lang,390,844);
+        await entryGeometry(entry,'#customer-entry','#customer-entry button[type=submit]',lang,'customer-entry');
       }
       await entry.close();
       for(const lang of locales){
@@ -158,6 +187,10 @@ async function measure(browser,surface) {
       for(const width of [390,1440]){
         await customer.setViewportSize({width,height:844});
         await customer.locator('#menu .menu-category-products').first().scrollIntoViewIfNeeded();
+        const catalog=await settleCatalog(customer);
+        assert.ok(catalog.visible>0&&catalog.decoded===catalog.visible&&catalog.flow==='column',JSON.stringify(catalog));
+        if(width===390)assert.ok(catalog.scrollWidth>catalog.clientWidth,JSON.stringify(catalog));
+        console.log('CATALOG IMAGE EVIDENCE '+JSON.stringify({width,...catalog}));
         await customer.screenshot({path:path.join(out,'customer-horizontal-catalog-en-'+width+'.png'),animations:'disabled'});
         await customer.evaluate(()=>window.scrollTo(0,0));
         await customer.locator('#menu-toggle').click();

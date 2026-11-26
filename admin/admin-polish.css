@@ -491,3 +491,28 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
 .demo-member-row {display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px 0;border-bottom:1px solid var(--admin-border,#ffffff22);}
 .demo-member-row strong {overflow-wrap:anywhere;}
 @media(prefers-reduced-motion:reduce){.admin-gate,.admin-gate-panel,.admin-gate-ambient{animation:none!important;transition:none!important;}}
+
+/* R9 — access screen shares the customer's warm glass treatment. */
+.admin-gate {
+  background:linear-gradient(145deg,#20120c48,#110c08ad),url("../assets/images/hero/hero.jpg") center/cover;
+}
+.admin-gate-panel {background:#32251b;border:1px solid #ead2af80;border-radius:30px;}
+@supports ((backdrop-filter:blur(16px)) or (-webkit-backdrop-filter:blur(16px))) {
+  .admin-gate-panel {background:linear-gradient(145deg,#3c2c20d9,#211810e8);backdrop-filter:blur(20px) saturate(115%);-webkit-backdrop-filter:blur(20px) saturate(115%);}
+}
+.admin-gate.is-open .admin-gate-panel {box-shadow:0 24px 70px #0007,inset 0 1px 0 #fff3;}
+.admin-gate-brand-label,.admin-gate-panel p,.admin-gate-footer {color:#f1dfcd;}
+.admin-gate-field input,.admin-gate-field select {font-size:16px;min-height:52px;border-color:#e8ceb2;}
+.admin-gate-field :is(input,select):focus-visible,.admin-gate-submit:focus-visible {outline:2px solid #fff1d8;outline-offset:3px;}
+.admin-gate-submit {min-height:52px;background:linear-gradient(100deg,#f0d49d,#d6ae70);color:#21190f;}
+.admin-gate-auth {margin-block-start:20px;}
+@media(max-width:720px) {
+  .admin-gate-panel {padding:20px;}
+  .admin-gate-brand {margin-block-end:18px;}
+  .admin-gate-logo-shell {width:54px;height:54px;flex-basis:54px;}
+  .admin-gate-logo {width:40px;height:40px;}
+}
+@media(max-height:500px) {
+  .admin-gate.is-open {align-items:flex-start;}
+  .admin-gate-panel {margin-block:auto;}
+}
