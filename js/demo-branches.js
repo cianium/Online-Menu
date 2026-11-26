@@ -9,13 +9,18 @@
   const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
   const code = /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/;
   const label = value => typeof value === 'string' && value.trim() === value && value.length > 0 && value.length <= 80;
+  // Keep existing stored labels readable; enforce the stricter policy on new writes.
+  const normalizeName = value => typeof value === 'string' ? value.normalize('NFKC').trim().replace(/\s+/gu, ' ') : '';
+  const nameKey = value => normalizeName(value).toLowerCase();
+  // Persian and Arabic joiners are valid text. Reject other invisible format and control characters.
+  const validNewLabel = value => label(value) && !/[\p{Cc}\p{Cf}]/u.test(value.replace(/[\u200c\u200d]/gu, ''));
   function read() {
     const raw = localStorage.getItem(registry);
     if (raw === null) return [{id:'', name:'ROMANO', tables:[]}];
     const rows = JSON.parse(raw);
     if (!Array.isArray(rows) || !rows.length || rows.length > 50 || rows[0]?.id !== '' ||
         new Set(rows.map(row => row?.id)).size !== rows.length ||
-        !rows.every((row, index) => row && (!index || uuid.test(row.id)) && label(row.name) &&
+        !rows.every((row, index) => row && typeof row.id === 'string' && (!index || uuid.test(row.id)) && label(row.name) &&
           Array.isArray(row.tables) && row.tables.length <= 100 &&
           row.tables.every(t => t && typeof t.code === 'string' && code.test(t.code) && label(t.name)) &&
           new Set(row.tables.map(t => t.code)).size === row.tables.length)) throw Error('BRANCH_DATA');
@@ -31,12 +36,14 @@
   function link(relative, branchId, tableCode) {
     const url = new URL(relative, location.href);
     if (branchId) url.searchParams.set('demoBranch', branchId);
+    else url.searchParams.delete('demoBranch');
     if (tableCode) url.searchParams.set('demoTable', tableCode);
+    else url.searchParams.delete('demoTable');
     return url.href;
   }
   async function save(action, name, tableCode) {
-    const clean = String(name ?? '').normalize('NFKC').trim();
-    if (!label(clean)) throw Error('BRANCH_INPUT');
+    const clean = normalizeName(name);
+    if (!validNewLabel(clean)) throw Error('BRANCH_INPUT');
     // Only a serialized read/modify/write can preserve changes from other tabs.
     if (!navigator.locks) throw Error('BRANCH_STORAGE');
     const result = await navigator.locks.request(registry, () => {
@@ -49,7 +56,7 @@
           if (typeof tableCode !== 'string' || !code.test(tableCode) || current.tables.length >= 100 || current.tables.some(t => t.code === tableCode)) throw Error('BRANCH_INPUT');
           current.tables.push({code:tableCode, name:clean});
         } else {
-          if (rows.some(row => row.name.toLowerCase() === clean.toLowerCase() && (action !== 'rename' || row.id !== id))) throw Error('BRANCH_INPUT');
+          if (rows.some(row => nameKey(row.name) === nameKey(clean) && (action !== 'rename' || row.id !== id))) throw Error('BRANCH_INPUT');
           if (action === 'rename') current.name = clean;
           else if (action === 'create' && rows.length < 50) {
             changedId = crypto.randomUUID();
