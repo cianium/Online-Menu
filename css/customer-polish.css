@@ -335,5 +335,5 @@ html[dir="ltr"] .main-navigation.is-open .navigation-inner { transform:translate
 .site-footer .footer-column {min-width:0;}
 .site-footer .footer-bottom {border-block-start:1px solid #ffffff12;}
 @media(prefers-reduced-motion:reduce) {
-  .customer-entry-panel {animation:none!important;transition:none!important;}
+  .customer-entry-panel,.main-navigation .navigation-inner {animation:none!important;transition:none!important;}
 }
