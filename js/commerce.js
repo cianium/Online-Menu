@@ -24,6 +24,7 @@
   let cartBackground = [];
   let pollTimer = 0;
   let submitting = false;
+  let demoOrderSaved = false;
 
   function read(key, fallback) {
     try { const value = JSON.parse(localStorage.getItem(key)); return value ?? fallback; } catch { return fallback; }
@@ -178,7 +179,7 @@
       const mode=typeof menuDataMode !== 'undefined' ? menuDataMode : 'loading';
       const demo=mode==='demo';
       if(demo)content.append(element('p',words.demo,'ramen-contact-note'));
-      if(panel==='profile')content.append(element('p',labels.guest,'ramen-contact-note'));
+      if(panel==='profile' && !window.RomanoCustomerEntry?.renderProfile(content,close))content.append(element('p',labels.guest,'ramen-contact-note'));
       if(panel==='chat')content.append(element('p',labels.chatMissing,'ramen-contact-note'));
       if(panel==='feedback') {
         content.append(element('p',demo?labels.draft:labels.unavailable,'ramen-contact-note'));
@@ -247,6 +248,7 @@
         </header>
         <div class="commerce-scroll">
         <div class="commerce-order-status" id="commerce-order-status" hidden></div>
+        <p class="ramen-contact-note" id="commerce-demo-status" role="status" hidden></p>
         <div class="commerce-items" id="commerce-items"></div>
         <div class="commerce-options" id="commerce-options">
           <label class="commerce-note"><span>${safe(t("note"))}</span><textarea id="commerce-notes" maxlength="1000" rows="2" placeholder="${safe(t("noteHint"))}"></textarea></label>
@@ -327,6 +329,7 @@
 
   function add(id) {
     if (!product(id)) return;
+    demoOrderSaved=false;
     cart[id] = Math.min(99, Number(cart[id] || 0) + 1);
     save(cartKey(), cart);
     render();
@@ -377,7 +380,7 @@
     }
     const submit = document.querySelector("#commerce-submit");
     submit.disabled = amount === 0 || submitting;
-    submit.textContent = submitting ? t("sending") : t("checkout");
+    submit.textContent = submitting ? t("sending") : window.RomanoCustomerEntry?.current() ? window.RomanoCustomerEntry.t("order") : t("checkout");
     renderStatus();
     renderSession();
   }
@@ -398,8 +401,17 @@
     badge.hidden = !tableSession;
     badge.textContent = tableSession ? `${t("table")} · ${tableSession.table?.name || tableSession.table?.code || ""}` : "";
     renderPaymentMethods();
+    const sample=Boolean(window.RomanoCustomerEntry?.current());
+    const notice=document.querySelector('#commerce-demo-status');
+    if(notice){notice.hidden=!sample;notice.textContent=sample?window.RomanoCustomerEntry.t(demoOrderSaved?"saved":"notice"):"";}
+    const pay=document.querySelector('.commerce-pay-method');
+    if(pay)pay.hidden=sample;
+    const notes=document.querySelector('.commerce-note');
+    if(notes)notes.hidden=sample;
+    if(sample)badge.hidden=true;
     const message=document.querySelector('#commerce-message');
-    if(message && !tableSession && count()>0 && !message.textContent)message.textContent=t('scan');
+    if(message && !tableSession && !window.RomanoCustomerEntry?.current() && count()>0 && !message.textContent)message.textContent=t('scan');
+    if(message && window.RomanoCustomerEntry?.current() && message.textContent===t('scan'))message.textContent='';
     if(message && tableSession && message.textContent===t('scan'))message.textContent='';
   }
   function renderStatus() {
@@ -452,7 +464,7 @@
   async function openQrSession() {
     const params = new URLSearchParams(location.search);
     const qrToken = params.get("qr");
-    if (!qrToken) return;
+    if (!qrToken || window.RomanoCustomerEntry?.isDemoQr()) return;
     try {
       const response = await fetch("/api/v1/orders/session", {
         method: "POST", credentials: "include", headers: { "content-type": "application/json", accept: "application/json" },
@@ -491,6 +503,16 @@
 
   async function submitOrder() {
     if (submitting || !count()) return;
+    if (typeof menuDataMode!=="undefined" && menuDataMode==="demo" && window.RomanoCustomerEntry?.current()) {
+      try {
+        window.RomanoDemoMembers.addOrder(localStorage,sessionStorage,visibleCartEntries().map(([id,quantity])=>({name:localized(product(id)).name,quantity,price:product(id).price})),total(),typeof restaurantConfig!=='undefined'?restaurantConfig?.currency:undefined);
+        demoOrderSaved=true;
+        cart=normalizeCart({});save(cartKey(),cart);render();announce(window.RomanoCustomerEntry.t("saved"));
+        document.querySelector(".commerce-close")?.focus({preventScroll:true});
+        document.dispatchEvent(new CustomEvent("romano:demo-membership-changed"));
+      } catch {showMessage(window.RomanoCustomerEntry.t("orderError"));}
+      return;
+    }
     if (!tableSession) { showMessage(t("scan")); return; }
     if (typeof menuDataMode === "undefined" || menuDataMode !== "public") { showMessage(t("submitError")); return; }
     submitting = true; render(); showMessage("");
@@ -603,6 +625,7 @@
     document.addEventListener("romano:catalog-rendered", enhanceProducts);
     document.addEventListener("romano:product-opened", enhanceProducts);
     window.addEventListener("romano:data-updated", () => { reconcileCart(); enhanceProducts(); render(); });
+    document.addEventListener("romano:demo-membership-changed",render);
     window.addEventListener("storage", event => {
       if (event.key !== null && event.key !== cartKey()) return;
       cart = normalizeCart(read(cartKey(), {}));

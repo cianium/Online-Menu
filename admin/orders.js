@@ -142,21 +142,29 @@
   }
 
   async function loadBranches() {
-    if (!window.RomanoAPI?.enabled) return;
+    if (!window.RomanoAPI?.enabled) {branches=[];syncGateway();syncBranchManagement();return;}
     try {
       const data = await window.RomanoAPI.branches();
       branches = Array.isArray(data?.branches) ? data.branches : [];
       const select = document.querySelector("#gateway-branch");
+      const selected=select.value;
       select.innerHTML = branches.map((branch) => `<option value="${safe(branch.id)}">${safe(branch.name)}</option>`).join("");
+      if(branches.some(item=>item.id===selected)) select.value=selected;
       syncGateway();
       syncBranchManagement();
-    } catch { /* Settings remain unavailable until the server is connected. */ }
+    } catch { branches=[];syncGateway();syncBranchManagement(); }
   }
 
   function syncGateway() {
     const id = document.querySelector("#gateway-branch")?.value;
     const branch = branches.find((item) => item.id === id);
-    if (!branch) return;
+    const form=document.querySelector("#gateway-settings-form");
+    const enabled=Boolean(branch&&window.RomanoAPI?.enabled);
+    if(form)for(const input of form.querySelectorAll("input,select,button"))input.disabled=!enabled;
+    if(!enabled){
+      if(form){document.querySelector("#gateway-branch").replaceChildren();document.querySelector("#gateway-merchant-id").value="";document.querySelector("#gateway-active").checked=false;}
+      return;
+    }
     document.querySelector("#gateway-merchant-id").value = "";
     document.querySelector("#gateway-merchant-id").placeholder = branch.gateway?.merchantMasked || "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
     document.querySelector("#gateway-sandbox").checked = branch.gateway?.sandbox !== false;
@@ -168,7 +176,8 @@
     const message = document.querySelector("#gateway-message");
     const branchId = document.querySelector("#gateway-branch").value;
     const merchantId = document.querySelector("#gateway-merchant-id").value.trim();
-    if (!branchId || !merchantId) { message.textContent = t("برای تغییر تنظیمات، Merchant ID کامل را وارد کنید."); return; }
+    if (!window.RomanoAPI?.enabled || !branches.some(item=>item.id===branchId)) return;
+    if (!merchantId) { message.textContent = t("برای تغییر تنظیمات، Merchant ID کامل را وارد کنید."); return; }
     try {
       await window.RomanoAPI.saveGateway(branchId, {
         provider:"zarinpal", merchantId,
@@ -192,12 +201,13 @@
     const selected=select.value;
     select.innerHTML=branches.map((branch) => `<option value="${safe(branch.id)}">${safe(branch.name)}</option>`).join("");
     if(branches.some((item)=>item.id===selected)) select.value=selected;
-    const branch=branches.find((item)=>item.id===select.value);
+    const branch=window.RomanoAPI?.enabled?branches.find((item)=>item.id===select.value):null;
+    select.disabled=!branch;
     const checkbox=document.querySelector("#ops-qr-enabled");
     checkbox.checked=branch?.qr_ordering_enabled===true;
     checkbox.disabled=!branch;
     document.querySelector("#ops-save-branch").disabled=!branch;
-    document.querySelector("#create-table-form button[type=submit]").disabled=!branch;
+    for(const input of document.querySelectorAll("#create-table-form input,#create-table-form button"))input.disabled=!branch;
     refreshTables();
   }
 
@@ -243,7 +253,7 @@
     const host=document.querySelector("#ops-tables");
     if(!host) return;
     const selected=select?.value || "";
-    if(!selected) {host.textContent=t("برای شروع یک شعبه بسازید.");return;}
+    if(!window.RomanoAPI?.enabled||!selected) {host.textContent=t(window.RomanoAPI?.enabled?"رستوران عملیاتی هنوز پیکربندی نشده است.":"تنظیمات عملیاتی در نسخه مستقل در دسترس نیست.");return;}
     try {
       const result=await window.RomanoAPI.tables(selected);
       if(select.value!==selected) return;
@@ -294,32 +304,12 @@
     } catch { host.textContent=t("عملیات انجام نشد."); }
   }
 
-  async function addBranch(event) {
-    event.preventDefault();
-    const form=event.currentTarget;
-    const button=form.querySelector("button");
-    button.disabled=true;opsMessage("");
-    try {
-      const input=new FormData(form);
-      await window.RomanoAPI.createBranch({
-        name:String(input.get("branchName")||"").trim(),
-        slug:String(input.get("branchSlug")||"").trim(),
-        priceMultiplier:Number(input.get("priceMultiplier")),
-        currencyCode:"IRR",currencyExponent:0
-      });
-      form.reset();
-      await loadBranches();
-      opsMessage("شعبه ایجاد شد.");
-    }catch{opsMessage("عملیات انجام نشد.");}
-    finally{button.disabled=false;}
-  }
-
   async function addTable(event) {
     event.preventDefault();
     const form=event.currentTarget;
     const button=form.querySelector("button");
     const branchId=document.querySelector("#ops-branch")?.value;
-    if(!branchId)return;
+    if(!window.RomanoAPI?.enabled||!branches.some(item=>item.id===branchId))return;
     button.disabled=true;opsMessage("");
     try {
       const input=new FormData(form);
@@ -335,7 +325,7 @@
   async function saveOrderingStatus() {
     const branchId=document.querySelector("#ops-branch")?.value;
     const enabled=document.querySelector("#ops-qr-enabled")?.checked===true;
-    if(!branchId)return;
+    if(!window.RomanoAPI?.enabled||!branches.some(item=>item.id===branchId))return;
     const button=document.querySelector("#ops-save-branch");
     button.disabled=true;opsMessage("");
     try{
@@ -356,8 +346,8 @@
       render();
     }));
     document.addEventListener("romano:language-changed", () => { render(); syncBranchManagement(); updateSoundButton(); });
+    document.addEventListener("romano:admin-page-changed", event => {if(event.detail?.page==="settings")loadBranches();});
     document.querySelector("#ops-branch")?.addEventListener("change", syncBranchManagement);
-    document.querySelector("#create-branch-form")?.addEventListener("submit", addBranch);
     document.querySelector("#create-table-form")?.addEventListener("submit", addTable);
     document.querySelector("#ops-save-branch")?.addEventListener("click", saveOrderingStatus);
     document.querySelector("#gateway-branch")?.addEventListener("change", syncGateway);

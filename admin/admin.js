@@ -269,6 +269,9 @@ function showGateError(message) {
 }
 
 let adminInitialized = false;
+let adminDemoMode = false;
+const demoAdminSessionKey = 'online_menu_demo_admin_session_v1';
+function demoAdminSignedIn(){try{return sessionStorage.getItem(demoAdminSessionKey)==='1';}catch{return false;}}
 
 async function startAdmin() {
     if (adminInitialized) return;
@@ -279,19 +282,27 @@ async function startAdmin() {
 function initializeAccessGate() {
     const form = document.querySelector("#admin-gate-form");
     if (!form) return;
+    const language = document.querySelector("#admin-gate-language");
+    language.value = window.ROMANO_ADMIN_I18N.language;
+    language.addEventListener("change",()=>window.ROMANO_ADMIN_I18N.setLanguage(language.value));
+    document.addEventListener("romano:language-changed",()=>{language.value=window.ROMANO_ADMIN_I18N.language;});
     form.addEventListener("submit", async event => {
         event.preventDefault();
         const email = String(form.elements.email.value || "").trim();
         const password = String(form.elements.password.value || "");
         const button = form.querySelector("#admin-gate-submit");
         showGateError("");
-        if (!email || !password) { showGateError("ایمیل و رمز عبور را وارد کنید."); return; }
+        if (!email || !password) { showGateError("شناسه و رمز عبور را وارد کنید."); return; }
 
         const idle = button.textContent;
         button.disabled = true;
         button.textContent = window.ROMANO_ADMIN_I18N?.translate?.("در حال ورود…") || "…";
         try {
-            await window.RomanoAPI.login(email, password);
+            if (adminDemoMode && !window.RomanoAPI.enabled) {
+                if(email!=="demo-admin" || password!=="Demo-Only-2026") {showGateError("شناسه یا رمز عبور آزمایشی نادرست است.");return;}
+                // Public demonstration gate, not authorization or a secret.
+                try{sessionStorage.setItem(demoAdminSessionKey,"1");}catch{}
+            } else await window.RomanoAPI.login(email, password);
             form.reset();
             setGateOpen(false);
             await startAdmin();
@@ -321,7 +332,16 @@ async function bootAdmin() {
     document.querySelector(".admin-app").inert = true;
     try {
         const { available, session } = await window.RomanoAPI.detect();
-        if (!available) document.querySelector("#admin-mode-banner").hidden = false;
+        if (!available) {
+            adminDemoMode=true;
+            document.querySelector("#admin-mode-banner").hidden=false;
+            document.querySelector("#admin-demo-credentials").hidden=false;
+            document.querySelector("#admin-gate-server-auth").hidden=true;
+            for(const [selector,label] of Object.entries({"#admin-gate-id-label":"شناسه ورود","#admin-gate-eyebrow":"دسترسی آزمایشی مدیریت","#admin-gate-description":"با شناسه و رمز عمومی نمونه وارد شوید؛ این حساب واقعی نیست.","#admin-gate-footer-mode":"فقط داده آزمایشی"})) {
+                document.querySelector(selector).textContent=window.ROMANO_ADMIN_I18N.get(label);
+            }
+            if(!demoAdminSignedIn()){setGateOpen(true);return;}
+        }
         if (available && !session?.user) { setGateOpen(true); return; }
         await startAdmin();
     } catch (error) {
@@ -363,6 +383,7 @@ async function initializeAdmin() {
     renderAll();
     document.querySelector(".admin-app").inert = false;
     setSaveStatus(window.RomanoAPI?.enabled ? "server" : "local");
+    document.dispatchEvent(new CustomEvent("romano:demo-membership-changed"));
 
 }
 
@@ -2723,6 +2744,7 @@ async function handleSettingsSubmit(event) {
 ========================================================= */
 
 async function logoutAdmin() {
+    try{sessionStorage.removeItem(demoAdminSessionKey);}catch{}
     try {
         if (window.RomanoAPI?.enabled) await window.RomanoAPI.logout();
     } catch (error) { console.error("Admin logout error:", error); }
