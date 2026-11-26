@@ -137,3 +137,40 @@
 .revenue-table th,.revenue-table td {padding:8px;border-block-end:1px solid var(--admin-line);text-align:start;white-space:nowrap;}
 .overview-revenue :is(select,summary,button,[tabindex]):focus-visible {outline:2px solid var(--admin-accent-bright);outline-offset:2px;}
 @media(max-width:650px){.revenue-kpis {grid-template-columns:repeat(2,minmax(0,1fr));}.revenue-kpis>div{padding:9px;}.revenue-heading button{flex:1 1 auto;}}
+
+/* R13 — clearer workspace hierarchy and a legible, presentation-ready revenue panel. */
+.admin-main {background:radial-gradient(circle at 50% 0,#be8d4420,transparent 30%),#090a0b;}
+.admin-content {width:min(100%,1500px);margin-inline:auto;}
+.sidebar {border-inline-start:1px solid #d6ae7028;box-shadow:0 0 36px #0005;}
+.sidebar-navigation .nav-item {border:1px solid transparent;}
+.sidebar-navigation .nav-item:hover {border-color:#d6ae7030;background:#d6ae700a;}
+.sidebar-navigation .nav-item.active {border-color:#d6ae7050;background:linear-gradient(100deg,#d6ae7026,#d6ae700b);box-shadow:inset 3px 0 0 #d6ae70;}
+html[dir="rtl"] .sidebar-navigation .nav-item.active {box-shadow:inset -3px 0 0 #d6ae70;}
+.panel,.stat-card,.admin-welcome-strip {border-color:#d6ae7029;background:linear-gradient(145deg,#15191d,#101316);box-shadow:0 12px 30px #0002;}
+.admin-overview .overview-revenue {padding:clamp(16px,2vw,24px);border-color:#d6ae7040;background:linear-gradient(150deg,#1b1a17,#111519 55%);}
+.revenue-heading {align-items:center;padding-block-end:12px;border-block-end:1px solid var(--admin-line);}
+.revenue-heading h2 {font-size:clamp(19px,2.1vw,25px);}
+.revenue-heading p {max-width:64ch;line-height:1.65;}
+.revenue-filters {padding:12px;border:1px solid var(--admin-line);border-radius:14px;background:#0b0e11;}
+.revenue-kpis {gap:10px;}
+.revenue-kpis>div {position:relative;overflow:hidden;padding:14px 15px;border-radius:15px;background:linear-gradient(145deg,#1b2025,#12161a);}
+.revenue-kpis>div::before {content:"";position:absolute;inset-block:0;inset-inline-start:0;width:3px;background:#d6ae70;opacity:.72;}
+.revenue-kpis dt {line-height:1.5;}
+.revenue-kpis dd {color:#f4d296;line-height:1.25;}
+.revenue-chart {padding:18px 16px 12px;border-radius:18px;background:linear-gradient(180deg,#11161a,#0c0f12);box-shadow:inset 0 1px 0 #fff1;}
+#revenue-bars {height:clamp(170px,22vw,260px);gap:clamp(4px,.75vw,10px);border-bottom-color:#d6ae7060;background:repeating-linear-gradient(to top,transparent 0,transparent calc(25% - 1px),#ffffff0d calc(25% - 1px),#ffffff0d 25%);}
+.revenue-bar {min-width:3px;background:linear-gradient(180deg,#d4a963,#93652f);border-radius:8px 8px 2px 2px;box-shadow:0 -4px 12px #d6ae7020;transition:filter .18s ease,transform .18s ease;}
+.revenue-bar.is-selected {background:linear-gradient(180deg,#ffe0a7,#c18a45);filter:drop-shadow(0 0 7px #d6ae7060);}
+.revenue-detail-label {padding:12px;border-radius:13px;background:#ffffff05;}
+#revenue-detail,#revenue-excluded {margin:0;color:var(--admin-ink-soft);line-height:1.6;}
+.revenue-table {border-block-start:1px solid var(--admin-line);}
+.revenue-table summary {color:var(--admin-accent-bright);}
+.admin-app :is(input,select,textarea,button):focus-visible {outline:2px solid var(--admin-accent-bright);outline-offset:3px;}
+@media(max-width:700px) {
+  .admin-content {padding-inline:12px;}
+  .admin-overview .overview-revenue {padding:14px;}
+  .revenue-chart {padding-inline:10px;}
+  #revenue-bars {height:180px;gap:3px;}
+}
+@media(max-width:390px) {.revenue-kpis{grid-template-columns:minmax(0,1fr)}.revenue-heading>button{width:100%}}
+@media(prefers-reduced-motion:reduce) {.revenue-bar{transition:none}}
