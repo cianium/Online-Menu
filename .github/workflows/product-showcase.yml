@@ -1,0 +1,47 @@
+name: Product showcase
+on:
+  pull_request:
+    paths:
+      - 'docs/showcase/**'
+      - '.github/workflows/product-showcase.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install capture tools
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+          if ! command -v ffmpeg >/dev/null; then sudo apt-get update && sudo apt-get install -y ffmpeg; fi
+      - name: Capture local standalone product
+        run: |
+          node qa/demo-server.mjs > /tmp/showcase.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8765/ > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:8765/ > /dev/null
+          node docs/showcase/capture.cjs
+      - name: Encode admin tour and social preview
+        run: |
+          ffmpeg -v error -framerate 1/2 -i dist/showcase/frame-%d.png -vf "scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse" -loop 0 dist/showcase/admin-tour.gif
+          rm dist/showcase/frame-*.png
+          node -e 'const {chromium}=require("playwright"); (async()=>{const b=await chromium.launch();try{const p=await b.newPage({viewport:{width:1280,height:640}});await p.goto(require("node:url").pathToFileURL(require("node:path").resolve("docs/showcase/cover.svg")).href);await p.screenshot({path:"dist/showcase/social-preview.png"});}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;})'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ramen-product-showcase
+          path: dist/showcase/
+          if-no-files-found: error
+          retention-days: 30

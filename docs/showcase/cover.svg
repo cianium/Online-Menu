@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="t d">
+<title id="t">RAMEN — the digital dining experience</title>
+<desc id="d">Dark espresso and amber editorial brand cover with an abstract bowl and steam. Not a screenshot.</desc>
+<defs>
+ <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#211610"/><stop offset="1" stop-color="#100e0d"/></linearGradient>
+ <linearGradient id="gold" x2="1" y2="1"><stop stop-color="#f6d29a"/><stop offset="1" stop-color="#b8753c"/></linearGradient>
+ <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#e7b87e" stroke-opacity=".08"/></pattern>
+</defs>
+<rect width="1280" height="640" rx="0" fill="url(#bg)"/>
+<rect x="768" width="512" height="640" fill="url(#grid)"/>
+<rect x="32" y="32" width="1216" height="576" rx="20" fill="none" stroke="#dca46c" stroke-opacity=".27"/>
+<path d="M72 96h48" stroke="#edb675" stroke-width="3"/>
+<text x="135" y="103" font-family="Arial, sans-serif" font-size="17" letter-spacing="5" fill="#e6b67e">RAMEN / ONLINE MENU</text>
+<text x="70" y="243" font-family="Georgia, serif" font-size="82" font-weight="bold" fill="#fff4e5">Dining,</text>
+<text x="70" y="333" font-family="Georgia, serif" font-size="82" font-style="italic" fill="#f1c58a">reimagined.</text>
+<text x="75" y="393" font-family="Arial, sans-serif" font-size="25" fill="#e3d6c8">A digital menu and restaurant workspace.</text>
+<text x="75" y="431" font-family="Arial, sans-serif" font-size="25" fill="#e3d6c8">From the first scan to the last bite.</text>
+<g font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#f7d4a6">
+ <rect x="75" y="485" width="191" height="42" rx="21" fill="#3a2a20" stroke="#9a6d46"/><text x="94" y="512">STANDALONE DEMO</text>
+ <rect x="279" y="485" width="151" height="42" rx="21" fill="#3a2a20" stroke="#9a6d46"/><text x="301" y="512">4 LANGUAGES</text>
+ <rect x="443" y="485" width="124" height="42" rx="21" fill="#3a2a20" stroke="#9a6d46"/><text x="464" y="512">QR READY*</text>
+</g>
+<text x="75" y="569" font-family="Arial, sans-serif" font-size="14" fill="#b9a89a">*Connected ordering requires server and branch configuration.</text>
+<g transform="translate(1000 318)">
+ <circle r="218" fill="#231912" stroke="#684a34"/>
+ <circle r="192" fill="none" stroke="#a8784f" stroke-dasharray="2 9"/>
+ <circle r="160" fill="#2d2018" stroke="#a8784f" stroke-opacity=".5"/>
+ <g fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M-110 25Q0 65 110 25Q97 119 0 119Q-97 119-110 25Z" stroke-width="5"/>
+ <path d="M-110 25Q0-13 110 25M-53 129H53" stroke-width="4"/>
+ <path d="M-50 4C-88-23-14-50-47-82M0 1C-35-30 38-55 1-107M50 4C15-25 84-52 47-81" stroke-width="5"/>
+ <path d="M-95-28L66-131M-67-25L93-118" stroke-width="5"/>
+ </g>
+ <circle cx="0" cy="-218" r="4" fill="#f1c58a"/><circle cx="218" cy="0" r="4" fill="#f1c58a"/>
+</g>
+<text x="1000" y="573" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" letter-spacing="3" fill="#d0b49a">GUEST · TEAM · TABLE</text>
+</svg>
