@@ -264,6 +264,48 @@ const readyCustomer = async page => {
       assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).length),3);
     } finally {await Promise.all(registrants.map(page=>page.close()));}
     console.log('PASS: concurrent sample registration retains both profiles');
+    if (standalone) {
+      await admin.evaluate(()=>navigateTo('settings'));
+      const branches = admin.locator('#demo-branches');
+      await branches.locator('[name=sampleName]').fill('Sample North');
+      await branches.locator('[data-action=create] button').click();
+      await admin.waitForURL(url=>url.searchParams.has('demoBranch'));
+      await branches.waitFor({state:'visible'});
+      assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).length),0);
+      assert.equal(await admin.evaluate(()=>state.products.length),21);
+      await branches.locator('[name=sampleRename]').fill('Sample Harbour');
+      await branches.locator('[data-action=rename] button').click();
+      await admin.waitForFunction(()=>document.querySelector('#sample-branch-select').selectedOptions[0]?.text==='Sample Harbour');
+      await branches.locator('[name=sampleTableCode]').fill('T1');
+      await branches.locator('[name=sampleTableName]').fill('Window table');
+      await branches.locator('#sample-table-form button').click();
+      const qr=branches.locator('#sample-table-qr');
+      await qr.waitFor({state:'visible'});
+      assert.ok(await qr.locator('canvas,img').count());
+      const link=await qr.locator('a').getAttribute('href');
+      await customer.goto(link);await readyCustomer(customer);
+      const entry=customer.locator('#customer-entry');
+      assert.match(await entry.innerText(),/Sample Harbour · Window table/);
+      await entry.locator('[name=name]').fill('Branch Member');
+      await entry.locator('[name=phone]').fill('+12025550101');
+      await entry.locator('button[type=submit]').click();
+      await entry.waitFor({state:'hidden'});
+      await customer.evaluate(()=>{RomanoCommerce.add(menuProducts.find(p=>p.active!==false&&p.price>0).id);RomanoCommerce.open();});
+      await customer.locator('#commerce-submit').click();
+      await customer.waitForFunction(()=>RomanoCustomerEntry.current()?.orders[0]?.tableName==='Window table');
+      await admin.evaluate(()=>navigateTo('orders'));
+      await admin.locator('.sample-order-ticket').filter({hasText:'Window table'}).waitFor();
+      const invalid=new URL(link);invalid.searchParams.set('demoTable','no-such-table');
+      await customer.goto(invalid.href);await readyCustomer(customer);
+      assert.equal(await customer.evaluate(()=>menuDataMode),'unavailable');
+      await admin.evaluate(()=>navigateTo('settings'));
+      await branches.locator('#sample-branch-select').selectOption('');
+      await admin.waitForURL(url=>!url.searchParams.has('demoBranch'));
+      await branches.waitFor({state:'visible'});
+      assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).length),3);
+      assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).some(member=>member.name==='Branch Member')),false);
+      console.log('PASS: local branch creation, rename, isolated catalog and memberships, table QR, invalid entry, order and return to primary');
+    }
     await customer.goto(new URL('./?restaurant=standalone-qa-missing',base).href); await readyCustomer(customer);
     assert.equal(await customer.evaluate(() => menuDataMode), 'unavailable');
     assert.equal(await cards.count(),0);

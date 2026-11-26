@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r15-navigation-assets`;
+const CACHE_NAME = `${menuCachePrefix}r15-branch-catalog`;
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -14,6 +14,7 @@ const CORE_ASSETS = [
   "./css/catalog-browse.css",
   "./css/customer-polish.css",
   "./js/data.js",
+  "./js/demo-branches.js",
   "./js/public-api.js",
   "./js/i18n.js",
   "./js/money.js",
@@ -43,7 +44,7 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin || url.pathname.includes("/admin/") || url.pathname.endsWith("/admin") || url.pathname.includes("/api/")) return;
 
   // Never persist navigation URLs that may contain table tokens or payment callback identifiers.
-  if (["qr", "payment", "order", "ref"].some(key => url.searchParams.has(key))) return;
+  if (["qr", "payment", "order", "ref", "demoBranch", "demoTable"].some(key => url.searchParams.has(key))) return;
 
   const isDocument = request.mode === "navigate" || request.destination === "document";
   const isStaticCode = ["script", "style"].includes(request.destination);

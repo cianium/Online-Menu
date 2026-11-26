@@ -13,13 +13,13 @@
 const STORAGE_KEYS = {
 
     restaurant:
-        "romano_restaurant",
+        globalThis.RomanoDemoBranches?.scope("romano_restaurant") ?? "romano_restaurant",
 
     categories:
-        "romano_categories",
+        globalThis.RomanoDemoBranches?.scope("romano_categories") ?? "romano_categories",
 
     products:
-        "romano_products"
+        globalThis.RomanoDemoBranches?.scope("romano_products") ?? "romano_products"
 
 };
 

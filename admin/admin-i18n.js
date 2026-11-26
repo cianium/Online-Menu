@@ -9,6 +9,13 @@
     const LANGS = ["fa", "en", "tr", "ar"];
 
     const T = {
+      "شعبه‌های آزمایشی": ["Demo branches","Demo şubeler","الفروع التجريبية"],
+      "کاتالوگ، اعضا و سفارش‌های هر شعبه در همین مرورگر جداگانه ذخیره می‌شوند.": ["Each branch keeps its own catalog, members and orders in this browser.","Her şubenin menüsü, üyeleri ve siparişleri bu tarayıcıda ayrı saklanır.","يُحفظ منيو كل فرع وأعضاؤه وطلباته بشكل منفصل في هذا المتصفح."],
+      "نام شعبه جدید": ["New branch name","Yeni şube adı","اسم الفرع الجديد"],
+      "نام شعبه فعال": ["Current branch name","Geçerli şubenin adı","اسم الفرع الحالي"],
+      "ذخیره نام شعبه": ["Save branch name","Şube adını kaydet","حفظ اسم الفرع"],
+      "افزودن شعبه آزمایشی": ["Add demo branch","Demo şube ekle","إضافة فرع تجريبي"],
+      "نام یا کد معتبر و غیرتکراری وارد کنید.": ["Enter a valid, unique name or code.","Geçerli ve benzersiz bir ad veya kod girin.","أدخل اسمًا أو رمزًا صالحًا وغير مكرر."],
       "باز کردن ورود آزمایشی مشتری": ["Open demo customer entry","Demo müşteri girişini aç","فتح دخول العميل التجريبي"],
       "فقط داده آزمایشی": ["Sample data only","Yalnızca örnek veri","بيانات تجريبية فقط"],
       "با شناسه و رمز عمومی نمونه وارد شوید؛ این حساب واقعی نیست.": ["Sign in with the public sample ID and password; this is not a real account.","Herkese açık örnek kimlik ve şifreyle giriş yapın; bu gerçek hesap değildir.","ادخل بالمعرّف وكلمة المرور التجريبيين العامين؛ هذا ليس حسابًا حقيقيًا."],

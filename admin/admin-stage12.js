@@ -2,10 +2,11 @@
 (() => {
     'use strict';
     const model = window.AdminStage12Model;
-    const ruleKey = 'online_menu_loyalty_drafts_v1:romano';
-    const ratingKey = 'online_menu_demo_rating:romano';
+    const tenant = window.RomanoDemoBranches?.scope('romano') ?? 'romano';
+    const ruleKey = 'online_menu_loyalty_drafts_v1:'+tenant;
+    const ratingKey = 'online_menu_demo_rating:'+tenant;
     const reviewModel = window.RomanoDemoReview;
-    const reviewKey = reviewModel.key('romano');
+    const reviewKey = reviewModel.key(tenant);
     let displayedReview = null;
     const t = key => window.ROMANO_ADMIN_I18N.get(key);
     const local = () => typeof adminInitialized !== 'undefined' && adminInitialized && !window.RomanoAPI?.enabled && !document.querySelector('.admin-app').inert;
@@ -32,7 +33,7 @@
         note.textContent=t('امتیاز تأییدشده در دسترس نیست.');
         if (!local()) return;
         try {
-            const review=reviewModel.read(localStorage,'romano');
+            const review=reviewModel.read(localStorage,tenant);
             if (!review) return;
             displayedReview=review;
             if(review.status==='approved') {
@@ -131,7 +132,7 @@
         });
         $('overview-rating-actions').addEventListener('click',event=>{
             const action=event.target.closest('[data-rating-action]')?.dataset.ratingAction;if(!local()||!['approve','reject'].includes(action))return;
-            try {const updated=reviewModel.moderate(localStorage,'romano',displayedReview,action==='approve'?'approved':'rejected');renderRating();if(!updated)$('overview-rating-note').textContent=t('نظر تغییر کرده است؛ دوباره بررسی کنید.');}catch{$('overview-rating-note').textContent=t('خواندن داده محلی ممکن نیست.');}
+            try {const updated=reviewModel.moderate(localStorage,tenant,displayedReview,action==='approve'?'approved':'rejected');renderRating();if(!updated)$('overview-rating-note').textContent=t('نظر تغییر کرده است؛ دوباره بررسی کنید.');}catch{$('overview-rating-note').textContent=t('خواندن داده محلی ممکن نیست.');}
         });
         document.addEventListener('romano:orders-summary',event=>{orderSummary=event.detail;renderOrders();});
         document.addEventListener('romano:admin-page-changed',event=>{

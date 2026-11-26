@@ -65,7 +65,13 @@
    finally{pending=submit.disabled=guest.disabled=false;}
   });
   const notice=text('p','notice','customer-entry-notice');notice.id='customer-entry-notice';
-  panel.append(top,title,text('p','intro'),form,notice,guest);
+  panel.append(top,title);
+  const branch=window.RomanoDemoBranches?.context();
+  if(branch){
+    const table=branch.tables.find(row=>row.code===window.RomanoDemoBranches.table);
+    panel.append(el('p',table ? branch.name+' · '+table.name : branch.name));
+  }
+  panel.append(text('p','intro'),form,notice,guest);
   dialog.replaceChildren(panel);dialog.showModal();name.focus();return true;
  }
  function renderProfile(host,closePanel){

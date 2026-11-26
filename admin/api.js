@@ -46,6 +46,7 @@
    * Resolves to { available: boolean, session: object | null }.
    */
   async function detect() {
+    if (standalone) window.RomanoDemoBranches?.context();
     if (!canUseBackend) return { available: false, session: null };
     const response = await fetch(`${API_PREFIX}/auth/me`, { credentials: "include", cache: "no-store", headers: { Accept: "application/json" }, signal: AbortSignal.timeout(8000) });
     const isJson = (response.headers.get("content-type") || "").includes("application/json");

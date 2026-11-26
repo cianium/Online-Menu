@@ -1,0 +1,67 @@
+/* Local sample branches share a browser origin. Server APIs never read this registry. */
+(() => {
+  'use strict';
+  if (document.querySelector('meta[name="online-menu-mode"]')?.content !== 'standalone') return;
+  const registry = 'online_menu_demo_branches_v1';
+  const params = new URLSearchParams(location.search);
+  const id = params.get('demoBranch') ?? '';
+  const table = params.get('demoTable');
+  const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
+  const code = /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/;
+  const label = value => typeof value === 'string' && value.trim() === value && value.length > 0 && value.length <= 80;
+  function read() {
+    const raw = localStorage.getItem(registry);
+    if (raw === null) return [{id:'', name:'ROMANO', tables:[]}];
+    const rows = JSON.parse(raw);
+    if (!Array.isArray(rows) || !rows.length || rows.length > 50 || rows[0]?.id !== '' ||
+        new Set(rows.map(row => row?.id)).size !== rows.length ||
+        !rows.every((row, index) => row && (!index || uuid.test(row.id)) && label(row.name) &&
+          Array.isArray(row.tables) && row.tables.length <= 100 &&
+          row.tables.every(t => t && typeof t.code === 'string' && code.test(t.code) && label(t.name)) &&
+          new Set(row.tables.map(t => t.code)).size === row.tables.length)) throw Error('BRANCH_DATA');
+    return rows;
+  }
+  function context() {
+    if (!id && table === null) return null;
+    const branch = read().find(row => row.id === id);
+    if (!branch || (table !== null && !branch.tables.some(t => t.code === table))) throw Error('BRANCH_MISSING');
+    return branch;
+  }
+  function scope(key) { return id ? key + ':branch:' + id : key; }
+  function link(relative, branchId, tableCode) {
+    const url = new URL(relative, location.href);
+    if (branchId) url.searchParams.set('demoBranch', branchId);
+    if (tableCode) url.searchParams.set('demoTable', tableCode);
+    return url.href;
+  }
+  async function save(action, name, tableCode) {
+    const clean = String(name ?? '').normalize('NFKC').trim();
+    if (!label(clean)) throw Error('BRANCH_INPUT');
+    // Only a serialized read/modify/write can preserve changes from other tabs.
+    if (!navigator.locks) throw Error('BRANCH_STORAGE');
+    const result = await navigator.locks.request(registry, () => {
+      try {
+        const rows = read();
+        const current = rows.find(row => row.id === id);
+        if (!current) throw Error('BRANCH_MISSING');
+        let changedId = id;
+        if (action === 'table') {
+          if (typeof tableCode !== 'string' || !code.test(tableCode) || current.tables.length >= 100 || current.tables.some(t => t.code === tableCode)) throw Error('BRANCH_INPUT');
+          current.tables.push({code:tableCode, name:clean});
+        } else {
+          if (rows.some(row => row.name.toLowerCase() === clean.toLowerCase() && (action !== 'rename' || row.id !== id))) throw Error('BRANCH_INPUT');
+          if (action === 'rename') current.name = clean;
+          else if (action === 'create' && rows.length < 50) {
+            changedId = crypto.randomUUID();
+            rows.push({id:changedId, name:clean, tables:[]});
+          } else throw Error('BRANCH_INPUT');
+        }
+        localStorage.setItem(registry, JSON.stringify(rows));
+        return {id:changedId};
+      } catch (error) { return {error:error.message}; }
+    });
+    if (result.error) throw Error(result.error);
+    return result.id;
+  }
+  window.RomanoDemoBranches = Object.freeze({registry,id,table,scope,context,read,save,link});
+})();

@@ -8,7 +8,7 @@
     const byId = id => document.getElementById(id);
     const icons = { search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>', filter: '<path d="M4 7h16M4 12h16M4 17h16"/><circle cx="8" cy="7" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="17" r="2"/>' };
     const icon = name => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${icons[name]}</svg>`;
-    const key = () => `romano_favorites:${restaurantSlug}`;
+    const key = () => `romano_favorites:${window.RomanoDemoBranches?.scope(restaurantSlug) ?? restaurantSlug}`;
     const t = (name, value) => window.ROMANO_I18N.ui(name, value);
     const esc = value => escapeHTML(value);
     const numeral = value => new Intl.NumberFormat(window.ROMANO_I18N.language).format(value);
