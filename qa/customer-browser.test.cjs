@@ -97,7 +97,7 @@ async function ready(p){
   await p.setViewportSize({width:1440,height:900});
   await p.reload();await ready(p);
   await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));
-  await p.locator('#menu-toggle').click();
+  await p.evaluate(()=>openNavigation());
   await p.waitForFunction(()=>{
    const nav=document.querySelector('#main-navigation'),panel=nav?.querySelector('.navigation-inner');
    if(!nav?.classList.contains('is-open')||!panel)return false;
