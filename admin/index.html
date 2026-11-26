@@ -295,7 +295,22 @@
                 </div>
 
                 <section class="admin-overview" aria-label="خلاصه عملیات">
-                    <article class="panel overview-revenue"><h2>درآمد</h2><p>گزارش درآمد نیازمند تاریخچه پرداخت معتبر است.</p><div class="overview-unavailable" aria-hidden="true">—</div><p>داده کافی برای نمودار وجود ندارد.</p></article>
+                    <article class="panel overview-revenue" aria-labelledby="revenue-title">
+                        <div class="revenue-heading"><div><h2 id="revenue-title">درآمد</h2><p>مبلغ سفارش‌های نمونه؛ درآمد یا پرداخت واقعی نیست.</p></div><button id="revenue-export" class="secondary-button" type="button" disabled>خروجی CSV</button></div>
+                        <p id="revenue-status" role="status">گزارش درآمد نیازمند تاریخچه پرداخت معتبر است.</p>
+                        <div id="revenue-filters" class="revenue-filters" hidden>
+                            <label><span>بازه گزارش</span><select id="revenue-period"><option value="1">امروز</option><option value="7">۷ روز اخیر</option><option value="30" selected>۳۰ روز اخیر</option><option value="365">۳۶۵ روز اخیر</option></select></label>
+                            <label><span>واحد پول</span><select id="revenue-currency"></select></label>
+                        </div>
+                        <div id="revenue-content" hidden>
+                            <p id="revenue-range-label" dir="auto" data-admin-user-text="true"></p>
+                            <dl class="revenue-kpis"><div><dt>مجموع مبلغ سفارش‌های نمونه</dt><dd id="revenue-total" dir="auto" data-admin-user-text="true"></dd></div><div><dt>تعداد سفارش‌های نمونه</dt><dd id="revenue-count" data-admin-user-text="true"></dd></div><div><dt>میانگین مبلغ سفارش</dt><dd id="revenue-average" dir="auto" data-admin-user-text="true"></dd></div><div><dt>تغییر نسبت به دوره قبل</dt><dd id="revenue-change" dir="ltr" data-admin-user-text="true"></dd><dd id="revenue-previous" data-admin-user-text="true"></dd></div></dl>
+                            <div class="revenue-chart" aria-hidden="true" dir="ltr"><span id="revenue-axis-max" data-admin-user-text="true"></span><div id="revenue-bars"></div><div class="revenue-axis"><span id="revenue-axis-start" data-admin-user-text="true"></span><span id="revenue-axis-end" data-admin-user-text="true"></span></div></div>
+                            <label class="revenue-detail-label"><span>جزئیات بازه نمودار</span><select id="revenue-bucket" data-admin-user-text="true"></select></label><p id="revenue-detail" data-admin-user-text="true" role="status"></p>
+                            <p id="revenue-excluded" data-admin-user-text="true"></p>
+                            <details class="revenue-table"><summary>جدول داده‌های نمودار</summary><div class="revenue-table-scroll" tabindex="0" role="region" aria-label="جدول داده‌های نمودار"><table><thead><tr><th scope="col">بازه گزارش</th><th scope="col">مبلغ سفارش</th><th scope="col">تعداد سفارش‌های نمونه</th><th scope="col">میانگین مبلغ سفارش</th></tr></thead><tbody id="revenue-table-body" data-admin-user-text="true"></tbody></table></div></details>
+                        </div>
+                    </article>
                     <article class="panel overview-orders"><h2>سفارش‌های در جریان</h2><strong id="overview-order-count" class="stat-value">—</strong><p id="overview-order-note">داده زنده در دسترس نیست.</p><dl class="overview-order-breakdown" id="overview-order-breakdown" hidden><div><dt>جدید</dt><dd data-order-metric="submitted">—</dd></div><div><dt>در آشپزخانه</dt><dd data-order-metric="preparing">—</dd></div><div><dt>آماده</dt><dd data-order-metric="ready">—</dd></div><div><dt>سرو یا تحویل‌شده</dt><dd data-order-metric="other">—</dd></div></dl><button type="button" class="secondary-button" data-page-target="orders">سفارش‌ها</button></article>
                     <article class="panel overview-rating"><h2>امتیاز رستوران</h2><strong id="overview-rating-value" class="stat-value">—</strong><p id="overview-rating-note">امتیاز تأییدشده در دسترس نیست.</p><p id="overview-rating-comment" data-admin-user-text="true" class="review-comment" hidden></p><div id="overview-rating-actions" hidden><button type="button" class="secondary-button" data-rating-action="approve">تأیید امتیاز آزمایشی</button><button type="button" class="secondary-button" data-rating-action="reject">رد امتیاز آزمایشی</button></div></article>
                 </section>
@@ -1421,6 +1436,8 @@
 <script src="../js/demo-members.js"></script>
 <script src="admin-stage12.js"></script>
 <script src="demo-members-panel.js"></script>
+<script src="revenue-model.js"></script>
+<script src="revenue.js"></script>
 
 </body>
 

@@ -6,8 +6,9 @@
   const phone=value=>String(value??'').trim().replace(/[۰-۹٠-٩]/g,ch=>String(ch.charCodeAt(0)-(ch>='۰'?1776:1632))).replace(/[\s().-]/g,'');
   const validPhone=p=>typeof p==='string'&&/^\+?[0-9]{7,15}$/.test(p);
   const validItem=i=>i&&typeof i.name==='string'&&i.name.length<=150&&Number.isSafeInteger(i.quantity)&&i.quantity>=1&&i.quantity<=99&&Number.isFinite(i.price)&&i.price>0;
+  const catalogCurrency=value=>{const code=String(value||'IRT').trim().toUpperCase();return /^[A-Z]{3}$/.test(code)&&code!=='IRR'?code:'IRT';};
   const validDate=d=>typeof d==='string'&&Number.isFinite(Date.parse(d));
-  const validOrder=o=>o&&typeof o.id==='string'&&validDate(o.createdAt)&&Array.isArray(o.items)&&o.items.length>0&&o.items.length<=100&&o.items.every(validItem)&&Number.isFinite(o.total)&&o.total>0&&Math.abs(o.items.reduce((sum,i)=>sum+i.price*i.quantity,0)-o.total)<0.000001;
+  const validOrder=o=>o&&typeof o.id==='string'&&(o.currency===undefined||(typeof o.currency==='string'&&o.currency===catalogCurrency(o.currency)))&&validDate(o.createdAt)&&Array.isArray(o.items)&&o.items.length>0&&o.items.length<=100&&o.items.every(validItem)&&Number.isFinite(o.total)&&o.total>0&&Math.abs(o.items.reduce((sum,i)=>sum+i.price*i.quantity,0)-o.total)<0.000001;
   const uuid=()=>globalThis.crypto.randomUUID();
   function read(storage){
     const raw=storage.getItem(key);
@@ -38,12 +39,12 @@
     catch(e){try{if(old===null)storage.removeItem(key);else storage.setItem(key,old);}catch{}throw e;}
     return member;
   }
-  function addOrder(storage,session,items,total){
+  function addOrder(storage,session,items,total,currency){
     const rows=read(storage),current=active(storage,session);
     if(!current)throw Error('NO_PROFILE');
     if(!Array.isArray(items)||!items.length||items.length>100||!Number.isFinite(total)||total<=0||items.some(i=>!i||typeof i.name!=='string'||!Number.isSafeInteger(i.quantity)||i.quantity<1||i.quantity>99||!Number.isFinite(i.price)||i.price<=0))throw Error('INVALID_ORDER');
     if(current.orders.length>=100)throw Error('LIMIT');
-    const order={id:uuid(),createdAt:new Date().toISOString(),items:items.map(i=>({name:i.name.slice(0,150),quantity:i.quantity,price:i.price})),total};
+    const order={id:uuid(),createdAt:new Date().toISOString(),currency:catalogCurrency(currency),items:items.map(i=>({name:i.name.slice(0,150),quantity:i.quantity,price:i.price})),total};
     if(!validOrder(order))throw Error('INVALID_ORDER');
     storage.setItem(key,JSON.stringify(rows.map(r=>r.id===current.id?{...r,orders:[order,...r.orders]}:r)));
     return order;

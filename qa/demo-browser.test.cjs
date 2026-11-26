@@ -174,6 +174,18 @@ const readyCustomer = async page => {
     assert.ok((await customer.locator('#commerce-demo-status').innerText()).includes('nothing was sent to the restaurant'));
     assert.equal(await customer.locator('#commerce-demo-status').isVisible(),true);
     await admin.waitForFunction(()=>document.querySelector('#demo-members-list').textContent.includes('Sample order count: 1'));
+    await admin.evaluate(()=>navigateTo('dashboard'));
+    await admin.locator('#revenue-period').selectOption('7');
+    const expectedRevenue=await customer.evaluate(()=>RomanoCustomerEntry.current().orders[0].total);
+    await admin.waitForFunction(v=>document.querySelector('#revenue-total').textContent===OnlineMenuMoney.formatMinor(v,{currency:'IRT',exponent:0,language:'en'}),expectedRevenue);
+    assert.equal(await admin.locator('#revenue-count').textContent(),'1');
+    assert.equal(await admin.locator('#revenue-bars span').count(),7);
+    await admin.locator('#revenue-period').selectOption('1');
+    assert.equal(await admin.locator('#revenue-bars span').count(),24);
+    await admin.locator('#revenue-period').selectOption('365');
+    assert.ok(await admin.locator('#revenue-bars span').count()>=12);
+    await admin.locator('#revenue-period').selectOption('30');
+    console.log('PASS: sample revenue aggregates saved order and filters without fabricated income');
     await customer.reload();await readyCustomer(customer);
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders.length),1);
     await customer.locator('#menu-toggle').click();

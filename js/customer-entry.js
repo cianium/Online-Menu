@@ -58,7 +58,7 @@
    const card=el('article',undefined,'ramen-contact-item');
    card.append(el('small',new Date(order.createdAt).toLocaleDateString(lang())));
    for(const item of order.items)card.append(el('span',item.name+' × '+item.quantity));
-   card.append(el('strong',typeof formatPrice==='function'?formatPrice(order.total):String(order.total)));host.append(card);
+   card.append(el('strong',order.currency&&window.OnlineMenuMoney?window.OnlineMenuMoney.formatCatalog(order.total,{currency:order.currency,language:lang()}):typeof formatPrice==='function'?formatPrice(order.total):String(order.total)));host.append(card);
   }
   const logout=text('button','logout','feedback-save');logout.type='button';logout.addEventListener('click',()=>{try{model.signOut(sessionStorage);}catch{}closePanel();announce();});host.append(logout);return true;
  }

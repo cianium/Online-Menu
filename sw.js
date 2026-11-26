@@ -1,4 +1,4 @@
-const CACHE_NAME = "ramen-online-menu-vq3-9-qa16";
+const CACHE_NAME = "ramen-online-menu-vq3-9-qa17";
 const CORE_ASSETS = [
   "./",
   "./index.html",

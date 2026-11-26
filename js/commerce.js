@@ -505,7 +505,7 @@
     if (submitting || !count()) return;
     if (typeof menuDataMode!=="undefined" && menuDataMode==="demo" && window.RomanoCustomerEntry?.current()) {
       try {
-        window.RomanoDemoMembers.addOrder(localStorage,sessionStorage,visibleCartEntries().map(([id,quantity])=>({name:localized(product(id)).name,quantity,price:product(id).price})),total());
+        window.RomanoDemoMembers.addOrder(localStorage,sessionStorage,visibleCartEntries().map(([id,quantity])=>({name:localized(product(id)).name,quantity,price:product(id).price})),total(),typeof restaurantConfig!=='undefined'?restaurantConfig?.currency:undefined);
         demoOrderSaved=true;
         cart=normalizeCart({});save(cartKey(),cart);render();announce(window.RomanoCustomerEntry.t("saved"));
         document.querySelector(".commerce-close")?.focus({preventScroll:true});

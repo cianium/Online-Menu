@@ -42,6 +42,18 @@ async function check(name, action) { await action(); results.push(name); console
     await loginDemoAdmin(page);
   });
   await check('Local demo boot and seed catalog', async () => assert.equal(await page.evaluate(() => state.products.length), 21));
+  await check('Sample revenue filters and accessible empty state in four locales',async()=>{
+    await page.evaluate(()=>navigateTo('dashboard'));
+    for(const lang of ['fa','en','tr','ar']){
+      await page.evaluate(l=>ROMANO_ADMIN_I18N.setLanguage(l),lang);
+      await page.locator('#revenue-period').selectOption('7');
+      assert.equal(await page.locator('#revenue-content').isVisible(),true);
+      assert.equal(await page.locator('#revenue-table-body tr').count(),7);
+      assert.equal(await page.locator('#revenue-bars span').count(),7);
+      assert.equal(await page.locator('#revenue-export').isEnabled(),true);
+    }
+    await page.locator('#revenue-period').selectOption('30');
+  });
   await check('Compact admin header keeps only the requested controls and preserves logout',async()=>{
     await page.setViewportSize({width:320,height:900});
     for(const lang of ['fa','ar','en','tr']){
@@ -395,6 +407,8 @@ await check('Order filter group accessible name is localized in all four languag
     assert.equal(await page.evaluate(()=>state.products.length),0);
     assert.equal(await page.evaluate(()=>state.categories.length),0);
     assert.equal(writes,0);
+    assert.equal(await page.locator('#revenue-content').isVisible(),false);
+    assert.equal(await page.locator('#revenue-export').isDisabled(),true);
   });
   await check('Connected settings retain preconfigured restaurant, table and gateway controls',async()=>{
     await page.evaluate(()=>navigateTo('settings'));
