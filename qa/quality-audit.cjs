@@ -201,7 +201,10 @@ async function measure(browser,surface) {
         await customer.evaluate(()=>window.scrollTo(0,0));
         await customer.locator('#menu-toggle').click();
         const rect=await customer.locator('.navigation-inner').boundingBox(),overlay=await customer.locator('.main-navigation').boundingBox();
-        assert.ok(rect&&overlay&&Math.abs(rect.height-overlay.height)<=2&&Math.abs(rect.width-(width===390?overlay.width:680))<=2,JSON.stringify({rect,overlay}));
+        assert.ok(
+          rect&&overlay&&Math.abs(rect.height-844)<=2&&Math.abs(rect.width-width)<=2,
+          JSON.stringify({rect,overlay})
+        );
         await customer.screenshot({path:path.join(out,'customer-navigation-en-'+width+'.png'),animations:'disabled'});
         await customer.locator('#navigation-close').click();
       }
