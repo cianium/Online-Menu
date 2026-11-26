@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { chromium } = require('playwright');
+const { loginDemoAdmin } = require('../../qa/demo-admin-login.cjs');
 const base = new URL(process.env.SHOWCASE_URL || 'http://127.0.0.1:8765/');
 assert.equal(base.origin, 'http://127.0.0.1:8765', 'Only the local demo origin is allowed');
 const out = path.resolve(process.argv[2] || 'dist/showcase');
@@ -30,7 +31,7 @@ const out = path.resolve(process.argv[2] || 'dist/showcase');
     await shot(guest, 'customer-mobile-fa');
     const admin = await context.newPage();
     await admin.goto(new URL('/admin/', base).href);
-    await admin.waitForFunction(() => typeof adminInitialized !== 'undefined' && adminInitialized && !document.querySelector('.admin-app').inert);
+    await loginDemoAdmin(admin);
     assert.equal(await admin.locator('#admin-mode-banner').isVisible(), true);
     for (const [i, section] of ['dashboard', 'products', 'categories', 'settings'].entries()) {
       await admin.evaluate(section => { ROMANO_ADMIN_I18N.setLanguage('en'); navigateTo(section); }, section);
