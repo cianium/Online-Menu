@@ -272,6 +272,7 @@ html[dir="ltr"] .main-navigation.is-open .navigation-inner { transform:translate
   }
   .main-navigation .navigation-inner {
     position:absolute!important;top:0!important;right:auto!important;bottom:auto!important;left:0!important;inline-size:100vw!important;block-size:100dvh!important;
+    box-sizing:border-box!important;
     min-inline-size:0!important;max-inline-size:none!important;min-block-size:0!important;max-block-size:none!important;
     border-radius:0!important;padding:calc(14px + env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))!important;
     transform:translateX(var(--navigation-closed-shift,110%));

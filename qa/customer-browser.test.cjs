@@ -66,6 +66,8 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    const bounds=await nav.locator('.navigation-inner').boundingBox(),overlay=await nav.boundingBox();
    assert.ok(bounds&&overlay&&Math.abs(bounds.height-overlay.height)<=2&&Math.abs(bounds.width-overlay.width)<=2,JSON.stringify({bounds,overlay}));
    assert.ok(Math.abs(bounds.x)<=1&&Math.abs(overlay.x)<=1&&Math.abs(bounds.width-390)<=2&&Math.abs(overlay.width-390)<=2,JSON.stringify({bounds,overlay}));
+   const contentBounds=await nav.locator('.navigation-inner').evaluate(node=>{const outer=node.getBoundingClientRect(),style=getComputedStyle(node),left=outer.left+parseFloat(style.paddingLeft),right=outer.right-parseFloat(style.paddingRight);return {left,right,children:[...node.children].map(child=>{const rect=child.getBoundingClientRect();return {className:child.className,left:rect.left,right:rect.right};})};});
+   assert.ok(contentBounds.children.every(child=>child.left>=contentBounds.left-1&&child.right<=contentBounds.right+1),'Navigation content escapes viewport padding '+lang+': '+JSON.stringify(contentBounds));
    if(lang==='fa')await p.screenshot({path:path.join(out,'customer-navigation-fa-390.png')});
    const categoryBounds=await nav.locator('.navigation-categories').boundingBox();
    assert.ok(categoryBounds && categoryBounds.height>0);
