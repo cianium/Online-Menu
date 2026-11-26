@@ -7,7 +7,11 @@
   const n=v=>new Intl.NumberFormat(lang(),{maximumFractionDigits:1}).format(v);
   const money=(v,c)=>window.OnlineMenuMoney.formatMinor(v,{currency:c,exponent:0,language:lang()});
   const dateLabel=s=>new Intl.DateTimeFormat(lang(),{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'}).format(new Date(s+'T12:00:00Z'));
-  const periodLabel=b=>b.hour!==null?new Intl.NumberFormat(lang(),{minimumIntegerDigits:2}).format(b.hour)+':00':b.start===b.end?dateLabel(b.start):dateLabel(b.start)+' – '+dateLabel(b.end);
+  const periodLabel=b=>{
+    if(b.hour===null)return b.start===b.end?dateLabel(b.start):dateLabel(b.start)+' – '+dateLabel(b.end);
+    const digits=new Intl.NumberFormat(lang(),{minimumIntegerDigits:2});
+    return `${digits.format(b.hour)}:${digits.format(0)}`;
+  };
   const el=(tag,value)=>{const node=document.createElement(tag);if(value!==undefined)node.textContent=value;return node;};
   let latest=null;
   function clear(message){

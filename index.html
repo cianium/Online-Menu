@@ -48,19 +48,13 @@
          FONTS
     ========================== -->
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Vazirmatn:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet"
-    >
+    <link rel="stylesheet" href="css/fonts.css">
 
     <!-- =========================
          STYLES
     ========================== -->
 
-        <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/romano.css">
     <link rel="stylesheet" href="css/menu-experience.css">
     <link rel="stylesheet" href="css/commerce.css">
@@ -69,6 +63,7 @@
     <link rel="stylesheet" href="css/catalog-browse.css">
     <link rel="stylesheet" href="css/customer-polish.css">
     <noscript><link rel="stylesheet" href="css/no-script.css"></noscript>
+    <meta name="online-menu-mode" content="standalone">
 </head>
 
 
@@ -135,7 +130,7 @@
                 <a
                     href="#home"
                     class="brand"
-                    aria-label="صفحه اصلی رستوران"
+                    aria-labelledby="customer-brand-name customer-brand-tagline"
                 >
 
                     <span class="brand-logo">
@@ -147,11 +142,11 @@
 
                     <span class="brand-content">
 
-                        <span class="brand-name">
+                        <span class="brand-name" id="customer-brand-name">
                             ROMANO
                         </span>
 
-                        <span class="brand-tagline">
+                        <span class="brand-tagline" id="customer-brand-tagline">
                             رستوران و کافه
                         </span>
 
@@ -168,11 +163,11 @@
                     class="language-toggle"
                     id="romano-language-toggle"
                     type="button"
-                    aria-label="Language: فارسی. Click to change."
+                    aria-label="فارسی، تغییر زبان"
                     title="فارسی"
                 >
                     <svg class="language-toggle-icon" aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg>
-                    <span id="romano-language-label">FA</span>
+                    <span id="romano-language-label">فارسی</span>
                 </button>
 
 

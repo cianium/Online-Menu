@@ -1,7 +1,7 @@
 /* Pure sample-order analytics. Never represents verified payments. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.RomanoRevenueModel=api;})(globalThis,()=>{
   "use strict";
-  const periods=[1,7,30,365], DAY=86400000;
+  const periods=[1,7,30,365], DAY=86400000, SCALE=1000;
   const dayKey=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
   const ordinal=d=>Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/DAY;
   const key=n=>new Date(n*DAY).toISOString().slice(0,10);
@@ -11,7 +11,7 @@
     for(const member of members)for(const order of member.orders){
       if(ids.has(order.id))throw Error('DUPLICATE_ORDER');
       ids.add(order.id);
-      if(!Number.isFinite(order.total)||order.total<=0||order.total>Number.MAX_SAFE_INTEGER/1000||!Number.isFinite(Date.parse(order.createdAt)))throw Error('INVALID_ORDER');
+      if(!Number.isFinite(order.total)||order.total<=0||order.total>Number.MAX_SAFE_INTEGER/SCALE||!Number.isFinite(Date.parse(order.createdAt)))throw Error('INVALID_ORDER');
       result.push(order);
     }
     return result;
@@ -36,16 +36,20 @@
       if(date>now||n<previousStart||n>end)continue;
       if(!validCurrency(o.currency)){legacyCount++;continue;}
       if(o.currency!==currency){otherCurrencyCount++;continue;}
-      if(n<start){previousTotal+=o.total;previousCount++;continue;}
+      const amount=Math.round(o.total*SCALE);
+      if(n<start){previousTotal+=amount;previousCount++;continue;}
       const b=days===1?buckets[date.getHours()]:lookup.get(days===365?dayKey(date).slice(0,7):dayKey(date));
-      b.total+=o.total;b.count++;total+=o.total;count++;
+      b.total+=amount;b.count++;total+=amount;count++;
     }
-    if(!Number.isFinite(total)||!Number.isFinite(previousTotal)||total>Number.MAX_SAFE_INTEGER||previousTotal>Number.MAX_SAFE_INTEGER)throw Error('TOTAL_LIMIT');
+    if(!Number.isSafeInteger(total)||!Number.isSafeInteger(previousTotal))throw Error('TOTAL_LIMIT');
+    total/=SCALE;
+    previousTotal/=SCALE;
+    for(const bucket of buckets)bucket.total/=SCALE;
     return {currency,days,start:key(start),end:key(end),previousStart:key(previousStart),previousEnd:key(start-1),total,count,average:count?total/count:0,previousTotal,previousCount,change:previousTotal?(total-previousTotal)/previousTotal*100:null,legacyCount,otherCurrencyCount,buckets};
   }
   function csv(r){
     const lines=['start_date,end_date,local_hour,currency,sample_order_total,sample_order_count,average_order_amount'];
-    for(const b of r.buckets)lines.push([b.start,b.end,b.hour===null?'':b.hour,r.currency,b.total,b.count,b.count?b.total/b.count:0].join(','));
+    for(const b of r.buckets)lines.push([b.start,b.end,b.hour===null?'':b.hour,r.currency,b.total,b.count,b.count?Number((b.total/b.count).toFixed(3)):0].join(','));
     return lines.join('\r\n')+'\r\n';
   }
   return Object.freeze({orders,currencies,report,csv,validCurrency});

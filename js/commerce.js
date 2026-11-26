@@ -12,13 +12,15 @@
   const lang = () => window.ROMANO_I18N?.language || "fa";
   const t = (key) => text[lang()]?.[key] || text.fa[key] || key;
   const tenant = () => typeof restaurantSlug === "string" ? restaurantSlug : "romano";
+  const standalone = window.RomanoPublicAPI.standalone;
+  const isDemo = () => typeof menuDataMode !== "undefined" && menuDataMode === "demo";
   const cartKey = () => `online_menu_cart_vq3:${tenant()}`;
   const orderKey = () => `online_menu_last_order_vq3:${tenant()}`;
   const orderRequestKey = () => `online_menu_order_request_vq3:${tenant()}`;
   const paymentRequestKey = (orderId) => `online_menu_payment_request_vq3:${tenant()}:${orderId}`;
   let cart = normalizeCart(read(cartKey(), {}));
-  let tableSession = read(`online_menu_table_vq3:${tenant()}`, null);
-  let activeOrder = read(orderKey(), null);
+  let tableSession = standalone ? null : read(`online_menu_table_vq3:${tenant()}`, null);
+  let activeOrder = standalone ? null : read(orderKey(), null);
   let cartFocusOrigin = null;
   let cartKeyboardBound = false;
   let cartBackground = [];
@@ -92,18 +94,17 @@
       if(value) el.textContent=value;
     });
     const amount=count();
+    const displayCount=new Intl.NumberFormat(lang()).format(Math.min(amount,99))+(amount>99?"+":"");
     for(const selector of [".ramen-header-cart-count",".ramen-bottom-cart-count",".navigation-cart-count"]){
       const badge=document.querySelector(selector);
       if(!badge) continue;
-      badge.textContent=amount>99?"99+":String(amount);
+      badge.textContent=displayCount;
       badge.hidden=amount===0;
     }
-    const accessible=amount ? `${t("cart")}، ${amount}` : t("cart");
-    for(const id of ["ramen-header-cart","ramen-bottom-cart"]){
-      const button=document.getElementById(id);
-      if(button) button.setAttribute("aria-label",accessible);
-    }
-    document.querySelector('[data-nav-panel="cart"]')?.setAttribute("aria-label",accessible);
+    const cartLabel=label=>amount?`${label} · ${displayCount}`:label;
+    document.getElementById('ramen-header-cart')?.setAttribute('aria-label',cartLabel(t('cart')));
+    document.getElementById('ramen-bottom-cart')?.setAttribute('aria-label',cartLabel(words.cart));
+    document.querySelector('[data-nav-panel="cart"]')?.setAttribute('aria-label',cartLabel(words.cart));
   }
   function initializeCustomerNavigation(){
     for(const id of ["ramen-header-cart","ramen-bottom-cart"]){
@@ -173,7 +174,8 @@
       const header=element('header',null,'ramen-contact-head');
       const labels=panelText();
       const heading=element('h2',panel==='contact'?words.title:labels[panel]||words.title);heading.id='ramen-contact-title';
-      const dismiss=element('button','×','ramen-contact-close');dismiss.type='button';dismiss.setAttribute('aria-label',words.close);dismiss.addEventListener('click',close);
+      const dismiss=element('button',undefined,'ramen-contact-close');dismiss.type='button';dismiss.setAttribute('aria-label',words.close);dismiss.addEventListener('click',close);
+      const closeGlyph=element('span','×');closeGlyph.setAttribute('aria-hidden','true');dismiss.append(closeGlyph);
       header.append(heading,dismiss);
       const content=element('div',null,'ramen-contact-content');
       const mode=typeof menuDataMode !== 'undefined' ? menuDataMode : 'loading';
@@ -380,7 +382,8 @@
     }
     const submit = document.querySelector("#commerce-submit");
     submit.disabled = amount === 0 || submitting;
-    submit.textContent = submitting ? t("sending") : window.RomanoCustomerEntry?.current() ? window.RomanoCustomerEntry.t("order") : t("checkout");
+    const entry=window.RomanoCustomerEntry;
+    submit.textContent = submitting ? t("sending") : isDemo() ? entry.t(entry.current()?"order":"join") : t("checkout");
     renderStatus();
     renderSession();
   }
@@ -401,18 +404,17 @@
     badge.hidden = !tableSession;
     badge.textContent = tableSession ? `${t("table")} · ${tableSession.table?.name || tableSession.table?.code || ""}` : "";
     renderPaymentMethods();
-    const sample=Boolean(window.RomanoCustomerEntry?.current());
+    const demo=isDemo();
     const notice=document.querySelector('#commerce-demo-status');
-    if(notice){notice.hidden=!sample;notice.textContent=sample?window.RomanoCustomerEntry.t(demoOrderSaved?"saved":"notice"):"";}
+    if(notice){notice.hidden=!demo;notice.textContent=demo?window.RomanoCustomerEntry.t(demoOrderSaved?"saved":"notice"):"";}
     const pay=document.querySelector('.commerce-pay-method');
-    if(pay)pay.hidden=sample;
+    if(pay)pay.hidden=demo;
     const notes=document.querySelector('.commerce-note');
-    if(notes)notes.hidden=sample;
-    if(sample)badge.hidden=true;
+    if(notes)notes.hidden=demo;
+    if(demo)badge.hidden=true;
     const message=document.querySelector('#commerce-message');
-    if(message && !tableSession && !window.RomanoCustomerEntry?.current() && count()>0 && !message.textContent)message.textContent=t('scan');
-    if(message && window.RomanoCustomerEntry?.current() && message.textContent===t('scan'))message.textContent='';
-    if(message && tableSession && message.textContent===t('scan'))message.textContent='';
+    if(message && !demo && !tableSession && count()>0 && !message.textContent)message.textContent=t('scan');
+    if(message && (demo||tableSession) && message.textContent===t('scan'))message.textContent='';
   }
   function renderStatus() {
     const host = document.querySelector("#commerce-order-status");
@@ -503,14 +505,32 @@
 
   async function submitOrder() {
     if (submitting || !count()) return;
-    if (typeof menuDataMode!=="undefined" && menuDataMode==="demo" && window.RomanoCustomerEntry?.current()) {
+    if (isDemo()) {
+      const entry=window.RomanoCustomerEntry;
+      if(!entry.current()){
+        closeDrawer();
+        entry.open();
+        return;
+      }
+      submitting=true;render();showMessage('');
       try {
-        window.RomanoDemoMembers.addOrder(localStorage,sessionStorage,visibleCartEntries().map(([id,quantity])=>({name:localized(product(id)).name,quantity,price:product(id).price})),total(),typeof restaurantConfig!=='undefined'?restaurantConfig?.currency:undefined);
-        demoOrderSaved=true;
-        cart=normalizeCart({});save(cartKey(),cart);render();announce(window.RomanoCustomerEntry.t("saved"));
-        document.querySelector(".commerce-close")?.focus({preventScroll:true});
-        document.dispatchEvent(new CustomEvent("romano:demo-membership-changed"));
-      } catch {showMessage(window.RomanoCustomerEntry.t("orderError"));}
+        const members=window.RomanoDemoMembers;
+        const order=await members.mutate(()=>{
+          cart=normalizeCart(read(cartKey(),cart));
+          const items=visibleCartEntries().map(([id,quantity])=>({name:localized(product(id)).name,quantity,price:product(id).price}));
+          if(!items.length)return null;
+          const saved=members.addOrder(localStorage,sessionStorage,items,total(),restaurantConfig.currency);
+          cart=normalizeCart({});save(cartKey(),cart);
+          return saved;
+        });
+        if(order){
+          demoOrderSaved=true;
+          announce(entry.t("saved"));
+          if(document.querySelector("#commerce-drawer.is-open"))document.querySelector(".commerce-close")?.focus({preventScroll:true});
+          document.dispatchEvent(new CustomEvent("romano:demo-membership-changed"));
+        }
+      } catch {showMessage(entry.t("orderError"));}
+      finally{submitting=false;render();}
       return;
     }
     if (!tableSession) { showMessage(t("scan")); return; }
@@ -574,11 +594,13 @@
   }
 
   async function pollOrder() {
-    if (!activeOrder?.id) return;
+    const id=activeOrder?.id;
+    if (!id) return;
     try {
-      const response = await fetch(`/api/v1/orders/${encodeURIComponent(activeOrder.id)}`, { credentials: "include", headers: { accept: "application/json" } });
+      const response = await fetch(`/api/v1/orders/${encodeURIComponent(id)}`, { credentials: "include", headers: { accept: "application/json" }, signal:AbortSignal.timeout(7000) });
       const body = await response.json().catch(() => null);
-      if (response.ok && body?.data) { activeOrder = body.data; save(orderKey(), activeOrder); render(); }
+      if (activeOrder?.id!==id) return;
+      if (response.ok && body?.data?.id===id) { activeOrder = body.data; save(orderKey(), activeOrder); render(); }
       if (["completed", "rejected", "cancelled"].includes(activeOrder.status)) stopPolling();
     } catch { /* Keep the last known status while offline. */ }
   }
@@ -617,8 +639,11 @@
   }
 
   function init() {
-    buildShell(); initializeCustomerNavigation(); render(); enhanceProducts(); openQrSession(); paymentReturn();
-    if (activeOrder?.id && !["completed", "rejected", "cancelled"].includes(activeOrder.status)) startPolling();
+    buildShell(); initializeCustomerNavigation(); render(); enhanceProducts();
+    if (!standalone) {
+      openQrSession(); paymentReturn();
+      if (activeOrder?.id && !["completed", "rejected", "cancelled"].includes(activeOrder.status)) startPolling();
+    }
     // Enhance synchronously at the actual render boundary, not on a delayed click.
     // This keeps the cart actions present after filtering/refresh and avoids moving
     // the opener after the product dialog has already restored keyboard focus.

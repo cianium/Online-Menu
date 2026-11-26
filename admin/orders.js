@@ -74,14 +74,50 @@
     return orders.filter((order) => order.status === filter);
   }
 
+  function renderSampleOrders(board) {
+    const status = document.querySelector('#orders-summary');
+    board.replaceChildren();
+    status.textContent = '';
+    if (!adminInitialized || document.querySelector('.admin-app').inert) return;
+    try {
+      const members = window.RomanoDemoMembers.read(localStorage);
+      const rows = window.RomanoRevenueModel.orders(members).sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt));
+      status.textContent = `${t('تعداد سفارش‌های نمونه')} · ${number(rows.length)}`;
+      if (rows.length > 50) status.append(` · ${t('نمایش ۵۰ سفارش اخیر')}`);
+      if (!rows.length) {
+        board.innerHTML = `<p class="orders-empty">${safe(t('هنوز سفارش نمونه‌ای ثبت نشده است.'))}</p>`;
+        return;
+      }
+      const date = new Intl.DateTimeFormat(locale(),{dateStyle:'medium',timeStyle:'short'});
+      board.innerHTML = rows.slice(0,50).map(order=>{
+        const total = order.currency
+          ? window.OnlineMenuMoney.formatCatalog(order.total,{currency:order.currency,language:locale()})
+          : `${number(order.total)} · ${t('واحد پول ثبت نشده')}`;
+        return `<article class="order-ticket sample-order-ticket">
+          <time datetime="${safe(order.createdAt)}" dir="auto">${safe(date.format(new Date(order.createdAt)))}</time>
+          <ul class="order-ticket-items" data-admin-user-text="true">${order.items.map(item=>`<li><bdi>${safe(item.name)}</bdi> × ${number(item.quantity)}</li>`).join('')}</ul>
+          <footer class="order-ticket-footer"><strong dir="auto">${safe(total)}</strong></footer>
+        </article>`;
+      }).join('');
+    } catch {
+      status.textContent = t('خواندن داده محلی ممکن نیست.');
+    }
+  }
+
   function render() {
     const board = document.querySelector("#orders-board");
     if (!board) return;
+    const sample = !window.RomanoAPI.enabled;
+    document.querySelector('#orders-mode-label').textContent = t(sample?'فقط داده آزمایشی مرورگر':'عملیات زنده · آشپزخانه');
+    document.querySelector('#orders-mode-description').textContent = t(sample?'سفارش‌های نمونه ثبت‌شده در همین مرورگر.':'سفارش‌های QR را از پذیرش تا سرو، زنده مدیریت کنید.');
+    document.querySelector('.orders-filters').hidden = sample;
+    document.querySelector('#orders-sound').hidden = sample;
     const summary=orderDataAvailable && window.RomanoAPI?.enabled === true ? window.AdminStage12Model.summarizeOrders(orders) : null;
     const badge = document.querySelector("#orders-nav-badge");
     if(!summary){
       document.dispatchEvent(new CustomEvent("romano:orders-summary",{detail:{available:false}}));
       badge.hidden=true;badge.textContent='';
+      if (sample) {renderSampleOrders(board);return;}
       document.querySelector('#orders-summary').textContent=t('داده زنده در دسترس نیست.');
       board.innerHTML=`<div class="orders-empty">${safe(t(window.RomanoAPI?.enabled ? "دریافت سفارش‌ها ناموفق بود." : "برای مشاهده سفارش‌های زنده، پنل را به سرویس سرور متصل کنید."))}</div>`;
       return;
@@ -198,6 +234,14 @@
   function syncBranchManagement() {
     const select=document.querySelector("#ops-branch");
     if(!select) return;
+    const preview=document.querySelector('#sample-qr-preview');
+    preview.hidden=window.RomanoAPI.enabled;
+    const image=preview.querySelector('.ops-qr-image');
+    if(!preview.hidden && !image.firstChild && typeof window.QRCode==='function') {
+      const link=preview.querySelector('a');
+      try {new window.QRCode(image,{text:link.href,width:192,height:192,correctLevel:window.QRCode.CorrectLevel.M});}
+      catch {image.replaceChildren();image.hidden=true;}
+    }
     const selected=select.value;
     select.innerHTML=branches.map((branch) => `<option value="${safe(branch.id)}">${safe(branch.name)}</option>`).join("");
     if(branches.some((item)=>item.id===selected)) select.value=selected;
@@ -339,21 +383,26 @@
     document.querySelector("#orders-refresh")?.addEventListener("click", () => refresh());
     document.querySelector("#orders-sound")?.addEventListener("click", toggleSound);
     updateSoundButton();
-    document.querySelector('[data-page="orders"]')?.addEventListener("click", () => refresh());
     document.querySelectorAll("[data-order-filter]").forEach((button) => button.addEventListener("click", () => {
       filter = button.dataset.orderFilter;
       document.querySelectorAll("[data-order-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
       render();
     }));
     document.addEventListener("romano:language-changed", () => { render(); syncBranchManagement(); updateSoundButton(); });
-    document.addEventListener("romano:admin-page-changed", event => {if(event.detail?.page==="settings")loadBranches();});
+    document.addEventListener("romano:admin-page-changed", event => {
+      if(event.detail?.page==="settings")loadBranches();
+      if(event.detail?.page==="orders")refresh();
+    });
+    window.addEventListener('storage',event=>{
+      if(!window.RomanoAPI.enabled&&(event.key===window.RomanoDemoMembers.key||event.key===null)&&document.querySelector('#page-orders.is-active'))render();
+    });
     document.querySelector("#ops-branch")?.addEventListener("change", syncBranchManagement);
     document.querySelector("#create-table-form")?.addEventListener("submit", addTable);
     document.querySelector("#ops-save-branch")?.addEventListener("click", saveOrderingStatus);
     document.querySelector("#gateway-branch")?.addEventListener("change", syncGateway);
     document.querySelector("#gateway-settings-form")?.addEventListener("submit", saveGateway);
     window.setTimeout(() => { refresh(); loadBranches(); }, 900);
-    timer = window.setInterval(() => { if (document.querySelector("#page-orders.is-active, #page-dashboard.is-active")) refresh(); }, 10_000);
+    timer = window.setInterval(() => { if (window.RomanoAPI.enabled && document.querySelector("#page-orders.is-active, #page-dashboard.is-active")) refresh(); }, 10_000);
     window.addEventListener("beforeunload", () => window.clearInterval(timer));
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();

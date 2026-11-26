@@ -2,8 +2,9 @@
 (() => {
   "use strict";
   const API_PREFIX = "/api/v1";
-  const isHttp = window.location.protocol === "http:" || window.location.protocol === "https:";
-  let backendAvailable = isHttp;
+  const standalone = document.querySelector('meta[name="online-menu-mode"]')?.content === 'standalone';
+  const canUseBackend = !standalone && ["http:", "https:"].includes(window.location.protocol);
+  let backendAvailable = canUseBackend;
   let csrfToken = null;
 
   async function csrf() {
@@ -45,8 +46,8 @@
    * Resolves to { available: boolean, session: object | null }.
    */
   async function detect() {
-    if (!isHttp) { backendAvailable = false; return { available: false, session: null }; }
-    const response = await fetch(`${API_PREFIX}/auth/me`, { credentials: "include", headers: { Accept: "application/json" } });
+    if (!canUseBackend) return { available: false, session: null };
+    const response = await fetch(`${API_PREFIX}/auth/me`, { credentials: "include", cache: "no-store", headers: { Accept: "application/json" }, signal: AbortSignal.timeout(8000) });
     const isJson = (response.headers.get("content-type") || "").includes("application/json");
     if (response.status === 404) {
       backendAvailable = false;

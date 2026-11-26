@@ -1356,30 +1356,6 @@ html[dir="ltr"] .category-card { direction: ltr; }
 }
 
 
-.category-index {
-    position:
-        absolute;
-
-    top:
-        12px;
-
-    inset-inline-start:
-        12px;
-
-    color:
-        rgba(243, 238, 230, 0.58);
-
-    font-family:
-        var(--font-display);
-
-    font-size:
-        11px;
-
-    direction:
-        inherit;
-}
-
-
 .category-name {
     color:
         var(--color-text);

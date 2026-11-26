@@ -570,9 +570,10 @@
         if (!button) return;
         const labels = { fa: "فارسی", en: "English", tr: "Türkçe", ar: "العربية" };
         button.title = labels[current];
-        button.setAttribute("aria-label", current === "fa" ? "تغییر زبان" : current === "en" ? "Change language" : current === "tr" ? "Dili değiştir" : "تغيير اللغة");
+        const actions = { fa: "تغییر زبان", en: "Change language", tr: "Dili değiştir", ar: "تغيير اللغة" };
+        button.setAttribute("aria-label", `${labels[current]} · ${actions[current]}`);
         const label = button.querySelector("#romano-language-label");
-        if (label) label.textContent = ({fa:"فارسی",en:"English",tr:"Türkçe",ar:"العربية"})[current];
+        if (label) label.textContent = labels[current];
     }
 
     function setLanguage(lang, announce = true) {
