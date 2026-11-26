@@ -48,6 +48,8 @@ test('Standalone demo: serves public files and never exposes or proxies backend'
       assert.equal(res.headers['x-frame-options'], 'DENY');
       assert.equal(res.headers['cross-origin-resource-policy'], 'same-origin');
       assert.equal(res.headers['referrer-policy'], 'no-referrer');
+      assert.match(res.headers['content-security-policy'], /script-src 'self';/);
+      assert.match(res.headers['content-security-policy'], /frame-ancestors 'none';/);
     }
     const js = await call(port, '/js/app.js');
     assert.equal(js.status, 200); assert.match(js.headers['content-type'], /^text\/javascript/);

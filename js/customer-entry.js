@@ -13,7 +13,7 @@
  const demo=()=>typeof menuDataMode!=='undefined'&&menuDataMode==='demo';
  const current=()=>{try{return demo()?model.active(localStorage,sessionStorage):null;}catch{return null;}};
  const el=(tag,value,cls)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;if(cls)n.className=cls;return n;};
- let dialog,opener,required=false,entered=false;
+ let dialog,opener,required=false,entered=false,pending=false;
  const qr=()=>new URLSearchParams(location.search).get('qr')==='demo';
  function announce(){document.dispatchEvent(new CustomEvent('romano:demo-membership-changed'));}
  function removeMarker(){const url=new URL(location.href);if(qr()){url.searchParams.delete('qr');history.replaceState(null,'',url.pathname+url.search+url.hash);}}
@@ -27,7 +27,7 @@
   opener=document.activeElement;
   dialog=document.querySelector('#customer-entry');
   if(!dialog){dialog=el('dialog',undefined,'customer-entry');dialog.id='customer-entry';dialog.setAttribute('aria-labelledby','customer-entry-title');document.body.append(dialog);
-   dialog.addEventListener('cancel',e=>{if(required)e.preventDefault();});
+   dialog.addEventListener('cancel',e=>{if(required||pending)e.preventDefault();});
    dialog.addEventListener('close',()=>{if(opener?.isConnected&&!opener.closest('[inert]'))opener.focus({preventScroll:true});});
   }
   const panel=el('section',undefined,'customer-entry-panel'),top=el('div',undefined,'customer-entry-top');
@@ -44,7 +44,18 @@
   const error=el('p','', 'customer-entry-error');error.setAttribute('role','alert');
   const guest=text('button','guest','customer-entry-guest');guest.type='button';guest.addEventListener('click',()=>{entered=true;removeMarker();close();});
   form.append(nameLabel,phoneLabel,submit,error);
-  form.addEventListener('submit',e=>{e.preventDefault();if(!demo())return;try{model.register(localStorage,sessionStorage,name.value,phone.value);entered=true;removeMarker();close();announce();}catch(err){error.textContent=t(err.message==='EXISTING_PROFILE'?'existing':'error');}});
+  form.addEventListener('submit',async e=>{
+   e.preventDefault();
+   if(!demo()||pending)return;
+   const nameValue=name.value,phoneValue=phone.value;
+   pending=submit.disabled=guest.disabled=true;
+   error.textContent='';
+   try{
+    await model.mutate(()=>model.register(localStorage,sessionStorage,nameValue,phoneValue));
+    entered=true;removeMarker();close();announce();
+   }catch(err){error.textContent=t(err.message==='EXISTING_PROFILE'?'existing':'error');}
+   finally{pending=submit.disabled=guest.disabled=false;}
+  });
   panel.append(top,title,text('p','intro'),form,text('p','notice','customer-entry-notice'),guest);
   dialog.replaceChildren(panel);dialog.showModal();name.focus();return true;
  }

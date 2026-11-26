@@ -24,21 +24,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>ROMANO | پنل مدیریت</title>
 
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin
-    >
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Vazirmatn:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet"
-    >
+    <link rel="stylesheet" href="../css/fonts.css">
 
     <link rel="icon" type="image/png" href="../assets/images/logo/logo.png">
 
@@ -91,16 +77,15 @@
             <a
                 class="admin-brand"
                 href="#"
-                aria-label="ROMANO | مدیریت"
-                data-admin-i18n-aria-label="ROMANO | مدیریت"
+                aria-labelledby="admin-brand-name admin-brand-label"
                 data-page-target="dashboard"
             >
 
-                <span class="admin-brand-name">
+                <span class="admin-brand-name" id="admin-brand-name">
                     ROMANO
                 </span>
 
-                <span class="admin-brand-label">
+                <span class="admin-brand-label" id="admin-brand-label">
                     مدیریت
                 </span>
 
@@ -484,9 +469,9 @@
             <section class="admin-page" id="page-orders" aria-labelledby="orders-title">
                 <div class="page-heading page-heading-row">
                     <div>
-                        <span class="page-eyebrow">عملیات زنده · آشپزخانه</span>
+                        <span class="page-eyebrow" id="orders-mode-label">عملیات زنده · آشپزخانه</span>
                         <h1 id="orders-title">سفارش‌ها و آشپزخانه</h1>
-                        <p>سفارش‌های QR را از پذیرش تا سرو، زنده مدیریت کنید.</p>
+                        <p id="orders-mode-description">سفارش‌های QR را از پذیرش تا سرو، زنده مدیریت کنید.</p>
                     </div>
                     <div class="orders-toolbar">
                       <button class="secondary-button" id="orders-sound" type="button" aria-pressed="false" data-admin-i18n="فعال‌سازی اعلان صوتی">فعال‌سازی اعلان صوتی</button>
@@ -836,6 +821,14 @@
                         <button class="primary-button" type="submit" disabled data-admin-i18n="افزودن میز">افزودن میز</button>
                     </form>
                     <div id="ops-tables" class="ops-tables" aria-live="polite">تنظیمات عملیاتی در نسخه مستقل در دسترس نیست.</div>
+                    <div class="ops-qr-result" id="sample-qr-preview" hidden>
+                        <div class="ops-qr-image" aria-hidden="true"></div>
+                        <div>
+                            <h3>QR ورود آزمایشی</h3>
+                            <p>برای باز کردن فرم عضویت نمونه اسکن کنید.</p>
+                            <a class="secondary-button" href="../?qr=demo" target="_blank" rel="noopener noreferrer">باز کردن ورود آزمایشی مشتری</a>
+                        </div>
+                    </div>
                     <p id="ops-message" role="status" aria-live="polite"></p>
                 </section>
 

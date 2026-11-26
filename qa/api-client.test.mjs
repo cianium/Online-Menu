@@ -8,7 +8,7 @@ const source = Object.fromEntries(['js/public-api.js', 'admin/api.js'].map(file 
   [file, readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')]));
 const json = (status, body) => new Response(JSON.stringify(body), { status, headers: {'content-type':'application/json'} });
 const text = status => new Response('not JSON', {status, headers: {'content-type':'text/plain'}});
-function harness(file, responses, {search='', slug='', protocol='http:'}={}) {
+function harness(file, responses, {search='', slug='', protocol='http:', standalone=false}={}) {
   const calls=[];
   const location={protocol,search};
   const window={location};
@@ -19,11 +19,27 @@ function harness(file, responses, {search='', slug='', protocol='http:'}={}) {
     if(next instanceof Error) throw next;
     return next;
   };
-  runInNewContext(source[file], {window, location, document:{body:{dataset:{restaurantSlug:slug}}}, fetch, URLSearchParams, AbortController, Headers, setTimeout, clearTimeout}, {filename:file});
+  const document={body:{dataset:{restaurantSlug:slug}},querySelector:()=>standalone?{content:'standalone'}:null};
+  runInNewContext(source[file], {window, location, document, fetch, URLSearchParams, AbortController, AbortSignal, Headers, setTimeout, clearTimeout}, {filename:file});
   return {api:window.RomanoPublicAPI ?? window.RomanoAPI,calls};
 }
 const publicClient = (responses,options)=>harness('js/public-api.js',responses,options);
 const adminClient = (responses,options)=>harness('admin/api.js',responses,options);
+
+test('Standalone documents use sample data without contacting same-origin APIs',async()=>{
+  const {api,calls}=publicClient([],{standalone:true});
+  assert.equal(api.enabled,false);
+  assert.equal(await api.load('romano','fa'),null);
+  assert.deepEqual(calls,[]);
+  const explicit=publicClient([],{standalone:true,search:'?restaurant=other'});
+  await assert.rejects(explicit.api.load('other','en'),{status:404});
+  assert.deepEqual(explicit.calls,[]);
+  const admin=adminClient([],{standalone:true});
+  assert.equal((await admin.api.detect()).available,false);
+  await assert.rejects(admin.api.login('sample','sample'),/not available/);
+  await assert.rejects(admin.api.saveSnapshot({}),/not available/);
+  assert.deepEqual(admin.calls,[]);
+});
 
 test('Public: static host and undeployed API return bundled-demo signal only on default HTTP route',async()=>{
   for(const response of [text(404),json(404,{error:{}})]) {

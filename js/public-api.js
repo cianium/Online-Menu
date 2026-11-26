@@ -1,6 +1,7 @@
 (() => {
   "use strict";
-  const enabled = ["http:", "https:"].includes(location.protocol);
+  const standalone = document.querySelector('meta[name="online-menu-mode"]')?.content === 'standalone';
+  const enabled = !standalone && ["http:", "https:"].includes(location.protocol);
   const explicitRestaurant = Boolean(document.body.dataset.restaurantSlug) || new URLSearchParams(location.search).has("restaurant");
   async function load(slug, lang) {
     if (!enabled) {
@@ -21,5 +22,5 @@
       return body.data;
     } finally { clearTimeout(timer); }
   }
-  window.RomanoPublicAPI = Object.freeze({ enabled, load });
+  window.RomanoPublicAPI = Object.freeze({ enabled, standalone, load });
 })();

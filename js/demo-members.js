@@ -10,6 +10,16 @@
   const validDate=d=>typeof d==='string'&&Number.isFinite(Date.parse(d));
   const validOrder=o=>o&&typeof o.id==='string'&&(o.currency===undefined||(typeof o.currency==='string'&&o.currency===catalogCurrency(o.currency)))&&validDate(o.createdAt)&&Array.isArray(o.items)&&o.items.length>0&&o.items.length<=100&&o.items.every(validItem)&&Number.isFinite(o.total)&&o.total>0&&Math.abs(o.items.reduce((sum,i)=>sum+i.price*i.quantity,0)-o.total)<0.000001;
   const uuid=()=>globalThis.crypto.randomUUID();
+  async function mutate(write){
+    const locks=globalThis.navigator?.locks;
+    if(!locks?.request)return write();
+    const result=await locks.request('romano-demo-members-v1',()=>{
+      try{return {value:write()};}
+      catch(error){return {error};}
+    });
+    if('error' in result)throw result.error;
+    return result.value;
+  }
   function read(storage){
     const raw=storage.getItem(key);
     if(raw===null)return [];
@@ -23,7 +33,7 @@
   function register(storage,session,nameValue,phoneValue){
     const name=String(nameValue??'').trim(),p=phone(phoneValue);
     if(!name||name.length>80||!validPhone(p))throw Error('INVALID_INPUT');
-    const rows=read(storage),current=active(storage,session);
+    const rows=read(storage),current=rows.find(r=>r.id===session.getItem(activeKey));
     if(current&&current.phone===p)return current;
     const existing=rows.find(r=>r.phone===p);
     if(existing){
@@ -40,7 +50,7 @@
     return member;
   }
   function addOrder(storage,session,items,total,currency){
-    const rows=read(storage),current=active(storage,session);
+    const rows=read(storage),current=rows.find(r=>r.id===session.getItem(activeKey));
     if(!current)throw Error('NO_PROFILE');
     if(!Array.isArray(items)||!items.length||items.length>100||!Number.isFinite(total)||total<=0||items.some(i=>!i||typeof i.name!=='string'||!Number.isSafeInteger(i.quantity)||i.quantity<1||i.quantity>99||!Number.isFinite(i.price)||i.price<=0))throw Error('INVALID_ORDER');
     if(current.orders.length>=100)throw Error('LIMIT');
@@ -54,5 +64,5 @@
     session.removeItem(activeKey);
     if(id)session.setItem(previousKey,id);
   }
-  return Object.freeze({key,activeKey,read,active,register,addOrder,signOut,phone});
+  return Object.freeze({key,activeKey,read,active,mutate,register,addOrder,signOut,phone});
 });

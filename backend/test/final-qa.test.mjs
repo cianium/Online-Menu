@@ -17,7 +17,8 @@ test('Payment redirects allow only existing HTTPS gateway origins and exact Star
 });
 
 test('Service worker does not intercept table tokens or payment callback URLs',()=>{
- const listeners={};const ctx=vm.createContext({URL,self:{location:{origin:'https://example.test'},addEventListener:(type,fn)=>listeners[type]=fn}});
+ const listeners={};const ctx=vm.createContext({URL,self:{registration:{scope:'https://example.test/Online-Menu/'},location:{origin:'https://example.test'},addEventListener:(type,fn)=>listeners[type]=fn}});
+ ctx.importScripts=()=>vm.runInContext(read('js/sw-cache.js'),ctx);
  vm.runInContext(read('sw.js'),ctx);
  for(const key of ['qr','payment','order','ref'])listeners.fetch({request:{method:'GET',url:`https://example.test/Online-Menu/?${key}=test`,destination:'document'},respondWith:()=>assert.fail('Sensitive navigation intercepted')});
 });

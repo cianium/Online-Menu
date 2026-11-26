@@ -705,17 +705,15 @@ function createCategoryCard(
     );
 
 
-    article.setAttribute(
-        "aria-label",
-        window.ROMANO_I18N?.ui?.("categoryView", category.name) || `مشاهده ${category.name}`
-    );
+    const labelId = `category-card-name-${index}`;
+    article.setAttribute("aria-labelledby", labelId);
 
 
     article.innerHTML = `
 
         <div class="category-image">
             ${category.image
-                ? `<img src="${escapeAttribute(category.image)}" alt="${escapeAttribute(category.name)}" loading="lazy" decoding="async">`
+                ? `<img src="${escapeAttribute(category.image)}" alt="" loading="lazy" decoding="async">`
                 : `<div class="image-fallback" aria-hidden="true">${escapeHTML(String(category.name || "").trim().charAt(0) || "•")}</div>`}
         </div>
 
@@ -725,19 +723,12 @@ function createCategoryCard(
 
         <div class="category-content">
 
-            <span class="category-index">
-                ${String(index + 1).padStart(2, "0")}
-            </span>
-
-
-            <h3 class="category-name">
+            <h3 class="category-name" id="${labelId}">
                 ${escapeHTML(category.name)}
             </h3>
 
 
-            <span class="category-arrow">
-                ←
-            </span>
+            <svg class="category-arrow" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 12h16m-6-6 6 6-6 6"/></svg>
 
         </div>
 
@@ -1336,6 +1327,7 @@ function createProductCard(product) {
             : `<span class="product-price price-unavailable">${escapeHTML(window.ROMANO_I18N.ui("askPrice"))}</span>`;
 
 
+    const detailsLabel = window.ROMANO_I18N.ui("signatureButton");
     article.innerHTML = `
 
         ${window.RomanoMenuExperience?.favoriteButton(product.id) || ""}
@@ -1376,9 +1368,9 @@ function createProductCard(product) {
             <button
                 class="product-card-button"
                 type="button"
-                aria-label="${escapeAttribute(window.ROMANO_I18N?.ui?.("productView", product.name) || `مشاهده ${product.name}`)}"
+                aria-label="${escapeAttribute(`${detailsLabel} — ${product.name}`)}"
             >
-                <span>${escapeHTML(window.ROMANO_I18N?.ui?.("signatureButton") || "مشاهده جزئیات")}</span>
+                <span>${escapeHTML(detailsLabel)}</span>
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="m9 18 6-6-6-6" />
                 </svg>
