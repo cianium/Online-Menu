@@ -92,8 +92,17 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
  });
  await check('Hamburger navigation covers the complete desktop viewport',async()=>{
   await p.setViewportSize({width:1440,height:900});
+  if(await p.locator('#main-navigation').evaluate(node=>node.classList.contains('is-open'))){
+   await p.locator('#navigation-close').click();
+   await p.waitForFunction(()=>!document.querySelector('#main-navigation')?.classList.contains('is-open'));
+  }
   await p.locator('#menu-toggle').click();
-  await p.waitForFunction(()=>document.querySelector('#main-navigation')?.classList.contains('is-open'));
+  await p.waitForFunction(()=>{
+   const nav=document.querySelector('#main-navigation'),panel=nav?.querySelector('.navigation-inner');
+   if(!nav?.classList.contains('is-open')||!panel)return false;
+   const rect=panel.getBoundingClientRect();
+   return Math.abs(rect.x)<=1&&Math.abs(rect.y)<=1;
+  });
   const geometry=await p.locator('#main-navigation .navigation-inner').evaluate(node=>{const r=node.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,scrollWidth:node.scrollWidth,clientWidth:node.clientWidth}});
   assert.ok(Math.abs(geometry.x)<=1&&Math.abs(geometry.y)<=1,JSON.stringify(geometry));
   assert.ok(Math.abs(geometry.width-1440)<=2&&Math.abs(geometry.height-900)<=2,JSON.stringify(geometry));
