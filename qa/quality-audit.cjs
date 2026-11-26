@@ -123,7 +123,7 @@ async function measure(browser,surface) {
 }
 (async()=>{
   await fs.mkdir(out,{recursive:true});
-  const browser=await chromium.launch({headless:true});
+  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE_PATH});
   try {
     const noScript=await setup(browser,{javaScriptEnabled:false});
     try {
@@ -139,7 +139,8 @@ async function measure(browser,surface) {
       }
       console.log('PASS: no-script fallback for both surfaces');
     } finally {await noScript.close();}
-    const context=await setup(browser);
+    // Axe is injected by the test harness. Navigation and lab runs retain CSP enforcement.
+    const context=await setup(browser,{bypassCSP:true});
     try {
       const customer=await context.newPage(),admin=await context.newPage();
       await open(customer,'customer');
@@ -223,6 +224,14 @@ async function measure(browser,surface) {
         await admin.locator('.overview-revenue').scrollIntoViewIfNeeded();
         await admin.locator('.revenue-table summary').click();
         assert.equal(await admin.locator('#revenue-table-body tr').count(),7);
+        const geometry=await admin.locator('.overview-revenue').evaluate(panel=>{
+          const bounds=panel.getBoundingClientRect();
+          return [...panel.querySelectorAll('.revenue-kpis,.revenue-chart,.revenue-detail-label,.revenue-table-scroll')].map(node=>{
+            const box=node.getBoundingClientRect();
+            return {name:node.className,fits:box.left>=bounds.left&&box.right<=bounds.right};
+          });
+        });
+        assert.ok(geometry.every(item=>item.fits),JSON.stringify({lang,geometry}));
         await scan(admin,'admin-revenue',lang,390,844);
         await admin.locator('.revenue-table summary').click();
       }

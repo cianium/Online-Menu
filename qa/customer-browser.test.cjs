@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 let pw;try{pw=require('playwright')}catch(e){if(!process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES)throw e;pw=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright')}
 const base=process.env.ADMIN_TEST_URL||'http://127.0.0.1:8765';
-const out=path.resolve(__dirname,'../docs/qa');fs.mkdirSync(out,{recursive:true});
+const out=path.resolve(process.env.BROWSER_EVIDENCE_DIR||path.join(__dirname,'../docs/qa'));fs.mkdirSync(out,{recursive:true});
 const results=[],errors=[];let browser;
 async function check(name,fn){await fn();results.push(name);console.log('PASS',name)}
 async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode!=='loading');await p.locator('#splash-screen').waitFor({state:'detached'});}
@@ -126,12 +126,10 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   const rail=p.locator('#rv4-category-rail');
   for(const lang of ['fa','ar','en','tr']){
    await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
-   const box=await categoryCard.evaluate(node=>{
-    const card=node.getBoundingClientRect(),index=node.querySelector('.category-index').getBoundingClientRect();
-    return {cardLeft:card.left,cardRight:card.right,indexLeft:index.left,indexRight:index.right,indexWidth:index.width};
-   });
-   if(['fa','ar'].includes(lang))assert.ok(box.indexRight>(box.cardLeft+box.cardRight)/2,lang+' category index must align to inline-start/right: '+JSON.stringify(box));
-   else assert.ok(box.indexRight<(box.cardLeft+box.cardRight)/2,lang+' category index must align to inline-start/left: '+JSON.stringify(box));
+   const name=(await categoryCard.locator('.category-name').textContent()).trim();
+   assert.equal(await p.locator('#categories-grid').getByRole('button',{name,exact:true}).count(),1);
+   const arrow=await categoryCard.locator('.category-arrow').evaluate(node=>getComputedStyle(node).transform);
+   assert.equal(arrow,['fa','ar'].includes(lang)?'matrix(-1, 0, 0, 1, 0, 0)':'none');
    assert.equal(await rail.evaluate(node=>getComputedStyle(node).scrollSnapType.includes('inline')),true,lang+' category rail snap');
    const buttons=rail.locator('button');
    assert.ok(await buttons.count()>1);
@@ -168,7 +166,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.equal(await p.locator('.product-modal').getAttribute('aria-hidden'),'true');
   }
  });
- await check('Cart supports add, quantity and QR-gated checkout',async()=>{
+ await check('Cart supports add, quantity and sample registration at checkout',async()=>{
   const cartButton=p.locator('#ramen-bottom-cart');
   await cartButton.click();
   assert.equal(await p.locator('.commerce-items .commerce-empty').isVisible(),true);
@@ -176,7 +174,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   await p.locator('[data-commerce-close]').last().click();
   const add=cards.first().locator('.commerce-card-add');assert.equal(await add.isVisible(),true);await add.click();
   assert.equal(await p.locator('#commerce-checkout').isVisible(),true);
-  assert.equal(await cartButton.isVisible(),true);assert.equal(await p.locator('.ramen-bottom-cart-count').textContent(),'1');
+  assert.equal(await cartButton.isVisible(),true);assert.equal(await p.locator('.ramen-bottom-cart-count').textContent(),await p.evaluate(()=>new Intl.NumberFormat(document.documentElement.lang).format(1)));
   await cartButton.click();assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'false');
   await check('Cart drawer traps keyboard focus and restores its opener',async()=>{
    await p.keyboard.press('Shift+Tab');
@@ -194,7 +192,14 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   assert.equal(await p.locator('#commerce-options').isVisible(),true);
   const summary=await p.locator('#commerce-submit').boundingBox();assert.ok(summary && summary.y+summary.height<=844);
   await p.screenshot({path:path.join(out,'customer-cart-filled-fa-390.png')});
-  await p.locator('#commerce-submit').click();assert.ok((await p.locator('#commerce-message').textContent()).trim());
+  await p.locator('#commerce-submit').click();
+  const entry=p.locator('#customer-entry');
+  await entry.waitFor({state:'visible'});
+  assert.equal(await entry.locator('input').count(),2);
+  await p.keyboard.press('Escape');
+  await entry.waitFor({state:'hidden'});
+  await cartButton.click();
+  assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
   await p.locator('[data-cart-remove]').click();
   assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
   await p.locator('[data-commerce-close]').last().click();
@@ -286,8 +291,8 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   await p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   assert.equal(await updatedButton.evaluate(n=>n===document.activeElement),true,'focus stable after rendering frames');
  });
- await check('Four languages at 320, 390, 768, 1024 and 1440px: direction, overflow and modal',async()=>{
-  for(const lang of ['en','tr','ar','fa'])for(const width of [320,390,768,1024,1440]){
+ await check('Four languages at nine widths from 320 to 1920px: direction, overflow and modal',async()=>{
+  for(const lang of ['en','tr','ar','fa'])for(const width of [320,360,375,390,430,768,1024,1440,1920]){
    await p.setViewportSize({width,height:900});await p.evaluate(lang=>ROMANO_I18N.setLanguage(lang),lang);
    assert.equal(await p.locator('html').getAttribute('dir'),['fa','ar'].includes(lang)?'rtl':'ltr');
    const expectedFont=['fa','ar'].includes(lang)?'Vazirmatn':'Inter';

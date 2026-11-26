@@ -19,8 +19,15 @@ const readyCustomer = async page => {
   try {
     const context = await browser.newContext({viewport:{width:1440,height:900}, serviceWorkers:'block', reducedMotion:'reduce'});
     const errors = [];
+    const apiRequests = [];
+    const externalRequests = [];
     context.on('page', page => page.on('pageerror', error => errors.push(String(error))));
-    await context.route('**/*', route => new URL(route.request().url()).origin === base.origin ? route.continue() : route.abort('blockedbyclient'));
+    await context.route('**/*', route => {
+      const url = new URL(route.request().url());
+      if (url.origin!==base.origin) {externalRequests.push(url.origin);return route.abort('blockedbyclient');}
+      if (url.pathname.startsWith('/api/')) apiRequests.push(url.pathname);
+      return route.continue();
+    });
     const customer = await context.newPage();
     const admin = await context.newPage();
     await customer.goto(new URL('./',base).href); await readyCustomer(customer);
@@ -31,6 +38,13 @@ const readyCustomer = async page => {
     await loginDemoAdmin(admin);
     assert.equal(await admin.locator('#admin-mode-banner').isVisible(), true);
     assert.equal(await admin.evaluate(() => state.products.length), 21);
+    const standalone = await customer.evaluate(() => RomanoPublicAPI.standalone);
+    if (standalone) {
+      await customer.goto(new URL('./?qr=unused-table-marker',base).href);
+      await readyCustomer(customer);
+      assert.equal(await customer.evaluate(() => menuDataMode),'demo');
+      assert.equal(await customer.locator('#commerce-session').isVisible(),false);
+    }
     console.log('PASS: both applications start with no external network');
     // Controlled lab observations only (loopback, external resources blocked).
     for (const [label,page] of [['customer',customer],['admin',admin]]) {
@@ -174,6 +188,16 @@ const readyCustomer = async page => {
     assert.ok((await customer.locator('#commerce-demo-status').innerText()).includes('nothing was sent to the restaurant'));
     assert.equal(await customer.locator('#commerce-demo-status').isVisible(),true);
     await admin.waitForFunction(()=>document.querySelector('#demo-members-list').textContent.includes('Sample order count: 1'));
+    await admin.evaluate(()=>navigateTo('orders'));
+    assert.equal(await admin.locator('.sample-order-ticket').count(),1);
+    assert.equal(await admin.locator('.order-next').count(),0);
+    assert.equal(await admin.locator('.orders-filters').isVisible(),false);
+    assert.doesNotMatch(await admin.locator('#orders-board').innerText(),/Sample Customer|12025550101/);
+    await admin.evaluate(()=>navigateTo('settings'));
+    await admin.locator('#sample-qr-preview').waitFor({state:'visible'});
+    assert.ok(await admin.locator('#sample-qr-preview canvas, #sample-qr-preview img').count());
+    assert.equal(await admin.locator('#sample-qr-preview a').evaluate(a=>a.href),new URL('./?qr=demo',base).href);
+    console.log('PASS: sample order cards without customer identifiers and local sample QR preview');
     await admin.evaluate(()=>navigateTo('dashboard'));
     await admin.locator('#revenue-period').selectOption('7');
     const expectedRevenue=await customer.evaluate(()=>RomanoCustomerEntry.current().orders[0].total);
@@ -213,6 +237,19 @@ const readyCustomer = async page => {
     assert.equal(await other.evaluate(()=>RomanoCustomerEntry.current()),null);
     await other.close();
     console.log('PASS: QR demo entry, four locales, local membership/order history, same-tab re-entry, isolated name/phone lookup and admin club sync');
+    const registrants=await Promise.all([context.newPage(),context.newPage()]);
+    try {
+      await Promise.all(registrants.map(page=>page.goto(new URL('./?qr=demo',base).href)));
+      await Promise.all(registrants.map(async(page,index)=>{
+        const form=page.locator('#customer-entry form');
+        await form.locator('[name="name"]').fill('Synthetic profile '+index);
+        await form.locator('[name="phone"]').fill('+1202555011'+index);
+      }));
+      await Promise.all(registrants.map(page=>page.locator('#customer-entry button[type=submit]').click()));
+      await Promise.all(registrants.map(page=>page.locator('#customer-entry').waitFor({state:'hidden'})));
+      assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).length),3);
+    } finally {await Promise.all(registrants.map(page=>page.close()));}
+    console.log('PASS: concurrent sample registration retains both profiles');
     await customer.goto(new URL('./?restaurant=standalone-qa-missing',base).href); await readyCustomer(customer);
     assert.equal(await customer.evaluate(() => menuDataMode), 'unavailable');
     assert.equal(await cards.count(),0);
@@ -220,6 +257,8 @@ const readyCustomer = async page => {
     assert.equal(await customer.locator('meta[property="og:site_name"]').getAttribute('content'),'');
     assert.equal(await customer.locator('meta[name="description"]').getAttribute('content'),await customer.evaluate(()=>ROMANO_I18N.ui('menuUnavailable')));
     assert.deepEqual(errors,[]);
+    assert.deepEqual(externalRequests,[]);
+    if (standalone) assert.deepEqual(apiRequests,[]);
     console.log('PASS: unknown restaurant fails closed; no uncaught JavaScript errors');
     await context.close();
   } finally { await browser.close(); }

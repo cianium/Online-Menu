@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
+import { syntaxFailures } from "./syntax-audit.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const failures = [];
@@ -78,11 +78,7 @@ check(read("js/app.js").split("getImageFallbackLabel(").length >= 5, "Customer p
 check(!read("js/menu-experience.js").includes('class="section-eyebrow">ROMANO'), "Customer menu still contains a hard-coded platform heading.");
 check(read("sw.js").includes('url.pathname.includes("/admin/")'), "Service worker does not explicitly exclude admin.");
 
-const syntaxTargets = ["js/app.js", "js/menu-experience.js", "js/commerce.js", "js/demo-review.js", "js/demo-members.js", "js/customer-entry.js", "admin/demo-members-panel.js", "js/i18n.js", "js/money.js", "admin/admin.js", "admin/admin-i18n.js", "admin/rv4-admin-plus.js", "admin/workspace.js", "admin/orders.js", "admin/vendor/qrcode.min.js", "sw.js", "qa/static-audit.mjs", "admin/api.js", "js/public-api.js", "backend/server.mjs", "backend/seed.mjs", "backend/migrate.mjs", "supabase/functions/romano-public/index.ts", "supabase/functions/romano-admin/index.ts", "supabase/functions/romano-order/core.ts", "supabase/functions/romano-order/index.ts", "supabase/functions/romano-payment/index.ts"];
-for (const rel of syntaxTargets) {
-  const r = spawnSync(process.execPath, rel.endsWith(".ts") ? ["--experimental-strip-types", "--check", path.join(ROOT, rel)] : ["--check", path.join(ROOT, rel)], { encoding: "utf8" });
-  if (r.status !== 0) failures.push(`Syntax error in ${rel}: ${r.stderr.trim()}`);
-}
+failures.push(...syntaxFailures());
 
 const auth = read("admin/admin.js");
 check(!auth.includes("YOUR_GOOGLE_CLIENT_ID"), "Admin still contains a placeholder Google client ID.");
@@ -155,7 +151,7 @@ check(read("supabase/functions/romano-order/index.ts").includes("HttpOnly; Secur
 check(vercel.rewrites?.some(rule => rule.source === "/api/v1/payments/:path*" && rule.destination.includes("/romano-payment/")), "Vercel payment API rewrite is missing.");
 check(read("supabase/functions/romano-payment/index.ts").includes("/pg/v4/payment/verify.json"), "ZarinPal server-side verification is missing.");
 check(read("admin/index.html").includes('id="page-orders"'), "Operations/KDS page is missing.");
-check(read("js/app.js").includes('<span>${escapeHTML(window.ROMANO_I18N?.ui?.("signatureButton")'), "Product cards are missing their visible localized CTA.");
+check(read("js/app.js").includes('const detailsLabel = window.ROMANO_I18N.ui("signatureButton")') && read("js/app.js").includes('<span>${escapeHTML(detailsLabel)}</span>'), "Product cards are missing their visible localized CTA.");
 
 
 check(adminFunction.includes("romano_is_auth_session_active") && adminFunction.includes("sessionIdFromJwt"), "Admin protected routes must validate JWT session_id against auth.sessions.");

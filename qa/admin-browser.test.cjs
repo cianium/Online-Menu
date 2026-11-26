@@ -10,14 +10,15 @@ try { pw = require('playwright'); } catch (e) {
   pw = require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES + '/playwright');
 }
 const base = process.env.ADMIN_TEST_URL || 'http://127.0.0.1:8765';
-const out = path.resolve(__dirname, '../docs/qa');
+const out = path.resolve(process.env.BROWSER_EVIDENCE_DIR || path.join(__dirname, '../docs/qa'));
 fs.mkdirSync(out, { recursive: true });
 const results = [];
 let browser;
 async function check(name, action) { await action(); results.push(name); console.log('PASS', name); }
 (async () => {
   browser = await pw.chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined), args: ['--no-sandbox', '--disable-dev-shm-usage'] });
-  const context = await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
+  // Axe is injected by this test suite. The standalone integration suite enforces CSP.
+  const context = await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce',bypassCSP:true});
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
@@ -137,7 +138,7 @@ await check('Order filter group accessible name is localized in all four languag
   assert.equal(await page.locator('.orders-filters').getAttribute('aria-label'), expected[lang]);
  }
 });
-  await check('4 languages × 5 widths × 6 admin pages: direction and horizontal overflow', async () => {
+  await check('4 languages × 9 widths × 6 admin pages: direction and horizontal overflow', async () => {
     for (const lang of ['en','tr','ar','fa']) {
       await page.evaluate(lang => window.ROMANO_ADMIN_I18N.setLanguage(lang), lang);
       assert.equal(await page.getAttribute('html','dir'), ['fa','ar'].includes(lang) ? 'rtl' : 'ltr');
@@ -147,11 +148,11 @@ await check('Order filter group accessible name is localized in all four languag
       assert.match(await page.locator('#dashboard-title').evaluate(node => getComputedStyle(node).fontFamily), new RegExp(expectedDisplay));
       const expectedBrand = {fa:'مدیریت',en:'Management',tr:'Yönetim',ar:'الإدارة'}[lang];
       assert.equal(await page.locator('.admin-brand-label').textContent().then(value=>value.trim()), expectedBrand);
-      assert.equal(await page.locator('.admin-brand').getAttribute('aria-label'), ({fa:'ROMANO | مدیریت',en:'ROMANO | Admin',tr:'ROMANO | Yönetim',ar:'رومانو | الإدارة'})[lang]);
+      assert.equal(await page.locator('.admin-brand').getAttribute('aria-labelledby'), 'admin-brand-name admin-brand-label');
       assert.equal(await page.locator('.admin-brand-name').textContent().then(value=>value.trim()), 'ROMANO');
       assert.equal(await page.locator('.admin-footer-brand strong').textContent().then(value=>value.trim()), 'ROMANO');
       assert.match(await page.title(), /ROMANO|رومانو/);
-      for (const width of [1440,1024,768,390,320]) {
+      for (const width of [1920,1440,1024,768,430,390,375,360,320]) {
         await page.setViewportSize({width,height:900});
         for (const section of ['dashboard','orders','products','categories','settings','loyalty']) {
           await page.evaluate(section => navigateTo(section),section);
