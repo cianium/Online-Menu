@@ -516,3 +516,8 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
   .admin-gate.is-open {align-items:flex-start;}
   .admin-gate-panel {margin-block:auto;}
 }
+
+/* Decorative layers must not enlarge the scrollable login surface. */
+.admin-gate-grain {inset:0;transform:none;}
+.admin-gate-ambient-one {top:0;left:0;}
+.admin-gate-ambient-two {bottom:0;right:0;}

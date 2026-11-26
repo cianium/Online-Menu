@@ -29,6 +29,7 @@ async function open(page, surface) {
 }
 async function scan(page, name, lang, width, height) {
   await page.setViewportSize({width,height});
+  if(name==='admin-entry'||name==='customer-entry')await page.locator(name==='admin-entry'?'#admin-gate':'#customer-entry').evaluate(el=>{el.scrollTop=0;el.scrollLeft=0;});
   await page.evaluate(async()=>{await document.fonts.ready;});
   if (!await page.evaluate(()=>Boolean(window.axe))) await page.addScriptTag({path:axePath});
   if (name.startsWith('admin-') && name!=='admin-entry') {
@@ -70,7 +71,11 @@ async function entryGeometry(page,selector,submit,lang,surface){
   for(const [width,height] of [[320,568],[844,390]]){
     await page.setViewportSize({width,height});
     const box=page.locator(selector);
-    assert.ok(await box.evaluate(el=>el.scrollWidth<=el.clientWidth+1),surface+' '+lang+' horizontal overflow');
+    await box.evaluate(el=>{el.scrollTop=0;el.scrollLeft=0;});
+    const panel=box.locator(surface==='admin-entry'?'.admin-gate-panel':'.customer-entry-panel');
+    const panelRect=await panel.boundingBox();
+    assert.ok(panelRect&&panelRect.x>=-1&&panelRect.x+panelRect.width<=width+1,JSON.stringify({surface,lang,width,panelRect}));
+    assert.ok(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth+1),surface+' '+lang+' panel horizontal overflow');
     const button=page.locator(submit);
     await button.scrollIntoViewIfNeeded();
     const rect=await button.boundingBox();
