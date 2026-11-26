@@ -1352,12 +1352,14 @@ function createProductCard(product) {
             </div>
 
 
-            <h3 class="product-name">
-                ${escapeHTML(product.name)}
-            </h3>
+            <div class="product-heading-row">
+                <h3 class="product-name">
+                    ${escapeHTML(product.name)}
+                </h3>
 
 
-            ${price}
+                ${price}
+            </div>
 
 
             <p class="product-description">

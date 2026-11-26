@@ -136,12 +136,16 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.ok(await buttons.first().evaluate(node=>node.getBoundingClientRect().height>=44),lang+' category filter touch target');
   }
  });
- await check('Image-first card CTA and favorite remain accessible',async()=>{
+ await check('Compact full-bleed product card matches the premium reference and remains accessible',async()=>{
   const card=cards.first(),button=card.locator('.product-card-button'),favorite=card.locator('[data-favorite-product]');
   await card.evaluate(node=>node.scrollIntoView({block:'start',behavior:'instant'}));
   assert.ok((await button.textContent()).trim());assert.equal(await button.isVisible(),true);
-  const geometry=await card.evaluate(node=>{const card=node.getBoundingClientRect(),image=node.querySelector('.product-image-wrapper').getBoundingClientRect(),cta=node.querySelector('.product-card-button').getBoundingClientRect(),heart=node.querySelector('[data-favorite-product]').getBoundingClientRect(),hit=document.elementFromPoint(heart.left+heart.width/2,heart.top+heart.height/2);return{card:{width:card.width,height:card.height},image:{width:image.width,height:image.height},ctaWidth:cta.width,heartHit:Boolean(hit&&hit.closest('[data-favorite-product]'))}});
-  assert.ok(Math.abs(geometry.card.width-geometry.image.width)<=3&&geometry.image.height<geometry.card.height&&geometry.image.height>60);assert.ok(geometry.ctaWidth>geometry.card.width*.35);assert.equal(geometry.heartHit,true);
+  const geometry=await card.evaluate(node=>{const card=node.getBoundingClientRect(),image=node.querySelector('.product-image-wrapper').getBoundingClientRect(),body=node.querySelector('.product-body').getBoundingClientRect(),heading=node.querySelector('.product-heading-row').getBoundingClientRect(),price=node.querySelector('.product-price').getBoundingClientRect(),cta=node.querySelector('.product-card-button').getBoundingClientRect(),heart=node.querySelector('[data-favorite-product]').getBoundingClientRect(),hit=document.elementFromPoint(heart.left+heart.width/2,heart.top+heart.height/2);return{card:{width:card.width,height:card.height},image:{width:image.width,height:image.height},body:{top:body.top,bottom:body.bottom},heading:{top:heading.top,bottom:heading.bottom},price:{top:price.top,bottom:price.bottom},ctaWidth:cta.width,heartHit:Boolean(hit&&hit.closest('[data-favorite-product]'))}});
+  assert.ok(Math.abs(geometry.card.width-geometry.image.width)<=3&&Math.abs(geometry.card.height-geometry.image.height)<=3,JSON.stringify(geometry));
+  assert.ok(geometry.card.height/geometry.card.width>=1.3&&geometry.card.height/geometry.card.width<=1.45,JSON.stringify(geometry));
+  assert.ok(geometry.card.height<=430&&geometry.body.bottom<=geometry.card.height+card.evaluate(node=>node.getBoundingClientRect().top)+2);
+  assert.ok(geometry.price.top<geometry.heading.bottom&&geometry.price.bottom>geometry.heading.top);
+  assert.ok(geometry.ctaWidth>geometry.card.width*.25);assert.equal(geometry.heartHit,true);
   await button.click();await p.waitForTimeout(450);const modal=await p.locator('.product-modal .modal-container').boundingBox();assert.ok(modal);assert.ok(Math.abs((modal.y+modal.height/2)-844/2)<2,JSON.stringify(modal));await p.keyboard.press('Escape');
  });
  await check('Product card metadata and modal close control follow RTL/LTR direction',async()=>{
