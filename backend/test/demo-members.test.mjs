@@ -18,6 +18,22 @@ test('Demo registration normalizes RTL digits and preserves opaque browser sessi
  model.signOut(a);assert.equal(model.active(db,a),null);
  assert.equal(model.read(db)[0].orders.length,1);
 });
+test('An active profile still checks the name and requires sign-out before a profile change',()=>{
+ const db=storage(),session=storage(),secondTab=storage();
+ const first=model.register(db,session,'Sample A','+12025550112');
+ const second=model.register(db,secondTab,'Sample B','+12025550113');
+ model.addOrder(db,session,[{name:'Sample dish',quantity:1,price:5}],5);
+ assert.throws(()=>model.register(db,session,'Different name',first.phone),/EXISTING_PROFILE/);
+ assert.throws(()=>model.register(db,session,second.name,second.phone),/ACTIVE_PROFILE/);
+ assert.throws(()=>model.register(db,session,'New sample','+12025550114'),/ACTIVE_PROFILE/);
+ assert.equal(model.register(db,session,' Sample  A ','+١٢٠٢٥٥٥٠١١٢').orders.length,1);
+ assert.equal(model.active(db,session).id,first.id);
+ assert.equal(model.read(db).length,2);
+ model.signOut(session);
+ assert.equal(model.register(db,session,second.name,second.phone).id,second.id);
+ assert.equal(model.active(db,session).orders.length,0);
+});
+
 test('Demo membership storage failure is not reported as success',()=>{
  const db=storage(),session=storage();session.setItem=()=>{throw Error('BLOCKED')};
  assert.throws(()=>model.register(db,session,'Sample','+12025550102'));

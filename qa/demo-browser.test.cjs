@@ -227,6 +227,15 @@ const readyCustomer = async page => {
     await entry.locator('button[type=submit]').click();
     await entry.waitFor({state:'hidden'});
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders.length),1);
+    assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.open()),true);
+    await entry.locator('input[name=name]').fill('Different sample name');
+    await entry.locator('input[name=phone]').fill('+12025550101');
+    await entry.locator('button[type=submit]').click();
+    await entry.locator('[role=alert][data-member-text=existing]').waitFor({state:'visible'});
+    assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current()?.orders.length),1);
+    await entry.locator('input[name=name]').fill('Sample Customer');
+    await entry.locator('button[type=submit]').click();
+    await entry.waitFor({state:'hidden'});
     const other=await context.newPage();
     await other.goto(new URL('./?qr=demo',base).href);await readyCustomer(other);
     const otherEntry=other.locator('#customer-entry');

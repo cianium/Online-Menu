@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r14-experience-4`;
+const CACHE_NAME = `${menuCachePrefix}r15-demo-membership`;
 const CORE_ASSETS = [
   "./",
   "./index.html",

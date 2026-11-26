@@ -2,7 +2,6 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.RomanoDemoMembers=api;})(globalThis,()=>{
   "use strict";
   const key='online_menu_demo_members_v1:romano',activeKey='online_menu_demo_member_active_v1:romano';
-  const previousKey='online_menu_demo_member_previous_v1:romano';
   const name=value=>String(value??'').normalize('NFKC').trim().replace(/\s+/g,' ');
   const phone=value=>String(value??'').trim().replace(/[۰-۹٠-٩]/g,ch=>String(ch.charCodeAt(0)-(ch>='۰'?1776:1632))).replace(/[\s().-]/g,'');
   const validPhone=p=>typeof p==='string'&&/^\+?[0-9]{7,15}$/.test(p);
@@ -59,16 +58,16 @@
     const memberName=name(nameValue),p=phone(phoneValue);
     if(!memberName||memberName.length>80||!validPhone(p))throw Error('INVALID_INPUT');
     const rows=read(storage),current=rows.find(r=>r.id===session.getItem(activeKey));
-    if(current&&current.phone===p)return current;
     const existing=rows.find(r=>r.phone===p);
     if(existing){
-      // This is browser-local demo data, not authentication. Matching the exact
-      // normalized sample name and phone is enough to resume from another tab.
-      if(current||name(existing.name)!==memberName)throw Error('EXISTING_PROFILE');
+      // A matching phone never bypasses the sample name check, even in the active tab.
+      if(name(existing.name)!==memberName)throw Error('EXISTING_PROFILE');
+      if(current?.id===existing.id)return existing;
+      if(current)throw Error('ACTIVE_PROFILE');
       session.setItem(activeKey,existing.id);
-      session.removeItem(previousKey);
       return existing;
     }
+    if(current)throw Error('ACTIVE_PROFILE');
     if(rows.length>=100)throw Error('LIMIT');
     const member={id:uuid(),name:memberName,phone:p,createdAt:new Date().toISOString(),orders:[]};
     const old=storage.getItem(key);
@@ -87,9 +86,7 @@
     return order;
   }
   function signOut(session){
-    const id=session.getItem(activeKey);
     session.removeItem(activeKey);
-    if(id)session.setItem(previousKey,id);
   }
   return Object.freeze({key,activeKey,read,active,mutate,register,addOrder,signOut,phone});
 });
