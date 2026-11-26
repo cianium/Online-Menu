@@ -8,7 +8,7 @@ Requirements: Node.js 22 or later, a modern browser. No npm install, API keys, d
 node start.mjs
 ```
 
-Customer: http://127.0.0.1:8765/  
+Customer: http://127.0.0.1:8765/
 Admin: http://127.0.0.1:8765/admin/
 
 Use the same browser profile and origin for the menu and admin. Changes are stored in that browser, not a shared database. Use only fictional products, contact details and reviews. Real ordering, payment, revenue, SMS and multi-device synchronization are not offered by this standalone package. Noindex is not authentication. Do not expose this local server to the internet. The demo bundles its fonts and sample photographs. The local launcher serves only loopback, with a restrictive Content Security Policy. Stop with Ctrl+C. To reset use a fresh browser profile; save any sample catalog backup before clearing site data. Source identity: VERSION.json. Public checksums: SHA256SUMS (relative to public/); entire delivery: PACKAGE-SHA256SUMS (relative to package root).
