@@ -86,3 +86,18 @@ test('Storage lease serializes concurrent demo registration even with ineffectiv
   if(navigatorDescriptor)Object.defineProperty(globalThis,'navigator',navigatorDescriptor);else delete globalThis.navigator;
  }
 });
+
+test('Both international prefixes recover the same legacy membership and preserve its history',()=>{
+ const db=storage(),session=storage();
+ const original=model.register(db,session,'Sample','+12025550101');
+ const order=model.addOrder(db,session,[{name:'Sample',price:5,quantity:1}],5);
+ model.signOut(session);
+ const [legacy]=model.read(db);
+ db.setItem(model.key,JSON.stringify([{...legacy,phone:'0012025550101'}]));
+ const returned=model.register(db,session,'Sample','+۱۲۰۲۵۵۵۰۱۰۱');
+ assert.equal(returned.id,original.id);
+ assert.equal(returned.orders[0].id,order.id);
+ assert.equal(model.phone('٠٠١ ٢٠٢ ٥٥٥ ٠١٠١'),original.phone);
+ assert.throws(()=>model.register(db,session,'Other','0012025550101'),/EXISTING_PROFILE/);
+ assert.equal(model.read(db).length,1);
+});
