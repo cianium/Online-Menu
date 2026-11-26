@@ -50,3 +50,21 @@ test('Same-tab sample re-entry preserves history without unlocking another tab',
  assert.throws(()=>model.register(db,a,member.name,member.phone),/BLOCKED/);
  assert.equal(model.active(db,a),null);
 });
+
+test('Storage lease serializes concurrent demo registration even with ineffective Web Locks',async()=>{
+ const db=storage(),a=storage(),b=storage();
+ const localDescriptor=Object.getOwnPropertyDescriptor(globalThis,'localStorage');
+ const navigatorDescriptor=Object.getOwnPropertyDescriptor(globalThis,'navigator');
+ try{
+  Object.defineProperty(globalThis,'localStorage',{configurable:true,value:db});
+  Object.defineProperty(globalThis,'navigator',{configurable:true,value:{locks:{request:async(_name,commit)=>commit()}}});
+  await Promise.all([
+   model.mutate(()=>model.register(db,a,'Synthetic A','+12025550110')),
+   model.mutate(()=>model.register(db,b,'Synthetic B','+12025550111'))
+  ]);
+  assert.equal(model.read(db).length,2);
+ }finally{
+  if(localDescriptor)Object.defineProperty(globalThis,'localStorage',localDescriptor);else delete globalThis.localStorage;
+  if(navigatorDescriptor)Object.defineProperty(globalThis,'navigator',navigatorDescriptor);else delete globalThis.navigator;
+ }
+});
