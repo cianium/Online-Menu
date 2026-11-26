@@ -179,6 +179,19 @@ await check('Order filter group accessible name is localized in all four languag
     await page.locator('dialog[open] [value=confirm]').click();
     await page.waitForFunction(()=>JSON.parse(localStorage.getItem('online_menu_loyalty_drafts_v1:romano')).length===0);
   });
+  await check('Branch creation removed; standalone settings cannot submit live operations in any locale',async()=>{
+    await page.evaluate(()=>navigateTo('settings'));
+    for(const lang of ['fa','en','tr','ar']){
+      await page.evaluate(l=>ROMANO_ADMIN_I18N.setLanguage(l),lang);
+      assert.equal(await page.locator('#create-branch-form,[name=branchName],[name=branchSlug],[name=priceMultiplier]').count(),0);
+      assert.equal(await page.evaluate(()=>typeof RomanoAPI.createBranch),'undefined');
+      assert.equal(await page.locator('#ops-branch').isDisabled(),true);
+      assert.equal(await page.locator('#create-table-form button').isDisabled(),true);
+      assert.equal(await page.locator('#ops-save-branch').isDisabled(),true);
+      assert.equal(await page.locator('#gateway-settings-form button').isDisabled(),true);
+      assert.ok((await page.locator('#ops-tables').innerText()).trim());
+    }
+  });
   await check('Grouped settings validate contact and discard unsaved input without writing',async()=>{
     await page.evaluate(()=>{ROMANO_ADMIN_I18N.setLanguage('en');navigateTo('settings');});
     const form=page.locator('#restaurant-settings-form');const previous=await form.locator('[name=phone]').inputValue();
@@ -358,12 +371,17 @@ await check('Order filter group accessible name is localized in all four languag
   });
   // Mocked HTTP contract tests exercise frontend handling, not PostgreSQL or authorization.
   const remote={restaurant:{name:'Remote',currency:'TRY'},categories:[],products:[]};
-  let writes=0,failSave=false,delaySave=0,uploads=0;
+  let writes=0,failSave=false,delaySave=0,uploads=0,branchPosts=0;
   await context.route('**/api/v1/**',async route=>{
     const u=new URL(route.request().url());let data;
     if(u.pathname.endsWith('/auth/me'))data={user:{id:'u'}};
     else if(u.pathname.endsWith('/auth/csrf'))data={csrfToken:'test'};
     else if(u.pathname.endsWith('/admin/data'))data=remote;
+    else if(u.pathname.endsWith('/admin/branches')){
+      if(route.request().method()==='POST')branchPosts++;
+      data={branches:[{id:'existing',name:'Configured restaurant',qr_ordering_enabled:true}]};
+    }
+    else if(u.pathname.endsWith('/admin/branches/existing/tables'))data={tables:[{id:'t1',code:'T1',display_name:'Table 1',active:true}]};
     else if(u.pathname.endsWith('/admin/media')){uploads++;data={url:'/uploads/test.png'};}
     else if(u.pathname.endsWith('/admin/snapshot')){
       writes++;if(delaySave)await new Promise(r=>setTimeout(r,delaySave));
@@ -377,6 +395,16 @@ await check('Order filter group accessible name is localized in all four languag
     assert.equal(await page.evaluate(()=>state.products.length),0);
     assert.equal(await page.evaluate(()=>state.categories.length),0);
     assert.equal(writes,0);
+  });
+  await check('Connected settings retain preconfigured restaurant, table and gateway controls',async()=>{
+    await page.evaluate(()=>navigateTo('settings'));
+    await page.waitForFunction(()=>document.querySelector('#ops-branch').value==='existing'&&document.querySelector('#ops-tables').textContent.includes('Table 1'));
+    assert.equal(await page.locator('#create-branch-form').count(),0);
+    assert.equal(await page.locator('#ops-qr-enabled').isChecked(),true);
+    assert.equal(await page.locator('#create-table-form button').isEnabled(),true);
+    assert.equal(await page.locator('#gateway-branch').inputValue(),'existing');
+    assert.equal(await page.locator('#gateway-settings-form button').isEnabled(),true);
+    assert.equal(branchPosts,0);
   });
   await check('Server failure keeps category form and rolls back state; retry saves once',async()=>{
     await page.evaluate(()=>navigateTo('categories'));

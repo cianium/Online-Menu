@@ -124,3 +124,13 @@ test('Public: explicit restaurant must not fall back to demo on file protocol',a
   const demo=publicClient([],{protocol:'file:'});
   assert.equal(await demo.api.load('romano','en'),null);
 });
+
+test('Admin: no dashboard branch-creation method; existing restaurant and table operations remain',async()=>{
+  const {api,calls}=adminClient([json(200,{data:{branches:[]}}),json(200,{data:{tables:[]}})]);
+  assert.equal(typeof api.createBranch,'undefined');
+  await api.branches();await api.tables('existing');
+  assert.deepEqual(calls.map(x=>[x.url,x.options.method||'GET']),[['/api/v1/admin/branches','GET'],['/api/v1/admin/branches/existing/tables','GET']]);
+  assert.equal(typeof api.createTable,'function');
+  assert.equal(typeof api.branchSettings,'function');
+  assert.equal(typeof api.saveGateway,'function');
+});
