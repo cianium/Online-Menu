@@ -92,10 +92,8 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
  });
  await check('Hamburger navigation covers the complete desktop viewport',async()=>{
   await p.setViewportSize({width:1440,height:900});
-  if(await p.locator('#main-navigation').evaluate(node=>node.classList.contains('is-open'))){
-   await p.locator('#navigation-close').click();
-   await p.waitForFunction(()=>!document.querySelector('#main-navigation')?.classList.contains('is-open'));
-  }
+  await p.reload();await ready(p);
+  await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));
   await p.locator('#menu-toggle').click();
   await p.waitForFunction(()=>{
    const nav=document.querySelector('#main-navigation'),panel=nav?.querySelector('.navigation-inner');
