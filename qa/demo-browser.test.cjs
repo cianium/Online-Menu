@@ -172,7 +172,7 @@ const readyCustomer = async page => {
     await entry.locator('input[name=name]').fill('Sample Customer');
     await entry.locator('input[name=phone]').fill('abc');
     await entry.locator('button[type=submit]').click();
-    assert.equal(await entry.locator('[role=alert]').isVisible(),true);
+    await entry.locator('[role=alert]').waitFor({state:'visible'});
     await entry.locator('input[name=phone]').fill('+12025550101');
     await entry.locator('button[type=submit]').click();
     await entry.waitFor({state:'hidden'});
@@ -233,6 +233,7 @@ const readyCustomer = async page => {
     await otherEntry.locator('input[name=name]').fill('Sample Customer');
     await otherEntry.locator('input[name=phone]').fill('+12025550101');
     await otherEntry.locator('button[type=submit]').click();
+    await otherEntry.locator('[role=alert]').waitFor({state:'visible'});
     assert.equal(await otherEntry.isVisible(),true);
     assert.equal(await other.evaluate(()=>RomanoCustomerEntry.current()),null);
     await other.close();
