@@ -61,6 +61,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    await p.locator('#menu-toggle').click();
    const nav=p.locator('#main-navigation');
    await nav.locator('.navigation-category-list a').first().waitFor({state:'visible'});
+   await p.waitForFunction(()=>Math.abs(document.querySelector('#main-navigation .navigation-inner')?.getBoundingClientRect().x||0)<=1);
    assert.equal(await nav.locator('.navigation-category-media img').count(),7);
    const bounds=await nav.locator('.navigation-inner').boundingBox(),overlay=await nav.boundingBox();
    assert.ok(bounds&&overlay&&Math.abs(bounds.height-overlay.height)<=2&&Math.abs(bounds.width-overlay.width)<=2,JSON.stringify({bounds,overlay}));
