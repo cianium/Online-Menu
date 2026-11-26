@@ -21,7 +21,7 @@ function demoDocument(html, customer) {
   return result.replace(end, '    <meta name="online-menu-mode" content="standalone">\n' + end);
 }
 
-export async function exportDemo(source, destination) {
+export async function exportDemo(source, destination, publicTree) {
   const root = await realpath(source);
   const output = path.resolve(destination);
   // Resolve the existing parent, not a new path through an untrusted symlink.
@@ -50,6 +50,12 @@ export async function exportDemo(source, destination) {
       }
       if (!info.isFile() || (!ROOT_FILES.includes(relative) && !EXTENSIONS.has(path.extname(relative).toLowerCase()))) throw new Error(`Unexpected public file: ${relative}`);
       let bytes = await readFile(src);
+      if (publicTree) {
+        const expected = publicTree.get(relative);
+        if (!expected) throw new Error('Untracked public file: '+relative);
+        const actual = createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex');
+        if (actual !== expected) throw new Error('Public file differs from source commit: '+relative);
+      }
       // The private export must not be indexed or persist protected pages in a PWA cache.
       if (relative === 'index.html' || relative === 'admin/index.html') {
         bytes = Buffer.from(demoDocument(bytes.toString('utf8'), relative === 'index.html'));
@@ -67,6 +73,7 @@ export async function exportDemo(source, destination) {
       if (!(await lstat(path.join(root,name))).isDirectory()) throw new Error(`Expected public directory: ${name}`);
       await copy(name);
     }
+    if (publicTree && hashes.length !== publicTree.size) throw new Error('Incomplete public source tree');
     // Demo must not be indexed. This is guidance, not authentication.
     const robots = Buffer.from('User-agent: *\nDisallow: /\n');
     await writeFile(path.join(web,'robots.txt'),robots,{flag:'wx'});

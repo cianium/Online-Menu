@@ -60,6 +60,35 @@ test('rejects unsafe source paths, symlinks and unexpected files without overwri
 });
 
 
+test('release export verifies each public input against the pinned Git tree', async t => {
+  const root = await temp(t);
+  const target = path.join(root, 'bundle');
+  const tree = new Map();
+  for (const dir of ['admin', 'assets', 'css', 'js']) await mkdir(path.join(root, dir));
+  for (const [name, contents] of [
+    ['index.html', '<head><meta name="robots" content="index, follow"></head>'],
+    ['sw.js', 'sample worker'],
+    ['manifest.webmanifest', '{}'],
+    ['assets/sample.json', '{}']
+  ]) {
+    const bytes = Buffer.from(contents);
+    tree.set(name, createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex'));
+    await writeFile(path.join(root, name), bytes);
+  }
+  const extra = path.join(root, 'assets', 'extra.json');
+  await writeFile(extra, '{}');
+  await assert.rejects(exportDemo(root, target, tree), /Untracked public file/);
+  await rm(extra);
+  const tracked = path.join(root, 'assets', 'sample.json');
+  await writeFile(tracked, '[]');
+  await assert.rejects(exportDemo(root, target, tree), /differs from source commit/);
+  await rm(tracked);
+  await assert.rejects(exportDemo(root, target, tree), /Incomplete public source tree/);
+  await writeFile(tracked, '{}');
+  const exported = await exportDemo(root, target, tree);
+  assert.equal(exported.files, tree.size + 1);
+});
+
 test('private demo worker purges only its own older caches and never intercepts requests',async t=>{
   const dest=path.join(await temp(t),'bundle');
   await exportDemo(source,dest);
