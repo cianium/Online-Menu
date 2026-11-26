@@ -204,7 +204,29 @@ async function measure(browser,surface) {
         await customer.screenshot({path:path.join(out,'customer-navigation-en-'+width+'.png'),animations:'disabled'});
         await customer.locator('#navigation-close').click();
       }
-      await admin.evaluate(()=>ROMANO_ADMIN_I18N.setLanguage('en'));
+      // Populate only the isolated audit browser with explicit synthetic orders.
+      await admin.evaluate(()=>{
+        navigateTo('dashboard');
+        const now=new Date(),orders=[];
+        for(let i=0;i<7;i++){
+          const d=new Date(now);d.setDate(now.getDate()-i);
+          const total=120000+i*35000;
+          orders.push({id:'quality-order-'+i,createdAt:d.toISOString(),currency:'IRT',total,items:[{name:'Synthetic audit item',price:total,quantity:1}]});
+        }
+        localStorage.setItem(RomanoDemoMembers.key,JSON.stringify([{id:'quality-member',name:'Synthetic audit member',phone:'12025550198',createdAt:now.toISOString(),orders}]));
+        document.dispatchEvent(new CustomEvent('romano:demo-membership-changed'));
+      });
+      for(const lang of locales){
+        await admin.evaluate(l=>ROMANO_ADMIN_I18N.setLanguage(l),lang);
+        await admin.locator('#revenue-period').selectOption('7');
+        await admin.setViewportSize({width:390,height:844});
+        await admin.locator('.overview-revenue').scrollIntoViewIfNeeded();
+        await admin.locator('.revenue-table summary').click();
+        assert.equal(await admin.locator('#revenue-table-body tr').count(),7);
+        await scan(admin,'admin-revenue',lang,390,844);
+        await admin.locator('.revenue-table summary').click();
+      }
+      await admin.evaluate(()=>{localStorage.removeItem(RomanoDemoMembers.key);document.dispatchEvent(new CustomEvent('romano:demo-membership-changed'));ROMANO_ADMIN_I18N.setLanguage('en');});
       for(const view of ['orders','products','categories','settings','loyalty']){
         await admin.evaluate(v=>navigateTo(v),view);
         await scan(admin,'admin-'+view,'en',390,844);
@@ -212,7 +234,7 @@ async function measure(browser,surface) {
     } finally {await context.close();}
     for(const surface of ['customer','admin']) await measure(browser,surface);
     assert.deepEqual(report.errors,[],'Unexpected JavaScript errors during audit');
-    assert.equal(report.findings.length,33);
+    assert.equal(report.findings.length,37);
     assert.equal(report.lab.length,2);
     const severe=report.findings.flatMap(s=>s.violations.filter(v=>['critical','serious'].includes(v.impact)).map(v=>({surface:s.name,lang:s.lang,width:s.width,id:v.id})));
     console.log('QUALITY SUMMARY '+JSON.stringify({scans:report.findings.length,severe:severe.length,violations:report.findings.reduce((n,s)=>n+s.violations.length,0)}));

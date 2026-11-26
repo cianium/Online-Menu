@@ -54,6 +54,45 @@ async function check(name, action) { await action(); results.push(name); console
     }
     await page.locator('#revenue-period').selectOption('30');
   });
+  await check('Sample revenue populated chart, currency filter, CSV download and no customer identity in export',async()=>{
+    await page.evaluate(()=>{
+      ROMANO_ADMIN_I18N.setLanguage('en');navigateTo('dashboard');
+      const now=new Date(),before=new Date(now);before.setDate(now.getDate()-7);
+      const order=(id,createdAt,total,currency)=>({id,createdAt:createdAt.toISOString(),total,currency,items:[{name:'Synthetic QA dish',price:total,quantity:1}]});
+      const key=RomanoDemoMembers.key;
+      localStorage.setItem(key,JSON.stringify([{id:'qa-revenue',name:'Synthetic QA member',phone:'12025550199',createdAt:before.toISOString(),orders:[order('qa-a',now,100,'IRT'),order('qa-b',before,50,'IRT'),order('qa-c',now,25,'TRY')]}]));
+      document.dispatchEvent(new CustomEvent('romano:demo-membership-changed'));
+    });
+    try{
+      await page.locator('#revenue-period').selectOption('7');
+      await page.locator('#revenue-currency').selectOption('IRT');
+      assert.equal(await page.locator('#revenue-total').textContent(),'100 Toman');
+      assert.equal(await page.locator('#revenue-count').textContent(),'1');
+      assert.equal(await page.locator('#revenue-change').textContent(),'+100%');
+      await page.locator('#revenue-bucket').selectOption('6');
+      assert.match(await page.locator('#revenue-detail').textContent(),/100 Toman/);
+      const downloadPromise=page.waitForEvent('download');
+      await page.locator('#revenue-export').click();
+      const download=await downloadPromise;
+      assert.match(download.suggestedFilename(),/^ramen-sample-orders-IRT-/);
+      const csv=fs.readFileSync(await download.path(),'utf8');
+      assert.match(csv,/,IRT,100,1,100/);
+      assert.doesNotMatch(csv,/Synthetic QA member|12025550199|Synthetic QA dish|TRY/);
+      await page.locator('#revenue-currency').selectOption('TRY');
+      assert.equal(await page.locator('#revenue-count').textContent(),'1');
+      assert.equal(await page.locator('#revenue-change').textContent(),'—');
+      await page.locator('#revenue-currency').selectOption('IRT');
+      for(const width of [320,1440]){
+        await page.setViewportSize({width,height:900});
+        await page.locator('.overview-revenue').scrollIntoViewIfNeeded();
+        assert.ok(await page.locator('.overview-revenue').evaluate(el=>el.scrollWidth<=el.clientWidth+1));
+        await page.locator('.overview-revenue').screenshot({path:path.join(out,'admin-revenue-'+width+'.png')});
+      }
+    }finally{
+      await page.evaluate(()=>{localStorage.removeItem(RomanoDemoMembers.key);document.dispatchEvent(new CustomEvent('romano:demo-membership-changed'));});
+      await page.locator('#revenue-period').selectOption('30');
+    }
+  });
   await check('Compact admin header keeps only the requested controls and preserves logout',async()=>{
     await page.setViewportSize({width:320,height:900});
     for(const lang of ['fa','ar','en','tr']){

@@ -6,7 +6,7 @@
   const local=()=>typeof adminInitialized!=='undefined'&&adminInitialized&&!window.RomanoAPI?.enabled&&!document.querySelector('.admin-app').inert;
   const n=v=>new Intl.NumberFormat(lang(),{maximumFractionDigits:1}).format(v);
   const money=(v,c)=>window.OnlineMenuMoney.formatMinor(v,{currency:c,exponent:0,language:lang()});
-  const dateLabel=s=>new Intl.DateTimeFormat(lang(),{month:'short',day:'numeric',timeZone:'UTC'}).format(new Date(s+'T12:00:00Z'));
+  const dateLabel=s=>new Intl.DateTimeFormat(lang(),{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'}).format(new Date(s+'T12:00:00Z'));
   const periodLabel=b=>b.hour!==null?new Intl.NumberFormat(lang(),{minimumIntegerDigits:2}).format(b.hour)+':00':b.start===b.end?dateLabel(b.start):dateLabel(b.start)+' – '+dateLabel(b.end);
   const el=(tag,value)=>{const node=document.createElement(tag);if(value!==undefined)node.textContent=value;return node;};
   let latest=null;
@@ -35,7 +35,7 @@
       $('revenue-count').textContent=n(report.count);
       $('revenue-average').textContent=money(report.average,report.currency);
       $('revenue-change').textContent=report.change===null?'—':new Intl.NumberFormat(lang(),{style:'percent',maximumFractionDigits:1,signDisplay:'exceptZero'}).format(report.change/100);
-      $('revenue-previous').textContent=t('دوره قبل')+': '+money(report.previousTotal,report.currency);
+      $('revenue-previous').textContent=t('دوره قبل')+': '+money(report.previousTotal,report.currency)+' ('+dateLabel(report.previousStart)+' – '+dateLabel(report.previousEnd)+')';
       $('revenue-range-label').textContent=dateLabel(report.start)+' – '+dateLabel(report.end);
       $('revenue-excluded').textContent=(report.legacyCount?t('سفارش‌های قدیمی بدون واحد پول از گزارش حذف شده‌اند.')+' '+n(report.legacyCount)+' ':'')+(report.otherCurrencyCount?t('سفارش‌های با واحد پول دیگر جداگانه گزارش می‌شوند.')+' '+n(report.otherCurrencyCount):'');
       const max=Math.max(0,...report.buckets.map(b=>b.total));
