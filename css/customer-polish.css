@@ -366,7 +366,7 @@ html[dir="ltr"] .main-navigation.is-open .navigation-inner { transform:translate
 .main-navigation .navigation-contact-actions [data-nav-panel="feedback"] {grid-column:auto;}
 html[dir="ltr"] .main-navigation .navigation-inner {right:auto;left:0;transform:translateX(-102%);}
 html[dir="rtl"] .main-navigation .navigation-inner {right:0;left:auto;transform:translateX(102%);}
-html[dir] .main-navigation.is-open .navigation-inner {transform:translateX(0);}
+html[dir] .main-navigation.is-open .navigation-inner {transform:translateX(0)!important;}
 @media(max-width:900px) {
   .main-navigation .navigation-inner {padding-inline:max(14px,env(safe-area-inset-left),env(safe-area-inset-right))!important;}
   .main-navigation .navigation-category-list {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
