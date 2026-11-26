@@ -290,9 +290,11 @@
                         <div id="revenue-content" hidden>
                             <p id="revenue-range-label" dir="auto" data-admin-user-text="true"></p>
                             <dl class="revenue-kpis"><div><dt>مجموع مبلغ سفارش‌های نمونه</dt><dd id="revenue-total" dir="auto" data-admin-user-text="true"></dd></div><div><dt>تعداد سفارش‌های نمونه</dt><dd id="revenue-count" data-admin-user-text="true"></dd></div><div><dt>میانگین مبلغ سفارش</dt><dd id="revenue-average" dir="auto" data-admin-user-text="true"></dd></div><div><dt>تغییر نسبت به دوره قبل</dt><dd id="revenue-change" dir="ltr" data-admin-user-text="true"></dd><dd id="revenue-previous" data-admin-user-text="true"></dd></div></dl>
+                            <p class="revenue-member-count"><span>مشتریان دارای سفارش نمونه</span> <strong id="revenue-customers" data-admin-user-text="true"></strong></p>
                             <div class="revenue-chart" aria-hidden="true" dir="ltr"><span id="revenue-axis-max" data-admin-user-text="true"></span><div id="revenue-bars"></div><div class="revenue-axis"><span id="revenue-axis-start" data-admin-user-text="true"></span><span id="revenue-axis-end" data-admin-user-text="true"></span></div></div>
                             <label class="revenue-detail-label"><span>جزئیات بازه نمودار</span><select id="revenue-bucket" data-admin-user-text="true"></select></label><p id="revenue-detail" data-admin-user-text="true" role="status"></p>
                             <p id="revenue-excluded" data-admin-user-text="true"></p>
+                            <details class="revenue-table" id="revenue-ranking" hidden><summary>پنج قلم پر‌سفارش بر اساس تعداد</summary><ol id="revenue-top-items" data-admin-user-text="true"></ol></details>
                             <details class="revenue-table"><summary>جدول داده‌های نمودار</summary><div class="revenue-table-scroll" tabindex="0" role="region" aria-label="جدول داده‌های نمودار"><table><thead><tr><th scope="col">بازه گزارش</th><th scope="col">مبلغ سفارش</th><th scope="col">تعداد سفارش‌های نمونه</th><th scope="col">میانگین مبلغ سفارش</th></tr></thead><tbody id="revenue-table-body" data-admin-user-text="true"></tbody></table></div></details>
                         </div>
                     </article>

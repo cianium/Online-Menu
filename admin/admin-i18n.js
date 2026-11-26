@@ -9,6 +9,8 @@
     const LANGS = ["fa", "en", "tr", "ar"];
 
     const T = {
+      "مشتریان دارای سفارش نمونه": ["Customers with sample orders","Örnek siparişi olan müşteriler","العملاء الذين لديهم طلبات تجريبية"],
+      "پنج قلم پر‌سفارش بر اساس تعداد": ["Top five items by quantity","Adede göre en çok sipariş edilen beş ürün","أكثر خمسة أصناف طلبًا حسب الكمية"],
       "شعبه‌های آزمایشی": ["Demo branches","Demo şubeler","الفروع التجريبية"],
       "کاتالوگ، اعضا و سفارش‌های هر شعبه در همین مرورگر جداگانه ذخیره می‌شوند.": ["Each branch keeps its own catalog, members and orders in this browser.","Her şubenin menüsü, üyeleri ve siparişleri bu tarayıcıda ayrı saklanır.","يُحفظ منيو كل فرع وأعضاؤه وطلباته بشكل منفصل في هذا المتصفح."],
       "نام شعبه جدید": ["New branch name","Yeni şube adı","اسم الفرع الجديد"],

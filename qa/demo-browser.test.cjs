@@ -295,6 +295,9 @@ const readyCustomer = async page => {
       await customer.waitForFunction(()=>RomanoCustomerEntry.current()?.orders[0]?.tableName==='Window table');
       await admin.evaluate(()=>navigateTo('orders'));
       await admin.locator('.sample-order-ticket').filter({hasText:'Window table'}).waitFor();
+      await admin.evaluate(()=>navigateTo('dashboard'));
+      assert.equal(await admin.locator('#revenue-customers').innerText(),'1');
+      assert.equal(await admin.locator('#revenue-top-items li').count(),1);
       const invalid=new URL(link);invalid.searchParams.set('demoTable','no-such-table');
       await customer.goto(invalid.href);await readyCustomer(customer);
       assert.equal(await customer.evaluate(()=>menuDataMode),'unavailable');
