@@ -92,9 +92,9 @@ The showcase job captures the current standalone menu and admin workspace in Chr
 
 [Open customer entry](https://cianium.github.io/Online-Menu/?qr=demo) · [Open the demo admin workspace](https://cianium.github.io/Online-Menu/admin/) · [Published source identity](https://cianium.github.io/Online-Menu/VERSION.json)
 
-The audited R12 standalone snapshot is served from `pages-demo`; `main` is the canonical source branch. The public site is for sample data only, not a private staff login, real payment service or shared customer database. Customer entry uses a fictional name and phone number. Demo admin credentials are `demo-admin` / `Demo-Only-2026`; these public values are not real authentication.
+`pages-demo` contains the public standalone snapshot. `main` is the canonical source branch. Match a published build to its source with `VERSION.json`. See the [R15 candidate notes](docs/releases/R15_CANDIDATE_FA.md) for the current development track. The public site is for sample data only, not a private staff login, real payment service or shared customer database. Customer entry uses a fictional name and phone number. Demo admin credentials are `demo-admin` / `Demo-Only-2026`; these public values are not real authentication.
 
-The standalone R12 release gates cover Node tests, PostgreSQL contracts, Edge Function type checks, Chromium/Firefox/WebKit flows, four-language responsive views and automated accessibility scans. They do not certify the optional connected Supabase/Vercel services, real payments, native Safari or field Core Web Vitals. Historical showcase images retain their own revision provenance.
+The standalone release gates cover Node tests, PostgreSQL contracts, Edge Function type checks, Chromium/Firefox/WebKit flows, four-language responsive views and automated accessibility scans. They do not certify the optional connected Supabase/Vercel services, real payments, native Safari or field Core Web Vitals. Historical showcase images retain their own revision provenance.
 
 ## Quick start
 
@@ -375,6 +375,8 @@ Choose the material that fits your role: discover the product, evaluate the engi
 
 <div dir="rtl" align="right">
 
+<a href="docs/releases/R15_CANDIDATE_FA.md">یادداشت‌های کاندید R15</a>
+
 **رامن (RAMEN)** یک منوی دیجیتال چندزبانه و محیط مدیریت رستوران است؛ از تجربه مشاهده منو برای مهمان تا مدیریت کاتالوگ، سفارش میز، صف آشپزخانه و پرداخت مستقیم شعبه در حالت متصل.
 
 برای تجربه نسخه مستقل، کافی است پس از دریافت مخزن، دستور <code>npm run demo</code> را اجرا کنید. منوی مشتری و پنل مدیریت بدون نیاز به دیتابیس، حساب ابری یا کلید API قابل مشاهده هستند. تغییرات نمونه در مرورگر ذخیره می‌شوند. برای ساخت بسته مستقل نصب آینده روی VPS، دستور <code>npm run demo:export</code> در دسترس است؛ این دستور انتشار یا نصب روی سرور انجام نمی‌دهد.
@@ -393,7 +395,7 @@ Choose the material that fits your role: discover the product, evaluate the engi
 
 قائمة طعام رقمية متعددة اللغات ومساحة لإدارة المطعم، مع تجربة مصممة للهواتف وإدارة المنتجات والفئات والأسعار. يمكن تشغيل العرض المستقل باستخدام <code>npm run demo</code> دون قاعدة بيانات أو حساب سحابي. يتطلب الطلب الحقيقي وشاشة المطبخ والدفع إعداد الخدمات المتصلة والتحقق منها.
 
-<a href="docs/flagship/ar.md">دليل المنتج والمستخدم</a>
+<a href="docs/flagship/ar.md">دليل المنتج والمستخدم</a> · <a href="docs/releases/R15_CANDIDATE_FA.md">ملاحظات الإصدار المرشّح R15 (بالفارسية)</a>
 
 </div>
 
@@ -403,7 +405,7 @@ Choose the material that fits your role: discover the product, evaluate the engi
 
 Mobil öncelikli, çok dilli dijital menü ve restoran yönetim alanı. Ürünleri, kategorileri ve fiyatları keşfedin ve yönetin. Bağımsız demo `npm run demo` komutuyla veritabanı veya bulut hesabı olmadan çalışır. Gerçek masa siparişi, mutfak ekranı ve ödeme için bağlantılı hizmetlerin yapılandırılması ve doğrulanması gerekir.
 
-[Türkçe ürün ve kullanıcı rehberi](docs/flagship/tr.md)
+[Türkçe ürün ve kullanıcı rehberi](docs/flagship/tr.md) · [R15 aday sürüm notları (Farsça)](docs/releases/R15_CANDIDATE_FA.md)
 
 ---
 
