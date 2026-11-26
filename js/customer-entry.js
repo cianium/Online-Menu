@@ -32,7 +32,7 @@
   }
   const panel=el('section',undefined,'customer-entry-panel'),top=el('div',undefined,'customer-entry-top');
   const brand=el('div',undefined,'customer-entry-brand'),logo=el('img');
-  logo.src='assets/images/logo/logo.png';logo.alt='';logo.width=48;logo.height=48;
+  logo.src='assets/images/logo/brand-mark-144.webp';logo.alt='';logo.width=48;logo.height=48;
   const brandCopy=el('div');brandCopy.append(el('strong','ROMANO'),text('span','eyebrow','customer-entry-eyebrow'));brand.append(logo,brandCopy);top.append(brand);
   const select=el('select');select.setAttribute('aria-label',t('language'));
   for(const [code,label] of Object.entries({fa:'فارسی',en:'English',tr:'Türkçe',ar:'العربية'})){const o=el('option',label);o.value=code;select.append(o);}

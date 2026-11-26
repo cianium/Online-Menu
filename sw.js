@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r15-demo-membership`;
+const CACHE_NAME = `${menuCachePrefix}r15-navigation-assets`;
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -23,7 +23,7 @@ const CORE_ASSETS = [
   "./js/demo-review.js",
   "./js/demo-members.js",
   "./js/customer-entry.js",
-  "./assets/images/logo/logo.png",
+  "./assets/images/logo/brand-mark-144.webp",
   "./assets/images/hero/hero.jpg"
 ];
 

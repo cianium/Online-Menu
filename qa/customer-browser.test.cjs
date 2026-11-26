@@ -71,6 +71,14 @@ async function ready(p){
    assert.ok(Math.abs(bounds.x)<=1&&Math.abs(overlay.x)<=1&&Math.abs(bounds.width-390)<=2&&Math.abs(overlay.width-390)<=2,JSON.stringify({bounds,overlay}));
    const contentBounds=await nav.locator('.navigation-inner').evaluate(node=>{const outer=node.getBoundingClientRect(),style=getComputedStyle(node),left=outer.left+parseFloat(style.paddingLeft),right=outer.right-parseFloat(style.paddingRight);return {left,right,children:[...node.children].map(child=>{const rect=child.getBoundingClientRect();return {className:child.className,left:rect.left,right:rect.right};})};});
    assert.ok(contentBounds.children.every(child=>child.left>=contentBounds.left-1&&child.right<=contentBounds.right+1),'Navigation content escapes viewport padding '+lang+': '+JSON.stringify(contentBounds));
+   for(const child of contentBounds.children){
+    assert.ok(Math.abs(child.left-contentBounds.left)<=1 && Math.abs(child.right-contentBounds.right)<=1,'Navigation column shrinks in '+lang+': '+JSON.stringify(child));
+   }
+   const thumbnails=await nav.locator('.navigation-category-media img').evaluateAll(async images=>{
+    await Promise.all(images.map(img=>img.decode()));
+    return images.map(img=>{const frame=img.parentElement.getBoundingClientRect(),rect=img.getBoundingClientRect();return Math.abs(frame.width-rect.width)<=1 && Math.abs(frame.height-rect.height)<=1;});
+   });
+   assert.ok(thumbnails.length>0 && thumbnails.every(Boolean),'Category images must fill their frames in '+lang);
    if(lang==='fa')await p.screenshot({path:path.join(out,'customer-navigation-fa-390.png')});
    const categoryBounds=await nav.locator('.navigation-categories').boundingBox();
    assert.ok(categoryBounds && categoryBounds.height>0);

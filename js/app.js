@@ -2023,7 +2023,7 @@ function renderNavigation() {
         item.dataset.categoryLink = "true";
         item.innerHTML = `
             <a href="#category-${escapeAttribute(category.id)}" data-category-link="true">
-                <span class="navigation-category-media">${category.image ? `<img src="${escapeAttribute(getSafeImageSource(category.image))}" alt="${escapeAttribute(category.name)}" loading="lazy" decoding="async" width="96" height="64">` : `<span class="image-fallback">${escapeHTML(getImageFallbackLabel(category.name))}</span>`}</span>
+                <span class="navigation-category-media">${category.image ? `<img src="${escapeAttribute(getSafeImageSource(category.image))}" alt="" loading="lazy" decoding="async" width="96" height="64">` : `<span class="image-fallback">${escapeHTML(getImageFallbackLabel(category.name))}</span>`}</span>
                 <span class="navigation-category-name">${escapeHTML(category.name)}</span>
             </a>
         `;
