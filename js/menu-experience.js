@@ -139,6 +139,8 @@
     function setPanel(name, restoreFocus=false) {
         const previous=openPanel;
         openPanel=name;
+        if(name)window.RamenOverlayHistory.enter("browse",()=>setPanel(null,true));
+        else if(previous)window.RamenOverlayHistory.leave("browse");
         for(const id of ['search','filter']) {
             byId(`menu-${id}-panel`).hidden=name!==id;
             byId(`menu-${id}-toggle`).setAttribute('aria-expanded',String(name===id));
@@ -174,7 +176,7 @@
         search.setAttribute('aria-expanded','false');
         search.setAttribute('aria-controls','menu-search-panel');
         search.innerHTML = icon('search');
-        header.querySelector('#romano-language-toggle').after(search);
+        controls.querySelector('.menu-icon-actions').append(search);
         const accessibleHeading = document.createElement('div');
         accessibleHeading.className = 'sr-only';
         accessibleHeading.innerHTML = '<h2 id="browse-title"></h2><span id="menu-result-count" role="status" aria-live="polite"></span><p id="browse-hint"></p>';

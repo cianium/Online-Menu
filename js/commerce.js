@@ -61,9 +61,9 @@
     // Loading, unavailable and offline menus are not authoritative enough to discard a saved cart.
     if (typeof menuDataMode === "undefined" || !["demo", "public"].includes(menuDataMode)) return;
     const valid = Object.fromEntries(visibleCartEntries());
+    for(const id of zeroItems)if(!product(id))zeroItems.delete(id);
     if (Object.keys(valid).length === Object.keys(cart).length) return;
     cart = normalizeCart(valid);
-    for(const id of itemNotes.keys())if(!cart[id])itemNotes.delete(id);
     save(cartKey(), cart);
   }
   function localized(item) { return window.ROMANO_I18N?.localizeProduct?.(item) || item; }
@@ -163,7 +163,7 @@
   const h = key => hospitality[lang()]?.[key] || hospitality.fa[key];
   let lastRemoved = null;
   let orderNotes = "";
-  const itemNotes=new Map();
+  const zeroItems=new Set();
   let couponCode="",appliedCoupon="";
   const extra={fa:["تخفیف نمونه","کد تخفیف","اعمال","کد نامعتبر یا بدون تخفیف","امتیاز نمونه","یادداشت محصول / حساسیت غذایی","پذیرفته شد","انجام شد","ساعات کاری","مسیریابی","واتس‌اپ","حذف تخفیف"],en:["Sample discount","Promo code","Apply","Invalid code or no discount","Sample points","Item note / food allergy","Accepted","Completed","Opening hours","Directions","WhatsApp","Remove discount"],tr:["Örnek indirim","İndirim kodu","Uygula","Geçersiz kod veya indirim yok","Örnek puan","Ürün notu / gıda alerjisi","Kabul edildi","Tamamlandı","Çalışma saatleri","Yol tarifi","WhatsApp","İndirimi kaldır"],ar:["خصم تجريبي","رمز الخصم","تطبيق","رمز غير صالح أو لا يوجد خصم","نقاط تجريبية","ملاحظة المنتج / حساسية غذائية","تم القبول","مكتمل","ساعات العمل","الاتجاهات","واتساب","إزالة الخصم"]};
   const x=i=>(extra[lang()]||extra.fa)[i];
@@ -187,7 +187,7 @@
     const context=guestContext();
     return [context.branch && h("branch")+": "+context.branch,context.table ? t("table")+" "+context.table : h("unknown")].filter(Boolean).join(" · ");
   }
-  function guestServices(content, element, demo) {
+  function guestServices(content, element, demo, kinds=requestKinds) {
     const section=element("section",null,"hp-services");
     section.append(element("h3",h("quick")),element("p",contextLabel(),"hp-context"));
     const context=guestContext();
@@ -201,7 +201,7 @@
       try{return enabled?model.requests(localStorage,context.code):{};}catch{live.textContent=panelText().storageError;return {};}
     }
     const icons={waiter:"M3 17h18M5 17a7 7 0 0 1 14 0M12 7V5m-2 0h4M2 20h20",bill:"M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6m-6 4h6",water:"M12 3c-2 4-6 8-6 12a6 6 0 0 0 12 0c0-4-4-8-6-12Z",napkin:"M4 4h16v16H4zM4 20 20 4M12 12h8v8"};
-    for(const kind of requestKinds) {
+    for(const kind of kinds) {
       const button=element("button",null,"hp-service-action");button.type="button";button.disabled=!enabled;
       const icon=document.createElementNS("http://www.w3.org/2000/svg","svg");icon.setAttribute("viewBox","0 0 24 24");icon.setAttribute("class","hp-service-icon");icon.setAttribute("aria-hidden","true");icon.setAttribute("focusable","false");
       const stroke=document.createElementNS("http://www.w3.org/2000/svg","path");stroke.setAttribute("d",icons[kind]);icon.append(stroke);
@@ -240,15 +240,16 @@
     if(selected.length && typeof menuProducts!=="undefined" && Array.isArray(menuProducts)){
       const suggestedGroups=new Set(groups);
       const cfg=config();
-      for(const id of [...new Set([...(cfg?.bundle||[]),...(cfg?.suggestions||[])])]){const item=product(id);if(item&&!cart[id]&&candidates.length<3){candidates.push(item);suggestedGroups.add(item.category);}}
+      for(const id of [...new Set([...(cfg?.bundle||[]),...(cfg?.suggestions||[])])]){const item=product(id);if(item&&!cart[id]&&!zeroItems.has(id)&&candidates.length<3){candidates.push(item);suggestedGroups.add(item.category);}}
       for(const item of menuProducts){
         if(candidates.length>=3)break;
-        if(item.active===false || !product(item.id) || cart[item.id] || candidates.some(p=>p.id===item.id) || suggestedGroups.has(item.category))continue;
+        if(item.active===false || !product(item.id) || cart[item.id] || zeroItems.has(item.id) || candidates.some(p=>p.id===item.id) || suggestedGroups.has(item.category))continue;
         candidates.push(item);suggestedGroups.add(item.category);
         if(candidates.length===3)break;
       }
     }
     const previous=document.activeElement?.dataset?.hpAdd;
+    const offset=host.querySelector(".hp-suggestion-grid")?.scrollLeft||0;
     host.hidden=!candidates.length;
     host.replaceChildren();
     if(!candidates.length){if(previous && document.querySelector("#commerce-drawer.is-open"))document.querySelector("#commerce-submit")?.focus();return;}
@@ -260,15 +261,47 @@
       const price=document.createElement("span");price.textContent=money(item.price);
       const button=document.createElement("button");button.type="button";button.dataset.hpAdd=item.id;button.textContent="+ "+t("add");button.disabled=submitting;
       button.setAttribute("aria-label",t("add")+": "+name.textContent);button.addEventListener("click",()=>add(item.id));
-      card.append(name,price,button);grid.append(card);
+      const media=document.createElement("div");media.className="hp-suggestion-media";
+      const fallback=document.createElement("span");fallback.className="image-fallback";fallback.textContent=getImageFallbackLabel(name.textContent);fallback.setAttribute("aria-hidden","true");media.append(fallback);
+      const src=getSafeImageSource(item.image);
+      if(src){const image=document.createElement("img");image.src=src;image.alt="";image.width=160;image.height=112;image.loading="lazy";image.decoding="async";image.addEventListener("error",()=>image.remove(),{once:true});media.append(image);}
+      card.append(media,name,price,button);grid.append(card);
     }
-    host.append(grid);
+    host.append(grid);grid.scrollLeft=offset;
     if(previous && document.querySelector("#commerce-drawer.is-open"))(grid.querySelector("button")||document.querySelector("#commerce-submit"))?.focus({preventScroll:true});
   }
   function removeCartItem(id) {
-    if(submitting || !cart[id])return;
-    lastRemoved={id,quantity:cart[id],note:itemNotes.get(id)};itemNotes.delete(id);
-    delete cart[id];save(cartKey(),cart);render();announce(h("removed"));
+    if(submitting||!zeroItems.has(id)||cart[id])return;
+    lastRemoved={id,quantity:1};zeroItems.delete(id);
+    render();announce(h("removed"));
+  }
+  const ratingWords={
+    fa:["رضایت مشتریان","هنوز امتیاز تأییدشده‌ای ثبت نشده","بر اساس ۱ نظر نمونه تأییدشده در این مرورگر","امتیاز مشتریان در دسترس نیست"],
+    en:["Customer satisfaction","No approved ratings yet","Based on 1 approved sample review in this browser","Customer ratings unavailable"],
+    tr:["Müşteri memnuniyeti","Henüz onaylı puan yok","Bu tarayıcıdaki 1 onaylı örnek yoruma göre","Müşteri puanları mevcut değil"],
+    ar:["رضا العملاء","لا توجد تقييمات معتمدة بعد","استنادًا إلى تقييم تجريبي معتمد واحد في هذا المتصفح","تقييمات العملاء غير متاحة"]
+  };
+  function renderHeroRating(){
+    const node=document.querySelector("#hero-rating");if(!node)return;
+    const words=ratingWords[lang()]||ratingWords.fa;
+    let score=null;
+    if(isDemo())try{const r=window.RomanoDemoReview.read(localStorage,tenant());if(r?.status==="approved")score=r.rating;}catch{/* no fabricated rating */}
+    node.hidden=false;
+    node.disabled=!isDemo();
+    node.querySelectorAll(".hero-stars > span").forEach((star,index)=>{const filled=score!==null&&index<score;star.textContent=filled?"★":"☆";star.classList.toggle("is-filled",filled);});
+    const percent=score===null?"—":new Intl.NumberFormat(lang(),{style:"percent",maximumFractionDigits:0}).format(score/5);
+    node.querySelector("#hero-satisfaction").textContent=percent;
+    node.querySelector("#hero-rating-label").textContent=words[0];
+    const detail=score!==null?words[2]:isDemo()?words[1]:words[3];
+    node.querySelector("#hero-rating-detail").textContent=detail;
+    node.setAttribute("aria-label",[words[0],percent,detail,h("review")].join(" · "));
+    const nav=document.querySelector("#navigation-rating");
+    nav.replaceChildren(...[...node.children].map(child=>{const copy=child.cloneNode(true);copy.removeAttribute("id");copy.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));return copy;}));
+    nav.hidden=false;
+    nav.setAttribute("aria-label",[words[0],percent,detail].join(" · "));
+    document.querySelector("#navigation-service-toggle").setAttribute("aria-label",h("services"));
+    document.querySelector('[data-nav-panel="contact"]').textContent=(contactWords[lang()]||contactWords.fa).phone;
+    document.querySelector('[data-nav-panel="waiter"]').textContent=h("waiter");
   }
   function initializeContactPanel() {
     const trigger = document.querySelector('[data-ramen-nav="contact"]');
@@ -293,7 +326,7 @@
       const element = (tag, value, cls) => { const node=document.createElement(tag); if(value)node.textContent=value; if(cls)node.className=cls; return node; };
       const header=element('header',null,'ramen-contact-head');
       const labels=panelText();
-      const heading=element('h2',panel==='contact'?h('services'):labels[panel]||words.title);heading.id='ramen-contact-title';
+      const heading=element('h2',panel==='contact'?h('services'):panel==='waiter'?h('waiter'):labels[panel]||words.title);heading.id='ramen-contact-title';
       const dismiss=element('button',undefined,'ramen-contact-close');dismiss.type='button';dismiss.setAttribute('aria-label',words.close);dismiss.addEventListener('click',close);
       const closeGlyph=element('span','×');closeGlyph.setAttribute('aria-hidden','true');dismiss.append(closeGlyph);
       header.append(heading,dismiss);
@@ -301,6 +334,7 @@
       const mode=typeof menuDataMode !== 'undefined' ? menuDataMode : 'loading';
       const demo=mode==='demo';
       dialog.classList.toggle('hp-contact',panel==='contact');
+      if(panel==='waiter')guestServices(content,element,demo,['waiter']);
       if(panel==='contact'){
         const identity=element('div',null,'hp-identity');
         const brand=element('strong',document.querySelector('[data-restaurant-brand]')?.textContent.trim() || 'RAMEN');
@@ -324,7 +358,7 @@
           const button=element('button',labels.save,'feedback-save');button.type='button';button.disabled=!field.querySelector('input:checked');
           const status=element('p',null,'ramen-contact-note');status.setAttribute('role','status');
           field.addEventListener('change',()=>{button.disabled=false;status.textContent='';});
-          button.addEventListener('click',()=>{const selected=Number(field.querySelector('input:checked')?.value);if(!Number.isInteger(selected)||selected<1||selected>5||menuDataMode!=="demo")return;try{const id=globalThis.crypto.randomUUID();review.submit(localStorage,tenant(),selected,comment.value,id);status.textContent=labels.saved;}catch{status.textContent=labels.storageError;}});
+          button.addEventListener('click',()=>{const selected=Number(field.querySelector('input:checked')?.value);if(!Number.isInteger(selected)||selected<1||selected>5||menuDataMode!=="demo")return;try{const id=globalThis.crypto.randomUUID();review.submit(localStorage,tenant(),selected,comment.value,id);renderHeroRating();status.textContent=labels.saved;}catch{status.textContent=labels.storageError;}});
           content.append(field,commentLabel,button,status);
         }
       }
@@ -362,16 +396,17 @@
         actions.append(feedback);content.append(actions);
       }
       dialog.replaceChildren(header,content);
-      dialog.showModal();document.body.classList.add('ramen-contact-open');if(panel==='contact'){trigger.setAttribute('aria-controls',dialog.id);trigger.setAttribute('aria-expanded','true');}dismiss.focus();
+      dialog.showModal();window.RamenOverlayHistory.enter('contact',close);document.body.classList.add('ramen-contact-open');if(panel==='contact'){trigger.setAttribute('aria-controls',dialog.id);trigger.setAttribute('aria-expanded','true');}dismiss.focus();
     };
+    document.querySelector("#hero-rating")?.addEventListener("click",event=>openPanel("feedback",event.currentTarget));
     trigger.addEventListener('click',event=>{event.preventDefault();openPanel();});
     trigger.addEventListener('keydown',event=>{if(event.key===' '){event.preventDefault();openPanel();}});
     document.addEventListener('romano:open-customer-panel',event=>{
       const panel=event.detail?.panel;
       if(panel==='cart')openDrawer();
-      else if(['contact','chat','profile','feedback'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
+      else if(['contact','chat','profile','feedback','waiter'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
     });
-    dialog.addEventListener('close',()=>{document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');if(origin?.isConnected)origin.focus();origin=null;});
+    dialog.addEventListener('close',()=>{window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');if(origin?.isConnected)origin.focus();origin=null;});
     document.addEventListener('romano:language-changed',()=>{close();updateLabel();});
     updateLabel();
   }
@@ -388,15 +423,13 @@
       <div class="commerce-backdrop" data-commerce-close hidden></div>
       <section class="commerce-drawer" id="commerce-drawer" role="dialog" aria-modal="true" aria-labelledby="commerce-title" aria-hidden="true" tabindex="-1" inert>
         <header class="commerce-drawer-head">
-          <div><small>RAMEN</small><h2 id="commerce-title">${safe(t("cart"))}</h2><p class="hp-context" id="hp-cart-context"></p></div>
-          <button class="commerce-close" type="button" data-commerce-close aria-label="${safe(t("close"))}">×</button>
+          <div><small>RAMEN</small><h2 id="commerce-title" tabindex="-1">${safe(t("cart"))}</h2><p class="hp-context" id="hp-cart-context"></p></div>
         </header>
         <div class="commerce-scroll">
         <div class="commerce-order-status" id="commerce-order-status" hidden></div>
         <p class="ramen-contact-note" id="commerce-demo-status" role="status" hidden></p>
         <div class="commerce-items" id="commerce-items"></div>
         <div class="hp-undo" id="hp-undo" hidden><span>${safe(h("removed"))}</span><button type="button" id="hp-undo-button">${safe(h("undo"))}</button></div>
-        <button class="hp-continue" type="button" id="hp-continue" hidden>${safe(h("continue"))}</button>
         <section class="hp-suggestions" id="hp-suggestions" hidden></section>
         <div class="commerce-options" id="commerce-options">
           <label class="commerce-note"><span>${safe(t("note"))}</span><textarea id="commerce-notes" maxlength="1000" rows="2" placeholder="${safe(t("noteHint"))}">${safe(orderNotes)}</textarea><span id="hp-note-local" hidden>${safe(h("noteLocal"))}</span></label>
@@ -407,6 +440,7 @@
             <label hidden><input type="radio" name="commerce-payment" value="online" disabled> <span>${safe(t("online"))}</span></label>
           </fieldset>
         </div></div>
+        <button class="hp-continue" type="button" id="hp-continue">${safe(h("continue"))}</button>
         <div class="commerce-checkout" id="commerce-checkout">
           <div class="hp-summary">${safe(h("summary"))}</div><div class="commerce-total-row" id="hp-subtotal" hidden><span>${safe(subtotalText())}</span><strong id="hp-subtotal-value"></strong></div><div class="commerce-total-row" id="hp-discount" hidden><span>${safe(x(0))}</span><strong id="hp-discount-value"></strong></div><div class="commerce-total-row"><span>${safe(t("total"))}</span><strong id="commerce-total"></strong></div>
           <p class="commerce-message" id="commerce-message" role="alert"></p>
@@ -430,7 +464,7 @@
     document.querySelector("#commerce-notes").addEventListener("input",event=>{orderNotes=event.target.value;});
     document.querySelector("#hp-undo-button").addEventListener("click",()=>{
       if(!lastRemoved||submitting)return;
-      const {id,quantity,note}=lastRemoved;lastRemoved=null;if(note)itemNotes.set(id,note);
+      const {id,quantity}=lastRemoved;lastRemoved=null;zeroItems.delete(id);
       if(product(id)?.active!==false && product(id)){cart[id]=Math.min(99,(cart[id]||0)+quantity);save(cartKey(),cart);}
       render();document.querySelector("#commerce-items button:not([disabled])")?.focus({preventScroll:true});
     });
@@ -449,9 +483,9 @@
         .filter(element => !element.closest("[hidden],[inert]") && element.getClientRects().length > 0);
       if (!focusables.length) { event.preventDefault(); drawer.focus(); return; }
       const first = focusables[0], last = focusables[focusables.length - 1];
-      if (event.shiftKey && (document.activeElement === first || !drawer.contains(document.activeElement))) {
+      if (event.shiftKey && (document.activeElement === first || !focusables.includes(document.activeElement))) {
         event.preventDefault(); last.focus();
-      } else if (!event.shiftKey && (document.activeElement === last || !drawer.contains(document.activeElement))) {
+      } else if (!event.shiftKey && (document.activeElement === last || !focusables.includes(document.activeElement))) {
         event.preventDefault(); first.focus();
       }
     });
@@ -473,12 +507,15 @@
     cartBackground.forEach(({node})=>{node.inert=true;});
     document.querySelector("#commerce-cart-bar").setAttribute("aria-expanded", "true");
     for(const id of ["ramen-header-cart","ramen-bottom-cart"])document.getElementById(id)?.setAttribute("aria-expanded","true");
-    drawer.querySelector(".commerce-close")?.focus();
+    window.RamenOverlayHistory.enter("cart",closeDrawer);
+    drawer.querySelector("#commerce-title")?.focus({preventScroll:true});
   }
   function closeDrawer() {
     const drawer = document.querySelector("#commerce-drawer");
     if (!drawer?.classList.contains("is-open")) return;
     drawer.classList.remove("is-open");
+    window.RamenOverlayHistory.leave("cart");
+    zeroItems.clear();
     drawer.inert = true;
     drawer.setAttribute("aria-hidden", "true");
     const backdrop = document.querySelector(".commerce-backdrop");
@@ -489,8 +526,10 @@
     cartBackground=[];
     document.querySelector("#commerce-cart-bar").setAttribute("aria-expanded", "false");
     for(const id of ["ramen-header-cart","ramen-bottom-cart"])document.getElementById(id)?.setAttribute("aria-expanded","false");
-    if (cartFocusOrigin?.isConnected && !cartFocusOrigin.closest("[inert]")) cartFocusOrigin.focus();
+    if (cartFocusOrigin?.isConnected && cartFocusOrigin!==document.body && !cartFocusOrigin.closest("[inert]")) cartFocusOrigin.focus({preventScroll:true});
+    else document.querySelector("#ramen-header-cart")?.focus({preventScroll:true});
     cartFocusOrigin = null;
+    render();
   }
 
   const feedbackWords = {
@@ -537,6 +576,7 @@
     const previous = Number(cart[id] || 0);
     if (previous >= 99) { showAddFeedback(item, false); return; }
     demoOrderSaved=false;
+    zeroItems.delete(id);
     cart[id] = previous + 1;
     save(cartKey(), cart);
     render();
@@ -545,7 +585,8 @@
   function change(id, delta) {
     const next = Number(cart[id] || 0) + delta;
     if(submitting)return;
-    if (next <= 0) {removeCartItem(id);return;} else cart[id] = Math.min(99, next);
+    if(!product(id)||(!cart[id]&&!zeroItems.has(id)))return;
+    if(next<=0){if(!cart[id])return;delete cart[id];zeroItems.add(id);}else{zeroItems.delete(id);cart[id]=Math.min(99,next);}
     save(cartKey(), cart);
     render();
   }
@@ -580,42 +621,40 @@
     document.querySelector("#hp-cart-context").textContent=contextLabel();
     document.querySelector("#hp-undo").hidden=!lastRemoved || !product(lastRemoved.id);
     document.querySelector("#hp-undo-button").disabled=submitting;
-    document.querySelector("#hp-continue").hidden=amount!==0;
+    document.querySelector("#hp-continue").disabled=submitting;
     document.querySelector("#commerce-notes").disabled=submitting;
     renderSuggestions();
     const host = document.querySelector("#commerce-items");
     const focused = document.activeElement;
     const previousControl = focused?.closest('#commerce-items button') ? {id:focused.dataset.productId,change:focused.dataset.cartChange,remove:focused.hasAttribute('data-cart-remove')} : null;
-    const previousNote = focused?.matches('#commerce-items [data-hp-note]') ? {id:focused.dataset.hpNote,start:focused.selectionStart,end:focused.selectionEnd,direction:focused.selectionDirection} : null;
-    const rows = visibleCartEntries().map(([id, quantity]) => {
+    const priorOrder=new Map([...host.querySelectorAll("[data-cart-row]")].map((node,index)=>[node.dataset.cartRow,index]));
+    const entries=[...visibleCartEntries(),...[...zeroItems].filter(id=>!cart[id]&&product(id)).map(id=>[id,0])];
+    entries.sort(([a],[b])=>(priorOrder.get(a)??Infinity)-(priorOrder.get(b)??Infinity));
+    const rows = entries.map(([id, quantity]) => {
       const item = product(id);
       if (!item) return "";
       const view = localized(item);
-      return `<article class="commerce-item">
-        <div class="commerce-item-media">${item.image ? `<img src="${safe(item.image)}" alt="${safe(view.name)}" width="64" height="64">` : `<span class="image-fallback">${safe(Array.from(view.name||"?")[0])}</span>`}</div>
+      const src=getSafeImageSource(item.image);
+      return `<article class="commerce-item${quantity===0?' is-zero':''}" data-cart-row="${safe(id)}">
+        <div class="commerce-item-media"><span class="image-fallback" aria-hidden="true">${safe(getImageFallbackLabel(view.name))}</span>${src ? `<img src="${safe(src)}" alt="" width="64" height="64" decoding="async">` : ""}</div>
         <div class="hp-item-copy"><h3>${safe(view.name)}</h3><span class="hp-unit">${safe(h("unit"))}: ${safe(money(item.price))}</span><strong class="hp-line-total">${safe(money(item.price * quantity))}</strong>
-          <div class="commerce-quantity" aria-label="${safe(view.name)}"><button type="button" data-cart-change="-1" data-product-id="${safe(id)}" aria-label="${safe(panelText().less)}: ${safe(view.name)}" ${submitting?"disabled":""}>−</button><b>${quantity}</b><button type="button" data-cart-change="1" data-product-id="${safe(id)}" aria-label="${safe(panelText().more)}: ${safe(view.name)}" ${submitting||quantity>=99?"disabled":""}>+</button></div>
+          <div class="commerce-quantity" aria-label="${safe(view.name)}"><button type="button" data-cart-change="-1" data-product-id="${safe(id)}" aria-label="${safe(panelText().less)}: ${safe(view.name)}" ${submitting||quantity===0?"disabled":""}>−</button><b>${quantity}</b><button type="button" data-cart-change="1" data-product-id="${safe(id)}" aria-label="${safe(panelText().more)}: ${safe(view.name)}" ${submitting||quantity>=99?"disabled":""}>+</button></div>
         </div>
-        ${isDemo()?'<label class="hp-item-note"><span>'+safe(x(5))+'</span><input maxlength="200" data-hp-note="'+safe(id)+'" value="'+safe(itemNotes.get(id)||"")+'" '+(submitting?'disabled':'')+'></label>':""}
-        <button class="commerce-remove" type="button" data-cart-remove data-product-id="${safe(id)}" aria-label="${safe(t("remove"))}: ${safe(view.name)}" ${submitting?"disabled":""}>${safe(t("remove"))}</button>
+        ${quantity===0?`<button class="commerce-remove" type="button" data-cart-remove data-product-id="${safe(id)}" aria-label="${safe(t("remove"))}: ${safe(view.name)}" ${submitting?"disabled":""}>${safe(t("remove"))}</button>`:""}
       </article>`;
     }).join("");
     host.innerHTML = rows || `<p class="commerce-empty">${safe(t("empty"))}</p>`;
-    host.classList.toggle("is-empty", amount === 0);
+    host.classList.toggle("is-empty", !rows);
     const checkout = document.querySelector("#commerce-checkout");
     if (checkout) checkout.hidden = amount === 0;
     document.querySelector("#commerce-options").hidden = amount === 0;
-    host.querySelectorAll("[data-hp-note]").forEach(input=>input.addEventListener("input",()=>itemNotes.set(input.dataset.hpNote,input.value)));
+    host.querySelectorAll(".commerce-item-media img").forEach(img=>{if(img.complete&&!img.naturalWidth)img.remove();else img.addEventListener("error",()=>img.remove(),{once:true});});
     host.querySelectorAll("[data-cart-change]").forEach((button) => button.addEventListener("click", () => change(button.dataset.productId, Number(button.dataset.cartChange))));
     host.querySelectorAll("[data-cart-remove]").forEach((button) => button.addEventListener("click", () => removeCartItem(button.dataset.productId)));
-    if(previousNote && document.querySelector('#commerce-drawer.is-open')) {
-      const next=[...host.querySelectorAll('[data-hp-note]')].find(input=>input.dataset.hpNote===previousNote.id && !input.disabled);
-      if(next){next.focus({preventScroll:true});next.setSelectionRange(previousNote.start,previousNote.end,previousNote.direction);}
-      else document.querySelector(".commerce-close")?.focus({preventScroll:true});
-    }
     if(previousControl && document.querySelector('#commerce-drawer.is-open')) {
       const next=[...host.querySelectorAll('button')].find(b=>b.dataset.productId===previousControl.id && b.dataset.cartChange===previousControl.change && b.hasAttribute('data-cart-remove')===previousControl.remove);
-      ((next && !next.disabled ? next : null) || host.querySelector('button:not([disabled])') || document.querySelector('.commerce-close'))?.focus({preventScroll:true});
+      const zeroRemove=[...host.querySelectorAll('[data-cart-remove]')].find(b=>b.dataset.productId===previousControl.id);
+      ((next && !next.disabled ? next : null) || zeroRemove || (!document.querySelector("#hp-undo").hidden&&document.querySelector("#hp-undo-button")) || host.querySelector('button:not([disabled])') || document.querySelector('#hp-continue'))?.focus({preventScroll:true});
     }
     const submit = document.querySelector("#commerce-submit");
     submit.disabled = amount === 0 || submitting;
@@ -716,7 +755,7 @@
       tableSession = body.data;
       save(`online_menu_table_vq3:${tenant()}`, tableSession);
       params.delete("qr");
-      history.replaceState(null, "", `${location.pathname}${params.size ? `?${params}` : ""}${location.hash}`);
+      history.replaceState(history.state, "", `${location.pathname}${params.size ? `?${params}` : ""}${location.hash}`);
       render();
     } catch {
       tableSession = null;
@@ -748,7 +787,7 @@
       const entry=window.RomanoCustomerEntry;
       if(!entry.current()){
         closeDrawer();
-        entry.open();
+        if(!entry.open(false,openDrawer))openDrawer();
         return;
       }
       submitting=true;render();showMessage('');
@@ -756,16 +795,16 @@
         const members=window.RomanoDemoMembers;
         const order=await members.mutate(()=>{
           cart=normalizeCart(read(cartKey(),cart));
-          const items=visibleCartEntries().map(([id,quantity])=>({productId:id,name:localized(product(id)).name,quantity,price:product(id).price,note:(itemNotes.get(id)||"").trim()}));
+          const items=visibleCartEntries().map(([id,quantity])=>({productId:id,name:localized(product(id)).name,quantity,price:product(id).price}));
           if(!items.length)return null;
           const saved=members.addOrder(localStorage,sessionStorage,items,total()-discount(),restaurantConfig.currency,orderNotes.trim(),appliedCoupon);
-          cart=normalizeCart({});save(cartKey(),cart);lastRemoved=null;orderNotes="";itemNotes.clear();appliedCoupon=couponCode="";document.querySelector("#hp-code").value="";document.querySelector("#commerce-notes").value="";
+          cart=normalizeCart({});save(cartKey(),cart);lastRemoved=null;orderNotes="";zeroItems.clear();appliedCoupon=couponCode="";document.querySelector("#hp-code").value="";document.querySelector("#commerce-notes").value="";
           return saved;
         });
         if(order){
           demoOrderSaved=true;
           announce(entry.t("saved"));
-          if(document.querySelector("#commerce-drawer.is-open"))document.querySelector(".commerce-close")?.focus({preventScroll:true});
+          if(document.querySelector("#commerce-drawer.is-open"))document.querySelector("#commerce-title")?.focus({preventScroll:true});
           document.dispatchEvent(new CustomEvent("romano:demo-membership-changed"));
         }
       } catch {showMessage(entry.t("orderError"));}
@@ -793,7 +832,7 @@
       activeOrder = body.data;
       save(orderKey(), activeOrder);
       remove(orderRequestKey());
-      cart = normalizeCart({}); save(cartKey(), cart);lastRemoved=null;orderNotes="";document.querySelector("#commerce-notes").value="";
+      cart = normalizeCart({}); save(cartKey(), cart);lastRemoved=null;zeroItems.clear();orderNotes="";document.querySelector("#commerce-notes").value="";
       render(); startPolling();
       if (payment === "online") await startPayment(activeOrder.id);
     } catch (error) {
@@ -856,7 +895,7 @@
     const returnedOrderId = params.get("order");
     // Callback query parameters are untrusted hints, never proof of a payment.
     params.delete("payment"); params.delete("ref"); params.delete("order");
-    history.replaceState(null, "", `${location.pathname}${params.size ? `?${params}` : ""}${location.hash}`);
+    history.replaceState(history.state, "", `${location.pathname}${params.size ? `?${params}` : ""}${location.hash}`);
     let result="paymentUnverified";
     const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if(returnedOrderId && uuid.test(returnedOrderId) && activeOrder?.id===returnedOrderId){
@@ -882,7 +921,7 @@
   }
 
   function init() {
-    buildShell(); initializeCustomerNavigation(); render(); enhanceProducts();
+    buildShell(); initializeCustomerNavigation(); render(); enhanceProducts();renderHeroRating();
     if (!standalone) {
       openQrSession(); paymentReturn();
       if (activeOrder?.id && !["completed", "rejected", "cancelled"].includes(activeOrder.status)) startPolling();
@@ -893,14 +932,18 @@
     document.addEventListener("visibilitychange", () => { if (!document.hidden && pollTimer) pollOrder(); });
     document.addEventListener("romano:catalog-rendered", enhanceProducts);
     document.addEventListener("romano:product-opened", enhanceProducts);
-    window.addEventListener("romano:data-updated", () => { reconcileCart(); enhanceProducts(); render(); });
+    window.addEventListener("romano:data-updated", () => { reconcileCart(); enhanceProducts(); render();renderHeroRating(); });
     document.addEventListener("romano:demo-membership-changed",render);
+    document.addEventListener("romano:language-changed",renderHeroRating);
     window.addEventListener("storage", event => {
+      if(event.key===null||event.key===window.RomanoDemoReview.key(tenant()))renderHeroRating();
       const service=document.querySelector(".hp-services[data-request-key]");
       if(service && (event.key===null||event.key===service.dataset.requestKey))service.dispatchEvent(new Event("hp-request-updated"));
       if(event.key===window.RomanoDemoMembers?.settingsKey){render();return;}
       if (event.key !== null && event.key !== cartKey()) return;
       cart = normalizeCart(read(cartKey(), {}));
+      for(const id of zeroItems)if(cart[id])zeroItems.delete(id);
+      lastRemoved=null;
       reconcileCart(); render();
     });
     document.addEventListener("romano:language-changed", () => window.setTimeout(() => { document.getElementById("r17-cart-feedback")?.remove(); clearTimeout(feedbackTimer); if (document.querySelector("#commerce-drawer")?.classList.contains("is-open")) closeDrawer(); document.querySelector("#commerce-cart-bar")?.remove(); document.querySelector("#commerce-drawer")?.remove(); document.querySelector(".commerce-backdrop")?.remove(); document.querySelector("#commerce-session")?.remove(); document.querySelector("#commerce-live")?.remove(); document.querySelector("#commerce-payment-toast")?.remove(); buildShell(); updateCustomerNavigation(); enhanceProducts(); render(); }, 0));

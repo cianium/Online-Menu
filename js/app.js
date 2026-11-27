@@ -7,6 +7,56 @@
 
 "use strict";
 
+// History entries belong to customer overlays, not to individual UI buttons.
+window.RamenOverlayHistory = (() => {
+    const key="__ramenCustomerOverlay", idleKey="__ramenCustomerIdle";
+    let active=null,idle=null,serial=0,restoration;
+    const state=()=>history.state&&typeof history.state==="object"?{...history.state}:{};
+    const clean=()=>{const value=state();delete value[key];delete value[idleKey];return value;};
+    const url=()=>location.pathname+location.search+location.hash;
+    const restore=()=>{if(restoration)history.scrollRestoration=restoration;restoration=null;};
+    function enter(id,close,options={}){
+        if(active?.id===id)return;
+        const previous=active;
+        const next={id,close,token:Date.now()+"-"+(++serial),base:previous?.base||options.baseUrl||url(),onBack:options.onBack};
+        const replace=Boolean(previous&&history.state?.[key]===previous.token)||Boolean(idle&&history.state?.[idleKey]===idle.token&&url()===idle.url);
+        active=next;
+        if(previous)previous.close();
+        idle=null;
+        if(!previous){restoration=history.scrollRestoration;history.scrollRestoration="manual";}
+        if(!replace&&options.baseUrl&&url()===options.url)history.replaceState(clean(),"",options.baseUrl);
+        const nextState={...clean(),[key]:next.token};
+        if(replace)history.replaceState(nextState,"",options.url||url());
+        else history.pushState(nextState,"",options.url||url());
+    }
+    function leave(id,baseUrl){
+        if(active?.id!==id)return;
+        const record=active;active=null;
+        const destination=baseUrl||url();
+        // Explicit close is synchronous. Reuse the dismissed history slot on
+        // the next overlay instead of starting a racing history.back traversal.
+        idle={token:record.token,url:destination,base:record.base};
+        history.replaceState({...clean(),[idleKey]:idle.token},"",destination);
+        restore();
+    }
+    window.addEventListener("popstate",()=>{
+        if(active&&history.state?.[key]!==active.token){
+            const record=active;
+            if(record.onBack?.()){history.pushState({...clean(),[key]:record.token},"",url());return;}
+            active=null;idle=null;restore();record.close();return;
+        }
+        if(!active&&history.state?.[key])history.replaceState(clean(),"",url());
+        // If a user backs out of an already dismissed same-URL slot, consume
+        // only that duplicate; normal fragment or cross-document Back is untouched.
+        if(!active&&idle&&history.state?.[idleKey]!==idle.token){
+            const duplicate=url()===idle.url&&idle.url===idle.base;
+            idle=null;if(duplicate)history.back();
+        }
+    });
+    if(history.state?.[key]||history.state?.[idleKey])history.replaceState(clean(),"",url());
+    return Object.freeze({enter,leave});
+})()
+
 
 /* =========================================================
    01. ROMANO STORAGE
@@ -1633,7 +1683,10 @@ function openProductModal(productId, opener = null) {
     );
 
     syncBodyScrollLock();
-    history.replaceState(null, "", `${location.pathname}${location.search}#product-${encodeURIComponent(product.id)}`);
+    if(opening)window.RamenOverlayHistory.enter("product",closeProductModal,{
+        url:`${location.pathname}${location.search}#product-${encodeURIComponent(product.id)}`,
+        baseUrl:`${location.pathname}${location.search}${productModalPreviousHash}`
+    });
     document.dispatchEvent(new CustomEvent("romano:product-opened", { detail: { id: product.id } }));
     // Focus only after all synchronous overlay changes, and never steal focus on a content refresh.
     if (opening || !DOM.productModal.contains(document.activeElement)) DOM.modalClose?.focus({preventScroll:true});
@@ -1646,7 +1699,7 @@ function openProductModal(productId, opener = null) {
  */
 
 function closeProductModal() {
-    if (!DOM.productModal) return;
+    if (!DOM.productModal?.classList.contains("is-open")) return;
 
     DOM.productModal.classList.remove("is-open");
     DOM.productModal.setAttribute("aria-hidden", "true");
@@ -1657,7 +1710,7 @@ function closeProductModal() {
     productModalPreviousFocus = null;
     productModalReturnTarget = null;
     window.RomanoActiveProduct = null;
-    if (location.hash.startsWith("#product-")) history.replaceState(null, "", `${location.pathname}${location.search}${productModalPreviousHash}`);
+    window.RamenOverlayHistory.leave("product", `${location.pathname}${location.search}${productModalPreviousHash}`);
 
     // Restore immediately; a queued callback could interfere with a newly opened overlay.
     const focus = element => {
@@ -1772,7 +1825,7 @@ function initializeMenu() {
 
             if (event.key === "Escape") {
                 event.preventDefault();
-                closeNavigation();
+                if(!closeNavigationServices())closeNavigation();
                 return;
             }
 
@@ -1817,22 +1870,16 @@ function initializeMenu() {
         }
     );
 
-    // Keep the menu CTA as a shortcut to the full menu, without adding
-    // another top-level route to the hamburger list.
-    document
-        .querySelector("[data-navigation-menu-cta]")
-        ?.addEventListener(
-            "click",
-            () => {
-                closeNavigation();
-                document
-                    .querySelector("#menu")
-                    ?.scrollIntoView({
-                        behavior: customerScrollBehavior(),
-                        block: "start"
-                    });
-            }
-        );
+    const service=document.querySelector("#navigation-service-toggle");
+    service.addEventListener("click",()=>{
+        if(!closeNavigationServices()){
+            document.querySelector("#navigation-service-options").hidden=false;
+            service.setAttribute("aria-expanded","true");
+        }
+    });
+    DOM.mainNavigation.addEventListener("click",event=>{
+        if(!event.target.closest(".navigation-service"))closeNavigationServices(false);
+    });
 
     // Close this drawer before opening another overlay; focus returns to the hamburger.
     DOM.mainNavigation.querySelectorAll("[data-nav-panel]").forEach(button => {
@@ -1911,6 +1958,7 @@ function openNavigation() {
         "aria-hidden",
         "false"
     );
+    window.RamenOverlayHistory.enter("navigation",closeNavigation,{onBack:closeNavigationServices});
 
 
     DOM.menuToggle?.setAttribute(
@@ -1948,9 +1996,19 @@ function openNavigation() {
  * Close navigation.
  */
 
+function closeNavigationServices(focus=true){
+    const options=document.querySelector("#navigation-service-options");
+    if(!options||options.hidden)return false;
+    options.hidden=true;
+    const toggle=document.querySelector("#navigation-service-toggle");
+    toggle.setAttribute("aria-expanded","false");
+    if(focus)toggle.focus({preventScroll:true});
+    return true;
+}
+
 function closeNavigation() {
 
-    if (!DOM.mainNavigation) {
+    if (!DOM.mainNavigation?.classList.contains("is-open")) {
 
         return;
 
@@ -1966,6 +2024,8 @@ function closeNavigation() {
     DOM.mainNavigation.classList.remove(
         "is-open"
     );
+    closeNavigationServices(false);
+    window.RamenOverlayHistory.leave("navigation");
 
 
     DOM.menuToggle?.classList.remove(

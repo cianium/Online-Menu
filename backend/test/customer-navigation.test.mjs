@@ -59,7 +59,7 @@ test('Admin header preserves navigation hooks and moves logout outside the heade
 test('Catalog disclosures and sticky layout retain accessible controls, horizontal category navigation and cache registration',()=>{
  const js=read('js/menu-experience.js'),css=read('css/catalog-browse.css'),html=read('index.html'),sw=read('sw.js');
  for(const name of ['search','filter']) {
-   if(name==="search"){assert.match(js,/search\.id = 'menu-search-toggle'/);assert.match(js,/search\.setAttribute\('aria-expanded','false'\)/);assert.match(js,/search\.setAttribute\('aria-controls','menu-search-panel'\)/);assert.match(js,/header\.querySelector\('#romano-language-toggle'\)\.after\(search\)/);}
+   if(name==="search"){assert.match(js,/search\.id = 'menu-search-toggle'/);assert.match(js,/search\.setAttribute\('aria-expanded','false'\)/);assert.match(js,/search\.setAttribute\('aria-controls','menu-search-panel'\)/);assert.match(js,/controls\.querySelector\('\.menu-icon-actions'\)\.append\(search\)/);}
    else assert.match(js,new RegExp('id="menu-'+name+'-toggle" aria-expanded="false" aria-controls="menu-'+name+'-panel"'));
    assert.match(js,new RegExp('id="menu-'+name+'-panel" class="browse-panel" hidden'));
  }
@@ -187,4 +187,22 @@ test('Known sample address translates after a saved RAMEN rebrand; custom addres
   assert.equal(api.localizeRestaurant({address:original,translations:{[lang]:{address:'Custom translated address'}}}).address,'Custom translated address');
   assert.equal(api.localizeRestaurant({address:''}).address,'');
  }
+});
+
+test('Customer overlay history reuses dismissed slots and native Back closes active surfaces',async()=>{
+ const {runInNewContext}=await import('node:vm');
+ const source=read('js/app.js');const code=source.slice(source.indexOf('window.RamenOverlayHistory ='),source.indexOf('/* =========================================================',source.indexOf('window.RamenOverlayHistory =')));
+ let index=0;const entries=[{state:{},url:'/menu?restaurant=demo#menu'}];let event,queued=false;const location={pathname:'/menu',search:'?restaurant=demo',hash:'#menu'};
+ const apply=url=>{const u=new URL(url,'https://example.test');Object.assign(location,{pathname:u.pathname,search:u.search,hash:u.hash});};
+ const history={get state(){return entries[index].state;},scrollRestoration:'auto',pushState(state,_,url){entries.splice(index+1);entries.push({state,url});index++;apply(url);},replaceState(state,_,url){entries[index]={state,url};apply(url);},back(){queued=true;}};
+ const window={addEventListener(name,fn){if(name==='popstate')event=fn;}};
+ const flush=()=>{assert.ok(queued);queued=false;index--;apply(entries[index].url);event();};
+ runInNewContext(code,{window,history,location,Date});
+ const api=window.RamenOverlayHistory;let closed=0;
+ api.enter('cart',()=>{closed++;api.leave('cart');});assert.equal(index,1);
+ api.leave('cart');assert.equal(queued,false);api.enter('entry',()=>{closed++;api.leave('entry');});assert.equal(index,1);
+ history.back();flush();assert.equal(closed,1);assert.equal(index,0);assert.equal(history.scrollRestoration,'auto');
+ api.enter('product',()=>{closed++;api.leave('product');},{url:'/menu?restaurant=demo#product-a',baseUrl:'/menu?restaurant=demo#menu'});
+ assert.equal(location.hash,'#product-a');api.leave('product','/menu?restaurant=demo#menu');assert.equal(location.hash,'#menu');assert.equal(queued,false);
+ api.enter('browse',()=>{closed++;api.leave('browse');});api.enter('navigation',()=>{closed++;api.leave('navigation');});assert.equal(index,1);assert.equal(closed,2);history.back();flush();assert.equal(closed,3);
 });

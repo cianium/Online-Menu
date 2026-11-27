@@ -45,18 +45,35 @@ async function ready(p){
     assert.equal(await dialog.locator('.ramen-contact-item > span[dir="auto"]').textContent(),expected,lang+' contact address');
     await p.keyboard.press('Escape');await p.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open);
     await p.locator('#menu-toggle').click();
-    const nav=p.locator('.navigation-footer-meta > span');
-    const navLabel={fa:'منوی دیجیتال RAMEN',en:'RAMEN · DIGITAL MENU',tr:'RAMEN · DİJİTAL MENÜ',ar:'رامن · القائمة الرقمية'}[lang];
-    await p.waitForFunction(()=>document.querySelector('#main-navigation').getAttribute('aria-hidden')==='false');
-    await nav.waitFor({state:'visible'});
-    await p.waitForFunction(label=>document.querySelector('.navigation-footer-meta > span')?.innerText.trim()===label,navLabel);
-    assert.equal((await nav.textContent()).trim(),navLabel);
+    assert.equal(await p.locator('.navigation-footer-meta,.navigation-menu-cta').count(),0);
+    assert.equal(await p.locator('#navigation-rating .hero-stars span').count(),5);
     await p.locator('#navigation-close').click();
     await p.waitForFunction(()=>document.querySelector('#main-navigation').getAttribute('aria-hidden')==='true');
     assert.equal(await p.locator('.commerce-drawer small').textContent(),'RAMEN');
     assert.doesNotMatch(await p.locator('.footer-bottom span').textContent(),/romano|رومانو|رمانو/i);
    }
   }finally{await p.evaluate(()=>{localStorage.removeItem('romano_restaurant');ROMANO_I18N.setLanguage('fa',false);});await p.reload();await ready(p);}
+ });
+ await check('Compact header and hero expose a real, moderated local rating in four languages',async()=>{
+  const rating=p.locator('#hero-rating');
+  for(const lang of ['fa','ar','en','tr']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   await p.waitForFunction(()=>!document.querySelector('#hero-rating').hidden);
+   assert.equal(await p.locator('.menu-icon-actions #menu-search-toggle').count(),1);
+   assert.equal(await p.locator('.header-container #menu-search-toggle').count(),0);
+   assert.equal(await p.locator('.hero-button-icon').count(),0);
+   assert.equal(await rating.locator('.hero-stars span').count(),5);
+   assert.equal(await rating.locator('.is-filled').count(),0);
+   assert.equal(await rating.locator('#hero-satisfaction').textContent(),'—');
+   const geometry=await p.evaluate(()=>{const c=document.querySelector('.hero-content').getBoundingClientRect(),b=document.querySelector('.hero-button').getBoundingClientRect(),h=document.querySelector('.hero-section').getBoundingClientRect();return {content:c.bottom,button:b.top,end:b.bottom,hero:h.bottom};});
+   assert.ok(geometry.button>=geometry.content-1&&geometry.end<=geometry.hero+1);
+  }
+  await p.evaluate(()=>{const model=RomanoDemoReview;const review=model.submit(localStorage,'romano',4,'Sample review','qa-hero-rating');model.moderate(localStorage,'romano',review,'approved');window.dispatchEvent(new StorageEvent('storage',{key:model.key('romano')}));});
+  assert.equal(await rating.locator('.is-filled').count(),4);assert.equal(await p.locator('#navigation-rating .is-filled').count(),4);
+  assert.equal(await rating.locator('#hero-satisfaction').textContent(),await p.evaluate(()=>new Intl.NumberFormat(ROMANO_I18N.language,{style:'percent'}).format(.8)));
+  await rating.click();await p.locator('#ramen-contact-dialog').waitFor({state:'visible'});await p.keyboard.press('Escape');
+  await p.evaluate(()=>{localStorage.removeItem(RomanoDemoReview.key('romano'));window.dispatchEvent(new StorageEvent('storage',{key:RomanoDemoReview.key('romano')}));ROMANO_I18N.setLanguage('fa',false);});
+  assert.equal(await rating.locator('.is-filled').count(),0);
  });
  await check('Customer image sources reject unsupported protocols and URL credentials',async()=>{
   const result=await p.evaluate(()=>({
@@ -162,7 +179,7 @@ async function ready(p){
    await dialog.locator('.feedback-save').click();
    const review=await p.evaluate(()=>JSON.parse(localStorage.getItem('online_menu_demo_review_v2:romano')));assert.equal(review.rating,4);assert.equal(review.status,'pending');assert.equal(review.comment,'<b>Demo comment</b>');
    await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
-   await p.locator('#menu-toggle').click();await nav.locator('[data-nav-panel="chat"]').click();
+   await p.locator('#menu-toggle').click();await nav.locator('#navigation-service-toggle').click();await nav.locator('[data-nav-panel="chat"]').click();
    await dialog.waitFor({state:'visible'});assert.ok((await dialog.locator('.ramen-contact-note').last().innerText()).trim());
    await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
   }
@@ -296,7 +313,7 @@ async function ready(p){
     const original=location.href;
     const url=new URL(original);
     for(const [key,value] of Object.entries({restaurant:'sample',demoBranch:'sample-branch',demoTable:'A1',qr:'sample-private-token',payment:'ok',order:'sample-order',ref:'sample-ref',extra:'sample-extra'}))url.searchParams.set(key,value);
-    history.replaceState(null,'',url.href);
+    history.replaceState(history.state,'',url.href);
     Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.__qaShare=data}});
     window.__qaShare=null;
     return original;
@@ -311,7 +328,7 @@ async function ready(p){
     assert.equal(url.searchParams.get('demoBranch'),'sample-branch');
     assert.match(url.hash,/^#product-/);
    }finally{
-    await p.evaluate(original=>{history.replaceState(null,'',original);delete navigator.share;delete window.__qaShare;},original);
+    await p.evaluate(original=>{history.replaceState(history.state,'',original);delete navigator.share;delete window.__qaShare;},original);
     await p.keyboard.press('Escape');
    }
   }
@@ -348,7 +365,7 @@ async function ready(p){
   await cartButton.click();
   assert.equal(await p.locator('.commerce-items .commerce-empty').isVisible(),true);
   assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
-  await p.locator('[data-commerce-close]').last().click();
+  await p.locator('#hp-continue').click();
   const add=cards.first().locator('.commerce-card-add');assert.equal(await add.isVisible(),true);await add.click();
   assert.equal(await p.locator('#commerce-checkout').isVisible(),true);
   assert.equal(await p.locator('#r17-cart-feedback').getAttribute('data-state'),'added');
@@ -362,7 +379,7 @@ async function ready(p){
    await p.keyboard.press('Shift+Tab');
    assert.equal(await p.evaluate(()=>document.activeElement?.id),'commerce-submit');
    await p.keyboard.press('Tab');
-   assert.equal(await p.evaluate(()=>document.activeElement?.classList.contains('commerce-close')),true);
+   assert.equal(await p.evaluate(()=>document.activeElement?.dataset.cartChange),'-1');
    await p.keyboard.press('Escape');
    assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'true');
    assert.equal(await p.evaluate(()=>document.activeElement?.id),'ramen-bottom-cart');
@@ -370,11 +387,11 @@ async function ready(p){
   });
   await p.locator('.commerce-quantity button[data-cart-change="1"]').click();assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
   assert.equal(await p.evaluate(()=>document.activeElement.dataset.cartChange),'1');
-  const note=p.locator('[data-hp-note]').first();
-  await note.fill('Sample note');await note.focus();
-  await note.evaluate(input=>input.setSelectionRange(2,6));
-  await p.evaluate(()=>document.dispatchEvent(new CustomEvent('romano:demo-membership-changed')));
-  assert.deepEqual(await note.evaluate(input=>({focused:document.activeElement===input,value:input.value,start:input.selectionStart,end:input.selectionEnd})),{focused:true,value:'Sample note',start:2,end:6});
+  assert.equal(await p.locator('[data-hp-note],.commerce-close,[data-cart-remove]').count(),0);
+  const suggestions=p.locator('.hp-suggestion');
+  assert.ok(await suggestions.count()>0);
+  assert.equal(await p.locator('.hp-suggestion-media').count(),await suggestions.count());
+  assert.ok(await p.locator('.hp-suggestion-media img').count()>0);
   assert.equal(await p.locator('.site-wrapper').evaluate(n=>n.inert),true);
   assert.equal(await p.locator('#commerce-options').isVisible(),true);
   const summary=await p.locator('#commerce-submit').boundingBox();assert.ok(summary && summary.y+summary.height<=844);
@@ -386,16 +403,38 @@ async function ready(p){
   await p.screenshot({path:path.join(out,'customer-entry-fa-390.png')});
   await p.keyboard.press('Escape');
   await entry.waitFor({state:'hidden'});
-  await cartButton.click();
+  await p.waitForFunction(()=>document.querySelector('#commerce-drawer').classList.contains('is-open'));
   assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
-  await p.locator('[data-cart-remove]').click();
+  const minus=p.locator('[data-cart-change="-1"]');
+  await minus.click();assert.equal(await p.locator('[data-cart-remove]').count(),0);
+  await minus.click();assert.equal(await p.locator('.commerce-quantity b').textContent(),'0');
   assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
+  assert.equal(await p.locator('[data-cart-remove]').isVisible(),true);
+  await p.locator('[data-cart-change="1"]').click();
+  assert.equal(await p.locator('[data-cart-remove]').count(),0);
+  await minus.click();await p.locator('[data-cart-remove]').click();
   assert.equal(await p.locator('#hp-undo').isVisible(),true);
   await p.locator('#hp-undo-button').click();
-  assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
-  await p.locator('[data-cart-remove]').click();
+  assert.equal(await p.locator('.commerce-quantity b').textContent(),'1');
+  await minus.click();await p.locator('[data-cart-remove]').click();
   assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
-  await p.locator('[data-commerce-close]').last().click();
+  await p.locator('#hp-continue').click();
+ });
+ await check('Native Back closes each customer overlay without leaving the menu',async()=>{
+  const back=async(selector,closed)=>{await p.waitForFunction(()=>Boolean(history.state?.__ramenCustomerOverlay));await p.evaluate(()=>history.back());await p.waitForFunction(({selector,closed})=>{const node=document.querySelector(selector);return node&&(closed==='hidden'?node.hidden:closed==='dialog'?!node.open:node.getAttribute('aria-hidden')==='true');},{selector,closed});assert.equal(await p.evaluate(()=>Boolean(history.state?.__ramenCustomerOverlay)),false);};
+  const original=await p.evaluate(()=>location.pathname+location.search);
+  for(const lang of ['fa','en','tr','ar']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   await p.locator('#menu-toggle').click();await back('#main-navigation','aria');
+   await p.locator('#menu-search-toggle').click();await back('#menu-search-panel','hidden');
+   await p.locator('#menu-filter-toggle').click();await back('#menu-filter-panel','hidden');
+   await p.locator('#ramen-header-cart').click();await back('#commerce-drawer','aria');
+   const trigger=p.locator('[data-ramen-nav="contact"]');await trigger.focus();await trigger.press('Space');await back('#ramen-contact-dialog','dialog');
+   await cards.first().locator('.product-card-button').click();await back('#product-modal','aria');
+   assert.equal(await p.evaluate(()=>location.pathname+location.search),original);
+   assert.doesNotMatch(await p.evaluate(()=>location.hash),/^#product-/);
+  }
+  await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));
  });
  await check('Language changes close an open cart without leaving the page inert',async()=>{
   const cartButton=p.locator('#ramen-bottom-cart');
@@ -569,7 +608,7 @@ async function ready(p){
     const drawerBox=await p.locator('#commerce-drawer').boundingBox();
     assert.ok(drawerBox&&drawerBox.width>300&&drawerBox.x>=0&&drawerBox.x+drawerBox.width<=width, 'Cart drawer did not finish entering the viewport: '+JSON.stringify(drawerBox));
     await p.screenshot({path:path.join(out,`customer-cart-${lang}-${width}.png`)});
-    await p.locator('#commerce-drawer .commerce-close').click();
+    await p.locator('#hp-continue').click();
     await p.waitForFunction(()=>document.querySelector('#commerce-drawer')?.getAttribute('aria-hidden')==='true');
    }
   }
@@ -649,13 +688,20 @@ async function ready(p){
    if(await nav.getAttribute('aria-hidden')==='true')await p.locator('#menu-toggle').click();
    await p.waitForFunction(()=>document.querySelector('#main-navigation')?.getAttribute('aria-hidden')==='false');
    const footer=p.locator('.navigation-footer');
-   const cta=p.locator('.navigation-menu-cta');
+   const cta=p.locator('[data-nav-panel="feedback"]');
    assert.equal(await footer.evaluate(node=>getComputedStyle(node).direction),expected[lang].dir,lang+' footer direction');
    assert.equal(await cta.evaluate(node=>getComputedStyle(node).direction),expected[lang].dir,lang+' CTA direction');
    assert.match(await footer.evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expected[lang].font),lang+' footer font');
    assert.match(await cta.evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expected[lang].font),lang+' CTA font');
    assert.ok((await cta.boundingBox()).height>=40,lang+' CTA touch target');
    assert.ok((await cta.textContent()).trim().length>0,lang+' CTA label');
+   const toggle=nav.locator('#navigation-service-toggle'),options=nav.locator('#navigation-service-options');
+   assert.equal(await nav.locator('#navigation-rating .hero-stars span').count(),5);
+   await toggle.click();assert.equal(await options.isVisible(),true);
+   assert.equal(await options.locator('button').count(),3);
+   await p.keyboard.press('Escape');assert.equal(await options.isVisible(),false);assert.equal(await nav.getAttribute('aria-hidden'),'false');
+   await toggle.click();await p.evaluate(()=>history.back());await options.waitFor({state:'hidden'});assert.equal(await nav.getAttribute('aria-hidden'),'false');
+   await toggle.click();await options.locator('[data-nav-panel="waiter"]').click();const waiter=p.locator('#ramen-contact-dialog');await waiter.waitFor({state:'visible'});assert.equal(await waiter.locator('.hp-service-action').count(),1);await p.keyboard.press('Escape');await waiter.waitFor({state:'hidden'});await p.locator('#menu-toggle').click();
    await p.locator('#navigation-close').click();
    await p.waitForFunction(()=>document.querySelector('#main-navigation')?.getAttribute('aria-hidden')==='true');
   }
