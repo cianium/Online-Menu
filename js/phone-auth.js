@@ -8,8 +8,6 @@
   ar:{title:"مرحبًا بك في رامن",phone:"رقم الهاتف",name:"الاسم الكامل",admin:"لدي مفتاح وصول إداري",key:"مفتاح الوصول",code:"رمز التحقق",next:"متابعة",send:"إرسال رمز التحقق",verify:"تسجيل الدخول",edit:"تغيير الرقم",resend:"إعادة إرسال الرمز",guest:"تصفح القائمة الآن",intro:"سجّل الدخول برقم هاتفك.",new:"أدخل اسمك لإنشاء حساب.",sent:"أدخل الرمز المكوّن من ستة أرقام المرسل إلى هاتفك.",error:"تعذر إتمام الطلب. تحقق من البيانات وحاول مرة أخرى.",invalid:"الرمز غير صحيح أو منتهي الصلاحية.",limit:"محاولات كثيرة. حاول لاحقًا.",language:"اللغة",logout:"تسجيل الخروج",login:"الدخول / التسجيل",busy:"جارٍ التحقق…"}
  };
  const t=k=>(words[window.ROMANO_I18N?.language]||words.fa)[k];
- const initial=new URL(location.href).searchParams;
- const launch=initial.get('login')==='1'||(initial.has('qr')&&initial.get('qr')!=='demo');
  const digits=value=>value.replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776)).replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632));
  const el=(tag,cls)=>{const n=document.createElement(tag);if(cls)n.className=cls;return n;};
  const label=(tag,key,cls)=>{const n=el(tag,cls);n.dataset.phoneAuthText=key;n.textContent=t(key);return n;};
@@ -85,7 +83,7 @@
   dialog.addEventListener('close',()=>{generation++;clearTimeout(timer);registration=null;challenge=null;removeLogin();window.RamenOverlayHistory.leave('phone-entry');dialog.remove();dialog=null;if(opener?.isConnected&&!opener.closest('[inert]'))opener.focus({preventScroll:true});});
   dialog.showModal();window.RamenOverlayHistory.enter('phone-entry',()=>{if(!pending)dialog?.close();},{onBack:()=>pending});render();return true;
  }
- async function boot(){
+ async function boot(launch=false){
   if(booted||window.RomanoPublicAPI?.standalone||typeof menuDataMode==='undefined'||menuDataMode!=='public')return;
   booted=true;
   try{available=(await request('/auth/phone/status'))?.enabled===true;if(!available)return;session=await request('/auth/me');if(launch){if(session?.user){removeLogin();if(session.membership)location.assign(adminDestination().href);}else open();}}
@@ -97,7 +95,6 @@
   const name=el('strong');name.dir='auto';name.textContent=session.user.displayName||'';host.append(name);
   const logout=button('logout','feedback-save',async()=>{logout.disabled=true;try{await request('/auth/logout',{});csrf=null;session=null;closePanel();}catch{logout.disabled=false;const error=label('p','error');error.setAttribute('role','alert');host.append(error);}});host.append(logout);return true;
  }
- window.addEventListener('romano:data-updated',boot);
  document.addEventListener('romano:language-changed',labels);
- window.RomanoPhoneAuth=Object.freeze({open,renderProfile});
+ window.RomanoPhoneAuth=Object.freeze({boot,open,renderProfile});
 })();

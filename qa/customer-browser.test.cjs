@@ -193,7 +193,8 @@ async function ready(p){
    await p.locator('[data-ramen-nav="home"]').click();
    assert.equal(await p.locator('#menu').isVisible(),false);
    await p.locator('#menu-toggle').click();
-   const shortcut=p.locator('#main-navigation [data-category-link="true"]').first();
+   const shortcut=p.locator('#main-navigation a[data-category-link="true"][href^="#category-"]').first();
+   await shortcut.waitFor({state:'visible'});
    const categoryId=(await shortcut.getAttribute('href')).slice('#category-'.length);
    await shortcut.click();
    await p.locator('#menu').waitFor({state:'visible'});
