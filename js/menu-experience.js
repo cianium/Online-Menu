@@ -101,7 +101,10 @@
         document.querySelector('#menu-result-count').textContent = t('resultCount', numeral(count));
         const messageKey = {loading:'menuLoading',demo:'menuDemo',offline:'menuOffline',unavailable:'menuUnavailable'}[menuDataMode];
         const status = document.querySelector('#menu-data-status');
-        status.hidden = !messageKey;
+        const demoBadge=byId('menu-demo-badge');
+        demoBadge.hidden=menuDataMode!=='demo';
+        demoBadge.textContent=menuDataMode==='demo'?t('menuDemo'):'';
+        status.hidden = !messageKey || menuDataMode==='demo';
         status.querySelector('span').textContent = messageKey ? t(messageKey) : '';
         status.querySelector('button').textContent = t('retry');
         status.querySelector('button').hidden = !['offline','unavailable'].includes(menuDataMode);
@@ -144,22 +147,32 @@
         const section = document.querySelector('#menu');
         const controls = document.createElement('div');
         controls.className='menu-browser';
-        controls.innerHTML = `<div class="menu-browser-heading"><div class="menu-browser-title"><span class="section-eyebrow" id="menu-browser-eyebrow"></span><h2 id="browse-title" class="sr-only"></h2><span id="menu-result-count" role="status" aria-live="polite"></span><p id="browse-hint" class="sr-only"></p></div><div class="menu-icon-actions"><button type="button" id="menu-search-toggle" aria-expanded="false" aria-controls="menu-search-panel">${icon('search')}</button><button type="button" id="menu-filter-toggle" aria-expanded="false" aria-controls="menu-filter-panel">${icon('filter')}</button></div></div>
+        controls.innerHTML = `<div class="menu-browser-heading"><div class="menu-browser-title"><span class="section-eyebrow" id="menu-browser-eyebrow"></span><h2 id="browse-title" class="sr-only"></h2><span id="menu-result-count" role="status" aria-live="polite"></span><span id="menu-demo-badge" hidden></span><p id="browse-hint" class="sr-only"></p></div><div class="menu-icon-actions"><button type="button" id="menu-search-toggle" aria-expanded="false" aria-controls="menu-search-panel">${icon('search')}</button><button type="button" id="menu-filter-toggle" aria-expanded="false" aria-controls="menu-filter-panel">${icon('filter')}</button></div></div>
           <div id="rv4-category-rail" class="browse-category-rail" role="group"></div>
           <div id="menu-search-active" class="browse-query" hidden></div>
           <div id="menu-search-panel" class="browse-panel" hidden><div class="menu-search-field">${icon('search')}<label class="sr-only" for="rv4-menu-search"></label><input id="rv4-menu-search" type="search" autocomplete="off" aria-controls="menu-categories"></div></div>
           <div id="menu-filter-panel" class="browse-panel" hidden><h3 id="menu-filter-title"></h3><div class="menu-tools"><label for="menu-sort" id="menu-sort-label" class="sr-only"></label><select id="menu-sort"></select><button id="menu-favorites-toggle" type="button" aria-pressed="false"></button><button id="menu-reset" type="button"></button></div></div>`;
-        section.prepend(controls);
+        const header=document.querySelector('.site-header');
+        header.appendChild(controls);
+        controls.inert=true;
         // Status is intentionally not sticky: it must not consume the browsing viewport.
-        const status=document.createElement('div');status.id='menu-data-status';status.className='menu-data-status';status.setAttribute('role','status');status.innerHTML='<span></span><button type="button"></button>';controls.after(status);
+        const status=document.createElement('div');status.id='menu-data-status';status.className='menu-data-status';status.setAttribute('role','status');status.innerHTML='<span></span><button type="button"></button>';section.prepend(status);
         section.setAttribute('aria-labelledby','browse-title');
         const live=document.createElement('div');live.id='menu-announcement';live.setAttribute('role','status');live.setAttribute('aria-live','polite');document.body.appendChild(live);
-        const measure=()=>{
-            const header=document.querySelector('.site-header');
-            section.style.setProperty('--browse-header-offset',`${header?.getBoundingClientRect().height||0}px`);
-            section.style.setProperty('--browse-bar-height',`${controls.getBoundingClientRect().height}px`);
+        const syncVisibility=()=>{
+            const rect=section.getBoundingClientRect(),bottom=header.getBoundingClientRect().bottom;
+            const active=rect.top<=bottom+28 && rect.bottom>bottom+Math.min(controls.offsetHeight,100);
+            if(!active&&controls.contains(document.activeElement))document.activeElement.blur();
+            controls.classList.toggle('is-catalog-active',active);
+            controls.inert=!active;
         };
-        if('ResizeObserver' in window){const observer=new ResizeObserver(measure);observer.observe(controls);const header=document.querySelector('.site-header');if(header)observer.observe(header);}
+        const measure=()=>{
+            section.style.setProperty('--browse-header-offset',`${header.getBoundingClientRect().height}px`);
+            section.style.setProperty('--browse-bar-height',`${controls.getBoundingClientRect().height}px`);
+            syncVisibility();
+        };
+        if('ResizeObserver' in window){const observer=new ResizeObserver(measure);observer.observe(controls);observer.observe(header);observer.observe(section);}
+        window.addEventListener('scroll',syncVisibility,{passive:true});
         window.addEventListener('resize',measure,{passive:true});measure();
         for(const id of ['search','filter']) byId(`menu-${id}-toggle`).addEventListener('click',()=>setPanel(openPanel===id?null:id,openPanel===id));
         controls.addEventListener('keydown',event=>{if(event.key==='Escape'&&openPanel){event.preventDefault();event.stopPropagation();setPanel(null,true);}});
@@ -188,7 +201,7 @@
         document.addEventListener('romano:language-changed',refreshLabels);
         window.addEventListener('romano:data-updated',()=>{refreshLabels();renderMenuCategories();});
         window.addEventListener('storage',event=>{if(event.key===key()||event.key===null){readFavorites();redraw();}});
-        document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.closest('input,textarea,select,[contenteditable]')&&!DOM.body.classList.contains('modal-open')&&!DOM.body.classList.contains('commerce-open')&&!document.querySelector('dialog[open]')){event.preventDefault();section.scrollIntoView({behavior:'auto',block:'start'});setPanel('search');}});
+        document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.closest('input,textarea,select,[contenteditable]')&&!DOM.body.classList.contains('modal-open')&&!DOM.body.classList.contains('commerce-open')&&!document.querySelector('dialog[open]')){event.preventDefault();section.scrollIntoView({behavior:'instant',block:'start'});syncVisibility();setPanel('search');}});
         refreshLabels();
     }
     window.RomanoMenuExperience=Object.freeze({init,matches,sort,favoriteButton,selectCategory});
