@@ -5,7 +5,8 @@
   const registry = 'online_menu_demo_branches_v1';
   const params = new URLSearchParams(location.search);
   const id = '';
-  const legacyRoute = params.has('demoBranch') && params.get('demoBranch') !== '';
+  const legacyRoute = params.getAll('demoBranch').length > 1 || (params.has('demoBranch') && params.get('demoBranch') !== '');
+  const ambiguousTable = params.getAll('demoTable').length > 1;
   const table = params.get('demoTable');
   const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
   const code = /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/;
@@ -36,7 +37,7 @@
     return validated;
   }
   function context() {
-    if (legacyRoute) throw Error('BRANCH_MISSING');
+    if (legacyRoute || ambiguousTable) throw Error('BRANCH_MISSING');
     if (table === null) return null;
     const branch = read().find(row => row.id === id);
     if (!branch || branch.active === false || (table !== null && !branch.tables.some(t => t.code === table))) throw Error('BRANCH_MISSING');
@@ -45,14 +46,15 @@
   function scope(key) { return key; }
   function link(relative, branchId, tableCode) {
     const url = new URL(relative, location.href);
-    if (branchId) throw Error('BRANCH_MISSING');
+    if (branchId || url.origin !== location.origin || !['http:','https:'].includes(url.protocol)) throw Error('BRANCH_MISSING');
+    if (tableCode && (typeof tableCode !== 'string' || !code.test(tableCode) || !read()[0].tables.some(t => t.code === tableCode))) throw Error('BRANCH_MISSING');
     url.searchParams.delete('demoBranch');
     if (tableCode) url.searchParams.set('demoTable', tableCode);
     else url.searchParams.delete('demoTable');
     return url.href;
   }
   async function save(action, name, tableCode) {
-    if(legacyRoute||table!==null||action!=='table'||typeof name!=='string')throw Error('BRANCH_INPUT');
+    if(legacyRoute||ambiguousTable||table!==null||action!=='table'||typeof name!=='string')throw Error('BRANCH_INPUT');
     const clean = normalizeName(name);
     if (!validNewLabel(clean)) throw Error('BRANCH_INPUT');
     // Only a serialized read/modify/write can preserve changes from other tabs.

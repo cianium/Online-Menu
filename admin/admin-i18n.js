@@ -245,6 +245,7 @@
       "آماده": ["Ready", "Hazır", "جاهز"],
       "همه": ["All", "Tümü", "الكل"],
       "درگاه پرداخت رستوران": ["Restaurant payment gateway", "Restoran ödeme geçidi", "بوابة دفع المطعم"],
+      "QR آزمایشی فقط در همین مرورگر و آدرس کار می‌کند؛ داده‌ها به دستگاه دیگر منتقل نمی‌شوند.": ["Demo QR works in the same browser profile and origin only; data is not shared with other devices.","Demo QR yalnızca aynı tarayıcı profili ve adreste çalışır; veriler diğer cihazlarla paylaşılmaz.","يعمل رمز QR التجريبي في ملف تعريف المتصفح والعنوان نفسيهما فقط؛ ولا تتم مشاركة البيانات مع أجهزة أخرى."],
       "برای هر میز کد و نام تعیین کنید و QR اختصاصی آن را بسازید.": ["Set a code and name for each table and generate its own QR.", "Her masa için kod ve ad belirleyip QR kodu oluşturun.", "حدد رمزًا واسمًا لكل طاولة وأنشئ رمز QR خاصًا بها."],
       "مبالغ سفارش مستقیماً به پذیرنده خود رستوران واریز می‌شود.": ["Order payments settle directly to the restaurant's own merchant account.", "Sipariş ödemeleri doğrudan restoranın üye işyeri hesabına aktarılır.", "تُحوّل مدفوعات الطلب مباشرة إلى حساب تاجر المطعم."],
       "شعبه": ["Branch", "Şube", "الفرع"],

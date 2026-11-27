@@ -815,7 +815,8 @@
                 <section class="panel" id="hp-admin-settings" hidden></section>
                 <section class="gateway-settings" id="demo-tables" hidden aria-labelledby="sample-tables-title">
                     <h2 id="sample-tables-title">میزها و سفارش QR</h2>
-                    <p>برای هر میز کد و نام تعیین کنید و QR اختصاصی آن را بسازید.</p>
+                    <p data-admin-i18n="برای هر میز کد و نام تعیین کنید و QR اختصاصی آن را بسازید.">برای هر میز کد و نام تعیین کنید و QR اختصاصی آن را بسازید.</p>
+                    <p data-admin-i18n="QR آزمایشی فقط در همین مرورگر و آدرس کار می‌کند؛ داده‌ها به دستگاه دیگر منتقل نمی‌شوند.">QR آزمایشی فقط در همین مرورگر و آدرس کار می‌کند؛ داده‌ها به دستگاه دیگر منتقل نمی‌شوند.</p>
                     <form class="gateway-settings-form" id="sample-table-form" data-action="table">
                         <label><span>کد میز (لاتین)</span><input name="sampleTableCode" dir="ltr" maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_\-]*" required></label>
                         <label><span>نام میز</span><input name="sampleTableName" maxlength="80" required></label>
@@ -839,7 +840,7 @@
                         <button class="secondary-button" id="ops-save-branch" type="button" disabled data-admin-i18n="ذخیره وضعیت سفارش‌گیری">ذخیره وضعیت سفارش‌گیری</button>
                     </div>
                     <form id="create-table-form" class="gateway-settings-form">
-                        <label><span data-admin-i18n="کد میز (لاتین)">کد میز (لاتین)</span><input name="tableCode" required maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_-]*" dir="ltr"></label>
+                        <label><span data-admin-i18n="کد میز (لاتین)">کد میز (لاتین)</span><input name="tableCode" required maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_\-]*" dir="ltr"></label>
                         <label><span data-admin-i18n="نام میز">نام میز</span><input name="tableName" required maxlength="80"></label>
                         <button class="primary-button" type="submit" disabled data-admin-i18n="افزودن میز">افزودن میز</button>
                     </form>

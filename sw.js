@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r25-panel-stabilization`;
+const CACHE_NAME = `${menuCachePrefix}r25-table-qr-hardening`;
 const CORE_ASSETS = [
   "./",
   "./index.html",

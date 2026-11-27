@@ -6,21 +6,34 @@
  const form=panel.querySelector('#sample-table-form'),select=panel.querySelector('#sample-table-select'),qr=panel.querySelector('#sample-table-qr'),output=panel.querySelector('[role="status"]');
  const t=label=>window.ROMANO_ADMIN_I18N.get(label);
  const ready=()=>typeof adminInitialized!=='undefined'&&adminInitialized&&adminDemoMode&&demoAdminSignedIn()&&!window.RomanoAPI.enabled&&!document.querySelector('.admin-app').inert;
+ function clearQr(){
+  qr.hidden=true;
+  qr.querySelector('a').removeAttribute('href');
+  qr.querySelector('.ops-qr-image').replaceChildren();
+ }
  function updateQr(){
+  clearQr();
+  if(!ready()||!select.value)return;
   const link=qr.querySelector('a'),image=qr.querySelector('.ops-qr-image');
-  qr.hidden=!select.value;image.replaceChildren();
-  if(qr.hidden)return;
-  link.href=model.link('../?qr=demo','',select.value);
-  try{new window.QRCode(image,{text:link.href,width:192,height:192,correctLevel:window.QRCode.CorrectLevel.M});}catch{qr.hidden=true;output.textContent=t('ساخت QR انجام نشد.');}
+  try{
+   const href=model.link('../?qr=demo','',select.value);
+   new window.QRCode(image,{text:href,width:192,height:192,correctLevel:window.QRCode.CorrectLevel.M});
+   link.href=href;qr.hidden=false;
+  }catch{clearQr();output.textContent=t('ساخت QR انجام نشد.');}
  }
  function render(){
-  panel.hidden=!ready();if(panel.hidden)return;
+  panel.hidden=!ready();if(panel.hidden){clearQr();return;}
   document.getElementById('branch-management').classList.add('has-sample-tables');
   try{const tables=model.read()[0].tables,previous=select.value;
    select.replaceChildren(...tables.map(row=>new Option(row.name+' · '+row.code,row.code)));
    if(tables.some(row=>row.code===previous))select.value=previous;
-   select.closest('label').hidden=!tables.length;updateQr();
-  }catch{output.textContent=t('خواندن داده محلی ممکن نیست.');}
+   select.closest('label').hidden=!tables.length;
+   if(output.textContent===t('خواندن داده محلی ممکن نیست.')||output.textContent===t('ساخت QR انجام نشد.'))output.textContent='';
+   updateQr();
+  }catch{
+   clearQr();select.replaceChildren();select.closest('label').hidden=true;
+   output.textContent=t('خواندن داده محلی ممکن نیست.');
+  }
  }
  select.addEventListener('change',updateQr);
  form.addEventListener('submit',async event=>{

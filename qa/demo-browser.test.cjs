@@ -289,6 +289,20 @@ const readyCustomer = async page => {
       await qr.waitFor({state:'visible'});
       assert.ok(await qr.locator('canvas,img').count());
       const link=await qr.locator('a').getAttribute('href');
+      assert.ok(link && new URL(link).searchParams.get('demoTable')==='T1');
+      // Invalid local registry must not leave an old QR or clickable stale link visible.
+      const savedRegistry=await admin.evaluate(()=>localStorage.getItem(RomanoDemoBranches.registry));
+      try{
+       await admin.evaluate(()=>{const key=RomanoDemoBranches.registry;localStorage.setItem(key,'{invalid');window.dispatchEvent(new StorageEvent('storage',{key}));});
+       await qr.waitFor({state:'hidden'});
+       assert.equal(await qr.locator('a').getAttribute('href'),null);
+       assert.equal(await qr.locator('canvas,img').count(),0);
+       assert.equal(await branches.locator('#sample-table-select option').count(),0);
+      }finally{
+       await admin.evaluate(value=>{const key=RomanoDemoBranches.registry;localStorage.setItem(key,value);window.dispatchEvent(new StorageEvent('storage',{key}));},savedRegistry);
+      }
+      await qr.waitFor({state:'visible'});
+      assert.equal(await qr.locator('a').getAttribute('href'),link);
       const hospitality=admin.locator('#hp-admin-settings');
       await hospitality.waitFor({state:'visible'});
       await hospitality.locator('[name=coupon]').fill('DEMO10');
@@ -379,6 +393,9 @@ const readyCustomer = async page => {
       await customer.goto(invalid.href);await readyCustomer(customer);
       assert.equal(await customer.evaluate(()=>menuDataMode),'unavailable');
       await admin.evaluate(()=>navigateTo('settings'));
+      const duplicate=new URL(link);duplicate.searchParams.append('demoTable','T1');
+      await customer.goto(duplicate.href);await readyCustomer(customer);
+      assert.equal(await customer.evaluate(()=>menuDataMode),'unavailable');
       const obsolete=new URL(link);obsolete.searchParams.set('demoBranch','old-location');
       await customer.goto(obsolete.href);await readyCustomer(customer);
       assert.equal(await customer.evaluate(()=>menuDataMode),'unavailable');

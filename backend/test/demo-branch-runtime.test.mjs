@@ -59,3 +59,15 @@ test('Legacy multi-location backup cannot silently restore into one restaurant',
 test('Table writes fail closed without serialization',async()=>{
  await assert.rejects(fixture({locks:false}).model.save('table','Window','T1'),/BRANCH_STORAGE/);
 });
+
+ test('Table QR generation rejects unknown codes, cross-origin targets and ambiguous query parameters',async()=>{
+  const {model,db}=fixture();
+  await model.save('table','Window','T1');
+  assert.throws(()=>model.link('../?qr=demo','','unknown'),/BRANCH_MISSING/);
+  assert.throws(()=>model.link('https://other.example/','','T1'),/BRANCH_MISSING/);
+  for(const query of ['demoTable=T1&demoTable=T1','demoTable=T1&demoTable=unknown','demoTable=T1&demoBranch=&demoBranch=old']){
+   assert.throws(()=>fixture({db,url:'https://demo.example/?'+query}).model.context(),/BRANCH_MISSING/);
+  }
+  const url=new URL(model.link('../?demoTable=old&demoTable=other','','T1'));
+  assert.deepEqual(url.searchParams.getAll('demoTable'),['T1']);
+ });
