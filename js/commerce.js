@@ -178,14 +178,14 @@
       try {
         const model=window.RomanoDemoBranches, branch=model?.context();
         const table=branch?.tables.find(row=>row.code===model.table);
-        return {branch:window.ROMANO_I18N.displayBrand(branch?.name || ""), table:window.ROMANO_I18N.displayBrand(table?.name || ""), code:table?.code || ""};
+        return {table:window.ROMANO_I18N.displayBrand(table?.name || ""), code:table?.code || ""};
       } catch { return {}; }
     }
-    return {branch:"",table:window.ROMANO_I18N.displayBrand(tableSession?.table?.name || tableSession?.table?.code || ""),code:""};
+    return {table:window.ROMANO_I18N.displayBrand(tableSession?.table?.name || tableSession?.table?.code || ""),code:""};
   }
   function contextLabel() {
     const context=guestContext();
-    return [context.branch && h("branch")+": "+context.branch,context.table ? t("table")+" "+context.table : h("unknown")].filter(Boolean).join(" · ");
+    return context.table ? t("table")+" "+context.table : h("unknown");
   }
   function guestServices(content, element, demo, kinds=requestKinds) {
     const section=element("section",null,"hp-services");
@@ -343,7 +343,7 @@
       dialog.classList.toggle('connect-dialog',panel==='chat'&&Boolean(chat));
       if(panel==='chat'&&chat){
         let branchId=null;
-        if(demo){try{window.RomanoDemoBranches?.context();branchId=window.RomanoDemoBranches?.id||'primary';}catch{/* invalid demo branch */}}
+        if(demo){try{window.RomanoDemoBranches?.context();branchId='primary';}catch{/* invalid demo branch */}}
         chat.render(content,{language:lang(),mode,branchId,tableCode:guestContext().code,profileId:profileId(),context:contextLabel(),brand:document.querySelector('[data-restaurant-brand]')?.textContent.trim(),onContact:()=>openPanel('contact',origin,true),onLanguage:value=>window.ROMANO_I18N.setLanguage(value,false)});
       }else{
       if(panel==='waiter')guestServices(content,element,demo,['waiter']);

@@ -4,7 +4,7 @@ const copy={
   "fa": {
     "title": "صندوق مکالمات",
     "mode": "RAMEN Connect · آزمایشی",
-    "notice": "فقط مکالمات نمونه همین شعبه و مرورگر. پاسخ‌ها برای مشتری واقعی ارسال نمی‌شوند.",
+    "notice": "فقط مکالمات نمونه همین رستوران و مرورگر. پاسخ‌ها برای مشتری واقعی ارسال نمی‌شوند.",
     "unavailable": "صندوق آنلاین هنوز فعال نشده است.",
     "branch": "شعبه",
     "primary": "شعبه اصلی",
@@ -52,7 +52,7 @@ const copy={
   "en": {
     "title": "Conversation inbox",
     "mode": "RAMEN Connect · Demo",
-    "notice": "Sample conversations in this branch and browser only. No replies are sent to real guests.",
+    "notice": "Sample conversations in this restaurant and browser only. No replies are sent to real guests.",
     "unavailable": "The online inbox is not enabled yet.",
     "branch": "Branch",
     "primary": "Main branch",
@@ -100,7 +100,7 @@ const copy={
   "tr": {
     "title": "Sohbet gelen kutusu",
     "mode": "RAMEN Connect · Demo",
-    "notice": "Yalnızca bu şube ve tarayıcıdaki örnek sohbetler. Gerçek misafirlere yanıt gönderilmez.",
+    "notice": "Yalnızca bu restoran ve tarayıcıdaki örnek sohbetler. Gerçek misafirlere yanıt gönderilmez.",
     "unavailable": "Çevrimiçi gelen kutusu henüz etkin değil.",
     "branch": "Şube",
     "primary": "Ana şube",
@@ -148,7 +148,7 @@ const copy={
   "ar": {
     "title": "صندوق المحادثات",
     "mode": "RAMEN Connect · تجريبي",
-    "notice": "محادثات نموذجية في هذا الفرع والمتصفح فقط. لا تُرسل الردود إلى ضيوف حقيقيين.",
+    "notice": "محادثات نموذجية في هذا المطعم والمتصفح فقط. لا تُرسل الردود إلى ضيوف حقيقيين.",
     "unavailable": "صندوق المحادثات عبر الإنترنت غير مفعّل بعد.",
     "branch": "الفرع",
     "primary": "الفرع الرئيسي",
@@ -219,7 +219,7 @@ const start=function startInbox(root,copy,model){
       if(typeof adminInitialized==="undefined"||!adminInitialized||!adminDemoMode||!demoAdminSignedIn()||root.RomanoAPI.enabled||doc.querySelector(".admin-app").inert)return null;
       const branch=root.RomanoDemoBranches;
       if(branch)branch.context();
-      return {id:"demo-manager",role:"manager",restaurantId:"romano",branchId:branch?.id||"primary"};
+      return {id:"demo-manager",role:"manager",restaurantId:"romano",branchId:"primary"};
     }catch{return null;}
   }
   const isPage=()=>page.classList.contains("is-active");
@@ -261,8 +261,7 @@ const start=function startInbox(root,copy,model){
   function build(){
     if(!actor){showNotice();return;}
     const t=w(),heading=el("div",null,"page-heading"),h=el("h1",t.title);h.id="connect-inbox-title";
-    const branchName=root.RomanoDemoBranches?.context()?.name||t.primary;
-    heading.append(el("span",t.mode,"page-eyebrow"),h,el("p",t.branch+": "+branchName,"connect-inbox-notice"),el("p",t.notice,"connect-inbox-notice"));
+    heading.append(el("span",t.mode,"page-eyebrow"),h,el("p",t.notice,"connect-inbox-notice"));
     const toolbar=el("div",null,"connect-inbox-toolbar"),search=el("input"),statusFilter=el("select");
     search.type="search";search.placeholder=t.search;search.setAttribute("aria-label",t.search);search.value=query;search.maxLength=200;
     statusFilter.setAttribute("aria-label",t.filter);

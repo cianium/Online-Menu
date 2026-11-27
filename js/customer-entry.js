@@ -70,7 +70,7 @@
   const branch=window.RomanoDemoBranches?.context();
   if(branch){
     const table=branch.tables.find(row=>row.code===window.RomanoDemoBranches.table);
-    panel.append(el('p',table ? window.ROMANO_I18N.displayBrand(branch.name)+' · '+window.ROMANO_I18N.displayBrand(table.name) : window.ROMANO_I18N.displayBrand(branch.name)));
+    if(table)panel.append(el('p',window.ROMANO_I18N.displayBrand(table.name)));
   }
   panel.append(text('p','intro'),form,notice,guest);
   dialog.replaceChildren(panel);dialog.showModal();

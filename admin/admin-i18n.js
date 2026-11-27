@@ -9,13 +9,13 @@
     const LANGS = ["fa", "en", "tr", "ar"];
 
     const T = {
-      "پشتیبان همه شعبه‌ها": ["All-branch backup","Tüm şubelerin yedeği","نسخة احتياطية لكل الفروع"],
-      "شامل منو، میزها، اعضا، سفارش‌ها، پیش‌نویس وفاداری و نظرات همه شعبه‌ها؛ فایل حاوی اطلاعات شخصی است و باید خصوصی بماند.": ["Includes menus, tables, members, orders, loyalty drafts and reviews for every branch. The file contains personal information; keep it private.","Tüm şubelerin menülerini, masalarını, üyelerini, siparişlerini, sadakat taslaklarını ve yorumlarını içerir. Dosyada kişisel bilgiler vardır; gizli tutun.","يشمل القوائم والطاولات والأعضاء والطلبات ومسودات الولاء والتقييمات لكل الفروع. يحتوي الملف على بيانات شخصية؛ احفظه بسرية."],
+      "پشتیبان رستوران": ["Restaurant backup","Restoran yedeği","نسخة احتياطية للمطعم"],
+      "شامل منو، میزها، اعضا، سفارش‌ها، پیش‌نویس وفاداری و نظرات رستوران؛ فایل حاوی اطلاعات شخصی است و باید خصوصی بماند.": ["Includes the restaurant menu, tables, members, orders, loyalty drafts and reviews. Keep personal information private.","Restoran menüsü, masaları, üyeleri, siparişleri, sadakat taslakları ve yorumları içerir. Kişisel bilgileri gizli tutun.","يشمل قائمة المطعم والطاولات والأعضاء والطلبات ومسودات الولاء والتقييمات. احفظ المعلومات الشخصية بسرية."],
       "برای بازیابی کامل از یک مرورگر یا پروفایل خالی استفاده کنید و تب‌های دیگر را ببندید. اطلاعات موجود بازنویسی نمی‌شوند.": ["For full restore, use an empty browser profile and close other tabs. Existing data will not be overwritten.","Tam geri yükleme için boş bir tarayıcı profili kullanın ve diğer sekmeleri kapatın. Mevcut verilerin üzerine yazılmaz.","للاستعادة الكاملة استخدم ملف متصفح فارغًا وأغلق علامات التبويب الأخرى. لن تُستبدل البيانات الموجودة."],
-      "خروجی همه شعبه‌ها": ["Export all branches","Tüm şubeleri dışa aktar","تصدير كل الفروع"],
-      "بازیابی همه شعبه‌ها": ["Restore all branches","Tüm şubeleri geri yükle","استعادة كل الفروع"],
+      "خروجی پشتیبان رستوران": ["Export restaurant backup","Restoran yedeğini dışa aktar","تصدير نسخة المطعم"],
+      "بازیابی پشتیبان رستوران": ["Restore restaurant backup","Restoran yedeğini geri yükle","استعادة نسخة المطعم"],
       "همه داده‌های پشتیبان در این محیط خالی بازیابی شوند؟": ["Restore all backup data into this empty workspace?","Tüm yedek veriler bu boş çalışma alanına geri yüklensin mi?","هل تريد استعادة جميع بيانات النسخة الاحتياطية في مساحة العمل الفارغة؟"],
-      "برای بازیابی همه شعبه‌ها از محیط خالی استفاده کنید.": ["Use an empty workspace to restore all branches.","Tüm şubeleri geri yüklemek için boş bir çalışma alanı kullanın.","استخدم مساحة عمل فارغة لاستعادة كل الفروع."],
+      "برای بازیابی پشتیبان رستوران از محیط خالی استفاده کنید.": ["Use an empty workspace to restore the backup.","Restoran yedeğini geri yüklemek için boş bir çalışma alanı kullanın.","استخدم مساحة عمل فارغة لاستعادة نسخة المطعم."],
       "بازیابی ناقص است؛ داده‌ها را بررسی کنید و دوباره وارد نکنید.": ["Restore was incomplete. Inspect the data before attempting another import.","Geri yükleme tamamlanamadı. Yeniden içe aktarmadan önce verileri kontrol edin.","الاستعادة غير مكتملة. افحص البيانات قبل محاولة الاستيراد مجددًا."],
       "مدیریت وضعیت شعبه": ["Manage branch status","Şube durumunu yönet","إدارة حالة الفرع"],
       "غیرفعال‌سازی، ورود و سفارش جدید را متوقف می‌کند؛ اطلاعات قبلی حذف نمی‌شوند.": ["Deactivation stops new sign-ins and orders; existing data is retained.","Devre dışı bırakma yeni girişleri ve siparişleri durdurur; mevcut veriler korunur.","يوقف التعطيل تسجيل الدخول والطلبات الجديدة؛ وتُحفظ البيانات السابقة."],
