@@ -328,7 +328,14 @@ async function bootAdmin() {
             }
             if(!demoAdminSignedIn()){setGateOpen(true);return;}
         }
-        if (available && !session?.user) { setGateOpen(true); return; }
+        if (available && (!session?.user || !session?.membership)) {
+            if (await window.RomanoAPI.phoneAuthStatus()) {
+                const destination = new URL('../',location.href);
+                if (!session?.user) destination.searchParams.set('login','1');
+                location.replace(destination.href); return;
+            }
+            setGateOpen(true); return;
+        }
         await startAdmin();
     } catch (error) {
         console.error("Admin could not load:", error);

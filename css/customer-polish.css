@@ -734,3 +734,9 @@ html[dir] .hero-section>.hero-button{grid-row:2;align-self:end;justify-self:cent
 .navigation-rating{min-height:0;padding-block:4px}
 
 #main-content > .menu-data-status{max-width:1192px;margin:8px auto 12px;padding:8px 12px;font-size:12px;border-radius:8px}
+
+/* Connected phone entry uses the same visual system as customer entry. */
+#phone-auth-entry [hidden]{display:none!important}
+#phone-auth-entry .phone-auth-invite-toggle{display:flex;align-items:center;gap:10px}
+#phone-auth-entry .phone-auth-invite-toggle input{width:24px;min-width:24px;min-height:24px;height:24px;accent-color:#d6ae70}
+#phone-auth-entry button:disabled{opacity:.6;cursor:not-allowed}

@@ -78,7 +78,7 @@
   name.focus();return true;
  }
  function renderProfile(host,closePanel){
-  if(!demo())return false;
+  if(!demo())return window.RomanoPhoneAuth?.renderProfile(host,closePanel)??false;
   const member=current();
   if(!member){const button=text('button','join','feedback-save');button.type='button';button.addEventListener('click',()=>{closePanel();open();});host.append(text('p','notice','ramen-contact-note'),button);return true;}
   const memberName=el('strong',member.name);memberName.dir='auto';host.append(memberName);
