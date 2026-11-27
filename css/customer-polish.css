@@ -623,3 +623,56 @@ html[dir] .hero-description {text-align:center;margin-inline:auto;}
 html[dir] .hero-button {align-self:center;}
 html[dir] .hero-overlay {background:linear-gradient(180deg,#080705b0 0%,#08070590 35%,#08070540 70%,#080705b0 100%);}
 @media(max-width:720px){html[dir] .hero-section{min-height:max(300px,calc(100dvh - var(--r17-header-height,106px) - var(--customer-nav-reserve,86px)));}html[dir] .hero-content{padding-block:clamp(28px,6vh,48px) 24px;}}
+
+/* Hospitality Premium — scoped customer panels, logical directions and accessible touch targets. */
+.hp-context{margin:4px 0 0;color:#c4b8a7;font-size:.78rem;line-height:1.5;overflow-wrap:anywhere}
+#commerce-drawer .commerce-item{grid-template-columns:64px minmax(0,1fr) auto;align-items:start;gap:10px;padding:12px;border:1px solid #d6ae7025;border-radius:16px;background:#ffffff05}
+#commerce-drawer .commerce-item-media{inline-size:64px;block-size:64px;border-radius:12px}
+.hp-item-copy{display:grid;gap:4px;min-width:0}
+#commerce-drawer .hp-unit{color:#bcb0a2;font-size:11px;overflow-wrap:anywhere}
+.hp-line-total{color:#ebc98e;font-size:14px;overflow-wrap:anywhere}
+#commerce-drawer .commerce-quantity{width:max-content;max-width:100%;margin:4px 0 0;gap:6px}
+#commerce-drawer .commerce-quantity button{border-radius:12px}
+#commerce-drawer .commerce-remove{font-size:12px;text-decoration:none;border-radius:10px;background:#ffffff05;color:#e0b6a5}
+.hp-summary{font-size:12px;color:#c4b8a7}
+#commerce-drawer #commerce-demo-status{margin-block:10px 0;font-size:12px;color:#c4b8a7}
+.hp-undo{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border:1px solid #d6ae7040;border-radius:12px;color:#ecd9bc;font-size:13px}
+.hp-undo button,.hp-continue,.hp-suggestion button,.hp-contact-actions button{min-height:44px;border-radius:11px;border:1px solid #d6ae7050;background:#d6ae7010;color:#f1d8b0;font:inherit;cursor:pointer;padding:6px 12px}
+.hp-continue{margin-block:10px}
+.hp-suggestions{padding-block:14px}
+.hp-suggestions h3,.hp-services h3{font-size:15px;color:#f7f0e7;margin:0 0 10px}
+.hp-suggestion-grid{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(132px,48%);gap:8px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:inline proximity;padding-block:4px}
+.hp-suggestion{display:grid;gap:6px;align-content:space-between;padding:12px;min-width:0;border:1px solid #d6ae7025;border-radius:14px;background:#ffffff05;scroll-snap-align:start;font-size:12px;overflow-wrap:anywhere}
+.hp-suggestion span{color:#ebc98e}
+.hp-suggestion button{font-size:12px}
+#commerce-drawer .commerce-note{margin-block:8px 14px}
+#commerce-drawer .commerce-note textarea{border-color:#d6ae7030}
+.hp-contact{max-height:90dvh;padding:20px 18px calc(18px + env(safe-area-inset-bottom));}
+.hp-contact .ramen-contact-head{margin-bottom:12px}
+.hp-contact .ramen-contact-content{gap:12px}
+.hp-identity{display:grid;gap:4px;padding:16px;border:1px solid #d6ae7033;border-radius:16px;background:linear-gradient(135deg,#d6ae7010,#ffffff03)}
+.hp-identity strong{font-size:20px;overflow-wrap:anywhere;color:#ebc98e}
+.hp-services{padding-block:6px}
+.hp-service-notice,.hp-service-live{margin:8px 0;color:#c4b8a7;font-size:12px;line-height:1.6}
+.hp-service-live:empty{display:none}
+.hp-service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.hp-service-action{display:grid;justify-items:start;gap:5px;min-height:88px;padding:12px;border:1px solid #d6ae7030;border-radius:14px;color:#f7f0e7;background:#ffffff05;font:inherit;text-align:start;cursor:pointer;overflow-wrap:anywhere}
+.hp-service-action strong{font-size:13px}
+.hp-service-icon{color:#ebc98e;font-size:22px;line-height:1}
+.hp-service-action[aria-pressed="true"]{border-color:#d6ae70;background:#d6ae7018}
+.hp-service-detail{color:#ebc98e;font-size:11px}
+.hp-service-action:disabled{color:#b7ad9f;cursor:not-allowed;background:#ffffff03}
+.hp-contact-actions{display:grid;gap:8px}
+#hp-undo[hidden],#hp-continue[hidden],#hp-suggestions[hidden],#hp-note-local[hidden]{display:none!important}
+:is(#commerce-drawer,.hp-contact) button:focus-visible{outline:2px solid #ebc98e;outline-offset:3px}
+@media(max-width:420px){#commerce-drawer .commerce-item{grid-template-columns:52px minmax(0,1fr);gap:9px}#commerce-drawer .commerce-item-media{inline-size:52px;block-size:52px}#commerce-drawer .commerce-remove{grid-column:2;justify-self:start;min-height:44px}}
+
+.hp-service-icon{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.hp-history-notes{white-space:pre-wrap;overflow-wrap:anywhere;color:#c4b8a7}
+
+/* Demo hospitality offers and item instructions. */
+.hp-item-note{grid-column:2/-1;display:grid;gap:4px;color:#c4b8a7;font-size:12px;min-width:0}.hp-item-note input,.hp-code-row input{width:100%;min-width:0;min-height:44px;border:1px solid #d6ae7035;border-radius:10px;padding:8px;color:#f7f0e7;background:#100e0c;font:inherit}.hp-code-row{display:flex;gap:8px}.hp-code-row button{min-height:44px;border-radius:10px;border:1px solid #d6ae7050;background:#d6ae7010;color:#f1d8b0;padding:8px 12px;font:inherit}#hp-offer{display:grid;gap:6px;color:#c4b8a7;font-size:13px;padding-block:8px}#hp-offer[hidden],#hp-discount[hidden],#hp-points[hidden]{display:none!important}#hp-coupon-status{margin:0}#hp-coupon-status:empty{display:none}#hp-discount strong{color:#b6d1af}@media(max-width:420px){#commerce-drawer .hp-item-note{grid-column:1/-1}#commerce-drawer .commerce-remove{grid-column:2;justify-self:end}}
+
+/* At very narrow widths use two compact rows rather than clip the localized wordmark or reduce touch targets. */
+@media(max-width:360px){#site-header .header-container{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding-inline:0;}#site-header .header-container>.brand{grid-column:1/-1;justify-content:center;width:100%;min-width:0;gap:6px}#site-header .brand-content{flex:0 1 auto;width:auto;min-inline-size:0}#site-header .brand-name{font-size:15px}#site-header .header-container>:is(#romano-language-toggle,#menu-search-toggle,.ramen-header-cart,.menu-toggle){justify-self:center;inline-size:44px;min-inline-size:44px;block-size:44px;min-block-size:44px;}}
+#hp-subtotal[hidden],#hp-bundle[hidden]{display:none!important}

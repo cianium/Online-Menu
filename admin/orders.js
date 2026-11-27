@@ -97,7 +97,9 @@
         return `<article class="order-ticket sample-order-ticket">
           <time datetime="${safe(order.createdAt)}" dir="auto">${safe(date.format(new Date(order.createdAt)))}</time>
           ${order.tableName ? '<span data-admin-user-text="true">'+safe(order.tableName)+'</span>' : ''}
-          <ul class="order-ticket-items" data-admin-user-text="true">${order.items.map(item=>`<li><bdi>${safe(item.name)}</bdi> × ${number(item.quantity)}</li>`).join('')}</ul>
+          <ul class="order-ticket-items" data-admin-user-text="true">${order.items.map(item=>`<li><bdi>${safe(item.name)}</bdi> × ${number(item.quantity)}${item.note?'<p>'+safe(item.note)+'</p>':''}</li>`).join('')}</ul>
+          ${order.notes?'<p data-admin-user-text="true">'+safe(order.notes)+'</p>':''}
+          ${order.offer?'<p data-admin-user-text="true">'+safe(order.offer.code)+' · −'+safe(window.OnlineMenuMoney.formatCatalog(order.offer.discount,{currency:order.currency,language:locale()}))+'</p>':''}
           <footer class="order-ticket-footer"><strong dir="auto">${safe(total)}</strong></footer>
         </article>`;
       }).join('');
