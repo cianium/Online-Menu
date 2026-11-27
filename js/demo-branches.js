@@ -21,6 +21,7 @@
     if (!Array.isArray(rows) || !rows.length || rows.length > 50 || rows[0]?.id !== '' ||
         new Set(rows.map(row => row?.id)).size !== rows.length ||
         !rows.every((row, index) => row && typeof row.id === 'string' && (!index || uuid.test(row.id)) && label(row.name) &&
+          (row.active === undefined || typeof row.active === 'boolean') && (index !== 0 || row.active !== false) &&
           Array.isArray(row.tables) && row.tables.length <= 100 &&
           row.tables.every(t => t && typeof t.code === 'string' && code.test(t.code) && label(t.name)) &&
           new Set(row.tables.map(t => t.code)).size === row.tables.length)) throw Error('BRANCH_DATA');
@@ -29,7 +30,7 @@
   function context() {
     if (!id && table === null) return null;
     const branch = read().find(row => row.id === id);
-    if (!branch || (table !== null && !branch.tables.some(t => t.code === table))) throw Error('BRANCH_MISSING');
+    if (!branch || branch.active === false || (table !== null && !branch.tables.some(t => t.code === table))) throw Error('BRANCH_MISSING');
     return branch;
   }
   function scope(key) { return id ? key + ':branch:' + id : key; }
@@ -50,7 +51,7 @@
       try {
         const rows = read();
         const current = rows.find(row => row.id === id);
-        if (!current) throw Error('BRANCH_MISSING');
+        if (!current || current.active === false) throw Error('BRANCH_MISSING');
         let changedId = id;
         if (action === 'table') {
           if (typeof tableCode !== 'string' || !code.test(tableCode) || current.tables.length >= 100 || current.tables.some(t => t.code === tableCode)) throw Error('BRANCH_INPUT');
@@ -70,5 +71,27 @@
     if (result.error) throw Error(result.error);
     return result.id;
   }
-  window.RomanoDemoBranches = Object.freeze({registry,id,table,scope,context,read,save,link});
+  // Archive is reversible; the primary branch and all historical data are retained.
+  async function setActive(target, active) {
+    if (id !== '' || table !== null || typeof target !== 'string' || !uuid.test(target) || typeof active !== 'boolean') throw Error('BRANCH_INPUT');
+    if (!navigator.locks) throw Error('BRANCH_STORAGE');
+    const result = await navigator.locks.request(registry, () => {
+      try {
+        const rows = read(), row = rows.find(item => item.id === target);
+        if (!row) throw Error('BRANCH_MISSING');
+        if ((row.active !== false) !== active) {
+          row.active = active;
+          localStorage.setItem(registry, JSON.stringify(rows));
+        }
+        return {};
+      } catch (error) { return {error:error.message}; }
+    });
+    if (result.error) throw Error(result.error);
+  }
+  // Existing customer/admin tabs must not continue using an archived branch.
+  if (id) window.addEventListener?.('storage', event => {
+    if (event.key !== registry && event.key !== null) return;
+    try { context(); } catch { location.reload(); }
+  });
+  window.RomanoDemoBranches = Object.freeze({registry,id,table,scope,context,read,save,link,setActive});
 })();
