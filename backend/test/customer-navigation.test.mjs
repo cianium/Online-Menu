@@ -162,3 +162,29 @@ test('Commerce enhances freshly rendered cards synchronously and preserves focus
  assert.doesNotMatch(js,/setTimeout\(enhanceProducts/);
  assert.match(js,/restoreDetailsFocus && !details\.closest\("\[inert\]"\)/);
 });
+
+test('RAMEN customer presentation maps legacy brand text without changing persisted data',async()=>{
+ const {runInNewContext}=await import('node:vm');
+ for(const lang of ['fa','en','tr','ar']){
+  const window={};runInNewContext(read('js/i18n.js'),{window,document:{addEventListener(){}},localStorage:{getItem:()=>lang}});
+  const api=window.ROMANO_I18N, name=['fa','ar'].includes(lang)?'رامن':'RAMEN';
+  const original={name:'رمانو',address:'ROMANO Cafe',translations:{en:{name:'Romano'}}};
+  assert.equal(api.localizeRestaurant(original).name,name);assert.equal(api.localizeRestaurant(original).address,name+' Cafe');assert.equal(original.name,'رمانو');
+  assert.equal(api.localizeRestaurant({name:'Test Kitchen'}).name,'Test Kitchen');
+  assert.equal(api.localizeProduct({id:'custom',name:'ROMANO dish',description:'سس رومانو'}).name,name+' dish');
+ }
+});
+
+test('Known sample address translates after a saved RAMEN rebrand; custom addresses are preserved',async()=>{
+ const {runInNewContext}=await import('node:vm');
+ const original='اصفهان، میدان انقلاب، بر گذر چهارباغ عباسی، بعد از مادی نیاصرم، کافه رستوران رامن';
+ for(const lang of ['fa','en','tr','ar']){
+  const window={};runInNewContext(read('js/i18n.js'),{window,document:{addEventListener(){}},localStorage:{getItem:()=>lang}});
+  const api=window.ROMANO_I18N;
+  const expected=api.displayBrand(api.restaurant.address[lang]);
+  for(const address of [original,original.replace('رامن','رمانو'),original.replace('رامن','رومانو'),original.replace('رامن','RAMEN'),api.restaurant.address.en])assert.equal(api.localizeRestaurant({name:'RAMEN',address}).address,expected,lang);
+  assert.equal(api.localizeRestaurant({address:'Custom branch address'}).address,'Custom branch address');
+  assert.equal(api.localizeRestaurant({address:original,translations:{[lang]:{address:'Custom translated address'}}}).address,'Custom translated address');
+  assert.equal(api.localizeRestaurant({address:''}).address,'');
+ }
+});

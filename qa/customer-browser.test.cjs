@@ -17,6 +17,47 @@ async function ready(p){
  const p=await ctx.newPage();await p.goto(base);await ready(p);
  const cards=p.locator('#menu .product-card');
  await check('Static demo boots with 21 products',async()=>{assert.equal(await cards.count(),21);assert.equal(await p.evaluate(()=>menuDataMode),'demo')});
+ await check('Customer brand is RAMEN in all four locales including legacy catalog data',async()=>{
+  for(const lang of ['fa','en','tr','ar']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   const name=['fa','ar'].includes(lang)?'رامن':'RAMEN';
+   assert.equal((await p.locator('.brand-name').innerText()).trim(),name);
+   assert.equal((await p.locator('.footer-logo').innerText()).trim(),name);
+   assert.ok((await p.title()).includes(name));
+   const values=await p.evaluate(()=>[ROMANO_I18N.localizeRestaurant({name:'ROMANO',address:'ROMANO restaurant'}).name,ROMANO_I18N.localizeRestaurant({name:'رمانو',address:'ROMANO restaurant'}).address,ROMANO_I18N.localizeProduct({id:'custom',name:'ROMANO dish',description:'Sauce ROMANO'}).description]);
+   assert.ok(values.every(value=>value.includes(name)&&!/romano|رمانو|رومانو/i.test(value)));
+   assert.equal(await p.locator('.commerce-drawer small').textContent(),'RAMEN');
+  }
+  await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));
+ });
+ await check('Saved RAMEN address, contact dialog, navigation footer and cart brand stay localized',async()=>{
+  const legacy='اصفهان، میدان انقلاب، بر گذر چهارباغ عباسی، بعد از مادی نیاصرم، کافه رستوران رامن';
+  await p.evaluate(address=>localStorage.setItem('romano_restaurant',JSON.stringify({...restaurantConfig,name:'رامن',address})),legacy);
+  try{
+   await p.reload();await ready(p);
+   for(const lang of ['en','tr','ar','fa']){
+    await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+    const expected=await p.evaluate(()=>ROMANO_I18N.displayBrand(ROMANO_I18N.restaurant.address[ROMANO_I18N.language]));
+    assert.equal((await p.locator('.footer-address').innerText()).trim(),expected,lang+' footer address');
+    assert.equal(await p.locator('.footer-address').getAttribute('dir'),'auto');
+    const trigger=p.locator('[data-ramen-nav="contact"]');await trigger.focus();await trigger.press('Space');
+    const dialog=p.locator('#ramen-contact-dialog');await dialog.waitFor({state:'visible'});
+    assert.equal(await dialog.locator('.ramen-contact-item > span[dir="auto"]').textContent(),expected,lang+' contact address');
+    await p.keyboard.press('Escape');await p.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open);
+    await p.locator('#menu-toggle').click();
+    const nav=p.locator('.navigation-footer-meta > span');
+    const navLabel={fa:'منوی دیجیتال RAMEN',en:'RAMEN · DIGITAL MENU',tr:'RAMEN · DİJİTAL MENÜ',ar:'رامن · القائمة الرقمية'}[lang];
+    await p.waitForFunction(()=>document.querySelector('#main-navigation').getAttribute('aria-hidden')==='false');
+    await nav.waitFor({state:'visible'});
+    await p.waitForFunction(label=>document.querySelector('.navigation-footer-meta > span')?.innerText.trim()===label,navLabel);
+    assert.equal((await nav.textContent()).trim(),navLabel);
+    await p.locator('#navigation-close').click();
+    await p.waitForFunction(()=>document.querySelector('#main-navigation').getAttribute('aria-hidden')==='true');
+    assert.equal(await p.locator('.commerce-drawer small').textContent(),'RAMEN');
+    assert.doesNotMatch(await p.locator('.footer-bottom span').textContent(),/romano|رومانو|رمانو/i);
+   }
+  }finally{await p.evaluate(()=>{localStorage.removeItem('romano_restaurant');ROMANO_I18N.setLanguage('fa',false);});await p.reload();await ready(p);}
+ });
  await check('Customer image sources reject unsupported protocols and URL credentials',async()=>{
   const result=await p.evaluate(()=>({
    rejected:['javascript:alert(1)','data:image/svg+xml,<svg/>','file:///etc/passwd','https://user:password@example.test/a.png','blob:'+location.origin+'/sample'].map(getSafeImageSource),
@@ -621,10 +662,10 @@ async function ready(p){
  });
  await check('Hero and consolidated footer stay localized and direction-aware',async()=>{
   const expected={
-   fa:{tagline:'کافه و رستوران',footerBrand:'کافه و رستوران',contact:'ارتباط با ما',follow:'ما را دنبال کنید',powered:'قدرت‌گرفته از ROMANO',story:'ساده نیست خاص است',contactTitle:'منتظر شما هستیم.'},
-   en:{tagline:'Cafe & Restaurant',footerBrand:'Cafe & Restaurant',contact:'Contact',follow:'Follow us',powered:'Powered by ROMANO',story:'It is not ordinary.',contactTitle:'We are waiting for you.'},
-   tr:{tagline:'Kafe & Restoran',footerBrand:'Kafe & Restoran',contact:'İletişim',follow:'Bizi takip edin',powered:'ROMANO ile desteklenmektedir',story:'Sıradan değil özel.',contactTitle:'Sizi bekliyoruz.'},
-   ar:{tagline:'مقهى ومطعم',footerBrand:'مقهى ومطعم',contact:'تواصل معنا',follow:'تابعنا',powered:'مدعوم بواسطة رومانو',story:'الأمر ليس عاديًا.',contactTitle:'بانتظاركم.'}
+   fa:{tagline:'کافه و رستوران',footerBrand:'کافه و رستوران',contact:'ارتباط با ما',follow:'ما را دنبال کنید',powered:'قدرت‌گرفته از RAMEN',story:'ساده نیست خاص است',contactTitle:'منتظر شما هستیم.'},
+   en:{tagline:'Cafe & Restaurant',footerBrand:'Cafe & Restaurant',contact:'Contact',follow:'Follow us',powered:'Powered by RAMEN',story:'It is not ordinary.',contactTitle:'We are waiting for you.'},
+   tr:{tagline:'Kafe & Restoran',footerBrand:'Kafe & Restoran',contact:'İletişim',follow:'Bizi takip edin',powered:'RAMEN ile desteklenmektedir',story:'Sıradan değil özel.',contactTitle:'Sizi bekliyoruz.'},
+   ar:{tagline:'مقهى ومطعم',footerBrand:'مقهى ومطعم',contact:'تواصل معنا',follow:'تابعنا',powered:'مدعوم بواسطة رامن',story:'الأمر ليس عاديًا.',contactTitle:'بانتظاركم.'}
   };
   for(const lang of ['fa','ar','en','tr']){
    await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
@@ -680,12 +721,12 @@ async function ready(p){
    assert.equal((await p.locator('.footer-brand p').textContent()).trim(),custom[lang]);
   }
  });
- await check('Only the requested localized creator credit appears in the footer; commerce remains ROMANO',async()=>{
+ await check('Only the requested localized creator credit appears in the footer; commerce remains RAMEN',async()=>{
   assert.equal(await p.locator('a[href*="kiankhayat.me"]').count(),1);
   const credit=p.locator('.footer-bottom a.footer-creator[href="https://kiankhayat.me"]');
   assert.equal(await credit.count(),1);
   assert.equal(await credit.getAttribute('rel'),'noopener noreferrer');
-  assert.equal(await p.locator('.commerce-drawer small').textContent(),'ROMANO');
+  assert.equal(await p.locator('.commerce-drawer small').textContent(),'RAMEN');
  });
  await check('No uncaught browser errors',async()=>assert.deepEqual(errors,[]));
  fs.writeFileSync(path.join(out,'customer-browser-results.json'),JSON.stringify({passed:results.length,cases:results,errors,notes:'Chromium, static preview and mocked public API. Service workers blocked. No real PostgreSQL or production test.'},null,2));

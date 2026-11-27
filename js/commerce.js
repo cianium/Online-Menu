@@ -178,10 +178,10 @@
       try {
         const model=window.RomanoDemoBranches, branch=model?.context();
         const table=branch?.tables.find(row=>row.code===model.table);
-        return {branch:branch?.name || "", table:table?.name || "", code:table?.code || ""};
+        return {branch:window.ROMANO_I18N.displayBrand(branch?.name || ""), table:window.ROMANO_I18N.displayBrand(table?.name || ""), code:table?.code || ""};
       } catch { return {}; }
     }
-    return {branch:"",table:tableSession?.table?.name || tableSession?.table?.code || "",code:""};
+    return {branch:"",table:window.ROMANO_I18N.displayBrand(tableSession?.table?.name || tableSession?.table?.code || ""),code:""};
   }
   function contextLabel() {
     const context=guestContext();
@@ -303,7 +303,7 @@
       dialog.classList.toggle('hp-contact',panel==='contact');
       if(panel==='contact'){
         const identity=element('div',null,'hp-identity');
-        const brand=element('strong',document.querySelector('[data-restaurant-brand]')?.textContent.trim() || 'ROMANO');
+        const brand=element('strong',document.querySelector('[data-restaurant-brand]')?.textContent.trim() || 'RAMEN');
         identity.append(brand,element('span',contextLabel(),'hp-context'));content.append(identity);
         guestServices(content,element,demo);
       }else if(demo)content.append(element('p',words.demo,'ramen-contact-note'));
@@ -341,7 +341,7 @@
       const phone=document.querySelector('[data-restaurant-phone]')?.textContent.trim();
       const social=document.querySelector('[data-restaurant-instagram]')?.getAttribute('href');
       if((panel==='contact'||panel==='chat') && (demo || mode==='public' || mode==='offline') && phone)appendInfo(words.phone,phone,!demo && /^\+?[\d\s().-]{5,25}$/.test(phone)?'tel:'+phone.replace(/[^+\d]/g,''):null,'ltr');
-      if(panel==='contact' && (demo || mode==='public' || mode==='offline') && address)appendInfo(words.address,address,null);
+      if(panel==='contact' && (demo || mode==='public' || mode==='offline') && address)appendInfo(words.address,address,null,'auto');
       if((panel==='contact'||panel==='chat') && social && /^https?:\/\//i.test(social) && (mode==='public' || mode==='offline')){const url=getSafeExternalUrl(social);if(url)appendInfo(words.social,words.social,url);}
       if(panel==='contact'){
         if(!content.querySelector('.ramen-contact-item'))content.append(element('p',words.missing,'ramen-contact-note'));
@@ -388,7 +388,7 @@
       <div class="commerce-backdrop" data-commerce-close hidden></div>
       <section class="commerce-drawer" id="commerce-drawer" role="dialog" aria-modal="true" aria-labelledby="commerce-title" aria-hidden="true" tabindex="-1" inert>
         <header class="commerce-drawer-head">
-          <div><small>ROMANO</small><h2 id="commerce-title">${safe(t("cart"))}</h2><p class="hp-context" id="hp-cart-context"></p></div>
+          <div><small>RAMEN</small><h2 id="commerce-title">${safe(t("cart"))}</h2><p class="hp-context" id="hp-cart-context"></p></div>
           <button class="commerce-close" type="button" data-commerce-close aria-label="${safe(t("close"))}">×</button>
         </header>
         <div class="commerce-scroll">
