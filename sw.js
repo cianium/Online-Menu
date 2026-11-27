@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r16-branch-lifecycle`;
+const CACHE_NAME = `${menuCachePrefix}r17-customer-refinement`;
 const CORE_ASSETS = [
   "./",
   "./index.html",

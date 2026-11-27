@@ -556,7 +556,7 @@
             if (!value || !staticText[value]) return;
             const parent = node.parentElement;
             if (!parent || parent.closest("script, style")) return;
-            if (parent.children.length > 0 && value !== parent.textContent.trim()) return;
+            if (parent.matches("#romano-language-toggle") || (parent.children.length > 0 && value !== parent.textContent.trim())) return;
             parent.setAttribute("data-i18n", value);
         });
         document.querySelectorAll("[aria-label]").forEach(el => {
