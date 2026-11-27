@@ -386,6 +386,7 @@ function readCatalogRevision(storage = localStorage) {
 async function commitLocalCatalog(entries) {
     const commit = () => {
         try {
+            window.RomanoDemoBranches?.context();
             if (localCatalogRevision === null || readCatalogRevision() !== localCatalogRevision) {
                 const error = new Error("Local catalog changed in another tab");
                 error.code = "LOCAL_CATALOG_CONFLICT";
