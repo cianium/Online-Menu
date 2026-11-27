@@ -13,6 +13,48 @@
   const t = (key) => text[lang()]?.[key] || text.fa[key] || key;
   const tenant = () => window.RomanoDemoBranches?.scope("romano") ?? (typeof restaurantSlug === "string" ? restaurantSlug : "romano");
   const standalone = window.RomanoPublicAPI.standalone;
+  // Keep chat assets outside the initial menu payload. Fixed local paths support subpath hosting.
+  const connectAssets = (() => {
+    const base = new URL("../", document.currentScript.src), pending = new Map();
+    let rotateGuest = false;
+    function asset(path, ready, style = false) {
+      if (ready()) return Promise.resolve();
+      if (pending.has(path)) return pending.get(path);
+      const job = new Promise((resolve, reject) => {
+        const node = document.createElement(style ? "link" : "script");
+        if (style) { node.rel = "stylesheet"; node.href = new URL(path, base).href; }
+        else { node.src = new URL(path, base).href; node.async = false; }
+        const finish = ok => {
+          clearTimeout(timer); node.onload = node.onerror = null;
+          if (ok && ready()) resolve(); else { node.remove(); reject(Error("CONNECT_ASSET")); }
+        };
+        const timer = setTimeout(() => finish(false), 10000);
+        node.onload = () => finish(true); node.onerror = () => finish(false);
+        document.head.append(node);
+      }).finally(() => pending.delete(path));
+      pending.set(path, job); return job;
+    }
+    const loadLive = () => asset("js/connect-live.js", () => Boolean(window.RomanoConnectLive));
+    const loadPanels = () => asset("js/customer-panels.js", () => Boolean(window.RomanoCustomerPanels));
+    async function loadEngine() {
+      await asset("js/connect-core.js", () => Boolean(window.RomanoConnectCore));
+      await asset("js/connect-demo.js", () => Boolean(window.RomanoConnectDemo));
+      if (rotateGuest) { rotateGuest = false; try { RomanoConnectDemo.forget(); } catch {} }
+    }
+    async function loadChat() {
+      await Promise.all([loadEngine(), loadLive(), asset("css/connect.css", () =>
+        [...document.styleSheets].some(sheet => sheet.href === new URL("css/connect.css", base).href), true)]);
+      await asset("js/connect-customer.js", () => Boolean(window.RomanoCustomerChat));
+    }
+    function forgetGuest() {
+      if (window.RomanoCustomerChat) { RomanoCustomerChat.clear(); return; }
+      if (window.RomanoConnectDemo) { try { RomanoConnectDemo.forget(); } catch {} return; }
+      rotateGuest = true;
+      try { sessionStorage.removeItem("romano_connect_guest_v1"); } catch {}
+    }
+    return Object.freeze({loadEngine,loadLive,loadChat,loadPanels,forgetGuest});
+  })();
+  window.RomanoConnectAssets = connectAssets;
   const isDemo = () => typeof menuDataMode !== "undefined" && menuDataMode === "demo";
   const cartKey = () => `online_menu_cart_vq3:${tenant()}`;
   const orderKey = () => `online_menu_last_order_vq3:${tenant()}`;
@@ -147,10 +189,10 @@
     ar:{title:"التواصل مع المطعم",close:"إغلاق",phone:"اتصال",address:"العنوان",social:"إنستغرام",missing:"لم تُضف معلومات التواصل.",nav:"التنقل السريع",demo:"وضع تجريبي؛ بيانات نموذجية فقط."}
   };
   const panelWords = {
-    fa:{profile:"پروفایل",guest:"شما به عنوان مهمان در حال مرور منو هستید. حساب کاربری فعال نیست.",chat:"چت",chatMissing:"سرویس گفت‌وگوی مستقیم هنوز متصل نیست. از راه‌های ارتباطی موجود استفاده کنید.",feedback:"ثبت امتیاز و رضایت",draft:"امتیاز آزمایشی فقط در این مرورگر؛ برای رستوران ارسال نمی‌شود.",unavailable:"ثبت نظر واقعی هنوز فعال نیست.",save:"ذخیره امتیاز محلی",saved:"امتیاز فقط در این مرورگر ذخیره شد.",storageError:"ذخیره محلی ممکن نیست.",rating:"امتیاز",comment:"نظر اختیاری (حداکثر ۵۰۰ نویسه؛ بدون اطلاعات شخصی)",less:"کاهش تعداد",more:"افزایش تعداد",methods:"روش پرداخت"},
-    en:{profile:"Profile",guest:"You are browsing as a guest. Customer accounts are not enabled.",chat:"Chat",chatMissing:"Direct chat is not connected yet. Use the available contact options.",feedback:"Rating & feedback",draft:"Demo rating stays in this browser and is not sent to the restaurant.",unavailable:"Online review submission is not enabled.",save:"Save local rating",saved:"Rating saved in this browser only.",storageError:"Local storage is unavailable.",rating:"Rating",comment:"Optional feedback (500 characters; no personal information)",less:"Decrease quantity",more:"Increase quantity",methods:"Payment method"},
-    tr:{profile:"Profil",guest:"Misafir olarak menüye göz atıyorsunuz. Müşteri hesabı etkin değil.",chat:"Sohbet",chatMissing:"Doğrudan sohbet bağlı değil. Mevcut iletişim seçeneklerini kullanın.",feedback:"Puan ve geri bildirim",draft:"Deneme puanı yalnızca bu tarayıcıda kalır; restorana gönderilmez.",unavailable:"Çevrimiçi yorum gönderimi etkin değil.",save:"Yerel puanı kaydet",saved:"Puan yalnızca bu tarayıcıya kaydedildi.",storageError:"Yerel depolama kullanılamıyor.",rating:"Puan",comment:"İsteğe bağlı yorum (500 karakter; kişisel bilgi yazmayın)",less:"Miktarı azalt",more:"Miktarı artır",methods:"Ödeme yöntemi"},
-    ar:{profile:"الملف الشخصي",guest:"تتصفح القائمة كضيف. حسابات العملاء غير مفعلة.",chat:"محادثة",chatMissing:"المحادثة المباشرة غير متصلة. استخدم وسائل التواصل المتاحة.",feedback:"التقييم والملاحظات",draft:"التقييم التجريبي يبقى في هذا المتصفح ولا يرسل للمطعم.",unavailable:"إرسال التقييمات عبر الإنترنت غير مفعل.",save:"حفظ التقييم المحلي",saved:"حُفظ التقييم في هذا المتصفح فقط.",storageError:"التخزين المحلي غير متاح.",rating:"التقييم",comment:"تعليق اختياري (500 حرف؛ دون معلومات شخصية)",less:"تقليل الكمية",more:"زيادة الكمية",methods:"طريقة الدفع"}
+    fa:{loadError:"بارگذاری این بخش انجام نشد. دوباره تلاش کنید.",profile:"پروفایل",guest:"شما به عنوان مهمان در حال مرور منو هستید. حساب کاربری فعال نیست.",chat:"چت",chatMissing:"سرویس گفت‌وگوی مستقیم هنوز متصل نیست. از راه‌های ارتباطی موجود استفاده کنید.",feedback:"ثبت امتیاز و رضایت",draft:"امتیاز آزمایشی فقط در این مرورگر؛ برای رستوران ارسال نمی‌شود.",unavailable:"ثبت نظر واقعی هنوز فعال نیست.",save:"ذخیره امتیاز محلی",saved:"امتیاز فقط در این مرورگر ذخیره شد.",storageError:"ذخیره محلی ممکن نیست.",rating:"امتیاز",comment:"نظر اختیاری (حداکثر ۵۰۰ نویسه؛ بدون اطلاعات شخصی)",less:"کاهش تعداد",more:"افزایش تعداد",methods:"روش پرداخت"},
+    en:{loadError:"This section could not load. Please try again.",profile:"Profile",guest:"You are browsing as a guest. Customer accounts are not enabled.",chat:"Chat",chatMissing:"Direct chat is not connected yet. Use the available contact options.",feedback:"Rating & feedback",draft:"Demo rating stays in this browser and is not sent to the restaurant.",unavailable:"Online review submission is not enabled.",save:"Save local rating",saved:"Rating saved in this browser only.",storageError:"Local storage is unavailable.",rating:"Rating",comment:"Optional feedback (500 characters; no personal information)",less:"Decrease quantity",more:"Increase quantity",methods:"Payment method"},
+    tr:{loadError:"Bu bölüm yüklenemedi. Tekrar deneyin.",profile:"Profil",guest:"Misafir olarak menüye göz atıyorsunuz. Müşteri hesabı etkin değil.",chat:"Sohbet",chatMissing:"Doğrudan sohbet bağlı değil. Mevcut iletişim seçeneklerini kullanın.",feedback:"Puan ve geri bildirim",draft:"Deneme puanı yalnızca bu tarayıcıda kalır; restorana gönderilmez.",unavailable:"Çevrimiçi yorum gönderimi etkin değil.",save:"Yerel puanı kaydet",saved:"Puan yalnızca bu tarayıcıya kaydedildi.",storageError:"Yerel depolama kullanılamıyor.",rating:"Puan",comment:"İsteğe bağlı yorum (500 karakter; kişisel bilgi yazmayın)",less:"Miktarı azalt",more:"Miktarı artır",methods:"Ödeme yöntemi"},
+    ar:{loadError:"تعذر تحميل هذا القسم. حاول مجدداً.",profile:"الملف الشخصي",guest:"تتصفح القائمة كضيف. حسابات العملاء غير مفعلة.",chat:"محادثة",chatMissing:"المحادثة المباشرة غير متصلة. استخدم وسائل التواصل المتاحة.",feedback:"التقييم والملاحظات",draft:"التقييم التجريبي يبقى في هذا المتصفح ولا يرسل للمطعم.",unavailable:"إرسال التقييمات عبر الإنترنت غير مفعل.",save:"حفظ التقييم المحلي",saved:"حُفظ التقييم في هذا المتصفح فقط.",storageError:"التخزين المحلي غير متاح.",rating:"التقييم",comment:"تعليق اختياري (500 حرف؛ دون معلومات شخصية)",less:"تقليل الكمية",more:"زيادة الكمية",methods:"طريقة الدفع"}
   };
   const panelText = () => panelWords[lang()] || panelWords.fa;
   // All new customer-facing copy is localized; no demo action reaches restaurant staff.
@@ -172,64 +214,19 @@
   const config=()=>{try{return isDemo()?window.RomanoDemoMembers.settings(localStorage):null;}catch{return null;}};
   function eligible(cfg){return cfg&&window.RomanoDemoMembers.eligibleBundle(cfg.bundle,visibleCartEntries().map(([productId,quantity])=>({productId,quantity})));}
   function discount(){const cfg=config();return cfg&&appliedCoupon&&cfg.coupon===appliedCoupon&&eligible(cfg)?window.RomanoDemoMembers.discountFor(total(),cfg.percent,restaurantConfig.currency):0;}
-  const requestKinds = ["waiter","bill","water","napkin"];
   function guestContext() {
     if (isDemo()) {
       try {
         const model=window.RomanoDemoBranches, branch=model?.context();
         const table=branch?.tables.find(row=>row.code===model.table);
-        return {branch:window.ROMANO_I18N.displayBrand(branch?.name || ""), table:window.ROMANO_I18N.displayBrand(table?.name || ""), code:table?.code || ""};
+        return {table:window.ROMANO_I18N.displayBrand(table?.name || ""), code:table?.code || ""};
       } catch { return {}; }
     }
-    return {branch:"",table:window.ROMANO_I18N.displayBrand(tableSession?.table?.name || tableSession?.table?.code || ""),code:""};
+    return {table:window.ROMANO_I18N.displayBrand(tableSession?.table?.name || tableSession?.table?.code || ""),code:""};
   }
   function contextLabel() {
     const context=guestContext();
-    return [context.branch && h("branch")+": "+context.branch,context.table ? t("table")+" "+context.table : h("unknown")].filter(Boolean).join(" · ");
-  }
-  function guestServices(content, element, demo, kinds=requestKinds) {
-    const section=element("section",null,"hp-services");
-    section.append(element("h3",h("quick")),element("p",contextLabel(),"hp-context"));
-    const context=guestContext();
-    const enabled=demo && Boolean(context.code);
-    const model=window.RomanoDemoMembers;
-    const key= model.requestPrefix+context.code;
-    const status=element("p",enabled?h("local"):demo?h("selectTable")+" "+h("local"):h("unconnected"),"hp-service-notice");
-    const grid=element("div",null,"hp-service-grid");
-    const live=element("p",null,"hp-service-live");live.setAttribute("role","status");
-    function readRequests() {
-      try{return enabled?model.requests(localStorage,context.code):{};}catch{live.textContent=panelText().storageError;return {};}
-    }
-    const icons={waiter:"M3 17h18M5 17a7 7 0 0 1 14 0M12 7V5m-2 0h4M2 20h20",bill:"M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6m-6 4h6",water:"M12 3c-2 4-6 8-6 12a6 6 0 0 0 12 0c0-4-4-8-6-12Z",napkin:"M4 4h16v16H4zM4 20 20 4M12 12h8v8"};
-    for(const kind of kinds) {
-      const button=element("button",null,"hp-service-action");button.type="button";button.disabled=!enabled;
-      const icon=document.createElementNS("http://www.w3.org/2000/svg","svg");icon.setAttribute("viewBox","0 0 24 24");icon.setAttribute("class","hp-service-icon");icon.setAttribute("aria-hidden","true");icon.setAttribute("focusable","false");
-      const stroke=document.createElementNS("http://www.w3.org/2000/svg","path");stroke.setAttribute("d",icons[kind]);icon.append(stroke);
-      const label=element("strong",h(kind));const detail=element("span",null,"hp-service-detail");
-      button.append(icon,label,detail);
-      function refresh() {
-        const state=readRequests()[kind];
-        const active=state==="pending"||state==="accepted";
-        button.disabled=!enabled||state==="accepted";
-        button.setAttribute("aria-pressed",String(active));
-        button.setAttribute("aria-label",h(kind)+(state==="pending"?" — "+h("cancel"):state==="accepted"?" — "+x(6):state==="completed"?" — "+x(7):""));
-        detail.textContent=state==="pending"?h("cancel"):state==="accepted"?x(6):state==="completed"?x(7):"";
-      }
-      button.addEventListener("click",async()=>{
-        if(!isDemo() || guestContext().code!==context.code || !enabled)return;
-        button.disabled=true;
-        try {
-          const before=readRequests()[kind], next=before==="pending"?undefined:"pending";
-          await model.mutate(()=>model.setRequest(localStorage,context.code,kind,next,before));
-          live.textContent=h(kind)+" — "+h(next?"request":"cancel")+" · "+h("local");
-        }catch{live.textContent=panelText().storageError;}
-        finally{refresh();}
-      });
-      section.addEventListener("hp-request-updated",refresh);
-      refresh();grid.append(button);
-    }
-    section.dataset.requestKey=key;
-    section.append(status,grid,live);content.append(section);
+    return context.table ? t("table")+" "+context.table : h("unknown");
   }
   function renderSuggestions() {
     const host=document.querySelector("#hp-suggestions");if(!host)return;
@@ -318,15 +315,21 @@
     trigger.setAttribute('aria-expanded','false');
     const updateLabel = () => document.querySelector('.ramen-bottom-nav')?.setAttribute('aria-label',(contactWords[lang()] || contactWords.fa).nav);
     const close = () => { if (dialog.open) dialog.close(); };
-    let origin = null;
-    const openPanel = (panel='contact', opener=trigger) => {
-      if (dialog.open) return;
-      origin=opener;
+    let origin = null, activePanel = null, panelRevision = 0;
+    const profileId=()=>window.RomanoCustomerEntry?.current()?.id||"";
+    let connectProfile=profileId();
+    const openPanel = (panel='chat', opener=trigger, replace=false, restoreLanguage=false) => {
+      if (dialog.open && !replace) return;
+      const wasOpen=dialog.open, revision=++panelRevision;
+      if(panel!=='chat')window.RomanoCustomerChat?.suspend();
+      if(!wasOpen)origin=opener;
+      activePanel=panel;
       const words = contactWords[lang()] || contactWords.fa;
       const element = (tag, value, cls) => { const node=document.createElement(tag); if(value)node.textContent=value; if(cls)node.className=cls; return node; };
       const header=element('header',null,'ramen-contact-head');
       const labels=panelText();
-      const heading=element('h2',panel==='contact'?h('services'):panel==='waiter'?h('waiter'):labels[panel]||words.title);heading.id='ramen-contact-title';
+      const chat=window.RomanoCustomerChat;
+      const heading=element('h2',panel==='chat'&&chat?chat.words(lang()).title:panel==='contact'?h('services'):panel==='waiter'?h('waiter'):labels[panel]||words.title);heading.id='ramen-contact-title';
       const dismiss=element('button',undefined,'ramen-contact-close');dismiss.type='button';dismiss.setAttribute('aria-label',words.close);dismiss.addEventListener('click',close);
       const closeGlyph=element('span','×');closeGlyph.setAttribute('aria-hidden','true');dismiss.append(closeGlyph);
       header.append(heading,dismiss);
@@ -334,69 +337,29 @@
       const mode=typeof menuDataMode !== 'undefined' ? menuDataMode : 'loading';
       const demo=mode==='demo';
       dialog.classList.toggle('hp-contact',panel==='contact');
-      if(panel==='waiter')guestServices(content,element,demo,['waiter']);
-      if(panel==='contact'){
-        const identity=element('div',null,'hp-identity');
-        const brand=element('strong',document.querySelector('[data-restaurant-brand]')?.textContent.trim() || 'RAMEN');
-        identity.append(brand,element('span',contextLabel(),'hp-context'));content.append(identity);
-        guestServices(content,element,demo);
-      }else if(demo)content.append(element('p',words.demo,'ramen-contact-note'));
-      if(panel==='profile' && !window.RomanoCustomerEntry?.renderProfile(content,close))content.append(element('p',labels.guest,'ramen-contact-note'));
-      if(panel==='chat')content.append(element('p',labels.chatMissing,'ramen-contact-note'));
-      if(panel==='feedback') {
-        content.append(element('p',demo?labels.draft:labels.unavailable,'ramen-contact-note'));
-        if(demo) {
-          const review=window.RomanoDemoReview;
-          let existing=null;try{existing=review.read(localStorage,tenant());}catch{/* invalid local data is not trusted */}
-          const field=element('fieldset',null,'feedback-rating');field.append(element('legend',labels.rating));
-          for(let n=1;n<=5;n++) {
-            const label=element('label');const input=element('input');input.type='radio';input.name='demo-rating';input.value=String(n);input.checked=existing?.rating===n;
-            label.append(input,element('span',String(n)));field.append(label);
-          }
-          const commentLabel=element("label",null,"feedback-comment");
-          commentLabel.append(element("span",labels.comment));const comment=element("textarea");comment.maxLength=500;comment.rows=3;comment.value=existing?.comment||"";commentLabel.append(comment);
-          const button=element('button',labels.save,'feedback-save');button.type='button';button.disabled=!field.querySelector('input:checked');
-          const status=element('p',null,'ramen-contact-note');status.setAttribute('role','status');
-          field.addEventListener('change',()=>{button.disabled=false;status.textContent='';});
-          button.addEventListener('click',()=>{const selected=Number(field.querySelector('input:checked')?.value);if(!Number.isInteger(selected)||selected<1||selected>5||menuDataMode!=="demo")return;try{const id=globalThis.crypto.randomUUID();review.submit(localStorage,tenant(),selected,comment.value,id);renderHeroRating();status.textContent=labels.saved;}catch{status.textContent=labels.storageError;}});
-          content.append(field,commentLabel,button,status);
-        }
-      }
-      const appendInfo=(label,value,href,direction)=>{
-        if(!value)return;
-        const item=element(href?'a':'div',null,'ramen-contact-item');
-        if(href){item.href=href;if(href.startsWith('https:')||href.startsWith('http:')){item.target='_blank';item.rel='noopener noreferrer';}}
-        const valueNode=element('span',value);
-        if(direction)valueNode.dir=direction;
-        item.append(element('small',label),valueNode);content.append(item);
-      };
-      // Read only the current rendered restaurant information. Never introduce a fake chat or map destination.
-      const address=document.querySelector('[data-restaurant-address]')?.textContent.trim();
-      const phone=document.querySelector('[data-restaurant-phone]')?.textContent.trim();
-      const social=document.querySelector('[data-restaurant-instagram]')?.getAttribute('href');
-      if((panel==='contact'||panel==='chat') && (demo || mode==='public' || mode==='offline') && phone)appendInfo(words.phone,phone,!demo && /^\+?[\d\s().-]{5,25}$/.test(phone)?'tel:'+phone.replace(/[^+\d]/g,''):null,'ltr');
-      if(panel==='contact' && (demo || mode==='public' || mode==='offline') && address)appendInfo(words.address,address,null,'auto');
-      if((panel==='contact'||panel==='chat') && social && /^https?:\/\//i.test(social) && (mode==='public' || mode==='offline')){const url=getSafeExternalUrl(social);if(url)appendInfo(words.social,words.social,url);}
-      if(panel==='contact'){
-        if(!content.querySelector('.ramen-contact-item'))content.append(element('p',words.missing,'ramen-contact-note'));
-        const cfg=config();
-        if(cfg?.hours[lang()])appendInfo(x(8),cfg.hours[lang()],null);
-        if(cfg?.map)appendInfo(x(9),x(9),cfg.map);
-        if(cfg?.whatsapp)appendInfo(x(10),x(10),cfg.whatsapp);
-        if(demo)content.append(element('p',words.demo,'ramen-contact-note'));
-        const actions=element('div',null,'hp-contact-actions');
-        if(address && navigator.clipboard?.writeText && (demo||mode==='public'||mode==='offline')){
-          const copy=element('button',h('copy'));copy.type='button';
-          const result=element('p',null,'hp-service-live');result.setAttribute('role','status');
-          copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(address);result.textContent=h('copied');}catch{result.textContent=h('copyFailed');}});
-          actions.append(copy,result);
-        }
-        const feedback=element('button',h('review'));feedback.type='button';
-        feedback.addEventListener('click',()=>{const previous=origin;dialog.addEventListener('close',()=>openPanel('feedback',previous),{once:true});close();});
-        actions.append(feedback);content.append(actions);
+      dialog.classList.toggle('connect-dialog',panel==='chat'&&Boolean(chat&&window.RomanoCustomerPanels));
+      const panels=window.RomanoCustomerPanels;
+      if(panels&&(panel!=='chat'||chat)){
+        content.dataset.panelState='ready';
+        panels.render({panel,content,element,demo,mode,labels,words,chat,profileId,lang,h,x,panelText,guestContext,contextLabel,config,tenant,renderHeroRating,close,openPanel,origin,dialog,isDemo});
+      }else{
+        content.dataset.panelState='loading';
+        const loading=element('p',({fa:'در حال بارگذاری…',en:'Loading…',tr:'Yükleniyor…',ar:'جارٍ التحميل…'})[lang()],'ramen-contact-note');loading.setAttribute('role','status');
+        const retry=element('button',t('retry'),'feedback-save');retry.type='button';retry.hidden=true;
+        retry.addEventListener('click',()=>openPanel(panel,origin,true));content.append(loading,retry);
+        if(panel==='chat'){const contactButton=element('button',words.phone,'feedback-save');contactButton.type='button';contactButton.addEventListener('click',()=>openPanel('contact',origin,true));content.append(contactButton);}
+        const load=panel==='chat'?Promise.all([connectAssets.loadPanels(),connectAssets.loadChat()]):connectAssets.loadPanels();
+        load.then(()=>{
+          if(dialog.open&&activePanel===panel&&revision===panelRevision)openPanel(panel,origin,true);
+        }).catch(()=>{
+          if(dialog.open&&activePanel===panel&&revision===panelRevision){content.dataset.panelState='error';loading.textContent=labels.loadError;retry.hidden=false;}
+        });
       }
       dialog.replaceChildren(header,content);
-      dialog.showModal();window.RamenOverlayHistory.enter('contact',close);document.body.classList.add('ramen-contact-open');if(panel==='contact'){trigger.setAttribute('aria-controls',dialog.id);trigger.setAttribute('aria-expanded','true');}dismiss.focus();
+      if(!wasOpen){dialog.showModal();window.RamenOverlayHistory.enter('contact',close);document.body.classList.add('ramen-contact-open');}
+      if(origin===trigger){trigger.setAttribute('aria-controls',dialog.id);trigger.setAttribute('aria-expanded','true');}
+      const focusTarget=restoreLanguage?content.querySelector('.connect-language')||dismiss:dismiss;
+      focusTarget.focus({preventScroll:true});
     };
     document.querySelector("#hero-rating")?.addEventListener("click",event=>openPanel("feedback",event.currentTarget));
     trigger.addEventListener('click',event=>{event.preventDefault();openPanel();});
@@ -406,8 +369,19 @@
       if(panel==='cart')openDrawer();
       else if(['contact','chat','profile','feedback','waiter'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
     });
-    dialog.addEventListener('close',()=>{window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');if(origin?.isConnected)origin.focus();origin=null;});
-    document.addEventListener('romano:language-changed',()=>{close();updateLabel();});
+    dialog.addEventListener('close',()=>{panelRevision++;window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');window.RomanoCustomerChat?.suspend();if(origin?.isConnected&&!origin.closest('[inert]'))origin.focus({preventScroll:true});origin=null;activePanel=null;});
+    document.addEventListener('romano:language-changed',()=>{if(dialog.open&&activePanel==='chat'){const restore=document.activeElement?.classList.contains('connect-language');openPanel('chat',origin,true,restore);}else close();updateLabel();});
+    document.addEventListener('romano:connect-session-changed',()=>{window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
+    document.addEventListener('romano:demo-membership-changed',()=>{const next=profileId();if(next===connectProfile)return;connectProfile=next;connectAssets.forgetGuest();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
+    let lastPanelMode=typeof menuDataMode==='undefined'?'loading':menuDataMode;
+    window.addEventListener('romano:data-updated',()=>{
+      const mode=typeof menuDataMode==='undefined'?'loading':menuDataMode;
+      if(mode!==lastPanelMode){
+        lastPanelMode=mode;
+        window.RomanoCustomerChat?.clear();
+        if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);
+      }
+    });
     updateLabel();
   }
 
@@ -744,7 +718,11 @@
   async function openQrSession() {
     const params = new URLSearchParams(location.search);
     const qrToken = params.get("qr");
-    if (!qrToken || window.RomanoCustomerEntry?.isDemoQr()) return;
+    if (!qrToken || window.RomanoCustomerEntry?.isDemoQr() || standalone) return;
+    if(window.RomanoConnectLive)window.RomanoConnectLive.clearBinding();
+    else try{sessionStorage.removeItem("romano_connect_binding_v1");}catch{}
+    const liveAssets=connectAssets.loadLive().catch(()=>null);
+    document.dispatchEvent(new CustomEvent("romano:connect-session-changed"));
     try {
       const response = await fetch("/api/v1/orders/session", {
         method: "POST", credentials: "include", headers: { "content-type": "application/json", accept: "application/json" },
@@ -752,8 +730,12 @@
       });
       const body = await response.json().catch(() => null);
       if (!response.ok || !body?.data) throw new Error("QR_SESSION_FAILED");
-      tableSession = body.data;
+      const {connectBinding,...tableData}=body.data;
+      await liveAssets;
+      window.RomanoConnectLive?.setBinding(connectBinding);
+      tableSession = tableData;
       save(`online_menu_table_vq3:${tenant()}`, tableSession);
+      document.dispatchEvent(new CustomEvent("romano:connect-session-changed"));
       params.delete("qr");
       history.replaceState(history.state, "", `${location.pathname}${params.size ? `?${params}` : ""}${location.hash}`);
       render();
@@ -792,8 +774,11 @@
       }
       submitting=true;render();showMessage('');
       try {
-        const members=window.RomanoDemoMembers;
+        const members=window.RomanoDemoMembers, memberId=entry.current()?.id;
+        if(guestContext().code)await connectAssets.loadEngine().catch(()=>{});
+        if(!isDemo()||!memberId||entry.current()?.id!==memberId)throw Error("ORDER_CONTEXT_CHANGED");
         const order=await members.mutate(()=>{
+          if(!isDemo()||entry.current()?.id!==memberId)throw Error("ORDER_CONTEXT_CHANGED");
           cart=normalizeCart(read(cartKey(),cart));
           const items=visibleCartEntries().map(([id,quantity])=>({productId:id,name:localized(product(id)).name,quantity,price:product(id).price}));
           if(!items.length)return null;
@@ -805,6 +790,8 @@
           demoOrderSaved=true;
           announce(entry.t("saved"));
           if(document.querySelector("#commerce-drawer.is-open"))document.querySelector("#commerce-title")?.focus({preventScroll:true});
+          // Update an existing chat's verified order context without affecting the saved order.
+          try{const engine=window.RomanoConnectDemo;if(engine&&order.connectVisitId){const s=engine.sessionForCurrent();if(s.visitId===order.connectVisitId)await engine.get(s);}}catch{/* later chat refresh reconciles */}
           document.dispatchEvent(new CustomEvent("romano:demo-membership-changed"));
         }
       } catch {showMessage(entry.t("orderError"));}

@@ -629,13 +629,6 @@ function renderRestaurantInformation() {
     );
 
 
-    if (menuDataMode === "demo" && window.RomanoDemoBranches?.id) {
-        try {
-            const branch = window.RomanoDemoBranches.context();
-            document.getElementById("customer-brand-tagline").textContent = window.ROMANO_I18N.displayBrand(branch.name);
-        } catch { /* The next data refresh handles a removed or corrupt local registry. */ }
-    }
-
     DOM.restaurantAddress.forEach(
         element => {
 
@@ -2694,7 +2687,7 @@ window.addEventListener("storage", event => {
             const url = new URL(location.href);
             // A product link is public; never forward table/session or payment callback data.
             const context = new URLSearchParams();
-            for (const key of ["restaurant", "demoBranch"]) {
+            for (const key of ["restaurant"]) {
                 const value = url.searchParams.get(key);
                 if (value) context.set(key, value);
             }

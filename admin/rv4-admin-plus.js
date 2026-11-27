@@ -496,12 +496,12 @@
         section.setAttribute('aria-labelledby','sample-backup-title');
         section.className='gateway-settings';
         section.innerHTML=`
-            <h2 id="sample-backup-title">پشتیبان همه شعبه‌ها</h2>
-            <p>شامل منو، میزها، اعضا، سفارش‌ها، پیش‌نویس وفاداری و نظرات همه شعبه‌ها؛ فایل حاوی اطلاعات شخصی است و باید خصوصی بماند.</p>
+            <h2 id="sample-backup-title">پشتیبان رستوران</h2>
+            <p>شامل منو، میزها، اعضا، سفارش‌ها، پیش‌نویس وفاداری و نظرات رستوران؛ فایل حاوی اطلاعات شخصی است و باید خصوصی بماند.</p>
             <p>برای بازیابی کامل از یک مرورگر یا پروفایل خالی استفاده کنید و تب‌های دیگر را ببندید. اطلاعات موجود بازنویسی نمی‌شوند.</p>
             <div class="gateway-settings-form">
-                <button type="button" class="secondary-button" data-sample-export>خروجی همه شعبه‌ها</button>
-                <button type="button" class="secondary-button" data-sample-restore>بازیابی همه شعبه‌ها</button>
+                <button type="button" class="secondary-button" data-sample-export>خروجی پشتیبان رستوران</button>
+                <button type="button" class="secondary-button" data-sample-restore>بازیابی پشتیبان رستوران</button>
                 <input type="file" accept=".json,application/json" data-sample-import hidden>
             </div>`;
         wrap.append(section);
@@ -527,7 +527,7 @@
                 const payload=backup.capture(localStorage,branches.read(),branches.validateDirectory,validateRecords);
                 const url=URL.createObjectURL(new Blob([JSON.stringify(payload)],{type:'application/json'}));
                 const link=document.createElement('a');
-                link.href=url;link.download='ramen-standalone-branches-'+new Date().toISOString().slice(0,10)+'.json';
+                link.href=url;link.download='ramen-restaurant-backup-'+new Date().toISOString().slice(0,10)+'.json';
                 document.body.append(link);link.click();link.remove();
                 setTimeout(()=>URL.revokeObjectURL(url),1000);
                 toast('نسخه پشتیبان آماده شد.');
@@ -551,7 +551,7 @@
                 if(result.error)throw Error(result.error);
                 window.location.reload();
             }catch(error){
-                toast(error.message==='BACKUP_NOT_EMPTY'?'برای بازیابی همه شعبه‌ها از محیط خالی استفاده کنید.':error.message==='BACKUP_ROLLBACK'?'بازیابی ناقص است؛ داده‌ها را بررسی کنید و دوباره وارد نکنید.':'فایل پشتیبان معتبر نیست یا ذخیره‌سازی انجام نشد.','danger');
+                toast(error.message==='BACKUP_NOT_EMPTY'?'برای بازیابی پشتیبان رستوران از محیط خالی استفاده کنید.':error.message==='BACKUP_ROLLBACK'?'بازیابی ناقص است؛ داده‌ها را بررسی کنید و دوباره وارد نکنید.':'فایل پشتیبان معتبر نیست یا ذخیره‌سازی انجام نشد.','danger');
             }finally{
                 input.value='';exportButton.disabled=restoreButton.disabled=false;
                 if(restoreButton.isConnected)restoreButton.focus();

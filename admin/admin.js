@@ -671,7 +671,8 @@ function navigateTo(page) {
         "products",
         "categories",
         "settings",
-        "loyalty"
+        "loyalty",
+        "connect"
 
     ];
 
@@ -727,7 +728,10 @@ function navigateTo(page) {
             "تنظیمات رستوران",
 
         loyalty:
-            "باشگاه مشتریان"
+            "باشگاه مشتریان",
+
+        connect:
+            "صندوق مکالمات"
 
     };
 

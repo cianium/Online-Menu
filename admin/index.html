@@ -24,23 +24,24 @@
     <meta name="robots" content="noindex, nofollow">
     <title>ROMANO | پنل مدیریت</title>
 
-    <link rel="stylesheet" href="../css/fonts.css?v=1a581a4">
+    <link rel="stylesheet" href="../css/fonts.css?v=ddf8ef6">
 
     <link rel="icon" type="image/webp" href="../assets/images/logo/brand-mark-144.webp">
 
     <link
         rel="stylesheet"
-        href="admin.css?v=1a581a4"
+        href="admin.css?v=ddf8ef6"
     >
 
-    <link rel="stylesheet" href="rv4-admin-plus.css?v=1a581a4">
-    <link rel="stylesheet" href="workspace.css?v=1a581a4">
-    <link rel="stylesheet" href="orders.css?v=1a581a4">
-    <link rel="stylesheet" href="admin-polish.css?v=1a581a4">
-    <link rel="stylesheet" href="admin-stage12.css?v=1a581a4">
-    <link rel="stylesheet" href="../css/interaction-system.css?v=1a581a4">
+    <link rel="stylesheet" href="rv4-admin-plus.css?v=ddf8ef6">
+    <link rel="stylesheet" href="workspace.css?v=ddf8ef6">
+    <link rel="stylesheet" href="orders.css?v=ddf8ef6">
+    <link rel="stylesheet" href="admin-polish.css?v=ddf8ef6">
+    <link rel="stylesheet" href="admin-stage12.css?v=ddf8ef6">
+    <link rel="stylesheet" href="../css/interaction-system.css?v=ddf8ef6">
+    <link rel="stylesheet" href="connect-inbox.css?v=ddf8ef6">
 
-    <noscript><link rel="stylesheet" href="../css/no-script.css?v=1a581a4"></noscript>
+    <noscript><link rel="stylesheet" href="../css/no-script.css?v=ddf8ef6"></noscript>
     <meta name="online-menu-mode" content="standalone">
 </head>
 
@@ -167,6 +168,7 @@
                 <span>تنظیمات رستوران</span>
             </button>
 
+            <button class="nav-item" data-page="connect" type="button"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 5h16v12H9l-5 4V5Z"/><path d="M8 9h8M8 13h5"/></svg></span><span>صندوق مکالمات</span><b class="orders-nav-badge" id="connect-nav-badge" hidden>0</b></button>
             <button class="nav-item" data-page="loyalty" type="button"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5v1"/></svg></span><span>باشگاه مشتریان</span></button>
         </nav>
 
@@ -468,6 +470,8 @@
             <!-- ===================================
                  ORDERS
             ==================================== -->
+
+            <section class="admin-page" id="page-connect" aria-labelledby="connect-inbox-title"><div id="connect-inbox" data-admin-user-text="true"><h1 id="connect-inbox-title">صندوق مکالمات</h1></div></section>
 
             <section class="admin-page" id="page-orders" aria-labelledby="orders-title">
                 <div class="page-heading page-heading-row">
@@ -810,29 +814,16 @@
                 </form>
 
                 <section class="panel" id="hp-admin-settings" hidden></section>
-                <section class="gateway-settings" id="demo-branches" hidden aria-labelledby="sample-branches-title">
-                    <h2 id="sample-branches-title">شعبه‌های آزمایشی</h2>
-                    <p>کاتالوگ، اعضا و سفارش‌های هر شعبه در همین مرورگر جداگانه ذخیره می‌شوند.</p>
-                    <label class="sample-branch-field"><span>انتخاب شعبه</span><select id="sample-branch-select" data-admin-user-text="true"></select></label>
-                    <form class="gateway-settings-form" data-action="create">
-                        <label><span>نام شعبه جدید</span><input name="sampleName" maxlength="80" required></label>
-                        <button type="submit" class="secondary-button">افزودن شعبه آزمایشی</button>
-                    </form>
-                    <form class="gateway-settings-form" data-action="rename">
-                        <label><span>نام شعبه فعال</span><input name="sampleRename" maxlength="80" required></label>
-                        <button type="submit" class="secondary-button">ذخیره نام شعبه</button>
-                    </form>
-                    <form class="gateway-settings-form" id="sample-branch-lifecycle" hidden>
-                        <label><span>مدیریت وضعیت شعبه</span><select id="sample-branch-target" data-admin-user-text="true"></select></label>
-                        <p>غیرفعال‌سازی، ورود و سفارش جدید را متوقف می‌کند؛ اطلاعات قبلی حذف نمی‌شوند.</p>
-                        <button type="submit" class="secondary-button" id="sample-branch-active-toggle">غیرفعال‌کردن</button>
-                    </form>
+                <section class="gateway-settings" id="demo-tables" hidden aria-labelledby="sample-tables-title">
+                    <h2 id="sample-tables-title">میزها و سفارش QR</h2>
+                    <p data-admin-i18n="برای هر میز کد و نام تعیین کنید و QR اختصاصی آن را بسازید.">برای هر میز کد و نام تعیین کنید و QR اختصاصی آن را بسازید.</p>
+                    <p data-admin-i18n="QR آزمایشی فقط در همین مرورگر و آدرس کار می‌کند؛ داده‌ها به دستگاه دیگر منتقل نمی‌شوند.">QR آزمایشی فقط در همین مرورگر و آدرس کار می‌کند؛ داده‌ها به دستگاه دیگر منتقل نمی‌شوند.</p>
                     <form class="gateway-settings-form" id="sample-table-form" data-action="table">
                         <label><span>کد میز (لاتین)</span><input name="sampleTableCode" dir="ltr" maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_\-]*" required></label>
                         <label><span>نام میز</span><input name="sampleTableName" maxlength="80" required></label>
                         <button class="secondary-button" type="submit">افزودن میز</button>
                     </form>
-                    <label class="sample-branch-field" hidden><span>میز</span><select id="sample-table-select" data-admin-user-text="true"></select></label>
+                    <label class="sample-table-field" hidden><span>میز</span><select id="sample-table-select" data-admin-user-text="true"></select></label>
                     <div class="ops-qr-result" id="sample-table-qr" hidden>
                         <div class="ops-qr-image" aria-hidden="true"></div>
                         <a class="secondary-button" target="_blank" rel="noopener noreferrer">باز کردن ورود آزمایشی مشتری</a>
@@ -845,35 +836,27 @@
                         <p data-admin-i18n="میزها و سفارش‌گیری برای رستوران از قبل پیکربندی‌شده مدیریت می‌شوند.">میزها و سفارش‌گیری برای رستوران از قبل پیکربندی‌شده مدیریت می‌شوند.</p>
                     </div>
                     <div class="gateway-settings-form">
-                        <label><span data-admin-i18n="انتخاب شعبه">انتخاب شعبه</span><select id="ops-branch" disabled></select></label>
+                        <select id="ops-branch" hidden aria-hidden="true" tabindex="-1" disabled></select>
                         <label class="gateway-check"><input id="ops-qr-enabled" type="checkbox" disabled><span data-admin-i18n="فعال‌سازی سفارش QR">فعال‌سازی سفارش QR</span></label>
                         <button class="secondary-button" id="ops-save-branch" type="button" disabled data-admin-i18n="ذخیره وضعیت سفارش‌گیری">ذخیره وضعیت سفارش‌گیری</button>
                     </div>
                     <form id="create-table-form" class="gateway-settings-form">
-                        <label><span data-admin-i18n="کد میز (لاتین)">کد میز (لاتین)</span><input name="tableCode" required maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_-]*" dir="ltr"></label>
+                        <label><span data-admin-i18n="کد میز (لاتین)">کد میز (لاتین)</span><input name="tableCode" required maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_\-]*" dir="ltr"></label>
                         <label><span data-admin-i18n="نام میز">نام میز</span><input name="tableName" required maxlength="80"></label>
                         <button class="primary-button" type="submit" disabled data-admin-i18n="افزودن میز">افزودن میز</button>
                     </form>
                     <div id="ops-tables" class="ops-tables" aria-live="polite">تنظیمات عملیاتی در نسخه مستقل در دسترس نیست.</div>
-                    <div class="ops-qr-result" id="sample-qr-preview" hidden>
-                        <div class="ops-qr-image" aria-hidden="true"></div>
-                        <div>
-                            <h3>QR ورود آزمایشی</h3>
-                            <p>برای باز کردن فرم عضویت نمونه اسکن کنید.</p>
-                            <a class="secondary-button" href="../?qr=demo" target="_blank" rel="noopener noreferrer">باز کردن ورود آزمایشی مشتری</a>
-                        </div>
-                    </div>
                     <p id="ops-message" role="status" aria-live="polite"></p>
                 </section>
 
                 <section class="gateway-settings" aria-labelledby="gateway-settings-title">
                     <div>
                         <span class="page-eyebrow">تسویه مستقیم</span>
-                        <h2 id="gateway-settings-title">درگاه پرداخت شعبه</h2>
+                        <h2 id="gateway-settings-title">درگاه پرداخت رستوران</h2>
                         <p>مبالغ سفارش مستقیماً به پذیرنده خود رستوران واریز می‌شود.</p>
                     </div>
                     <form id="gateway-settings-form" class="gateway-settings-form">
-                        <label><span>شعبه</span><select id="gateway-branch" required disabled></select></label>
+                        <select id="gateway-branch" hidden aria-hidden="true" tabindex="-1" disabled></select>
                         <label><span>درگاه</span><select id="gateway-provider"><option value="zarinpal">زرین‌پال</option></select></label>
                         <label class="gateway-merchant"><span>شناسه پذیرنده</span><input id="gateway-merchant-id" type="text" inputmode="latin" autocomplete="off" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label>
                         <label class="gateway-check"><input id="gateway-sandbox" type="checkbox" checked><span>محیط آزمایشی</span></label>
@@ -1449,26 +1432,30 @@
 </div>
 
 
-<script src="../js/demo-branches.js?v=1a581a4"></script>
-<script src="../js/data.js?v=1a581a4"></script>
-<script src="../js/money.js?v=1a581a4"></script>
-<script src="admin-i18n.js?v=1a581a4"></script>
-<script src="api.js?v=1a581a4"></script>
-<script src="admin-stage12-model.js?v=1a581a4"></script>
-<script src="admin.js?v=1a581a4"></script>
-<script src="demo-backup-model.js?v=1a581a4"></script>
-<script src="rv4-admin-plus.js?v=1a581a4"></script>
-<script src="workspace.js?v=1a581a4"></script>
-<script src="vendor/qrcode.min.js?v=1a581a4"></script>
-<script src="orders.js?v=1a581a4"></script>
-<script src="../js/demo-review.js?v=1a581a4"></script>
-<script src="../js/demo-members.js?v=1a581a4"></script>
-<script src="admin-stage12.js?v=1a581a4"></script>
-<script src="demo-members-panel.js?v=1a581a4"></script>
-<script src="hospitality.js?v=1a581a4"></script>
-<script src="demo-branches.js?v=1a581a4"></script>
-<script src="revenue-model.js?v=1a581a4"></script>
-<script src="revenue.js?v=1a581a4"></script>
+<script src="../js/demo-branches.js?v=ddf8ef6"></script>
+<script src="../js/data.js?v=ddf8ef6"></script>
+<script src="../js/money.js?v=ddf8ef6"></script>
+<script src="admin-i18n.js?v=ddf8ef6"></script>
+<script src="api.js?v=ddf8ef6"></script>
+<script src="admin-stage12-model.js?v=ddf8ef6"></script>
+<script src="admin.js?v=ddf8ef6"></script>
+<script src="demo-backup-model.js?v=ddf8ef6"></script>
+<script src="rv4-admin-plus.js?v=ddf8ef6"></script>
+<script src="workspace.js?v=ddf8ef6"></script>
+<script src="vendor/qrcode.min.js?v=ddf8ef6"></script>
+<script src="orders.js?v=ddf8ef6"></script>
+<script src="../js/demo-review.js?v=ddf8ef6"></script>
+<script src="../js/demo-members.js?v=ddf8ef6"></script>
+<script src="admin-stage12.js?v=ddf8ef6"></script>
+<script src="demo-members-panel.js?v=ddf8ef6"></script>
+<script src="hospitality.js?v=ddf8ef6"></script>
+    <script src="../js/connect-core.js?v=ddf8ef6"></script>
+    <script src="../js/connect-demo.js?v=ddf8ef6"></script>
+    <script src="../js/connect-live.js?v=ddf8ef6"></script>
+    <script src="connect-inbox.js?v=ddf8ef6"></script>
+<script src="demo-branches.js?v=ddf8ef6"></script>
+<script src="revenue-model.js?v=ddf8ef6"></script>
+<script src="revenue.js?v=ddf8ef6"></script>
 
 </body>
 
