@@ -130,12 +130,9 @@ function getSafeImageSource(value) {
     if (/^data:image\/(?:jpeg|jpg|png|webp);base64,/i.test(raw)) return raw;
     try {
         const url = new URL(raw, window.location.href);
-        if (["https:", "http:"].includes(url.protocol)) return url.href;
-        if (url.protocol === "file:") return raw;
-        if (url.origin === window.location.origin && !/[\"'<>]/.test(raw)) return url.href;
-    } catch (_) {
-        if (/^(?:\.?\/?)[^\"'<>]+$/.test(raw)) return raw;
-    }
+        if (["https:", "http:"].includes(url.protocol) && !url.username && !url.password) return url.href;
+        if (url.protocol === "file:" && window.location.protocol === "file:" && !url.host) return url.href;
+    } catch (_) { /* Invalid URLs are not image sources. */ }
     return "";
 }
 
@@ -1112,7 +1109,18 @@ function renderRatingStars(rating) {
 /**
  * Wrap horizontal product rows with prev/next controls.
  */
+const horizontalScrollUpdates = new WeakMap();
+let horizontalResizeBound = false;
+function customerScrollBehavior() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+}
 function enhanceHorizontalScrollers() {
+    if (!horizontalResizeBound) {
+        horizontalResizeBound = true;
+        window.addEventListener("resize", () => {
+            document.querySelectorAll(".products-grid-horizontal").forEach(node => horizontalScrollUpdates.get(node)?.());
+        }, { passive: true });
+    }
 
     const scrollers =
         document.querySelectorAll(
@@ -1123,14 +1131,12 @@ function enhanceHorizontalScrollers() {
     scrollers.forEach(
         scroller => {
 
-            if (
-                scroller.closest(
-                    ".products-scroll-shell"
-                )
-            ) {
-
+            const existing = scroller.closest(".products-scroll-shell");
+            if (existing) {
+                existing.querySelector(".products-scroll-btn--prev")?.setAttribute("aria-label", window.ROMANO_I18N.ui("previous"));
+                existing.querySelector(".products-scroll-btn--next")?.setAttribute("aria-label", window.ROMANO_I18N.ui("next"));
+                horizontalScrollUpdates.get(scroller)?.();
                 return;
-
             }
 
 
@@ -1212,9 +1218,8 @@ function enhanceHorizontalScrollers() {
                     const maxScroll = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
                     const direction = getComputedStyle(scroller).direction;
                     const raw = scroller.scrollLeft;
-                    const normalized = direction === "rtl"
-                        ? (raw < 0 ? Math.abs(raw) : Math.max(0, maxScroll - raw))
-                        : Math.max(0, raw);
+                    // Modern engines use zero at inline-start and negative offsets in RTL.
+                    const normalized = Math.min(maxScroll, Math.max(0, direction === "rtl" ? -raw : raw));
 
                     prev.hidden = maxScroll < 8 || normalized < 8;
                     next.hidden = maxScroll < 8 || normalized > maxScroll - 8;
@@ -1242,8 +1247,7 @@ function enhanceHorizontalScrollers() {
                                         ? -1
                                         : 1
                                 ),
-                            behavior:
-                                "smooth"
+                            behavior: customerScrollBehavior()
                         }
                     );
 
@@ -1276,15 +1280,8 @@ function enhanceHorizontalScrollers() {
             );
 
 
-            window.addEventListener(
-                "resize",
-                updateButtons
-            );
-
-
-            requestAnimationFrame(
-                updateButtons
-            );
+            horizontalScrollUpdates.set(scroller, updateButtons);
+            requestAnimationFrame(updateButtons);
 
         }
     );
@@ -1707,7 +1704,7 @@ function scrollToCategory(categoryId) {
 
 
     section.scrollIntoView({
-        behavior: "smooth",
+        behavior: customerScrollBehavior(),
         block: "start"
     });
 
@@ -1831,7 +1828,7 @@ function initializeMenu() {
                 document
                     .querySelector("#menu")
                     ?.scrollIntoView({
-                        behavior: "smooth",
+                        behavior: customerScrollBehavior(),
                         block: "start"
                     });
             }
@@ -2164,7 +2161,7 @@ function initializeHeroMenuButton() {
 
 
             menuSection.scrollIntoView({
-                behavior: "smooth",
+                behavior: customerScrollBehavior(),
                 block: "start"
             });
 
@@ -2515,12 +2512,22 @@ window.addEventListener("storage", event => {
         if (link) link.textContent = window.ROMANO_I18N?.ui?.("skipToMenu") || "رفتن به منو";
     }
 
+    // Coalesce scroll/resize work to one update per paint; keep initial state synchronous.
+    function frameUpdate(update) {
+        let pending = false;
+        return () => {
+            if (pending) return;
+            pending = true;
+            requestAnimationFrame(() => { pending = false; update(); });
+        };
+    }
+
     function initHeaderEffects() {
         const header = document.querySelector(".site-header");
         if (!header) return;
         const update = () => header.classList.toggle("is-scrolled", window.scrollY > 18);
         update();
-        window.addEventListener("scroll", update, { passive: true });
+        window.addEventListener("scroll", frameUpdate(update), { passive: true });
     }
 
     function initReadingProgress() {
@@ -2536,8 +2543,9 @@ window.addEventListener("storage", event => {
             bar.style.transform = `scaleX(${progress})`;
         };
         update();
-        window.addEventListener("scroll", update, { passive: true });
-        window.addEventListener("resize", update, { passive: true });
+        const schedule = frameUpdate(update);
+        window.addEventListener("scroll", schedule, { passive: true });
+        window.addEventListener("resize", schedule, { passive: true });
     }
 
     function getProducts() {
@@ -2574,7 +2582,7 @@ window.addEventListener("storage", event => {
             else if (direction < 0 && anchor - y >= 12) show(true);
             previous = y;
         };
-        window.addEventListener("scroll", update, { passive: true });
+        window.addEventListener("scroll", frameUpdate(update), { passive: true });
         button.addEventListener("click", () => window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
     }
 
@@ -2622,7 +2630,18 @@ window.addEventListener("storage", event => {
             const product = window.RomanoActiveProduct;
             return product && product.id ? product : null;
         };
-        const productUrl = product => { const url = new URL(location.href); url.hash = `product-${encodeURIComponent(product.id)}`; return url.href; };
+        const productUrl = product => {
+            const url = new URL(location.href);
+            // A product link is public; never forward table/session or payment callback data.
+            const context = new URLSearchParams();
+            for (const key of ["restaurant", "demoBranch"]) {
+                const value = url.searchParams.get(key);
+                if (value) context.set(key, value);
+            }
+            url.search = context.toString();
+            url.hash = `product-${encodeURIComponent(product.id)}`;
+            return url.href;
+        };
 
         // The core modal is the single source of truth. Do not cache the
         // selected product here: direct card clicks can bypass this wrapper.
@@ -2636,37 +2655,66 @@ window.addEventListener("storage", event => {
             const product = getActiveProduct();
             if (!product) return;
             const shareData = { title: `ROMANO | ${product.name}`, text: product.description || product.name, url: productUrl(product) };
-            try {
-                if (typeof navigator.share === "function") await navigator.share(shareData);
-                else await copyText(shareData.url);
-            } catch (_) {}
+            if (typeof navigator.share === "function") {
+                try { await navigator.share(shareData); return; }
+                catch (error) { if (error?.name === "AbortError") return; }
+            }
+            await copyProductLink(product, shareData.url);
         });
         actions.querySelector("[data-rv4-copy]").addEventListener("click", async () => {
             const product = getActiveProduct();
             if (!product) return;
-            const button = actions.querySelector("[data-rv4-copy]");
-            if (!(await copyText(productUrl(product)))) return;
-            button.textContent = window.ROMANO_I18N?.ui?.("copied") || "کپی شد ✓";
-            setTimeout(applyActionLabels, 1400);
+            await copyProductLink(product, productUrl(product));
         });
 
+        let copyTimer;
+        const copyFailure = {fa:"کپی نشد؛ دوباره تلاش کنید", ar:"تعذر النسخ؛ حاول مجددًا", en:"Copy failed; try again", tr:"Kopyalanamadı; tekrar deneyin"};
+        const status = document.createElement("span");
+        status.className = "sr-only";
+        status.setAttribute("role", "status");
+        status.setAttribute("aria-live", "polite");
+        actions.appendChild(status);
+        const resetCopyFeedback = () => {
+            clearTimeout(copyTimer);
+            status.textContent = "";
+            applyActionLabels();
+        };
+        document.addEventListener("romano:product-opened", resetCopyFeedback);
+        document.addEventListener("romano:language-changed", resetCopyFeedback);
+
+        async function copyProductLink(product, url) {
+            const copied = await copyText(url);
+            if (getActiveProduct()?.id !== product.id) return;
+            clearTimeout(copyTimer);
+            const language = window.ROMANO_I18N.language;
+            const message = copied ? window.ROMANO_I18N.ui("copied") : copyFailure[language] || copyFailure.en;
+            status.textContent = message;
+            labelCopy.textContent = message;
+            copyTimer = setTimeout(resetCopyFeedback, 2200);
+        }
+
         async function copyText(text) {
+            if (navigator.clipboard?.writeText) {
+                try { await navigator.clipboard.writeText(text); return true; }
+                catch (_) { /* Clipboard may be denied; try the local fallback. */ }
+            }
+            const previous = document.activeElement;
+            const helper = document.createElement("textarea");
+            helper.value = text;
+            helper.setAttribute("readonly", "");
+            helper.tabIndex = -1;
+            helper.style.position = "fixed";
+            helper.style.opacity = "0";
             try {
-                if (navigator.clipboard?.writeText) {
-                    await navigator.clipboard.writeText(text);
-                    return true;
-                }
-                const helper = document.createElement("textarea");
-                helper.value = text;
-                helper.setAttribute("readonly", "");
-                helper.style.position = "fixed";
-                helper.style.opacity = "0";
-                document.body.appendChild(helper);
+                content.appendChild(helper);
+                helper.focus({preventScroll:true});
                 helper.select();
-                const ok = document.execCommand("copy");
-                helper.remove();
-                return ok;
+                return Boolean(document.execCommand("copy"));
             } catch (_) { return false; }
+            finally {
+                helper.remove();
+                if (previous?.isConnected && !previous.closest("[inert]")) previous.focus({preventScroll:true});
+            }
         }
 
 
