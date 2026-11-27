@@ -403,6 +403,22 @@ async function ready(p){
   assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
   await p.locator('#hp-continue').click();
  });
+ await check('Native Back closes each customer overlay without leaving the menu',async()=>{
+  const back=async(selector,closed)=>{await p.waitForFunction(()=>Boolean(history.state?.__ramenCustomerOverlay));await p.evaluate(()=>history.back());await p.waitForFunction(({selector,closed})=>{const node=document.querySelector(selector);return node&&(closed==='hidden'?node.hidden:closed==='dialog'?!node.open:node.getAttribute('aria-hidden')==='true');},{selector,closed});assert.equal(await p.evaluate(()=>Boolean(history.state?.__ramenCustomerOverlay)),false);};
+  const original=await p.evaluate(()=>location.pathname+location.search);
+  for(const lang of ['fa','en','tr','ar']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   await p.locator('#menu-toggle').click();await back('#main-navigation','aria');
+   await p.locator('#menu-search-toggle').click();await back('#menu-search-panel','hidden');
+   await p.locator('#menu-filter-toggle').click();await back('#menu-filter-panel','hidden');
+   await p.locator('#ramen-header-cart').click();await back('#commerce-drawer','aria');
+   const trigger=p.locator('[data-ramen-nav="contact"]');await trigger.focus();await trigger.press('Space');await back('#ramen-contact-dialog','dialog');
+   await cards.first().locator('.product-card-button').click();await back('#product-modal','aria');
+   assert.equal(await p.evaluate(()=>location.pathname+location.search),original);
+   assert.doesNotMatch(await p.evaluate(()=>location.hash),/^#product-/);
+  }
+  await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));
+ });
  await check('Language changes close an open cart without leaving the page inert',async()=>{
   const cartButton=p.locator('#ramen-bottom-cart');
   await cartButton.click();

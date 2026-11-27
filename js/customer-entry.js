@@ -96,6 +96,7 @@
   const logout=text('button','logout','feedback-save');logout.type='button';logout.addEventListener('click',()=>{try{model.signOut(sessionStorage);}catch{}closePanel();announce();});host.append(logout);return true;
  }
  function scan(){if(demo()&&qr()&&!entered){if(current()){removeMarker();entered=true;}else open(true);}}
+ window.addEventListener("popstate",()=>{if(entered&&qr())removeMarker();});
  window.addEventListener('romano:data-updated',scan);
  document.addEventListener('romano:language-changed',labels);
  window.RomanoCustomerEntry=Object.freeze({t,current,open,renderProfile,scan,isDemoQr:qr});

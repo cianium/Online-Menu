@@ -240,10 +240,10 @@
     if(selected.length && typeof menuProducts!=="undefined" && Array.isArray(menuProducts)){
       const suggestedGroups=new Set(groups);
       const cfg=config();
-      for(const id of [...new Set([...(cfg?.bundle||[]),...(cfg?.suggestions||[])])]){const item=product(id);if(item&&!cart[id]&&candidates.length<3){candidates.push(item);suggestedGroups.add(item.category);}}
+      for(const id of [...new Set([...(cfg?.bundle||[]),...(cfg?.suggestions||[])])]){const item=product(id);if(item&&!cart[id]&&!zeroItems.has(id)&&candidates.length<3){candidates.push(item);suggestedGroups.add(item.category);}}
       for(const item of menuProducts){
         if(candidates.length>=3)break;
-        if(item.active===false || !product(item.id) || cart[item.id] || candidates.some(p=>p.id===item.id) || suggestedGroups.has(item.category))continue;
+        if(item.active===false || !product(item.id) || cart[item.id] || zeroItems.has(item.id) || candidates.some(p=>p.id===item.id) || suggestedGroups.has(item.category))continue;
         candidates.push(item);suggestedGroups.add(item.category);
         if(candidates.length===3)break;
       }
@@ -496,7 +496,8 @@
     cartBackground=[];
     document.querySelector("#commerce-cart-bar").setAttribute("aria-expanded", "false");
     for(const id of ["ramen-header-cart","ramen-bottom-cart"])document.getElementById(id)?.setAttribute("aria-expanded","false");
-    if (cartFocusOrigin?.isConnected && !cartFocusOrigin.closest("[inert]")) cartFocusOrigin.focus();
+    if (cartFocusOrigin?.isConnected && cartFocusOrigin!==document.body && !cartFocusOrigin.closest("[inert]")) cartFocusOrigin.focus({preventScroll:true});
+    else document.querySelector("#ramen-header-cart")?.focus({preventScroll:true});
     cartFocusOrigin = null;
     render();
   }
@@ -596,12 +597,15 @@
     const host = document.querySelector("#commerce-items");
     const focused = document.activeElement;
     const previousControl = focused?.closest('#commerce-items button') ? {id:focused.dataset.productId,change:focused.dataset.cartChange,remove:focused.hasAttribute('data-cart-remove')} : null;
-    const rows = [...visibleCartEntries(),...[...zeroItems].filter(id=>!cart[id]&&product(id)).map(id=>[id,0])].map(([id, quantity]) => {
+    const priorOrder=new Map([...host.querySelectorAll("[data-cart-row]")].map((node,index)=>[node.dataset.cartRow,index]));
+    const entries=[...visibleCartEntries(),...[...zeroItems].filter(id=>!cart[id]&&product(id)).map(id=>[id,0])];
+    entries.sort(([a],[b])=>(priorOrder.get(a)??Infinity)-(priorOrder.get(b)??Infinity));
+    const rows = entries.map(([id, quantity]) => {
       const item = product(id);
       if (!item) return "";
       const view = localized(item);
       const src=getSafeImageSource(item.image);
-      return `<article class="commerce-item${quantity===0?' is-zero':''}">
+      return `<article class="commerce-item${quantity===0?' is-zero':''}" data-cart-row="${safe(id)}">
         <div class="commerce-item-media"><span class="image-fallback" aria-hidden="true">${safe(getImageFallbackLabel(view.name))}</span>${src ? `<img src="${safe(src)}" alt="" width="64" height="64" decoding="async">` : ""}</div>
         <div class="hp-item-copy"><h3>${safe(view.name)}</h3><span class="hp-unit">${safe(h("unit"))}: ${safe(money(item.price))}</span><strong class="hp-line-total">${safe(money(item.price * quantity))}</strong>
           <div class="commerce-quantity" aria-label="${safe(view.name)}"><button type="button" data-cart-change="-1" data-product-id="${safe(id)}" aria-label="${safe(panelText().less)}: ${safe(view.name)}" ${submitting||quantity===0?"disabled":""}>−</button><b>${quantity}</b><button type="button" data-cart-change="1" data-product-id="${safe(id)}" aria-label="${safe(panelText().more)}: ${safe(view.name)}" ${submitting||quantity>=99?"disabled":""}>+</button></div>

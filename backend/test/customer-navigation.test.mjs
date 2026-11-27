@@ -188,3 +188,21 @@ test('Known sample address translates after a saved RAMEN rebrand; custom addres
   assert.equal(api.localizeRestaurant({address:''}).address,'');
  }
 });
+
+test('Customer overlay history consumes explicit close and native Back without duplicate entries',async()=>{
+ const {runInNewContext}=await import('node:vm');
+ const source=read('js/app.js');const code=source.slice(source.indexOf('window.RamenOverlayHistory ='),source.indexOf('/* =========================================================',source.indexOf('window.RamenOverlayHistory =')));
+ let index=0;const entries=[{state:{},url:'/menu?restaurant=demo#menu'}];let event,queued=false;const location={pathname:'/menu',search:'?restaurant=demo',hash:'#menu'};
+ const apply=url=>{const u=new URL(url,'https://example.test');Object.assign(location,{pathname:u.pathname,search:u.search,hash:u.hash});};
+ const history={get state(){return entries[index].state;},scrollRestoration:'auto',pushState(state,_,url){entries.splice(index+1);entries.push({state,url});index++;apply(url);},replaceState(state,_,url){entries[index]={state,url};apply(url);},back(){queued=true;}};
+ const window={addEventListener(name,fn){if(name==='popstate')event=fn;}};
+ const flush=()=>{assert.ok(queued);queued=false;index--;apply(entries[index].url);event();};
+ runInNewContext(code,{window,history,location,Date});
+ const api=window.RamenOverlayHistory;let closed=0;
+ api.enter('cart',()=>{closed++;api.leave('cart');});assert.equal(index,1);
+ api.leave('cart');api.enter('entry',()=>{closed++;api.leave('entry');});flush();assert.equal(index,1);
+ history.back();flush();assert.equal(closed,1);assert.equal(index,0);assert.equal(history.scrollRestoration,'auto');
+ api.enter('product',()=>{closed++;api.leave('product');},{url:'/menu?restaurant=demo#product-a',baseUrl:'/menu?restaurant=demo#menu'});
+ assert.equal(location.hash,'#product-a');api.leave('product','/menu?restaurant=demo#menu');assert.equal(location.hash,'#menu');flush();assert.equal(index,0);
+ api.enter('browse',()=>{closed++;api.leave('browse');});api.enter('navigation',()=>{closed++;api.leave('navigation');});assert.equal(index,1);assert.equal(closed,2);history.back();flush();assert.equal(closed,3);
+});

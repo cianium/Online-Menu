@@ -23,8 +23,10 @@ window.RamenOverlayHistory = (() => {
     function enter(id, close, options={}) {
         if (active?.id === id) return;
         const next={id,close,token:Date.now()+"-"+(++serial),url:options.url,baseUrl:options.baseUrl};
-        const replace=active && history.state?.[key] === active.token;
+        const previous=active;
+        const replace=previous && history.state?.[key] === previous.token;
         active=next;
+        if(previous)previous.close();
         if(pending)return;
         if(replace)history.replaceState({...clean(),[key]:next.token},"",next.url||url());
         else push(next);
