@@ -2655,37 +2655,66 @@ window.addEventListener("storage", event => {
             const product = getActiveProduct();
             if (!product) return;
             const shareData = { title: `ROMANO | ${product.name}`, text: product.description || product.name, url: productUrl(product) };
-            try {
-                if (typeof navigator.share === "function") await navigator.share(shareData);
-                else await copyText(shareData.url);
-            } catch (_) {}
+            if (typeof navigator.share === "function") {
+                try { await navigator.share(shareData); return; }
+                catch (error) { if (error?.name === "AbortError") return; }
+            }
+            await copyProductLink(product, shareData.url);
         });
         actions.querySelector("[data-rv4-copy]").addEventListener("click", async () => {
             const product = getActiveProduct();
             if (!product) return;
-            const button = actions.querySelector("[data-rv4-copy]");
-            if (!(await copyText(productUrl(product)))) return;
-            button.textContent = window.ROMANO_I18N?.ui?.("copied") || "کپی شد ✓";
-            setTimeout(applyActionLabels, 1400);
+            await copyProductLink(product, productUrl(product));
         });
 
+        let copyTimer;
+        const copyFailure = {fa:"کپی نشد؛ دوباره تلاش کنید", ar:"تعذر النسخ؛ حاول مجددًا", en:"Copy failed; try again", tr:"Kopyalanamadı; tekrar deneyin"};
+        const status = document.createElement("span");
+        status.className = "sr-only";
+        status.setAttribute("role", "status");
+        status.setAttribute("aria-live", "polite");
+        actions.appendChild(status);
+        const resetCopyFeedback = () => {
+            clearTimeout(copyTimer);
+            status.textContent = "";
+            applyActionLabels();
+        };
+        document.addEventListener("romano:product-opened", resetCopyFeedback);
+        document.addEventListener("romano:language-changed", resetCopyFeedback);
+
+        async function copyProductLink(product, url) {
+            const copied = await copyText(url);
+            if (getActiveProduct()?.id !== product.id) return;
+            clearTimeout(copyTimer);
+            const language = window.ROMANO_I18N.language;
+            const message = copied ? window.ROMANO_I18N.ui("copied") : copyFailure[language] || copyFailure.en;
+            status.textContent = message;
+            labelCopy.textContent = message;
+            copyTimer = setTimeout(resetCopyFeedback, 2200);
+        }
+
         async function copyText(text) {
+            if (navigator.clipboard?.writeText) {
+                try { await navigator.clipboard.writeText(text); return true; }
+                catch (_) { /* Clipboard may be denied; try the local fallback. */ }
+            }
+            const previous = document.activeElement;
+            const helper = document.createElement("textarea");
+            helper.value = text;
+            helper.setAttribute("readonly", "");
+            helper.tabIndex = -1;
+            helper.style.position = "fixed";
+            helper.style.opacity = "0";
             try {
-                if (navigator.clipboard?.writeText) {
-                    await navigator.clipboard.writeText(text);
-                    return true;
-                }
-                const helper = document.createElement("textarea");
-                helper.value = text;
-                helper.setAttribute("readonly", "");
-                helper.style.position = "fixed";
-                helper.style.opacity = "0";
-                document.body.appendChild(helper);
+                content.appendChild(helper);
+                helper.focus({preventScroll:true});
                 helper.select();
-                const ok = document.execCommand("copy");
-                helper.remove();
-                return ok;
+                return Boolean(document.execCommand("copy"));
             } catch (_) { return false; }
+            finally {
+                helper.remove();
+                if (previous?.isConnected && !previous.closest("[inert]")) previous.focus({preventScroll:true});
+            }
         }
 
 
