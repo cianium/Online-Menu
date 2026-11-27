@@ -378,6 +378,11 @@ async function ready(p){
    assert.equal(await p.locator('#ramen-header-cart').getAttribute('aria-label'),labels.cartAria);
    const headerBoxes=await p.locator('.header-container .brand, #romano-language-toggle, #menu-search-toggle, #ramen-header-cart, #menu-toggle').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {name:node.className||node.id,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};}));
    assert.equal(headerBoxes.length,5,JSON.stringify(headerBoxes));
+   const hamburger=await p.locator('#menu-toggle').evaluate(button=>{const b=button.getBoundingClientRect();return {button:{x:b.x,y:b.y,w:b.width,h:b.height},lines:[...button.children].map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}})};});
+   assert.equal(hamburger.lines.length,3);
+   for(const line of hamburger.lines){assert.ok(Math.abs(line.w-18)<1&&Math.abs(line.h-2)<1);assert.ok(Math.abs(line.x+line.w/2-hamburger.button.x-hamburger.button.w/2)<1);}
+   assert.ok(Math.abs(hamburger.lines[1].y-hamburger.lines[0].y-6)<1&&Math.abs(hamburger.lines[2].y-hamburger.lines[1].y-6)<1);
+   assert.ok(Math.abs(hamburger.lines[1].y+1-hamburger.button.y-hamburger.button.h/2)<1);
    const headerDirection=await p.locator('.header-container').evaluate(node=>getComputedStyle(node).direction);
    assert.equal(headerDirection,lang==='fa'||lang==='ar'?'rtl':'ltr','Header direction mismatch '+lang+'/'+width);
    const brandParts=await p.locator('.brand-logo, .brand-content').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right,display:getComputedStyle(node).display,width:r.width};}));
