@@ -317,6 +317,7 @@ async function ready(p){
  await check('Every featured dish uses the shared card renderer without duplication',async()=>{
   assert.equal(await p.locator('#signature-dish').count(),0);
   assert.equal(await p.locator('#featured-products .product-card .product-card-button').count(),await p.locator('#featured-products .product-card').count());
+  assert.equal(await p.locator('#featured-products .product-card .commerce-card-add').count(),await p.evaluate(()=>getFeaturedProducts().filter(product=>product.price>0).length));
   const ids=await p.evaluate(()=>[document.querySelector('[data-signature-product]')?.dataset.signatureProduct,...Array.from(document.querySelectorAll('#featured-products .product-card'),n=>n.dataset.productId)].filter(Boolean));
   assert.equal(ids.length,new Set(ids).size);assert.equal(ids.length,await p.evaluate(()=>getFeaturedProducts().length));
  });
