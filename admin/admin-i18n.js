@@ -9,6 +9,11 @@
     const LANGS = ["fa", "en", "tr", "ar"];
 
     const T = {
+      "مدیریت وضعیت شعبه": ["Manage branch status","Şube durumunu yönet","إدارة حالة الفرع"],
+      "غیرفعال‌سازی، ورود و سفارش جدید را متوقف می‌کند؛ اطلاعات قبلی حذف نمی‌شوند.": ["Deactivation stops new sign-ins and orders; existing data is retained.","Devre dışı bırakma yeni girişleri ve siparişleri durdurur; mevcut veriler korunur.","يوقف التعطيل تسجيل الدخول والطلبات الجديدة؛ وتُحفظ البيانات السابقة."],
+      "شعبه غیرفعال": ["Inactive branch","Pasif şube","فرع غير نشط"],
+      "شعبه فعال": ["Active branch","Aktif şube","فرع نشط"],
+      "این شعبه غیرفعال شود؟ اطلاعات قبلی حفظ می‌شوند.": ["Deactivate this branch? Existing data will be retained.","Bu şube devre dışı bırakılsın mı? Mevcut veriler korunacak.","هل تريد تعطيل هذا الفرع؟ ستُحفظ البيانات السابقة."],
       "مشتریان دارای سفارش نمونه": ["Customers with sample orders","Örnek siparişi olan müşteriler","العملاء الذين لديهم طلبات تجريبية"],
       "پنج قلم پر‌سفارش بر اساس تعداد": ["Top five items by quantity","Adede göre en çok sipariş edilen beş ürün","أكثر خمسة أصناف طلبًا حسب الكمية"],
       "شعبه‌های آزمایشی": ["Demo branches","Demo şubeler","الفروع التجريبية"],
