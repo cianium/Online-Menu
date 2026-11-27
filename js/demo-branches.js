@@ -14,10 +14,7 @@
   const nameKey = value => normalizeName(value).toLowerCase();
   // Persian and Arabic joiners are valid text. Reject other invisible format and control characters.
   const validNewLabel = value => label(value) && !/[\p{Cc}\p{Cf}]/u.test(value.replace(/[\u200c\u200d]/gu, ''));
-  function read() {
-    const raw = localStorage.getItem(registry);
-    if (raw === null) return [{id:'', name:'ROMANO', tables:[]}];
-    const rows = JSON.parse(raw);
+  function validateDirectory(rows) {
     if (!Array.isArray(rows) || !rows.length || rows.length > 50 || rows[0]?.id !== '' ||
         new Set(rows.map(row => row?.id)).size !== rows.length ||
         !rows.every((row, index) => row && typeof row.id === 'string' && (!index || uuid.test(row.id)) && label(row.name) &&
@@ -26,6 +23,10 @@
           row.tables.every(t => t && typeof t.code === 'string' && code.test(t.code) && label(t.name)) &&
           new Set(row.tables.map(t => t.code)).size === row.tables.length)) throw Error('BRANCH_DATA');
     return rows;
+  }
+  function read() {
+    const raw = localStorage.getItem(registry);
+    return validateDirectory(raw===null?[{id:'',name:'ROMANO',tables:[]}]:JSON.parse(raw));
   }
   function context() {
     if (!id && table === null) return null;
@@ -93,5 +94,5 @@
     if (event.key !== registry && event.key !== null) return;
     try { context(); } catch { location.reload(); }
   });
-  window.RomanoDemoBranches = Object.freeze({registry,id,table,scope,context,read,save,link,setActive});
+  window.RomanoDemoBranches = Object.freeze({registry,id,table,scope,context,read,save,link,setActive,validateDirectory});
 })();
