@@ -16,7 +16,7 @@ async function ready(p){
  ctx.on('page',p=>p.on('pageerror',e=>errors.push(String(e))));
  const p=await ctx.newPage();await p.goto(base);await ready(p);
  const cards=p.locator('#menu .product-card');
- await check('Static demo boots with 21 products',async()=>{assert.equal(await cards.count(),21);assert.equal(await p.evaluate(()=>menuDataMode),'demo')});
+ await check('Static demo boots with 21 products without loading chat assets',async()=>{assert.equal(await cards.count(),21);assert.equal(await p.evaluate(()=>menuDataMode),'demo');assert.equal(await p.evaluate(()=>Boolean(window.RomanoConnectCore||window.RomanoCustomerChat||window.RomanoConnectLive)),false);assert.equal(await p.locator('link[href$="css/connect.css"]').count(),0)});
  await check('Customer brand is RAMEN in all four locales including legacy catalog data',async()=>{
   for(const lang of ['fa','en','tr','ar']){
    await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
@@ -119,8 +119,9 @@ async function ready(p){
    assert.equal(await trigger.getAttribute('aria-expanded'),'true');
    assert.equal(await trigger.getAttribute('aria-controls'),'ramen-contact-dialog');
    assert.ok((await dialog.locator('h2').innerText()).trim());
+   await dialog.locator('#connect-message-input').waitFor({state:'visible'});
    assert.equal(await dialog.evaluate(d=>d.classList.contains('connect-dialog')),true);
-   await p.waitForFunction(()=>!document.querySelector('#connect-message-input')?.disabled);
+   await p.waitForFunction(()=>Boolean(document.querySelector('#connect-message-input'))&&!document.querySelector('#connect-message-input').disabled);
    await dialog.locator('[data-connect-contact]').click();
    assert.equal(await dialog.locator('.hp-service-action').count(),4);
    assert.equal(await dialog.locator('.hp-service-action:disabled').count(),4,'no table context must not simulate requests');
@@ -184,7 +185,7 @@ async function ready(p){
    const review=await p.evaluate(()=>JSON.parse(localStorage.getItem('online_menu_demo_review_v2:romano')));assert.equal(review.rating,4);assert.equal(review.status,'pending');assert.equal(review.comment,'<b>Demo comment</b>');
    await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
    await p.locator('#menu-toggle').click();await nav.locator('#navigation-service-toggle').click();await nav.locator('[data-nav-panel="chat"]').click();
-   await dialog.waitFor({state:'visible'});assert.ok((await dialog.locator('.ramen-contact-note').last().innerText()).trim());
+   await dialog.locator('#connect-message-input').waitFor({state:'visible'});assert.ok((await dialog.locator('.ramen-contact-note').last().innerText()).trim());
    assert.equal(await dialog.evaluate(d=>d.classList.contains('connect-dialog')),true);
    await dialog.locator('#connect-message-input').fill('<b>Demo chat</b>');
    await dialog.locator('.connect-send').click();
@@ -213,6 +214,7 @@ async function ready(p){
   const staffTab=await ctx.newPage();
   try{
    await staffTab.goto(base);await ready(staffTab);
+   await staffTab.evaluate(()=>RomanoConnectAssets.loadEngine());
    await staffTab.evaluate(async guest=>{
     const engine=RomanoConnectDemo,a={id:'qa-staff',role:'manager',restaurantId:'romano',branchId:guest.branchId};
     const data=await engine.readStaff(a,guest.conversationId);
@@ -362,9 +364,9 @@ async function ready(p){
     await p.waitForFunction(()=>Boolean(window.__qaShare));
     const share=await p.evaluate(()=>window.__qaShare);
     const url=new URL(share.url);
-    assert.deepEqual([...url.searchParams.keys()],['restaurant','demoBranch']);
+    assert.deepEqual([...url.searchParams.keys()],['restaurant']);
     assert.equal(url.searchParams.get('restaurant'),'sample');
-    assert.equal(url.searchParams.get('demoBranch'),'sample-branch');
+    assert.equal(url.searchParams.has('demoBranch'),false);
     assert.match(url.hash,/^#product-/);
    }finally{
     await p.evaluate(original=>{history.replaceState(history.state,'',original);delete navigator.share;delete window.__qaShare;},original);
