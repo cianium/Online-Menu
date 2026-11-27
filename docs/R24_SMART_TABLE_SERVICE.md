@@ -1,0 +1,8 @@
+# R24.7 — Smart table services
+- The contact panel, waiter route and RAMEN Connect reuse the same service controls and per-table local records (waiter, bill, water, napkins). Actions create actual sample requests, not draft chat messages.
+- Requests are table-wide, not private messages or identity claims. Any browser tab on the same validated demo table can see the state and cancel a pending request. Existing completed states remain until replaced. No real server delivery or authentication.
+- A request identity plus expected state protects against stale actions on replacement requests. Browser Web Locks serialize writes for a table; when unavailable the service action fails closed. Storage is still a demo boundary, not a security authority.
+- Pending requests are ordered before accepted/completed; waiter and bill have high priority, water normal and napkins low. Equal priorities sort by creation time. Old records have unknown timings, not invented metrics.
+- Staff can accept or complete requests from Orders. Connect inbox shows active table request count and a shortcut to that queue. Mean acceptance time is calculated from currently retained timestamped requests (not historical SLA analytics). Direct completion is allowed and does not count as an acceptance sample. No customer or staff identity is stored with service records.
+- Order-status quick reply is a message draft; locally linked order status is explicitly local-only. Real preparation/dispatch state needs live backend integration.
+- Unit logic and syntax checks ran on retrieved JavaScript using a simulated store and lock adapter. Browser/CI scenarios still need execution before release. No merge or deployment.

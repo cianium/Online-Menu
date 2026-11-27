@@ -312,6 +312,11 @@ const readyCustomer = async page => {
       await customer.locator('[data-ramen-nav="contact"]').click();
       await guestPanel.locator('.connect-service-compact .hp-service-action').first().waitFor({state:'visible'});
       assert.equal(await guestPanel.locator('.connect-service-compact .hp-service-action').first().getAttribute('aria-pressed'),'true');
+      const water=guestPanel.locator('.connect-service-compact .hp-service-action').nth(2);
+      await water.click();
+      await customer.waitForFunction(()=>RomanoDemoMembers.requests(localStorage,'T1').water==='pending');
+      await water.click();
+      await customer.waitForFunction(()=>RomanoDemoMembers.requests(localStorage,'T1').water===undefined);
       await admin.evaluate(()=>navigateTo('orders'));
       const ticket=admin.locator('#hp-admin-requests article').first();
       await ticket.waitFor({state:'visible'});
