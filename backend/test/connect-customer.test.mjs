@@ -56,3 +56,56 @@ test('Customer chat localizes all labels and precaches local-only scripts',()=>{
  for(const p of assets)assert.ok(sw.includes(p));
  for(const p of ['js/connect-demo.js','js/connect-customer.js'])assert.doesNotMatch(read(p),/\b(?:fetch|WebSocket|XMLHttpRequest)\b/);
 });
+
+function tableFixture(){
+ const f=fixture();let context={tableId:'T1',profileId:'member1'},order=null;
+ f.platform.context=()=>context;f.platform.latestOrder=()=>order;
+ return {...f,setContext:value=>context=value,setOrder:value=>order=value};
+}
+test('Table visit isolates guests on the same table and persists through reload',async()=>{
+ const f=tableFixture(),s=f.engine.sessionForCurrent();
+ await f.engine.send(s,'m1','hello','en');
+ const reloaded=createDemoEngine(core,f.platform).sessionForCurrent();assert.deepEqual(s,reloaded);
+ assert.equal((await f.engine.get(s)).conversation.tableId,'T1');
+ assert.equal((await f.engine.get(s)).conversation.tableSessionId,s.visitId);
+ assert.equal((await f.engine.get(s)).conversation.orderId,null);
+ f.setContext({tableId:'T1',profileId:'member2'});
+ const other=f.engine.sessionForCurrent();assert.notEqual(other.guestId,s.guestId);assert.notEqual(other.visitId,s.visitId);
+ await assert.rejects(f.engine.get(s),/CONNECT_NOT_FOUND/);
+ await assert.rejects(f.engine.send(s,'m2','old session','en'),/CONNECT_NOT_FOUND/);
+ assert.deepEqual((await f.engine.get(other)).messages,[]);
+ assert.throws(()=>f.engine.session('primary','fake'),/CONNECT_INVALID_CONTEXT/);
+ await assert.rejects(f.engine.get({guestId:s.guestId,conversationId:s.conversationId,branchId:'primary',scope:s.scope}),/CONNECT_NOT_FOUND/);
+});
+test('Only orders from the same table and visit can be attached; retries do not increment version',async()=>{
+ const f=tableFixture(),s=f.engine.sessionForCurrent();
+ await f.engine.send(s,'m1','hello','en');
+ f.setOrder({id:'order1',tableCode:'T1',connectVisitId:s.visitId,createdAt:new Date(100).toISOString()});
+ const linked=await f.engine.get(s);assert.equal(linked.conversation.orderId,'order1');assert.equal(linked.conversation.version,3);
+ assert.equal((await f.engine.get(s)).conversation.version,3);
+ f.setOrder({id:'wrong',tableCode:'T2',connectVisitId:s.visitId,createdAt:new Date(100).toISOString()});
+ await assert.rejects(f.engine.get(s),/CONNECT_INVALID_CONTEXT/);
+ f.setOrder({id:'wrong',tableCode:'T1',connectVisitId:'old',createdAt:new Date(100).toISOString()});
+ await assert.rejects(f.engine.get(s),/CONNECT_INVALID_CONTEXT/);
+ f.setOrder({id:'wrong',tableCode:'T1',connectVisitId:s.visitId,createdAt:new Date(99).toISOString()});
+ await assert.rejects(f.engine.get(s),/CONNECT_INVALID_CONTEXT/);
+});
+test('An order saved before first message is linked, and new chat preserves only the current visit',async()=>{
+ const f=tableFixture(),s=f.engine.sessionForCurrent(),visit=f.engine.currentVisit();
+ f.setOrder({id:'order1',tableCode:'T1',connectVisitId:visit.visitId,createdAt:new Date(100).toISOString()});
+ await f.engine.send(s,'m1','hello','en');assert.equal((await f.engine.get(s)).conversation.orderId,'order1');
+ const next=f.engine.newConversation();assert.equal(next.visitId,s.visitId);assert.notEqual(next.conversationId,s.conversationId);
+ await assert.rejects(f.engine.get(s),/CONNECT_NOT_FOUND/);
+ await f.engine.send(next,'m2','new chat','en');assert.equal((await f.engine.get(next)).conversation.orderId,'order1');
+ f.engine.forget();const fresh=f.engine.sessionForCurrent();assert.notEqual(fresh.visitId,s.visitId);assert.deepEqual((await f.engine.get(fresh)).messages,[]);
+});
+test('Expiry and table changes rotate visit; generic chat cannot link a table order',async()=>{
+ const f=tableFixture(),s=f.engine.sessionForCurrent();await f.engine.send(s,'m1','hello','en');
+ f.advance(14400000);await assert.rejects(f.engine.get(s),/CONNECT_EXPIRED/);
+ const next=f.engine.sessionForCurrent();assert.notEqual(next.visitId,s.visitId);
+ f.setContext({tableId:null,profileId:'member1'});
+ const generic=f.engine.sessionForCurrent();assert.equal(f.engine.currentVisit(),null);
+ await f.engine.send(generic,'m2','general question','en');
+ assert.equal((await f.engine.get(generic)).conversation.tableId,null);
+ assert.equal((await f.engine.get(generic)).conversation.orderId,null);
+});

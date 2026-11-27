@@ -29,3 +29,14 @@ test('Inbox four-language dictionaries and integration hooks are complete',()=>{
  assert.match(js,/connect:\s*"صندوق مکالمات"/);assert.match(inbox,/demoAdminSignedIn\(\)/);assert.match(inbox,/RomanoAPI.enabled/);
  assert.doesNotMatch(inbox,/\.innerHTML\s*=|\bfetch\(|\bWebSocket\b/);
 });
+
+test('Order summary matches exact order, table and visit without leaking member identity',()=>{
+ const c={orderId:'o1',tableId:'T1',tableSessionId:'v1'};
+ const order={id:'o1',tableCode:'T1',connectVisitId:'v1',items:[{name:'Tea',quantity:2,price:5}],notes:'private'};
+ const member={id:'member',phone:'fictional',name:'fictional',orders:[order]};
+ assert.deepEqual(model.orderSummary(c,[member]),{id:'o1',items:[{name:'Tea',quantity:2}]});
+ assert.equal(model.orderSummary({...c,tableSessionId:'v2'},[member]),null);
+ assert.equal(model.orderSummary({...c,tableId:'T2'},[member]),null);
+ assert.equal(model.orderSummary(c,[member,member]),null);
+ assert.equal(model.select([{...row,tableId:'T1',orderId:'o1'}],'T1','all',{},100).length,1);
+});

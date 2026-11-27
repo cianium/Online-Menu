@@ -325,6 +325,21 @@ const readyCustomer = async page => {
       await customer.locator('#commerce-submit').click();
       await customer.waitForFunction(()=>RomanoCustomerEntry.current()?.orders[0]?.tableName==='Window table');
       assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders[0].notes),'Sample note');
+      const linked=await customer.evaluate(async()=>{
+        const engine=RomanoConnectDemo,s=engine.sessionForCurrent(),o=RomanoCustomerEntry.current().orders[0];
+        await engine.send(s,crypto.randomUUID(),'Table order QA','en');
+        return {session:s,order:o,chat:(await engine.get(s)).conversation};
+      });
+      assert.equal(linked.order.tableCode,'T1');
+      assert.equal(linked.order.connectVisitId,linked.session.visitId);
+      assert.equal(linked.chat.tableId,'T1');
+      assert.equal(linked.chat.orderId,linked.order.id);
+      await admin.evaluate(()=>navigateTo('connect'));
+      const chatRow=admin.locator('[data-conversation-id="'+linked.chat.id+'"]');
+      await chatRow.waitFor({state:'visible'});await chatRow.click();
+      await admin.waitForFunction(id=>document.querySelector('.connect-inbox-context')?.textContent.includes(id),linked.order.id);
+      assert.ok((await admin.locator('.connect-inbox-context').innerText()).includes('T1'));
+
       assert.ok(!(await customer.evaluate(()=>RomanoCustomerEntry.current().orders[0].items[0].note)));
       assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders[0].offer.code),'DEMO10');
       assert.equal(await customer.evaluate(()=>RomanoDemoMembers.pointsFor(RomanoCustomerEntry.current())),25);
