@@ -20,7 +20,7 @@ function renderSettings(){
  settings.append(localized("h2",()=>t(0)),localized("p",()=>t(1)));
  let statusCode=null;
  const status=localized("p",()=>statusCode===null?"":t(statusCode));status.setAttribute("role","status");
- const showStatus=code=>{statusCode=code;status.textContent=t(code);};
+ const showStatus=code=>{statusCode=code;status.textContent=code===null?"":t(code);};
  let cfg,baseline;try{baseline=localStorage.getItem(model.settingsKey);cfg=model.settings(localStorage);}catch{settings.append(node("p",t(11)));return;}
  const form=node("form",undefined,"settings-form");const fields=node("div",undefined,"form-grid");
  const add=(label,input)=>{const wrap=node("label",undefined,"form-field");wrap.append(localized("span",label),input);fields.append(wrap);};
