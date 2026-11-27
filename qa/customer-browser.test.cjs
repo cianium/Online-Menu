@@ -120,7 +120,7 @@ async function ready(p){
    assert.equal(await trigger.getAttribute('aria-controls'),'ramen-contact-dialog');
    assert.ok((await dialog.locator('h2').innerText()).trim());
    assert.equal(await dialog.evaluate(d=>d.classList.contains('connect-dialog')),true);
-   assert.equal(await dialog.locator('#connect-message-input').isEnabled(),true);
+   await p.waitForFunction(()=>!document.querySelector('#connect-message-input')?.disabled);
    await dialog.locator('[data-connect-contact]').click();
    assert.equal(await dialog.locator('.hp-service-action').count(),4);
    assert.equal(await dialog.locator('.hp-service-action:disabled').count(),4,'no table context must not simulate requests');
@@ -188,9 +188,11 @@ async function ready(p){
    assert.equal(await dialog.evaluate(d=>d.classList.contains('connect-dialog')),true);
    await dialog.locator('#connect-message-input').fill('<b>Demo chat</b>');
    await dialog.locator('.connect-send').click();
+   await p.waitForFunction(()=>document.querySelector('.connect-bubble:last-of-type')?.textContent==='<b>Demo chat</b>'||Array.from(document.querySelectorAll('.connect-bubble')).at(-1)?.textContent==='<b>Demo chat</b>');
    assert.equal(await dialog.locator('.connect-bubble').last().textContent(),'<b>Demo chat</b>');
    assert.equal(await dialog.locator('.connect-bubble b').count(),0);
    await dialog.locator('.connect-language').selectOption(lang==='en'?'fa':'en');
+   await p.waitForFunction(()=>Array.from(document.querySelectorAll('.connect-bubble')).at(-1)?.textContent==='<b>Demo chat</b>');
    assert.equal(await dialog.locator('.connect-bubble').last().textContent(),'<b>Demo chat</b>');
    await dialog.locator('.connect-language').selectOption(lang);
    await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});

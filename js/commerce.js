@@ -322,6 +322,7 @@
     const openPanel = (panel='chat', opener=trigger, replace=false, restoreLanguage=false) => {
       if (dialog.open && !replace) return;
       const wasOpen=dialog.open;
+      if(panel!=='chat')window.RomanoCustomerChat?.suspend();
       if(!wasOpen)origin=opener;
       activePanel=panel;
       const words = contactWords[lang()] || contactWords.fa;
@@ -341,7 +342,7 @@
       if(panel==='chat'&&chat){
         let branchId=null;
         if(demo){try{window.RomanoDemoBranches?.context();branchId=window.RomanoDemoBranches?.id||'primary';}catch{/* invalid demo branch */}}
-        chat.render(content,{language:lang(),mode,branchId,context:contextLabel(),brand:document.querySelector('[data-restaurant-brand]')?.textContent.trim(),onContact:()=>openPanel('contact',origin,true),onLanguage:value=>window.ROMANO_I18N.setLanguage(value,false)});
+        chat.render(content,{language:lang(),mode,branchId,tableCode:guestContext().code,context:contextLabel(),brand:document.querySelector('[data-restaurant-brand]')?.textContent.trim(),onContact:()=>openPanel('contact',origin,true),onLanguage:value=>window.ROMANO_I18N.setLanguage(value,false)});
       }else{
       if(panel==='waiter')guestServices(content,element,demo,['waiter']);
       if(panel==='contact'){
@@ -419,7 +420,7 @@
       if(panel==='cart')openDrawer();
       else if(['contact','chat','profile','feedback','waiter'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
     });
-    dialog.addEventListener('close',()=>{window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');if(origin?.isConnected)origin.focus();origin=null;activePanel=null;});
+    dialog.addEventListener('close',()=>{window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');window.RomanoCustomerChat?.suspend();if(origin?.isConnected)origin.focus();origin=null;activePanel=null;});
     document.addEventListener('romano:language-changed',()=>{if(dialog.open&&activePanel==='chat'){const restore=document.activeElement?.classList.contains('connect-language');openPanel('chat',origin,true,restore);}else close();updateLabel();});
     document.addEventListener('romano:demo-membership-changed',()=>{window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
     window.addEventListener('romano:data-updated',()=>{if(typeof menuDataMode!=='undefined'&&menuDataMode!=='demo')window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});

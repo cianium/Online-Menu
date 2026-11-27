@@ -47,3 +47,5 @@
 }
 @media(max-height:540px){.connect-top{padding-block:5px}.connect-dialog .ramen-contact-head{padding-block-end:5px}.connect-symbol{display:none}.connect-bottom{padding-block-start:4px}.connect-notice{max-height:3.1em;overflow:auto}.connect-timeline{padding-block:6px}}
 @media(prefers-reduced-motion:reduce){.ramen-contact-dialog.connect-dialog[open]{animation:none!important;scroll-behavior:auto}}
+
+.connect-message.is-staff{align-self:flex-start}.connect-message.is-staff .connect-bubble{background:#211d18;color:#f2ece3;border:1px solid #ffffff25;border-end-end-radius:16px;border-end-start-radius:5px}
