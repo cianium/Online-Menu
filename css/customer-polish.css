@@ -561,7 +561,7 @@ html[dir] .hero-button {inline-size:max-content;width:fit-content;min-inline-siz
 /* Intent-sensitive scroll affordance and cart confirmation. */
 .rv4-back-top {visibility:hidden;opacity:0;pointer-events:none;transform:translateY(10px) scale(.92);transition:opacity .18s ease,transform .22s ease,visibility .22s;}
 .rv4-back-top.is-visible {visibility:visible;opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
-body:is(.modal-open,.commerce-open,.ramen-contact-open) .rv4-back-top {visibility:hidden;opacity:0;pointer-events:none;}
+body:is(.modal-open,.commerce-open,.ramen-contact-open) .rv4-back-top {visibility:hidden;opacity:0;pointer-events:none;transition:none;}
 .r17-cart-feedback {position:fixed;z-index:2147483000;inset-inline-end:16px;inset-block-end:calc(18px + env(safe-area-inset-bottom));inline-size:min(360px,calc(100vw - 32px));display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:10px;padding:12px;border:1px solid #ddba7a99;border-radius:18px;background:linear-gradient(135deg,#36291a,#18130f);box-shadow:0 18px 48px #0009;color:#fff5e6;pointer-events:none;opacity:0;visibility:hidden;transform:translateY(14px) scale(.98);transition:opacity .22s ease,transform .3s cubic-bezier(.2,.75,.2,1),visibility .3s;}
 .r17-cart-feedback.is-visible {visibility:visible;opacity:1;transform:translateY(0) scale(1);}
 .r17-feedback-icon {display:grid;place-items:center;inline-size:38px;block-size:38px;border-radius:50%;background:#d6ae70;color:#21190f;font-weight:800;font-size:20px;}
