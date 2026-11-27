@@ -26,7 +26,7 @@ const oldFiles="['index.html', 'manifest.webmanifest', 'sw.js']";
 if(launcher.split(oldRoot).length!==2 || launcher.split(oldFiles).length!==2) throw Error('Unexpected preview server source');
 await writeFile(path.join(dest,'start.mjs'),launcher.replace(oldRoot,"new URL('./public/', import.meta.url)").replace(oldFiles,"['index.html', 'manifest.webmanifest', 'sw.js', 'robots.txt']"),{flag:'wx'});
 await writeFile(path.join(dest,'START-HERE.md'),await readFile(path.join(root,'docs/COMMERCIAL_DEMO_GUIDE.md')),{flag:'wx'});
-await writeFile(path.join(dest,'VERSION.json'),JSON.stringify({schema:1,milestone:'R16',channel:'candidate',sourceCommit:sha,sourceTree:git('rev-parse',sha+'^{tree}'),mode:'standalone-sample-only',publicFiles:result.files},null,2)+'\n',{flag:'wx'});
+await writeFile(path.join(dest,'VERSION.json'),JSON.stringify({schema:1,milestone:'R17',channel:'candidate',sourceCommit:sha,sourceTree:git('rev-parse',sha+'^{tree}'),mode:'standalone-sample-only',publicFiles:result.files},null,2)+'\n',{flag:'wx'});
 const files=[];
 async function walk(dir){
  for(const name of (await readdir(path.join(dest,dir))).sort()){

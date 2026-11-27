@@ -186,6 +186,7 @@
             const content=DOM.productModal.querySelector('.modal-content');
             content.querySelector('.modal-favorite-row')?.remove();
             const row=document.createElement('div');row.className='modal-favorite-row';row.innerHTML=favoriteButton(window.RomanoActiveProduct.id);content.appendChild(row);
+            const actions=content.querySelector('.rv4-modal-actions');if(actions)content.appendChild(actions);
         });
         document.addEventListener('romano:catalog-rendered',()=>{syncHearts();updateStatus();});
         document.addEventListener('romano:language-changed',refreshLabels);

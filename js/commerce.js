@@ -497,7 +497,8 @@
       modalAdd = document.createElement("button");
       modalAdd.type = "button";
       modalAdd.className = "commerce-modal-add";
-      modalContent.append(modalAdd);
+      const actions=modalContent.querySelector('.rv4-modal-actions');
+      if(actions)actions.before(modalAdd);else modalContent.append(modalAdd);
       modalAdd.addEventListener("click", () => { if (window.RomanoActiveProduct?.id) add(window.RomanoActiveProduct.id); });
     }
     if (modalAdd) modalAdd.textContent = `+ ${t("add")}`;

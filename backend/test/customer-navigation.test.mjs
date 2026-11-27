@@ -69,11 +69,11 @@ test('Catalog disclosures and sticky layout retain accessible controls, horizont
  assert.match(html,/css\/catalog-browse\.css/);assert.match(sw,/css\/catalog-browse\.css/);
 });
 
-test('Category shortcuts reset conflicting filters and featured signature is not duplicated',()=>{
+test('Category shortcuts reset conflicting filters and all featured dishes share the renderer',()=>{
  const app=read('js/app.js'),browser=read('js/menu-experience.js');
  assert.match(app,/selectCategory\(categoryId, true\)/);assert.match(app,/selectCategory\(id, true\)/);
  assert.match(browser,/if\(reset\) \{query='';order='menu';onlyFavorites=false/);
- assert.match(app,/const railProducts = featured.slice\(1\)/);
+ assert.match(app,/const railProducts = featured;/);assert.doesNotMatch(read('index.html'),/id="signature-dish"/);assert.match(app,/railProducts\.forEach\(/);
 });
 
 test('Browsing translations preserve literal search input in every supported locale',async()=>{
