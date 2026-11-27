@@ -150,3 +150,21 @@ test('Admin: no dashboard branch-creation method; existing restaurant and table 
   assert.equal(typeof api.branchSettings,'function');
   assert.equal(typeof api.saveGateway,'function');
 });
+
+
+test('Authenticated API requests disable HTTP caching and redirects and carry finite timeout signals',async()=>{
+ const {api,calls}=adminClient([json(200,{data:{csrfToken:'first'}}),json(200,{data:{csrfToken:'rotated'}}),json(200,{data:{}}),json(200,{data:null})]);
+ await api.login('sample@example.invalid','fictional');
+ await api.adminData();await api.logout();
+ for(const {options} of calls){assert.equal(options.cache,'no-store');assert.equal(options.redirect,'error');assert.ok(options.signal instanceof AbortSignal);}
+});
+test('Read-only CSRF errors are not automatically retried; mutations never retry network failures',async()=>{
+ const {api,calls}=adminClient([json(403,{error:{code:'CSRF_INVALID'}})]);
+ await assert.rejects(api.adminData(),{status:403,code:'CSRF_INVALID'});assert.equal(calls.length,1);
+ const mutation=adminClient([json(200,{data:{csrfToken:'sample'}}),new Error('network')]);
+ await assert.rejects(mutation.api.saveSnapshot({}),/network/);assert.equal(mutation.calls.length,2);
+});
+test('Public menu API refuses redirects and uses explicit no-store requests',async()=>{
+ const {api,calls}=publicClient([json(200,{data:{products:[]}})]);
+ await api.load('romano','en');assert.equal(calls[0].options.cache,'no-store');assert.equal(calls[0].options.redirect,'error');
+});

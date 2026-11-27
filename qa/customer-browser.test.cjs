@@ -5,6 +5,9 @@ let pw;try{pw=require('playwright')}catch(e){if(!process.env.CODEX_PRIMARY_RUNTI
 const base=process.env.ADMIN_TEST_URL||'http://127.0.0.1:8765';
 const out=path.resolve(process.env.BROWSER_EVIDENCE_DIR||path.join(__dirname,'../docs/qa'));fs.mkdirSync(out,{recursive:true});
 const results=[],errors=[];let browser;
+// getBoundingClientRect can report 43.999996 for a 44 CSS-pixel control.
+// Only tolerate floating-point noise, not actual subpixel target shrinkage.
+const atLeastCssPixels=(value,minimum)=>Number.isFinite(value)&&value>=minimum-0.0001;
 async function check(name,fn){await fn();results.push(name);console.log('PASS',name)}
 async function ready(p){
  await p.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode!=='loading'&&Boolean(document.querySelector('.main-navigation')?.__romanoFocus));
@@ -16,7 +19,7 @@ async function ready(p){
  ctx.on('page',p=>p.on('pageerror',e=>errors.push(String(e))));
  const p=await ctx.newPage();await p.goto(base);await ready(p);
  const cards=p.locator('#menu .product-card');
- await check('Static demo boots with 21 products',async()=>{assert.equal(await cards.count(),21);assert.equal(await p.evaluate(()=>menuDataMode),'demo')});
+ await check('Static demo boots with 21 products without loading chat assets',async()=>{assert.equal(await cards.count(),21);assert.equal(await p.evaluate(()=>menuDataMode),'demo');assert.equal(await p.evaluate(()=>Boolean(window.RomanoConnectCore||window.RomanoCustomerChat||window.RomanoConnectLive)),false);assert.equal(await p.locator('link[href$="css/connect.css"]').count(),0)});
  await check('Customer brand is RAMEN in all four locales including legacy catalog data',async()=>{
   for(const lang of ['fa','en','tr','ar']){
    await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
@@ -42,6 +45,7 @@ async function ready(p){
     assert.equal(await p.locator('.footer-address').getAttribute('dir'),'auto');
     const trigger=p.locator('[data-ramen-nav="contact"]');await trigger.focus();await trigger.press('Space');
     const dialog=p.locator('#ramen-contact-dialog');await dialog.waitFor({state:'visible'});
+    await dialog.locator('[data-connect-contact]').click();
     assert.equal(await dialog.locator('.ramen-contact-item > span[dir="auto"]').textContent(),expected,lang+' contact address');
     await p.keyboard.press('Escape');await p.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open);
     await p.locator('#menu-toggle').click();
@@ -118,12 +122,26 @@ async function ready(p){
    assert.equal(await trigger.getAttribute('aria-expanded'),'true');
    assert.equal(await trigger.getAttribute('aria-controls'),'ramen-contact-dialog');
    assert.ok((await dialog.locator('h2').innerText()).trim());
+   await dialog.locator('#connect-message-input').waitFor({state:'visible'});
+   assert.equal(await dialog.evaluate(d=>d.classList.contains('connect-dialog')),true);
+   for(const selector of ['.connect-timeline','.connect-chips','.connect-bottom','.connect-service-compact .hp-service-grid'])assert.equal(await dialog.locator(selector).getAttribute('tabindex'),'0');
+   await p.waitForFunction(()=>Boolean(document.querySelector('#connect-message-input'))&&!document.querySelector('#connect-message-input').disabled);
+   await dialog.locator('[data-connect-contact]').click();
    assert.equal(await dialog.locator('.hp-service-action').count(),4);
    assert.equal(await dialog.locator('.hp-service-action:disabled').count(),4,'no table context must not simulate requests');
    assert.equal(await dialog.locator('a[href^="tel:"]').count(),0,'sample phone must not initiate a call');
    assert.equal(await dialog.locator('.ramen-contact-item > span[dir="ltr"]').count(),1);
    assert.equal(await dialog.locator('.ramen-contact-item > span[dir="ltr"]').evaluate(n=>getComputedStyle(n).direction),'ltr');
    assert.equal(await p.locator('[data-restaurant-phone]').evaluate(n=>getComputedStyle(n).direction),'ltr');
+   const historyLength=await p.evaluate(()=>history.length);
+   await dialog.evaluate(d=>{d.dataset.qaClosed='false';d.addEventListener('close',()=>{d.dataset.qaClosed='true';},{once:true});});
+   await dialog.locator('[data-contact-feedback]').click();
+   await dialog.locator('.feedback-comment textarea').waitFor({state:'visible'});
+   assert.equal(await dialog.getAttribute('data-qa-closed'),'false','panel replacement must not close the dialog');
+   assert.equal(await p.evaluate(()=>history.length),historyLength,'panel replacement must not push another history entry');
+   assert.equal(await trigger.getAttribute('aria-expanded'),'true');
+   assert.equal(await dialog.locator('.feedback-comment textarea').getAttribute('dir'),'auto');
+   await p.screenshot({path:path.join(out,'customer-feedback-'+lang+'-390.png')});
    await p.keyboard.press('Escape');
    await p.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open && document.querySelector('[data-ramen-nav="contact"]').getAttribute('aria-expanded')==='false');
    assert.equal(await trigger.evaluate(n=>document.activeElement===n),true);
@@ -170,7 +188,9 @@ async function ready(p){
    await nav.locator('[data-nav-panel="profile"]').click();
    const dialog=p.locator('#ramen-contact-dialog');await dialog.waitFor({state:'visible'});
    assert.equal(await nav.getAttribute('aria-hidden'),'true');
+   await dialog.locator('[data-panel-state="ready"]').waitFor({state:'visible'});
    assert.equal(await dialog.locator('input[type="password"]').count(),0);
+   await p.screenshot({path:path.join(out,'customer-profile-'+lang+'-390.png')});
    await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
    await p.locator('#menu-toggle').click();await nav.locator('[data-nav-panel="feedback"]').click();
    await dialog.waitFor({state:'visible'});
@@ -180,10 +200,60 @@ async function ready(p){
    const review=await p.evaluate(()=>JSON.parse(localStorage.getItem('online_menu_demo_review_v2:romano')));assert.equal(review.rating,4);assert.equal(review.status,'pending');assert.equal(review.comment,'<b>Demo comment</b>');
    await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
    await p.locator('#menu-toggle').click();await nav.locator('#navigation-service-toggle').click();await nav.locator('[data-nav-panel="chat"]').click();
-   await dialog.waitFor({state:'visible'});assert.ok((await dialog.locator('.ramen-contact-note').last().innerText()).trim());
+   await dialog.locator('#connect-message-input').waitFor({state:'visible'});assert.ok((await dialog.locator('.ramen-contact-note').last().innerText()).trim());
+   assert.equal(await dialog.evaluate(d=>d.classList.contains('connect-dialog')),true);
+   const input=dialog.locator('#connect-message-input');
+   await p.waitForFunction(()=>!document.querySelector('#connect-message-input')?.disabled);
+   await input.fill('   ');
+   assert.equal(await dialog.locator('.connect-count').textContent(),'0 / 2000');
+   assert.equal(await dialog.locator('.connect-send').isDisabled(),true);
+   await input.fill('  '+ 'a'.repeat(2000)+'  ');
+   assert.equal(await dialog.locator('.connect-count').textContent(),'2000 / 2000');
+   assert.equal(await dialog.locator('.connect-send').isEnabled(),true);
+   await input.fill('a'.repeat(2001));
+   assert.equal(await dialog.locator('.connect-send').isDisabled(),true);
+   await input.fill('Draft '+lang);
+   await p.evaluate(()=>window.dispatchEvent(new Event('romano:data-updated')));
+   assert.equal(await input.inputValue(),'Draft '+lang,'catalog refresh must preserve the active draft');
+   assert.equal(await input.evaluate(n=>n===document.activeElement),true);
+   await input.fill('<b>Demo chat</b>');
+   await dialog.locator('.connect-send').click();
+   await p.waitForFunction(()=>document.querySelector('.connect-bubble:last-of-type')?.textContent==='<b>Demo chat</b>'||Array.from(document.querySelectorAll('.connect-bubble')).at(-1)?.textContent==='<b>Demo chat</b>');
+   assert.equal(await dialog.locator('.connect-bubble').last().textContent(),'<b>Demo chat</b>');
+   assert.equal(await dialog.locator('.connect-bubble b').count(),0);
+   await dialog.locator('.connect-language').selectOption(lang==='en'?'fa':'en');
+   await p.waitForFunction(()=>Array.from(document.querySelectorAll('.connect-bubble')).at(-1)?.textContent==='<b>Demo chat</b>');
+   assert.equal(await dialog.locator('.connect-bubble').last().textContent(),'<b>Demo chat</b>');
+   await dialog.locator('.connect-language').selectOption(lang);
    await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
   }
   await p.evaluate(()=>{localStorage.removeItem('online_menu_demo_rating:romano');localStorage.removeItem('online_menu_demo_review_v2:romano');ROMANO_I18N.setLanguage('fa',false);});
+ });
+ await check('Connect IndexedDB survives reload and receives a same-origin staff reply',async()=>{
+  await p.setViewportSize({width:390,height:844});await p.reload();await ready(p);
+  const trigger=p.locator('[data-ramen-nav="contact"]');await trigger.click();
+  const dialog=p.locator('#ramen-contact-dialog');
+  await p.waitForFunction(()=>document.querySelector('#connect-message-input')&&!document.querySelector('#connect-message-input').disabled);
+  await dialog.locator('#connect-message-input').fill('R24 demo persistence check');
+  await dialog.locator('.connect-send').click();
+  await p.waitForFunction(()=>Array.from(document.querySelectorAll('.connect-bubble')).at(-1)?.textContent==='R24 demo persistence check');
+  const guest=await p.evaluate(()=>JSON.parse(sessionStorage.getItem('romano_connect_guest_v1')));
+  await p.reload();await ready(p);await trigger.click();
+  await p.waitForFunction(()=>Array.from(document.querySelectorAll('.connect-bubble')).at(-1)?.textContent==='R24 demo persistence check');
+  const staffTab=await ctx.newPage();
+  try{
+   await staffTab.goto(base);await ready(staffTab);
+   await staffTab.evaluate(()=>RomanoConnectAssets.loadEngine());
+   await staffTab.evaluate(async guest=>{
+    const engine=RomanoConnectDemo,a={id:'qa-staff',role:'manager',restaurantId:'romano',branchId:guest.branchId};
+    const data=await engine.readStaff(a,guest.conversationId);
+    await engine.command(a,guest.conversationId,{type:'send',clientId:crypto.randomUUID(),text:'R24 demo staff reply',language:'en',expectedVersion:data.conversation.version});
+   },guest);
+   await p.waitForFunction(()=>Array.from(document.querySelectorAll('.connect-message.is-staff .connect-bubble')).some(n=>n.textContent==='R24 demo staff reply'));
+   const isolated=await staffTab.evaluate(async()=>{const s=RomanoConnectDemo.sessionForCurrent();return (await RomanoConnectDemo.get(s)).messages.length;});
+   assert.equal(isolated,0);
+  }finally{await staffTab.close();}
+  await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
  });
  await check('Hamburger navigation covers the complete desktop viewport',async()=>{
   await p.setViewportSize({width:1440,height:900});
@@ -268,7 +338,7 @@ async function ready(p){
    assert.equal(await rail.evaluate(node=>getComputedStyle(node).scrollSnapType.includes('inline')),true,lang+' category rail snap');
    const buttons=rail.locator('button');
    assert.ok(await buttons.count()>1);
-   assert.ok(await buttons.first().evaluate(node=>node.getBoundingClientRect().height>=44),lang+' category filter touch target');
+   assert.ok(atLeastCssPixels(await buttons.first().evaluate(node=>node.getBoundingClientRect().height),44),lang+' category filter touch target');
   }
  });
  await check('Compact full-bleed product card matches the premium reference and remains accessible',async()=>{
@@ -323,9 +393,9 @@ async function ready(p){
     await p.waitForFunction(()=>Boolean(window.__qaShare));
     const share=await p.evaluate(()=>window.__qaShare);
     const url=new URL(share.url);
-    assert.deepEqual([...url.searchParams.keys()],['restaurant','demoBranch']);
+    assert.deepEqual([...url.searchParams.keys()],['restaurant']);
     assert.equal(url.searchParams.get('restaurant'),'sample');
-    assert.equal(url.searchParams.get('demoBranch'),'sample-branch');
+    assert.equal(url.searchParams.has('demoBranch'),false);
     assert.match(url.hash,/^#product-/);
    }finally{
     await p.evaluate(original=>{history.replaceState(history.state,'',original);delete navigator.share;delete window.__qaShare;},original);
@@ -486,7 +556,7 @@ async function ready(p){
     await p.waitForFunction(()=>document.querySelector('#menu').style.getPropertyValue('--browse-bar-height'));
     assert.equal(await p.locator('#menu-search-panel').isVisible(),false);
     assert.equal(await p.locator('#menu-filter-panel').isVisible(),false);
-    for(const trigger of [searchToggle,filterToggle]){const r=await trigger.boundingBox();assert.ok(r&&r.width>=44&&r.height>=44,JSON.stringify({lang,width,id:await trigger.getAttribute("id"),rect:r}));assert.ok(await trigger.getAttribute('aria-label'));}
+    for(const trigger of [searchToggle,filterToggle]){const r=await trigger.boundingBox();assert.ok(r&&atLeastCssPixels(r.width,44)&&atLeastCssPixels(r.height,44),JSON.stringify({lang,width,id:await trigger.getAttribute("id"),rect:r}));assert.ok(await trigger.getAttribute('aria-label'));}
     await p.evaluate(()=>window.scrollBy({top:260,behavior:'instant'}));
     const pinned=await p.evaluate(()=>{const header=document.querySelector('.site-header'),h=header.getBoundingClientRect(),bar=header.querySelector('.menu-browser').getBoundingClientRect();return{gap:bar.bottom-h.bottom,height:bar.height}});
     assert.ok(Math.abs(pinned.gap)<=2,JSON.stringify({lang,width,pinned}));assert.ok(pinned.height<180);
@@ -675,7 +745,7 @@ async function ready(p){
   assert.equal(await headerCart.isVisible(),true);
   const cartBox=await headerCart.boundingBox();
   const menuBox=await p.locator('#menu-toggle').boundingBox();
-  assert.ok(cartBox && cartBox.width>=40 && cartBox.height>=40 && cartBox.x>=0 && cartBox.x+cartBox.width<=1440,JSON.stringify({cartBox,menuBox}));
+  assert.ok(cartBox && atLeastCssPixels(cartBox.width,40) && atLeastCssPixels(cartBox.height,40) && cartBox.x>=0 && cartBox.x+cartBox.width<=1440,JSON.stringify({cartBox,menuBox}));
   assert.ok(menuBox && (cartBox.x+cartBox.width<=menuBox.x-4 || menuBox.x+menuBox.width<=cartBox.x-4),JSON.stringify({cartBox,menuBox}));
   await p.setViewportSize({width:390,height:900});
   assert.equal(await p.locator('#ramen-bottom-cart').isVisible(),true);
@@ -693,7 +763,7 @@ async function ready(p){
    assert.equal(await cta.evaluate(node=>getComputedStyle(node).direction),expected[lang].dir,lang+' CTA direction');
    assert.match(await footer.evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expected[lang].font),lang+' footer font');
    assert.match(await cta.evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expected[lang].font),lang+' CTA font');
-   assert.ok((await cta.boundingBox()).height>=40,lang+' CTA touch target');
+   assert.ok(atLeastCssPixels((await cta.boundingBox())?.height,40),lang+' CTA touch target');
    assert.ok((await cta.textContent()).trim().length>0,lang+' CTA label');
    const toggle=nav.locator('#navigation-service-toggle'),options=nav.locator('#navigation-service-options');
    assert.equal(await nav.locator('#navigation-rating .hero-stars span').count(),5);
@@ -701,7 +771,7 @@ async function ready(p){
    assert.equal(await options.locator('button').count(),3);
    await p.keyboard.press('Escape');assert.equal(await options.isVisible(),false);assert.equal(await nav.getAttribute('aria-hidden'),'false');
    await toggle.click();await p.evaluate(()=>history.back());await options.waitFor({state:'hidden'});assert.equal(await nav.getAttribute('aria-hidden'),'false');
-   await toggle.click();await options.locator('[data-nav-panel="waiter"]').click();const waiter=p.locator('#ramen-contact-dialog');await waiter.waitFor({state:'visible'});assert.equal(await waiter.locator('.hp-service-action').count(),1);await p.keyboard.press('Escape');await waiter.waitFor({state:'hidden'});await p.locator('#menu-toggle').click();
+   await toggle.click();await options.locator('[data-nav-panel="waiter"]').click();const waiter=p.locator('#ramen-contact-dialog');await waiter.waitFor({state:'visible'});await waiter.locator('[data-panel-state="ready"]').waitFor({state:'visible'});await waiter.locator('.hp-service-action').first().waitFor({state:'visible'});assert.equal(await waiter.locator('.hp-service-action').count(),1);await p.keyboard.press('Escape');await waiter.waitFor({state:'hidden'});await p.locator('#menu-toggle').click();
    await p.locator('#navigation-close').click();
    await p.waitForFunction(()=>document.querySelector('#main-navigation')?.getAttribute('aria-hidden')==='true');
   }

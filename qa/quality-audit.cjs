@@ -178,6 +178,9 @@ async function measure(browser,surface) {
         await customer.locator('#ramen-contact-dialog').waitFor({state:'visible'});
         assert.equal(await contact.getAttribute('aria-expanded'),'true');
         assert.equal(await contact.getAttribute('aria-controls'),'ramen-contact-dialog');
+        await customer.locator('#connect-message-input').waitFor({state:'visible'});
+        await scan(customer,'customer-chat',lang,390,844);
+        await customer.locator('[data-connect-contact]').click();
         const footerPhone=customer.locator('[data-restaurant-phone]');
         const phone=customer.locator('#ramen-contact-dialog .ramen-contact-item > span[dir="ltr"]');
         assert.equal(await phone.count(),1);
@@ -188,6 +191,9 @@ async function measure(browser,surface) {
         await customer.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open && document.querySelector('[data-ramen-nav="contact"]').getAttribute('aria-expanded')==='false');
         assert.equal(await contact.getAttribute('aria-controls'),null);
         assert.equal(await contact.evaluate(el=>el===document.activeElement),true);
+        await admin.evaluate(()=>navigateTo('connect'));
+        await admin.locator('.connect-inbox-toolbar').waitFor({state:'visible'});
+        for(const [width,height] of [[390,844],[1440,900]])await scan(admin,'admin-connect',lang,width,height);
       }
       await customer.evaluate(()=>ROMANO_I18N.setLanguage('en',false));
       for(const width of [390,1440]){
@@ -260,7 +266,7 @@ async function measure(browser,surface) {
     } finally {await context.close();}
     for(const surface of ['customer','admin']) await measure(browser,surface);
     assert.deepEqual(report.errors,[],'Unexpected JavaScript errors during audit');
-    assert.equal(report.findings.length,37);
+    assert.equal(report.findings.length,49);
     assert.equal(report.lab.length,2);
     const severe=report.findings.flatMap(s=>s.violations.filter(v=>['critical','serious'].includes(v.impact)).map(v=>({surface:s.name,lang:s.lang,width:s.width,id:v.id})));
     console.log('QUALITY SUMMARY '+JSON.stringify({scans:report.findings.length,severe:severe.length,violations:report.findings.reduce((n,s)=>n+s.violations.length,0)}));

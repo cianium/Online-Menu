@@ -137,7 +137,7 @@
       const action = next[order.status];
       const items = (order.items || []).map((item) => `<div class="order-ticket-item"><span><b>${number(item.quantity)}×</b> ${safe(item.name)}</span><span>${safe(money(item.lineTotalMinor, order))}</span></div>`).join("");
       return `<article class="order-ticket" data-status="${safe(order.status)}">
-        <header class="order-ticket-head"><div><small>${safe(order.branchName || t("شعبه"))} · ${safe(order.tableName || "")}</small><h2>#${safe(order.orderNumber)}</h2></div><span class="order-status">${safe(t(labels[order.status] || order.status))}</span></header>
+        <header class="order-ticket-head"><div><small>${safe(order.tableName || "")}</small><h2>#${safe(order.orderNumber)}</h2></div><span class="order-status">${safe(t(labels[order.status] || order.status))}</span></header>
         <div class="order-ticket-items">${items}</div>
         ${order.notes ? `<p class="order-ticket-note">${safe(order.notes)}</p>` : ""}
         <span class="order-ticket-meta">${safe(time(order.submittedAt))} · ${t(order.paymentStatus === "paid" ? "پرداخت آنلاین ✓" : "پرداخت‌نشده")}</span>
@@ -185,7 +185,8 @@
     if (!window.RomanoAPI?.enabled) {branches=[];syncGateway();syncBranchManagement();return;}
     try {
       const data = await window.RomanoAPI.branches();
-      branches = Array.isArray(data?.branches) ? data.branches : [];
+      const configured = Array.isArray(data?.branches) ? data.branches.filter(row=>row.active!==false) : [];
+      branches = configured.length===1?configured:[];
       const select = document.querySelector("#gateway-branch");
       const selected=select.value;
       select.innerHTML = branches.map((branch) => `<option value="${safe(branch.id)}">${safe(branch.name)}</option>`).join("");
@@ -238,16 +239,6 @@
   function syncBranchManagement() {
     const select=document.querySelector("#ops-branch");
     if(!select) return;
-    const preview=document.querySelector('#sample-qr-preview');
-    preview.hidden=window.RomanoAPI.enabled;
-    const sample = window.RomanoDemoBranches;
-    if (sample) preview.querySelector('a').href = sample.link('../?qr=demo', sample.id);
-    const image=preview.querySelector('.ops-qr-image');
-    if(!preview.hidden && !image.firstChild && typeof window.QRCode==='function') {
-      const link=preview.querySelector('a');
-      try {new window.QRCode(image,{text:link.href,width:192,height:192,correctLevel:window.QRCode.CorrectLevel.M});}
-      catch {image.replaceChildren();image.hidden=true;}
-    }
     const selected=select.value;
     select.innerHTML=branches.map((branch) => `<option value="${safe(branch.id)}">${safe(branch.name)}</option>`).join("");
     if(branches.some((item)=>item.id===selected)) select.value=selected;

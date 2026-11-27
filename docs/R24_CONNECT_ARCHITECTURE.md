@@ -1,0 +1,25 @@
+# R24.2 — RAMEN Connect domain contract
+
+Status: isolated foundation; not wired into the UI and not a live messaging system.
+Baseline: R23 main, 1a581a4a988dd90a14880d5da7dfc6d1b1735f74.
+
+## Decisions
+- A conversation is scoped to restaurant, branch and an independently issued guest identity, not a table code, QR token, phone number or shared table session. Guest identity is an internal identifier, not a bearer credential.
+- Reuse existing restaurant/branch/table/order data only after a trusted adapter verifies their relationships and authorization. Optional table context requires both table and table-session identifiers. Optional order context currently requires a table session; non-table order support is deferred.
+- The pure domain model receives a trusted actor, aggregate and timestamp. It is not a security boundary, authentication implementation, database or untrusted storage validator. Never accept an actor, role, expiry, sender identity, timestamp, aggregate, or assignment eligibility directly from a request body. Backend resolves these from verified session, membership and current records.
+- Actors: guest, agent, manager. Map actual restaurant and branch memberships explicitly; do not infer branch privileges from a client role. Assignment targets must be checked against current branch staff by the adapter.
+- States: new, in_progress, resolved, closed. An assigned agent or manager may reply/resolve; guests may reopen resolved conversations or close their own. Closed is terminal. Expired guests cannot read/write; staff may inspect history, but writes stop after expiry. Retention and staff archival workflows are deferred.
+- Four supported language codes: fa, ar, en, tr. Text is plain text, never HTML. Render via textContent and use dir=auto for mixed-language messages. No UI strings are introduced yet.
+- Message sequence is per conversation; clientId is scoped by conversation, sender kind and sender id. Repeating an identical send returns the existing result; a different payload with the same key is rejected. Replay is permitted before expiry even after resolution/close. All new mutations require expectedVersion and monotonic adapter time. No automatic retries of non-idempotent mutations.
+- Limit: 2,000 Unicode code points per message and 1,000 messages per conversation for this aggregate implementation; paginate reads (max 100). A future database adapter may use separate message rows with a transactional sequence instead of loading the full aggregate. This cap is a deliberate MVP safeguard, not a production quota policy.
+- Read projections omit sender identifiers; guest projections omit guest and assignee identifiers. Never serialize the raw aggregate or mutation result to an untrusted client. The adapter should build response from read projection, not return raw messages. Storage is not yet implemented.
+
+## Adapter contract (next implementation)
+- createConversation(context), getConversation(id, cursor, limit), sendMessage(id, clientId, text, language, expectedVersion), assign(id, staffId, expectedVersion), resolve/reopen/close(id, expectedVersion), subscribe(scope, onChange).
+- Adapter derives actor from authenticated context, validates active branch/table/session/order and expiration, obtains transaction time, then executes core operation with an atomic compare-and-swap transaction. Idempotency lookup and commit share that transaction. Subscription notifications are hints; refetch authorized state after reconnect. Never use a guessed table code as access.
+- Demo: IndexedDB transactions, separate opaque guest context in sessionStorage, BroadcastChannel hints plus refresh fallback; same origin/browser only. Clearly label simulated/local messaging; no real delivery/read claim. Validate persisted schema, enforce storage limits and isolate branch data. Browser storage is not a security boundary.
+- Live: same-origin server endpoints using existing session patterns; issue a distinct guest credential, enforce revocation and branch membership on every operation. Use private data and least-privilege server authorization; private realtime events after authorization and commit. No service-role keys in frontend, no live-to-demo fallback on failure. Realtime transport and actual policies are deferred.
+- Stable error codes must map to four localized UI messages; unknown errors fail safely. No raw message content in telemetry; no personal details in demo.
+
+## Integration and acceptance
+Existing files are intentionally unchanged. js/connect-core.js supports classic browser scripts and Node CommonJS, consistent with existing demo models. Tests are discovered by existing backend/test/*.test.mjs glob. Later UI stages must preserve contact, waiter, feedback, menu navigation, focus/history and all four languages. Add concurrency, expiry/revocation, tenant isolation, browser storage failure, CSP/service-worker cache, offline/reconnect and mobile/RTL browser tests before release. Do not claim realtime or production security from these pure unit tests.

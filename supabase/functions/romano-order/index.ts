@@ -9,6 +9,7 @@ import {
 } from "./core.ts";
 
 const COOKIE_NAME = "romano_table_session";
+const connectEnabled = Deno.env.get("ROMANO_CONNECT_ENABLED") === "true";
 const MAX_BODY_BYTES = 32768;
 const SESSION_TTL_SECONDS = 14400;
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -272,6 +273,14 @@ function publicError(error: unknown): [number, string, string] {
       "Idempotency key was already used for another request.",
     ],
     ORDER_NOT_FOUND: [404, "ORDER_NOT_FOUND", "Order not found."],
+    CONNECT_INVALID_REQUEST:[400,"CONNECT_INVALID_REQUEST","Chat request is invalid."],
+    CONNECT_INVALID_MESSAGE:[422,"CONNECT_INVALID_MESSAGE","Message is invalid."],
+    CONNECT_EXPIRED:[401,"CONNECT_EXPIRED","Scan the table QR again."],
+    CONNECT_NOT_FOUND:[404,"CONNECT_NOT_FOUND","Conversation not found."],
+    CONNECT_INACTIVE:[409,"CONNECT_INACTIVE","Conversation is inactive."],
+    CONNECT_IDEMPOTENCY_CONFLICT:[409,"CONNECT_IDEMPOTENCY_CONFLICT","Message ID was already used."],
+    CONNECT_MESSAGE_LIMIT:[409,"CONNECT_MESSAGE_LIMIT","Conversation limit reached."],
+    CONNECT_RATE_LIMIT:[429,"CONNECT_RATE_LIMIT","Too many messages. Try again shortly."],
   };
   return mapping[code] ||
     [503, "SERVICE_UNAVAILABLE", "Ordering is temporarily unavailable."];
@@ -298,7 +307,7 @@ Deno.serve(async (request) => {
       headers: {
         ...originHeaders(request),
         "access-control-allow-methods": "GET, POST, OPTIONS",
-        "access-control-allow-headers": "content-type",
+        "access-control-allow-headers": "content-type, x-romano-connect-binding",
         "access-control-max-age": "600",
       },
     });
@@ -332,9 +341,27 @@ Deno.serve(async (request) => {
         encodeURIComponent(sessionToken)
       }; Path=/api/v1; Max-Age=${SESSION_TTL_SECONDS}; HttpOnly; Secure; SameSite=Lax`;
       const paymentOnlineEnabled=await onlinePaymentsEnabled(qr.branchId);
-      return json(request, ok({...data,paymentOnlineEnabled}, requestId), 201, {
+      const connectBinding=connectEnabled?await sha256Hex("romano-connect-v1:"+sessionToken):null;
+      return json(request, ok({...data,paymentOnlineEnabled,...(connectBinding?{connectBinding}:{})}, requestId), 201, {
         "set-cookie": cookie,
       });
+    }
+
+    if (path === "/connect" && ["GET","POST"].includes(request.method)) {
+      if(!connectEnabled) return json(request,fail("CONNECT_UNAVAILABLE","Chat is not enabled.",requestId),503);
+      if(request.method==="POST") requireAllowedOrigin(request);
+      const token=sessionFromRequest(request);
+      const binding=request.headers.get("x-romano-connect-binding");
+      if(!binding||binding!==await sha256Hex("romano-connect-v1:"+token))return json(request,fail("CONNECT_EXPIRED","Scan the table QR again.",requestId),401);
+      let payload:Record<string,unknown>={};
+      if(request.method==="POST"){
+        const body=await readJson(request);
+        if(!body||typeof body!=="object"||Array.isArray(body))throw new Error("CONNECT_INVALID_REQUEST");
+        payload=body as Record<string,unknown>;
+        if(typeof payload.clientId!=="string"||!isUuid(payload.clientId)||typeof payload.text!=="string"||typeof payload.language!=="string"||!["fa","en","tr","ar"].includes(payload.language))throw new Error("CONNECT_INVALID_MESSAGE");
+      }
+      const data=await rpc("romano_connect_guest",{p_token_hash:await sha256Hex(token),p_op:request.method==="GET"?"get":"send",p_client_id:payload.clientId??null,p_language:payload.language??null,p_text:payload.text??null});
+      return json(request,ok(data,requestId));
     }
 
     if (request.method === "POST" && path === "/submit") {

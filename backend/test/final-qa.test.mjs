@@ -58,8 +58,10 @@ test('Public asset budgets prevent major regressions in the initial UI',()=>{
  const html=read('index.html');
  const resources=[...html.matchAll(/(?:src|href)="((?:js|css)\/[^"]+\.(?:js|css))"/g)].map(m=>m[1]);
  assert.ok(resources.length>10);
- assert.ok([...new Set(resources)].reduce((sum,p)=>sum+size(p),0)<=450*1024,'Uncompressed customer JS/CSS budget (R18 scoped feature allowance)');
- assert.ok([...new Set(resources)].reduce((sum,p)=>sum+gzipSync(read(p)).length,0)<=115*1024,'Compressed customer JS/CSS budget');
+ assert.ok([...new Set(resources)].reduce((sum,p)=>sum+size(p),0)<=450*1024,'Uncompressed initial customer JS/CSS budget');
+ const compressed=[...new Set(resources)].map(p=>({path:p,bytes:gzipSync(read(p)).length}));
+ const compressedTotal=compressed.reduce((sum,p)=>sum+p.bytes,0);
+ assert.ok(compressedTotal<=115*1024,'Compressed customer JS/CSS budget: '+compressedTotal+' bytes; '+JSON.stringify(compressed.sort((a,b)=>b.bytes-a.bytes)));
  assert.match(read('js/app.js'),/loading="lazy"/);
 });
 

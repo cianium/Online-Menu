@@ -15,6 +15,7 @@ if (!url || !anon || !serviceKey) throw new Error("Supabase runtime secrets are 
 const service = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 const allowedOrigins = new Set((Deno.env.get("ROMANO_ADMIN_ALLOWED_ORIGINS") || "https://food.kiankhayat.me").split(",").map(v => v.trim()).filter(Boolean));
 const langs = ["fa", "en", "tr", "ar"];
+const connectEnabled = Deno.env.get("ROMANO_CONNECT_ENABLED") === "true";
 const roleRanks: Record<string, number> = { owner: 4, manager: 3, editor: 2, viewer: 1 };
 const cookiePath = "/api/v1";
 type Member = { restaurant_id: string; role: string; slug: string; name: string };
@@ -371,7 +372,6 @@ async function saveBranchGateway(member: Member, branchId: string, body: unknown
 }
 
 
-const branchSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const tableCodePattern = /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function record(value: unknown): Record<string,unknown> | null {
@@ -382,20 +382,6 @@ async function ownedBranch(member: Member, branchId: string) {
   const {data,error}=await service.from("branches")
     .select("id,restaurant_id,active,qr_ordering_enabled,currency_code,menu_price_to_minor_multiplier")
     .eq("restaurant_id",member.restaurant_id).eq("id",branchId).maybeSingle();
-  if(error) throw error;
-  return data;
-}
-async function saveBranch(member: Member, body: unknown) {
-  const value=record(body);
-  if(!value || typeof value.name !== "string" || value.name.trim().length<1 || value.name.trim().length>120
-     || typeof value.slug !== "string" || value.slug.length>80 || !branchSlugPattern.test(value.slug)
-     || value.currencyCode !== "IRR" || value.currencyExponent !== 0
-     || !Number.isSafeInteger(value.priceMultiplier) || Number(value.priceMultiplier)<1 || Number(value.priceMultiplier)>1000) return null;
-  const {data,error}=await service.from("branches").insert({
-    restaurant_id:member.restaurant_id, slug:value.slug, name:value.name.trim(),
-    currency_code:"IRR", currency_exponent:0, menu_price_to_minor_multiplier:value.priceMultiplier,
-    active:true, qr_ordering_enabled:false, auto_accept_qr_orders:false
-  }).select("id,slug,name,active,qr_ordering_enabled,currency_code").single();
   if(error) throw error;
   return data;
 }
@@ -535,6 +521,30 @@ Deno.serve(async req => {
       return reply({user:{id:p.id,email:p.email,displayName:p.display_name},
         memberships:p.memberships.map(m=>({restaurantId:m.restaurant_id,role:m.role,slug:m.slug,name:m.name}))},id,200,newCookies);
     }
+    const connectMatch=path.match(/^\/admin\/connect(?:\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}))?$/i);
+    if(connectMatch && (req.method==="GET"||req.method==="POST")){
+      if(!connectEnabled)return failure("CONNECT_UNAVAILABLE","Chat is not enabled.",id,503,newCookies);
+      const member=resolveMember(p,undefined,"manager");
+      if(!member||p.memberships.length!==1)return failure("CONNECT_FORBIDDEN","Manager access required.",id,403,newCookies);
+      let op=connectMatch[1]?"get":"list",body:Record<string,unknown>={};
+      if(req.method==="POST"){
+        if(!connectMatch[1])return failure("CONNECT_INVALID_REQUEST","Invalid conversation.",id,400,newCookies);
+        const raw=await readBody(req,16_384);
+        if(!raw||typeof raw!=="object"||Array.isArray(raw))return failure("CONNECT_INVALID_REQUEST","Invalid request.",id,400,newCookies);
+        body=raw;
+        if(typeof body.type!=="string"||!["send","assign","resolve","reopen","close"].includes(body.type)||typeof body.expectedVersion!=="number"||!Number.isSafeInteger(body.expectedVersion)||body.expectedVersion<1)return failure("CONNECT_INVALID_REQUEST","Invalid command.",id,422,newCookies);
+        op=body.type;
+        if(op==="send"&&(typeof body.clientId!=="string"||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.clientId)||typeof body.text!=="string"||typeof body.language!=="string"||!langs.includes(body.language)))return failure("CONNECT_INVALID_MESSAGE","Invalid message.",id,422,newCookies);
+      }
+      const {data,error}=await service.rpc("romano_connect_staff",{p_restaurant:member.restaurant_id,p_actor:p.id,p_op:op,p_conversation:connectMatch[1]||null,p_expected:body.expectedVersion??null,p_client_id:op==="send"?body.clientId:null,p_language:op==="send"?body.language:null,p_text:op==="send"?body.text:null});
+      if(error){
+        const codes:Record<string,number>={CONNECT_FORBIDDEN:403,CONNECT_NOT_FOUND:404,CONNECT_EXPIRED:409,CONNECT_STALE:409,CONNECT_INACTIVE:409,CONNECT_IDEMPOTENCY_CONFLICT:409,CONNECT_MESSAGE_LIMIT:409,CONNECT_RATE_LIMIT:429,CONNECT_INVALID_REQUEST:422,CONNECT_INVALID_MESSAGE:422};
+        const code=String(error.message);
+        if(Object.hasOwn(codes,code))return failure(code,"Chat command could not be completed.",id,codes[code],newCookies);
+        return failure("CONNECT_UNAVAILABLE","Chat is temporarily unavailable.",id,503,newCookies);
+      }
+      return reply(data,id,200,newCookies);
+    }
     if (path === "/admin/orders" && req.method === "GET") {
       const m=resolveMember(p,undefined,"viewer");
       if(!m) return failure("FORBIDDEN","Restaurant access denied.",id,403,newCookies);
@@ -567,11 +577,7 @@ Deno.serve(async req => {
       return reply(await branchSettings(m),id,200,newCookies);
     }
     if(path==="/admin/branches" && req.method==="POST") {
-      const m=resolveMember(p,undefined,"manager");
-      if(!m) return failure("FORBIDDEN","Manager access required.",id,403,newCookies);
-      const created=await saveBranch(m,await readBody(req,16_384));
-      if(!created) return failure("VALIDATION_ERROR","Invalid branch input.",id,422,newCookies);
-      return reply({branch:created},id,201,newCookies);
+      return failure("FEATURE_DISABLED","Additional restaurant locations are not supported.",id,405,newCookies);
     }
     const branchSettingsMatch=path.match(/^\/admin\/branches\/([0-9a-f-]{36})\/settings$/i);
     if(branchSettingsMatch && req.method==="PUT") {

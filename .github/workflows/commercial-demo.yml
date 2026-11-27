@@ -41,16 +41,29 @@ jobs:
           node qa/build-commercial-demo.mjs "$RUNNER_TEMP/commercial-demo"
           node qa/build-commercial-demo.mjs "$RUNNER_TEMP/commercial-demo-repeat"
           cmp "$RUNNER_TEMP/commercial-demo/PACKAGE-SHA256SUMS" "$RUNNER_TEMP/commercial-demo-repeat/PACKAGE-SHA256SUMS"
+          node --input-type=module -e '
+            import assert from "node:assert/strict";
+            import {readFileSync} from "node:fs";
+            import {execFileSync} from "node:child_process";
+            const v=JSON.parse(readFileSync(process.argv[1],"utf8"));
+            const git=(...args)=>execFileSync("git",args,{encoding:"utf8"}).trim();
+            assert.equal(v.milestone,"R25");
+            assert.equal(v.channel,"candidate");
+            assert.equal(v.mode,"standalone-sample-only");
+            assert.equal(v.sourceCommit,git("rev-parse","HEAD"));
+            assert.equal(v.sourceTree,git("rev-parse","HEAD^{tree}"));
+            console.log("PASS: candidate identity matches checked-out source");
+          ' "$RUNNER_TEMP/commercial-demo/VERSION.json"
           cd "$RUNNER_TEMP/commercial-demo"
           sha256sum -c PACKAGE-SHA256SUMS
           cd public
           sha256sum -c ../SHA256SUMS
       - name: Local-only rollback rehearsal
         run: |
-          current=3a2dad7fd319f8b69ee5a273d551dec72de49258
-          previous=939f8beb25a71d9df5743dc47cad2e65d5289d2c
-          test "$(git rev-parse "$current^{tree}")" = ef00732c606bc7e08ac21fbc52292036060189ca
-          test "$(git rev-parse "$previous^{tree}")" = c2f5a86fe6758b3b55f5827c7d7ca33ce69cb1ed
+          current=$(git rev-parse HEAD)
+          previous=1a581a4a988dd90a14880d5da7dfc6d1b1735f74
+          test "$(git rev-parse "$previous^{tree}")" = a2c186d1bc636f246c4031b976aafbfdced8c85f
+          git merge-base --is-ancestor "$previous" "$current"
           tree=$(git rev-parse "$previous^{tree}")
           rollback=$(printf 'Local rehearsal only\n' | git -c user.name=QA -c user.email=qa@example.invalid commit-tree "$tree" -p "$current")
           test "$(git rev-parse "$rollback^{tree}")" = "$tree"

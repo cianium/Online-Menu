@@ -49,3 +49,55 @@ test('activation only removes obsolete caches owned by this worker scope', async
   assert.deepEqual(deleted,old);
   assert.equal(claimed,true);
 });
+
+
+test('worker excludes unknown paths, queries, authenticated requests and sibling deployments', () => {
+  const listeners={};
+  runWorker({self:{registration:{scope:origin+'/menu/'},location:{origin},addEventListener:(type,fn)=>listeners[type]=fn}});
+  for(const [path,destination,extra] of [
+    ['/other/assets/logo.png','image',{}],
+    ['/menu/private','document',{}],
+    ['/menu/admin','document',{}],
+    ['/menu/api/v1/orders','document',{}],
+    ['/menu/?session=secret','document',{}],
+    ['/menu/assets/logo.png?token=secret','image',{}],
+    ['/menu/js/app.js','script',{cache:'no-store'}],
+    ['/menu/js/app.js','script',{headers:new Headers({Authorization:'Bearer sample'})}],
+    ['/menu/assets/logo.png','image',{headers:new Headers({Range:'bytes=0-9'})}],
+    ['/menu/js/unknown.js','script',{}]
+  ]) listeners.fetch({request:{method:'GET',url:origin+path,destination,...extra},respondWith:()=>assert.fail(path+' must bypass cache')});
+});
+test('worker caches only public complete responses; bundled media cache hits avoid network', async()=>{
+  const listeners={},puts=[],tasks=[];
+  let cached,networkCalls=0,policy='',redirected=false,status=200;
+  const networkResponse=()=>({status,type:'basic',redirected,headers:new Headers({'Cache-Control':policy}),clone(){return this;}});
+  runWorker({self:{location:{origin},addEventListener:(type,fn)=>listeners[type]=fn},
+    caches:{open:async()=>({match:async()=>cached,put:async(request)=>puts.push(request.url)})},
+    fetch:async()=>{networkCalls++;return networkResponse();}
+  });
+  async function request(path,destination){
+    let reply;listeners.fetch({request:{method:'GET',url:origin+path,destination},respondWith:p=>reply=p,waitUntil:p=>tasks.push(p)});
+    const result=await reply;await Promise.all(tasks.splice(0));return result;
+  }
+  for(const value of ['private','public, no-store','no-cache="Set-Cookie"']){
+    policy=value;await request('/js/app.js','script');
+  }
+  policy='public, max-age=60';redirected=true;await request('/js/app.js','script');
+  redirected=false;status=206;await request('/assets/logo.png','image');
+  assert.deepEqual(puts,[]);
+  status=200;await request('/js/app.js','script');assert.deepEqual(puts,[origin+'/js/app.js']);
+  cached={marker:'bundled-image'};const before=networkCalls;
+  assert.equal(await request('/assets/logo.png','image'),cached);assert.equal(networkCalls,before);
+});
+
+
+test('Precache requests omit credentials, reject redirects and honor response cache policy',async()=>{
+  const listeners={},puts=[],calls=[];let skipped=false,pending;
+  runWorker({self:{location:{origin},addEventListener:(type,fn)=>listeners[type]=fn,skipWaiting:async()=>{skipped=true;}},
+    caches:{open:async()=>({put:async url=>puts.push(url)})},
+    fetch:async(url,options)=>{calls.push({url,options});return {ok:true,status:200,type:'basic',redirected:false,headers:new Headers({'Cache-Control':url.endsWith('/index.html')?'private':'public'})};}
+  });
+  listeners.install({waitUntil:p=>pending=p});await pending;
+  assert.ok(skipped);assert.ok(calls.length>20);assert.ok(puts.includes(origin+'/js/app.js'));assert.ok(!puts.includes(origin+'/index.html'));
+  for(const {url,options} of calls){assert.ok(url.startsWith(origin+'/'));assert.equal(options.credentials,'omit');assert.equal(options.redirect,'error');}
+});

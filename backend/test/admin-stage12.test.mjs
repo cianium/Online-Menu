@@ -52,6 +52,6 @@ test('new admin labels are available across four locales and a rating is not fak
  const labels=['باشگاه مشتریان','خانه','ناوبری سریع مدیریت','قوانین و کمپین‌ها','تأیید امتیاز آزمایشی','داده کافی برای نمودار وجود ندارد.','انتقال به بالا','شماره تلفن معتبر نیست.'];
  for(const key of labels){const values=[];for(const lang of ['fa','en','tr','ar']){const window={};vm.runInNewContext(read('admin/admin-i18n.js'),{window,localStorage:{getItem:()=>lang},document:{addEventListener(){}}});values.push(window.ROMANO_ADMIN_I18N.get(key));}assert.equal(new Set(values).size,4,key);}
  for(const invalid of [0,6,2.5,'5',null])assert.equal(model.localRating(invalid),null);assert.equal(model.localRating(4),4);
- assert.match(read('js/commerce.js'),/review\.submit\(localStorage,tenant\(\),selected,comment\.value,id\)/);
+ assert.match(read('js/customer-panels.js'),/review\.submit\(localStorage,tenant\(\),selected,comment\.value,id\)/);
  assert.match(read('admin/index.html'),/گزارش درآمد نیازمند تاریخچه پرداخت معتبر است/);
 });
