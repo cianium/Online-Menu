@@ -179,7 +179,7 @@
         controls.querySelector('.menu-icon-actions').append(search);
         const accessibleHeading = document.createElement('div');
         accessibleHeading.className = 'sr-only';
-        accessibleHeading.innerHTML = '<h2 id="browse-title"></h2><span id="menu-result-count" role="status" aria-live="polite"></span><p id="browse-hint"></p>';
+        accessibleHeading.innerHTML = '<h1 id="browse-title"></h1><span id="menu-result-count" role="status" aria-live="polite"></span><p id="browse-hint"></p>';
         section.prepend(accessibleHeading);
         // Keep the data-mode disclosure compact and adjacent to the browse controls.
         const status=document.createElement('div');status.id='menu-data-status';status.className='menu-data-status';status.setAttribute('role','status');status.innerHTML='<span></span><button type="button"></button>';section.prepend(status);

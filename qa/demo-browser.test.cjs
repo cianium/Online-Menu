@@ -38,6 +38,7 @@ const readyCustomer = async page => {
     await customer.locator('.hero-button').click();
     await customer.locator('#menu').waitFor({state:'visible'});
     assert.equal(await customer.locator('#home').isVisible(),false);
+    assert.equal(await customer.locator('#menu h1').count(),1);
     await customer.evaluate(()=>navigateCustomerView("home"));
     assert.equal(await customer.locator('#menu').isVisible(),false);
     await admin.goto(new URL('admin/',base).href);

@@ -2171,6 +2171,10 @@ function renderCustomerView(view) {
     for (const id of ["home","categories","featured"]) {
         document.getElementById(id).hidden = view === "menu";
     }
+    const status = document.getElementById("menu-data-status");
+    const home = document.getElementById("home");
+    if (status && view === "menu" && status.parentElement !== menu) menu.prepend(status);
+    if (status && view === "home" && status.parentElement !== home.parentElement) home.before(status);
     if (changed) window.dispatchEvent(new CustomEvent("romano:customer-view-changed",{detail:{view}}));
     return changed;
 }

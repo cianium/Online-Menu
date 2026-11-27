@@ -71,6 +71,10 @@ async function ready(p){
    assert.equal(await rating.locator('.hero-stars').textContent(),'☆☆☆☆☆');
     assert.equal(await rating.locator('.hero-rating-copy,.hero-rating-detail').count(),0);
     assert.ok(await rating.getAttribute('aria-label'));
+    assert.equal(await rating.evaluate(n=>getComputedStyle(n).backgroundColor),'rgba(0, 0, 0, 0)');
+    assert.equal(await rating.evaluate(n=>getComputedStyle(n).borderTopWidth),'0px');
+    assert.equal(await p.locator('#navigation-rating .hero-stars').textContent(),'☆☆☆☆☆');
+    assert.equal(await p.locator('#navigation-rating .hero-rating-copy,#navigation-rating .hero-rating-detail').count(),0);
    const geometry=await p.evaluate(()=>{const c=document.querySelector('.hero-content').getBoundingClientRect(),b=document.querySelector('.hero-button').getBoundingClientRect(),h=document.querySelector('.hero-section').getBoundingClientRect();return {content:c.bottom,button:b.top,end:b.bottom,hero:h.bottom};});
    assert.ok(geometry.button>=geometry.content-1&&geometry.end<=geometry.hero+1);
   }
@@ -166,6 +170,7 @@ async function ready(p){
     assert.equal(await p.locator('#menu').isVisible(),true);
     assert.equal(await cards.count(),21);
     assert.equal(await p.evaluate(()=>location.search),original);
+    assert.equal(await p.locator('html').getAttribute('lang'),lang);
     await p.waitForFunction(()=>document.querySelector('[data-ramen-nav="menu"]').getAttribute('aria-current')==='location');
     await p.goBack();await p.locator('#home').waitFor({state:'visible'});
     await p.locator('[data-ramen-nav="menu"]').click();await p.locator('#menu').waitFor({state:'visible'});
@@ -174,6 +179,32 @@ async function ready(p){
     assert.equal(await p.evaluate(()=>location.hash),'#featured');
     assert.equal(await p.locator('#menu').isVisible(),false);
    }
+   await p.locator('[data-ramen-nav="home"]').click();
+  });
+  await check('Header and hamburger categories enter the catalog and preserve a favorite across views',async()=>{
+   const category=p.locator('#rv4-category-rail [data-browse-category]').first();
+   const id=await category.getAttribute('data-browse-category');
+   await category.click();
+   await p.locator('#menu').waitFor({state:'visible'});
+   assert.ok(await cards.count()>0);
+   assert.equal(await cards.evaluateAll((nodes,id)=>nodes.every(n=>getProductById(n.dataset.productId).category===id),id),true);
+   const productId=await cards.first().getAttribute('data-product-id');
+   await cards.first().locator('[data-favorite-product]').click();
+   await p.locator('[data-ramen-nav="home"]').click();
+   assert.equal(await p.locator('#menu').isVisible(),false);
+   await p.locator('#menu-toggle').click();
+   const shortcut=p.locator('#main-navigation [data-category-link="true"]').first();
+   const categoryId=(await shortcut.getAttribute('href')).slice('#category-'.length);
+   await shortcut.click();
+   await p.locator('#menu').waitFor({state:'visible'});
+   assert.ok(await cards.count()>0);
+   assert.equal(await cards.evaluateAll((nodes,id)=>nodes.every(n=>getProductById(n.dataset.productId).category===id),categoryId),true);
+   await p.locator('[data-ramen-nav="home"]').click();
+   await p.locator('[data-ramen-nav="menu"]').click();
+   assert.equal(await cards.count(),21);
+   const favorite=p.locator('#menu .product-card[data-product-id="'+productId+'"] [data-favorite-product]');
+   assert.equal(await favorite.getAttribute('aria-pressed'),'true');
+   await favorite.click();
    await p.locator('[data-ramen-nav="home"]').click();
   });
   await check('Category-first hamburger, guest profile and local-only rating in four languages',async()=>{
