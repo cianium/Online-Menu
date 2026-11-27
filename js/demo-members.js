@@ -139,7 +139,7 @@
     branch?.context();
     const rows=read(storage),current=rows.find(r=>r.id===session.getItem(activeKey));
     if(!current)throw Error('NO_PROFILE');
-    if(!Array.isArray(items)||!items.length||items.length>100||!Number.isFinite(total)||total<=0||items.some(i=>!i||typeof i.name!=='string'||!Number.isSafeInteger(i.quantity)||i.quantity<1||i.quantity>99||!Number.isFinite(i.price)||i.price<=0))throw Error('INVALID_ORDER');
+    if(!Array.isArray(items)||!items.length||items.length>100||!Number.isFinite(total)||total<=0||items.some(i=>!i||typeof i.name!=='string'||!Number.isSafeInteger(i.quantity)||i.quantity<1||i.quantity>99||!Number.isFinite(i.price)||i.price<=0||(i.note!==undefined&&(typeof i.note!=="string"||i.note.length>200))))throw Error('INVALID_ORDER');
     if(current.orders.length>=100)throw Error('LIMIT');
     const order={id:uuid(),createdAt:new Date().toISOString(),currency:catalogCurrency(currency),items:items.map(i=>({name:i.name.slice(0,150),quantity:i.quantity,price:i.price,...(i.note?{note:i.note}:{})})),total};
     const config=settings(storage);

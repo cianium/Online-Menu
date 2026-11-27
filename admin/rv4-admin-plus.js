@@ -516,6 +516,7 @@
             const ids=new Set(catalog.categories.map(row=>String(row.id).trim()));
             if(catalog.products.some(row=>row.category&&!ids.has(row.category)))throw Error('BACKUP_INVALID');
             window.RomanoDemoMembers.read({getItem:()=>raw.members});
+            if(data.hospitality!==null)window.RomanoDemoMembers.validateSettings(data.hospitality);
             window.AdminStage12Model.readRules(raw.rules);
             window.RomanoDemoReview.parse(raw.review);
             if(data.rating!==null&&!window.AdminStage12Model.localRating(data.rating))throw Error('BACKUP_INVALID');

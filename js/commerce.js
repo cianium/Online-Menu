@@ -61,6 +61,7 @@
     const valid = Object.fromEntries(visibleCartEntries());
     if (Object.keys(valid).length === Object.keys(cart).length) return;
     cart = normalizeCart(valid);
+    for(const id of itemNotes.keys())if(!cart[id])itemNotes.delete(id);
     save(cartKey(), cart);
   }
   function localized(item) { return window.ROMANO_I18N?.localizeProduct?.(item) || item; }

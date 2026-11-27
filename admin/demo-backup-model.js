@@ -15,7 +15,8 @@
     members:'online_menu_demo_members_v1:romano',
     rules:'online_menu_loyalty_drafts_v1:romano',
     review:'online_menu_demo_review_v2:romano',
-    rating:'online_menu_demo_rating:romano'
+    rating:'online_menu_demo_rating:romano',
+    hospitality:'online_menu_hospitality_v1:romano'
   });
   const key=(field,id)=>fields[field]+(id?':branch:'+id:'');
   const own=(obj,k)=>Object.prototype.hasOwnProperty.call(obj,k);
@@ -36,11 +37,12 @@
     const entries=[];
     for(const record of payload.records){
       if(!object(record)||typeof record.id!=='string'||!ids.delete(record.id)||!object(record.data)||
-        Object.keys(record.data).length!==Object.keys(fields).length)throw Error('BACKUP_INVALID');
+        Object.keys(record.data).some(field=>!own(fields,field)))throw Error('BACKUP_INVALID');
       const decoded=Object.create(null);
       for(const field of Object.keys(fields)){
-        if(!own(record.data,field))throw Error('BACKUP_INVALID');
-        const raw=record.data[field];
+        // Original v1 backups did not contain hospitality settings.
+        if(!own(record.data,field)&&field!=='hospitality')throw Error('BACKUP_INVALID');
+        const raw=own(record.data,field)?record.data[field]:null;
         if(raw!==null&&typeof raw!=='string')throw Error('BACKUP_INVALID');
         decoded[field]=raw===null?null:parse(raw);
         if(raw!==null&&decoded[field]===null)throw Error('BACKUP_INVALID');
