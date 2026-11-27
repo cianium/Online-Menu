@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { request } from 'node:http';
+import { gunzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 
 function call(port, path, options = {}) {
@@ -56,6 +57,22 @@ test('Standalone demo: serves public files and never exposes or proxies backend'
     assert.equal((await call(port, '/admin')).headers.location, '/admin/');
     const head = await call(port, '/', {method: 'HEAD'});
     assert.equal(head.status, 200); assert.equal(head.body.length, 0); assert.ok(Number(head.headers['content-length']) > 0);
+  });
+  await t.test('serves the same text with negotiated gzip and consistent HEAD metadata', async () => {
+    const url = '/admin/admin.js';
+    const plain = await call(port, url, {headers: {'Accept-Encoding': 'br, gzip;q=0'}});
+    assert.equal(plain.headers['content-encoding'], undefined);
+    const headers = {'Accept-Encoding': 'gzip, deflate, br'};
+    const zipped = await call(port, url, {headers});
+    assert.equal(zipped.headers.vary, 'Accept-Encoding');
+    assert.equal(zipped.headers['content-encoding'], 'gzip');
+    assert.ok(zipped.body.length < plain.body.length);
+    assert.deepEqual(gunzipSync(zipped.body), plain.body);
+    const head = await call(port, url, {method:'HEAD', headers});
+    assert.equal(head.body.length, 0);
+    assert.equal(head.headers['content-length'], String(zipped.body.length));
+    const image = await call(port, '/assets/images/logo/brand-mark-144.webp', {headers});
+    assert.equal(image.headers['content-encoding'], undefined);
   });
   await t.test('API, secrets, metadata, directories and traversal fail closed', async () => {
     for (const path of ['/api/v1/auth/me', '/api/v1/public/restaurants/romano/menu', '/api/v1/orders', '/backend/.env', '/backend/server.mjs', '/supabase/config.toml', '/.git/config', '/package.json', '/assets/', '/admin/%2e%2e/backend/server.mjs', '/admin/../index.html', '/admin/%2e%2e%2fpackage.json', '/admin/.secret.json']) {

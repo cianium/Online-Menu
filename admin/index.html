@@ -26,7 +26,7 @@
 
     <link rel="stylesheet" href="../css/fonts.css">
 
-    <link rel="icon" type="image/png" href="../assets/images/logo/logo.png">
+    <link rel="icon" type="image/webp" href="../assets/images/logo/brand-mark-144.webp">
 
     <link
         rel="stylesheet"
@@ -290,9 +290,11 @@
                         <div id="revenue-content" hidden>
                             <p id="revenue-range-label" dir="auto" data-admin-user-text="true"></p>
                             <dl class="revenue-kpis"><div><dt>مجموع مبلغ سفارش‌های نمونه</dt><dd id="revenue-total" dir="auto" data-admin-user-text="true"></dd></div><div><dt>تعداد سفارش‌های نمونه</dt><dd id="revenue-count" data-admin-user-text="true"></dd></div><div><dt>میانگین مبلغ سفارش</dt><dd id="revenue-average" dir="auto" data-admin-user-text="true"></dd></div><div><dt>تغییر نسبت به دوره قبل</dt><dd id="revenue-change" dir="ltr" data-admin-user-text="true"></dd><dd id="revenue-previous" data-admin-user-text="true"></dd></div></dl>
+                            <p class="revenue-member-count"><span>مشتریان دارای سفارش نمونه</span> <strong id="revenue-customers" data-admin-user-text="true"></strong></p>
                             <div class="revenue-chart" aria-hidden="true" dir="ltr"><span id="revenue-axis-max" data-admin-user-text="true"></span><div id="revenue-bars"></div><div class="revenue-axis"><span id="revenue-axis-start" data-admin-user-text="true"></span><span id="revenue-axis-end" data-admin-user-text="true"></span></div></div>
                             <label class="revenue-detail-label"><span>جزئیات بازه نمودار</span><select id="revenue-bucket" data-admin-user-text="true"></select></label><p id="revenue-detail" data-admin-user-text="true" role="status"></p>
                             <p id="revenue-excluded" data-admin-user-text="true"></p>
+                            <details class="revenue-table" id="revenue-ranking" hidden><summary>پنج قلم پر‌سفارش بر اساس تعداد</summary><ol id="revenue-top-items" data-admin-user-text="true"></ol></details>
                             <details class="revenue-table"><summary>جدول داده‌های نمودار</summary><div class="revenue-table-scroll" tabindex="0" role="region" aria-label="جدول داده‌های نمودار"><table><thead><tr><th scope="col">بازه گزارش</th><th scope="col">مبلغ سفارش</th><th scope="col">تعداد سفارش‌های نمونه</th><th scope="col">میانگین مبلغ سفارش</th></tr></thead><tbody id="revenue-table-body" data-admin-user-text="true"></tbody></table></div></details>
                         </div>
                     </article>
@@ -805,6 +807,35 @@
 
                 </form>
 
+                <section class="gateway-settings" id="demo-branches" hidden aria-labelledby="sample-branches-title">
+                    <h2 id="sample-branches-title">شعبه‌های آزمایشی</h2>
+                    <p>کاتالوگ، اعضا و سفارش‌های هر شعبه در همین مرورگر جداگانه ذخیره می‌شوند.</p>
+                    <label class="sample-branch-field"><span>انتخاب شعبه</span><select id="sample-branch-select" data-admin-user-text="true"></select></label>
+                    <form class="gateway-settings-form" data-action="create">
+                        <label><span>نام شعبه جدید</span><input name="sampleName" maxlength="80" required></label>
+                        <button type="submit" class="secondary-button">افزودن شعبه آزمایشی</button>
+                    </form>
+                    <form class="gateway-settings-form" data-action="rename">
+                        <label><span>نام شعبه فعال</span><input name="sampleRename" maxlength="80" required></label>
+                        <button type="submit" class="secondary-button">ذخیره نام شعبه</button>
+                    </form>
+                    <form class="gateway-settings-form" id="sample-branch-lifecycle" hidden>
+                        <label><span>مدیریت وضعیت شعبه</span><select id="sample-branch-target" data-admin-user-text="true"></select></label>
+                        <p>غیرفعال‌سازی، ورود و سفارش جدید را متوقف می‌کند؛ اطلاعات قبلی حذف نمی‌شوند.</p>
+                        <button type="submit" class="secondary-button" id="sample-branch-active-toggle">غیرفعال‌کردن</button>
+                    </form>
+                    <form class="gateway-settings-form" id="sample-table-form" data-action="table">
+                        <label><span>کد میز (لاتین)</span><input name="sampleTableCode" dir="ltr" maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_\-]*" required></label>
+                        <label><span>نام میز</span><input name="sampleTableName" maxlength="80" required></label>
+                        <button class="secondary-button" type="submit">افزودن میز</button>
+                    </form>
+                    <label class="sample-branch-field" hidden><span>میز</span><select id="sample-table-select" data-admin-user-text="true"></select></label>
+                    <div class="ops-qr-result" id="sample-table-qr" hidden>
+                        <div class="ops-qr-image" aria-hidden="true"></div>
+                        <a class="secondary-button" target="_blank" rel="noopener noreferrer">باز کردن ورود آزمایشی مشتری</a>
+                    </div>
+                    <p role="status" aria-live="polite"></p>
+                </section>
                 <section class="gateway-settings" id="branch-management" aria-labelledby="branch-management-title">
                     <div><span class="page-eyebrow">تنظیم میز و QR</span>
                         <h2 id="branch-management-title" data-admin-i18n="میزها و سفارش QR">میزها و سفارش QR</h2>
@@ -1344,8 +1375,8 @@
 
             <div class="admin-gate-logo-shell">
                 <img
-                    src="../assets/images/logo/logo.png"
-                    alt="ROMANO"
+                    src="../assets/images/logo/brand-mark-144.webp"
+                    alt="" width="48" height="48"
                     class="admin-gate-logo"
                 >
             </div>
@@ -1415,12 +1446,14 @@
 </div>
 
 
+<script src="../js/demo-branches.js"></script>
 <script src="../js/data.js"></script>
 <script src="../js/money.js"></script>
 <script src="admin-i18n.js"></script>
 <script src="api.js"></script>
 <script src="admin-stage12-model.js"></script>
 <script src="admin.js"></script>
+<script src="demo-backup-model.js"></script>
 <script src="rv4-admin-plus.js"></script>
 <script src="workspace.js"></script>
 <script src="vendor/qrcode.min.js"></script>
@@ -1429,6 +1462,7 @@
 <script src="../js/demo-members.js"></script>
 <script src="admin-stage12.js"></script>
 <script src="demo-members-panel.js"></script>
+<script src="demo-branches.js"></script>
 <script src="revenue-model.js"></script>
 <script src="revenue.js"></script>
 

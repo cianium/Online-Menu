@@ -33,4 +33,6 @@ With Playwright installed and its Chromium available, run `npm run qa:demo-brows
 
 ## Release safety
 
-Automatic Vercel Git deployments for `main` and `ux/system-redesign-vq3` are temporarily disabled through `vercel.json` while the final demo integration is reviewed. This does not change API rewrites, the existing deployed site, or database configuration. Verify the actual Vercel project's deployment status and any other deploy hooks independently. Re-enable the relevant branch only after explicit release approval.
+GitHub is the canonical source and delivery location. The standalone demo requires no Vercel project, Supabase account, database or external API. Use the local launcher, or download the verified commercial-demo artifact from GitHub Actions. The existing Pages snapshot is a separate, explicitly published sample build; compare its VERSION.json sourceCommit with the intended revision.
+
+The legacy `vercel.json` retains hosted API rewrites and security headers for reference and compatibility tests, but `git.deploymentEnabled` is false for every branch. No Vercel deployment is part of the release process. Removing the Vercel project may disable the former hosted API gateway or custom domain; it does not change the repository or the standalone launcher. Do not re-enable external deployment without owner approval.

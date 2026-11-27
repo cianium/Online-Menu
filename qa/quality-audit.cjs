@@ -201,7 +201,10 @@ async function measure(browser,surface) {
         await customer.evaluate(()=>window.scrollTo(0,0));
         await customer.locator('#menu-toggle').click();
         const rect=await customer.locator('.navigation-inner').boundingBox(),overlay=await customer.locator('.main-navigation').boundingBox();
-        assert.ok(rect&&overlay&&Math.abs(rect.height-overlay.height)<=2&&Math.abs(rect.width-(width===390?overlay.width:680))<=2,JSON.stringify({rect,overlay}));
+        assert.ok(
+          rect&&overlay&&Math.abs(rect.height-844)<=2&&Math.abs(rect.width-width)<=2,
+          JSON.stringify({rect,overlay})
+        );
         await customer.screenshot({path:path.join(out,'customer-navigation-en-'+width+'.png'),animations:'disabled'});
         await customer.locator('#navigation-close').click();
       }
@@ -222,8 +225,19 @@ async function measure(browser,surface) {
         await admin.locator('#revenue-period').selectOption('7');
         await admin.setViewportSize({width:390,height:844});
         await admin.locator('.overview-revenue').scrollIntoViewIfNeeded();
-        await admin.locator('.revenue-table summary').click();
+        const chartTable=admin.locator('details.revenue-table').filter({has:admin.locator('#revenue-table-body')});
+        const ranking=admin.locator('#revenue-ranking');
+        assert.equal(await chartTable.count(),1);
+        assert.equal(await ranking.count(),1);
+        await chartTable.locator('summary').click();
+        assert.equal(await chartTable.evaluate(node=>node.open),true);
         assert.equal(await admin.locator('#revenue-table-body tr').count(),7);
+        await ranking.locator('summary').click();
+        assert.equal(await ranking.evaluate(node=>node.open),true);
+        assert.equal(await ranking.locator('li').count(),1);
+        assert.equal(await ranking.locator('li bdi').innerText(),'Synthetic audit item');
+        assert.equal(await ranking.locator('li span').innerText(),await admin.evaluate(()=>new Intl.NumberFormat(document.documentElement.lang,{maximumFractionDigits:1}).format(7)));
+        assert.equal(await admin.locator('#revenue-customers').innerText(),await admin.evaluate(()=>new Intl.NumberFormat(document.documentElement.lang,{maximumFractionDigits:1}).format(1)));
         const geometry=await admin.locator('.overview-revenue').evaluate(panel=>{
           const bounds=panel.getBoundingClientRect();
           return [...panel.querySelectorAll('.revenue-kpis,.revenue-chart,.revenue-detail-label,.revenue-table-scroll')].map(node=>{
@@ -233,7 +247,10 @@ async function measure(browser,surface) {
         });
         assert.ok(geometry.every(item=>item.fits),JSON.stringify({lang,geometry}));
         await scan(admin,'admin-revenue',lang,390,844);
-        await admin.locator('.revenue-table summary').click();
+        await ranking.locator('summary').click();
+        await chartTable.locator('summary').click();
+        assert.equal(await ranking.evaluate(node=>node.open),false);
+        assert.equal(await chartTable.evaluate(node=>node.open),false);
       }
       await admin.evaluate(()=>{localStorage.removeItem(RomanoDemoMembers.key);document.dispatchEvent(new CustomEvent('romano:demo-membership-changed'));ROMANO_ADMIN_I18N.setLanguage('en');});
       for(const view of ['orders','products','categories','settings','loyalty']){

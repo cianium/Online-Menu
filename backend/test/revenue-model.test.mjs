@@ -42,3 +42,16 @@ test('New sample orders snapshot catalog currency; old records remain readable w
  const data=members.read(db);delete data[0].orders[0].currency;db.setItem(members.key,JSON.stringify(data));
  assert.equal(members.read(db)[0].orders[0].currency,undefined);
 });
+
+test('Counts distinct ordering customers and ranks recorded item quantities inside the selected period and currency',()=>{
+ const dish=(name,quantity)=>({name,quantity});
+ const rows=model.orders([
+   {orders:[{...order('a',26,20),items:[dish('Tea',2)]},{...order('b',25,20),items:[dish('Soup',3)]}]},
+   {orders:[{...order('c',26,10),items:[dish('Tea',2)]},{...order('d',10,99),items:[dish('Cake',8)]}]},
+   {orders:[{...order('e',26,2,'USD'),items:[dish('Cake',17)]}]}
+ ]);
+ const result=model.report(rows,'IRT',7,now);
+ assert.equal(result.customers,2);
+ assert.deepEqual(result.topItems,[['Tea',4],['Soup',3]]);
+ assert.doesNotMatch(model.csv(result),/Tea|Soup/);
+});

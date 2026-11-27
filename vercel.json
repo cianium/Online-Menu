@@ -62,11 +62,6 @@
     }
   ],
   "git": {
-    "deploymentEnabled": {
-      "main": false,
-      "ux/system-redesign-vq3": false,
-      "release/v1.0-candidate": false,
-      "ux/integrated-v2-candidate": false
-    }
+    "deploymentEnabled": false
   }
 }

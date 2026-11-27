@@ -227,17 +227,30 @@ const readyCustomer = async page => {
     await entry.locator('button[type=submit]').click();
     await entry.waitFor({state:'hidden'});
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders.length),1);
+    assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.open()),true);
+    await entry.locator('input[name=name]').fill('Different sample name');
+    await entry.locator('input[name=phone]').fill('+12025550101');
+    await entry.locator('button[type=submit]').click();
+    await entry.locator('[role=alert][data-member-text=existing]').waitFor({state:'visible'});
+    assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current()?.orders.length),1);
+    await entry.locator('input[name=name]').fill('Sample Customer');
+    await entry.locator('button[type=submit]').click();
+    await entry.waitFor({state:'hidden'});
     const other=await context.newPage();
     await other.goto(new URL('./?qr=demo',base).href);await readyCustomer(other);
     const otherEntry=other.locator('#customer-entry');
     await otherEntry.locator('input[name=name]').fill('Sample Customer');
     await otherEntry.locator('input[name=phone]').fill('+12025550101');
     await otherEntry.locator('button[type=submit]').click();
-    await otherEntry.locator('[role=alert]').waitFor({state:'visible'});
-    assert.equal(await otherEntry.isVisible(),true);
-    assert.equal(await other.evaluate(()=>RomanoCustomerEntry.current()),null);
+    await otherEntry.waitFor({state:'hidden'});
+    assert.equal(await other.evaluate(()=>RomanoCustomerEntry.current()?.name),'Sample Customer');
+    assert.equal(await other.evaluate(()=>RomanoCustomerEntry.current()?.orders.length),1);
+    assert.equal(
+      await other.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey)),
+      await customer.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey))
+    );
     await other.close();
-    console.log('PASS: QR demo entry, four locales, local membership/order history, same-tab re-entry, isolated name/phone lookup and admin club sync');
+    console.log('PASS: QR demo entry, four locales, local membership/order history, returning-member re-entry and admin club sync');
     const registrants=await Promise.all([context.newPage(),context.newPage()]);
     try {
       await Promise.all(registrants.map(page=>page.goto(new URL('./?qr=demo',base).href)));
@@ -251,6 +264,107 @@ const readyCustomer = async page => {
       assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).length),3);
     } finally {await Promise.all(registrants.map(page=>page.close()));}
     console.log('PASS: concurrent sample registration retains both profiles');
+    if (standalone) {
+      await admin.evaluate(()=>navigateTo('settings'));
+      const branches = admin.locator('#demo-branches');
+      await branches.locator('[name=sampleName]').fill('Sample North');
+      await branches.locator('[data-action=create] button').click();
+      await admin.waitForURL(url=>url.searchParams.has('demoBranch'));
+      await branches.waitFor({state:'visible'});
+      assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).length),0);
+      assert.equal(await admin.evaluate(()=>state.products.length),21);
+      await branches.locator('[name=sampleRename]').fill('Sample Harbour');
+      await branches.locator('[data-action=rename] button').click();
+      await admin.waitForFunction(()=>document.querySelector('#sample-branch-select').selectedOptions[0]?.text==='Sample Harbour');
+      await branches.locator('[name=sampleTableCode]').fill('T1');
+      await branches.locator('[name=sampleTableName]').fill('Window table');
+      await branches.locator('#sample-table-form button').click();
+      const qr=branches.locator('#sample-table-qr');
+      await qr.waitFor({state:'visible'});
+      assert.ok(await qr.locator('canvas,img').count());
+      const link=await qr.locator('a').getAttribute('href');
+      await customer.goto(link);await readyCustomer(customer);
+      const entry=customer.locator('#customer-entry');
+      assert.match(await entry.innerText(),/Sample Harbour · Window table/);
+      await entry.locator('[name=name]').fill('Branch Member');
+      await entry.locator('[name=phone]').fill('+12025550101');
+      await entry.locator('button[type=submit]').click();
+      await entry.waitFor({state:'hidden'});
+      await customer.evaluate(()=>{RomanoCommerce.add(menuProducts.find(p=>p.active!==false&&p.price>0).id);RomanoCommerce.open();});
+      await customer.locator('#commerce-submit').click();
+      await customer.waitForFunction(()=>RomanoCustomerEntry.current()?.orders[0]?.tableName==='Window table');
+      await admin.evaluate(()=>navigateTo('orders'));
+      await admin.locator('.sample-order-ticket').filter({hasText:'Window table'}).waitFor();
+      await admin.evaluate(()=>navigateTo('dashboard'));
+      assert.equal(await admin.locator('#revenue-customers').innerText(),'1');
+      assert.equal(await admin.locator('#revenue-top-items li').count(),1);
+      const invalid=new URL(link);invalid.searchParams.set('demoTable','no-such-table');
+      await customer.goto(invalid.href);await readyCustomer(customer);
+      assert.equal(await customer.evaluate(()=>menuDataMode),'unavailable');
+      await admin.evaluate(()=>navigateTo('settings'));
+      await branches.locator('#sample-branch-select').selectOption('');
+      await admin.waitForURL(url=>!url.searchParams.has('demoBranch'));
+      await branches.waitFor({state:'visible'});
+      assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).length),3);
+      assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).some(member=>member.name==='Branch Member')),false);
+      const branchId=new URL(link).searchParams.get('demoBranch');
+      const target=branches.locator('#sample-branch-target');
+      const toggle=branches.locator('#sample-branch-active-toggle');
+      await target.selectOption(branchId);
+      await customer.goto(link);await readyCustomer(customer);
+      assert.equal(await customer.evaluate(()=>menuDataMode),'demo');
+      admin.once('dialog',dialog=>dialog.accept());
+      await toggle.click();
+      await admin.waitForFunction(id=>RomanoDemoBranches.read().find(row=>row.id===id)?.active===false,branchId);
+      await customer.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode==='unavailable');
+      assert.equal(await branches.locator('#sample-branch-select option').count(),1);
+      await customer.goto(link);await readyCustomer(customer);
+      assert.equal(await customer.evaluate(()=>menuDataMode),'unavailable');
+      // Exercise the actual download and import controls in an independent browser profile.
+      const downloadPromise=admin.waitForEvent('download');
+      await admin.locator('[data-sample-export]').click();
+      const download=await downloadPromise;
+      const bytes=await require('node:fs/promises').readFile(await download.path());
+      const payload=JSON.parse(bytes.toString('utf8'));
+      assert.equal(payload.directory.find(row=>row.id===branchId)?.active,false);
+      assert.equal(JSON.parse(payload.records.find(row=>row.id===branchId).data.members)[0].orders.length,1);
+      const isolated=await browser.newContext({viewport:{width:1440,height:900},serviceWorkers:'block',reducedMotion:'reduce'});
+      try {
+        isolated.on('page',page=>page.on('pageerror',error=>errors.push(String(error))));
+        await isolated.route('**/*',route=>{
+          const url=new URL(route.request().url());
+          if(url.origin!==base.origin){externalRequests.push(url.origin);return route.abort('blockedbyclient');}
+          if(url.pathname.startsWith('/api/'))apiRequests.push(url.pathname);
+          return route.continue();
+        });
+        const restored=await isolated.newPage();
+        await restored.goto(new URL('admin/',base).href);await loginDemoAdmin(restored);
+        await restored.evaluate(()=>navigateTo('settings'));
+        assert.equal(await restored.evaluate(()=>RomanoDemoBackup.occupied(localStorage)),false);
+        await restored.locator('[data-sample-import]').setInputFiles({name:'branches.json',mimeType:'application/json',buffer:bytes});
+        // Restore commits storage before reloading; wait for the new document, not the old registry.
+        await Promise.all([
+          restored.waitForEvent('framenavigated',{predicate:frame=>frame===restored.mainFrame()}),
+          restored.locator('.rv4-confirm-dialog[open] [value=confirm]').click()
+        ]);
+        await restored.waitForLoadState('domcontentloaded');
+        await loginDemoAdmin(restored);
+        await restored.waitForFunction(id=>Boolean(window.RomanoDemoMembers)&&window.RomanoDemoBranches?.read().some(row=>row.id===id&&row.active===false),branchId);
+        assert.equal(await restored.evaluate(id=>JSON.parse(localStorage.getItem('online_menu_demo_members_v1:romano:branch:'+id))[0].orders.length,branchId),1);
+        assert.equal(await restored.evaluate(()=>RomanoDemoMembers.read(localStorage).length),3);
+      } finally {await isolated.close();}
+      console.log('PASS: private all-branch backup downloads and restores archived order history in a fresh profile');
+      await toggle.click();
+      await admin.waitForFunction(id=>RomanoDemoBranches.read().find(row=>row.id===id)?.active===true,branchId);
+      await branches.locator('#sample-branch-select').selectOption(branchId);
+      await admin.waitForURL(url=>url.searchParams.get('demoBranch')===branchId);
+      await branches.waitFor({state:'visible'});
+      assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).find(member=>member.name==='Branch Member')?.orders.length),1);
+      await customer.goto(link);await readyCustomer(customer);
+      assert.equal(await customer.evaluate(()=>menuDataMode),'demo');
+      console.log('PASS: branch archive blocks open and new QR sessions; reactivation preserves order history');
+      console.log('PASS: local branch creation, rename, isolated catalog and memberships, table QR, invalid entry, order and return to primary');
+    }
     await customer.goto(new URL('./?restaurant=standalone-qa-missing',base).href); await readyCustomer(customer);
     assert.equal(await customer.evaluate(() => menuDataMode), 'unavailable');
     assert.equal(await cards.count(),0);

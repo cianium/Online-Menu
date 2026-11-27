@@ -2,6 +2,10 @@
 import { createServer } from 'node:http';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
+import { promisify } from 'node:util';
+import { gzip } from 'node:zlib';
+
+const compress = promisify(gzip);
 import { fileURLToPath } from 'node:url';
 
 const root = await realpath(fileURLToPath(new URL('..', import.meta.url)));
@@ -54,7 +58,18 @@ const server = createServer(async (req, res) => {
     const file = await realpath(path.join(root, ...parts));
     // Refuse symlinks escaping the requested public path (including other project directories).
     if (file !== path.join(root, ...parts) || !(await stat(file)).isFile()) return finish(404);
-    const data = await readFile(file);
+    let data = await readFile(file);
+    if (data.length >= 1024 && (type.includes('charset=utf-8') || type === 'image/svg+xml')) {
+      res.setHeader('Vary', 'Accept-Encoding');
+      const acceptsGzip = (req.headers['accept-encoding'] || '').split(',').some(token => {
+        const match = /^\s*gzip\s*(?:;\s*q=(0(?:\.\d{0,3})?|1(?:\.0{0,3})?))?\s*$/i.exec(token);
+        return match && (match[1] === undefined || Number(match[1]) > 0);
+      });
+      if (acceptsGzip) {
+        data = await compress(data);
+        res.setHeader('Content-Encoding', 'gzip');
+      }
+    }
     res.writeHead(200, {'Content-Type': type, 'Content-Length': data.length});
     res.end(req.method === 'HEAD' ? undefined : data);
   } catch (error) {

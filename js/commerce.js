@@ -11,7 +11,7 @@
 
   const lang = () => window.ROMANO_I18N?.language || "fa";
   const t = (key) => text[lang()]?.[key] || text.fa[key] || key;
-  const tenant = () => typeof restaurantSlug === "string" ? restaurantSlug : "romano";
+  const tenant = () => window.RomanoDemoBranches?.scope("romano") ?? (typeof restaurantSlug === "string" ? restaurantSlug : "romano");
   const standalone = window.RomanoPublicAPI.standalone;
   const isDemo = () => typeof menuDataMode !== "undefined" && menuDataMode === "demo";
   const cartKey = () => `online_menu_cart_vq3:${tenant()}`;

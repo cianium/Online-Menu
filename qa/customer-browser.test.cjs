@@ -6,7 +6,10 @@ const base=process.env.ADMIN_TEST_URL||'http://127.0.0.1:8765';
 const out=path.resolve(process.env.BROWSER_EVIDENCE_DIR||path.join(__dirname,'../docs/qa'));fs.mkdirSync(out,{recursive:true});
 const results=[],errors=[];let browser;
 async function check(name,fn){await fn();results.push(name);console.log('PASS',name)}
-async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode!=='loading');await p.locator('#splash-screen').waitFor({state:'detached'});}
+async function ready(p){
+ await p.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode!=='loading'&&Boolean(document.querySelector('.main-navigation')?.__romanoFocus));
+ await p.locator('#splash-screen').waitFor({state:'detached'});
+}
 (async()=>{
  browser=await pw.chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox','--disable-dev-shm-usage']});
  const ctx=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
@@ -68,6 +71,14 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    assert.ok(Math.abs(bounds.x)<=1&&Math.abs(overlay.x)<=1&&Math.abs(bounds.width-390)<=2&&Math.abs(overlay.width-390)<=2,JSON.stringify({bounds,overlay}));
    const contentBounds=await nav.locator('.navigation-inner').evaluate(node=>{const outer=node.getBoundingClientRect(),style=getComputedStyle(node),left=outer.left+parseFloat(style.paddingLeft),right=outer.right-parseFloat(style.paddingRight);return {left,right,children:[...node.children].map(child=>{const rect=child.getBoundingClientRect();return {className:child.className,left:rect.left,right:rect.right};})};});
    assert.ok(contentBounds.children.every(child=>child.left>=contentBounds.left-1&&child.right<=contentBounds.right+1),'Navigation content escapes viewport padding '+lang+': '+JSON.stringify(contentBounds));
+   for(const child of contentBounds.children){
+    assert.ok(Math.abs(child.left-contentBounds.left)<=1 && Math.abs(child.right-contentBounds.right)<=1,'Navigation column shrinks in '+lang+': '+JSON.stringify(child));
+   }
+   const thumbnails=await nav.locator('.navigation-category-media img').evaluateAll(async images=>{
+    await Promise.all(images.map(img=>img.decode()));
+    return images.map(img=>{const frame=img.parentElement.getBoundingClientRect(),rect=img.getBoundingClientRect();return Math.abs(frame.width-rect.width)<=1 && Math.abs(frame.height-rect.height)<=1;});
+   });
+   assert.ok(thumbnails.length>0 && thumbnails.every(Boolean),'Category images must fill their frames in '+lang);
    if(lang==='fa')await p.screenshot({path:path.join(out,'customer-navigation-fa-390.png')});
    const categoryBounds=await nav.locator('.navigation-categories').boundingBox();
    assert.ok(categoryBounds && categoryBounds.height>0);
@@ -89,6 +100,41 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
    await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
   }
   await p.evaluate(()=>{localStorage.removeItem('online_menu_demo_rating:romano');localStorage.removeItem('online_menu_demo_review_v2:romano');ROMANO_I18N.setLanguage('fa',false);});
+ });
+ await check('Hamburger navigation covers the complete desktop viewport',async()=>{
+  await p.setViewportSize({width:1440,height:900});
+  await p.reload();await ready(p);
+  await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));
+  await p.evaluate(()=>openNavigation());
+  await p.waitForFunction(()=>document.querySelector('#main-navigation')?.classList.contains('is-open'));
+  await p.waitForTimeout(550);
+  const geometry=await p.locator('#main-navigation .navigation-inner').evaluate(node=>{const r=node.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,scrollWidth:node.scrollWidth,clientWidth:node.clientWidth}});
+  assert.ok(Math.abs(geometry.x)<=1&&Math.abs(geometry.y)<=1,JSON.stringify(geometry));
+  assert.ok(Math.abs(geometry.width-1440)<=2&&Math.abs(geometry.height-900)<=2,JSON.stringify(geometry));
+  assert.equal(geometry.scrollWidth,geometry.clientWidth);
+  await p.locator('#navigation-close').click();
+  await p.setViewportSize({width:390,height:844});
+ });
+ await check('Existing demo member can resume in another tab with the same name and phone',async()=>{
+  const memberContext=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
+  const first=await memberContext.newPage();
+  await first.goto(base+'/?qr=demo');await ready(first);
+  const firstEntry=first.locator('#customer-entry');await firstEntry.waitFor({state:'visible'});
+  await firstEntry.locator('input[name="name"]').fill('Sample Customer');
+  await firstEntry.locator('input[name="phone"]').fill('+12025550140');
+  await firstEntry.locator('button[type="submit"]').click();
+  await firstEntry.waitForFunction(()=>!document.querySelector('#customer-entry')?.open);
+  const memberId=await first.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey));assert.ok(memberId);
+  const second=await memberContext.newPage();
+  await second.goto(base+'/?qr=demo');await ready(second);
+  const secondEntry=second.locator('#customer-entry');await secondEntry.waitFor({state:'visible'});
+  await secondEntry.locator('input[name="name"]').fill(' Sample   Customer ');
+  await secondEntry.locator('input[name="phone"]').fill('+12025550140');
+  await secondEntry.locator('button[type="submit"]').click();
+  await second.waitForFunction(()=>!document.querySelector('#customer-entry')?.open);
+  assert.equal(await second.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey)),memberId);
+  assert.equal(await secondEntry.locator('[role="alert"]').textContent(),'');
+  await memberContext.close();
  });
  await check('Category image fallback uses localized category initials, not brand/developer copy',async()=>{
   const fallback=await p.evaluate(()=>{
@@ -151,7 +197,7 @@ async function ready(p){await p.waitForFunction(()=>typeof menuDataMode!=='undef
   assert.ok(geometry.card.height<=430&&geometry.body.top>=geometry.card.top-2&&geometry.body.bottom<=geometry.card.bottom+2,JSON.stringify(geometry));
   assert.ok(geometry.price.top<geometry.heading.bottom&&geometry.price.bottom>geometry.heading.top);
   assert.ok(geometry.ctaWidth>geometry.card.width*.25);assert.equal(geometry.heartHit,true);
-  await button.click();await p.waitForTimeout(450);const modal=await p.locator('.product-modal .modal-container').boundingBox();assert.ok(modal);assert.ok(Math.abs((modal.y+modal.height/2)-844/2)<2,JSON.stringify(modal));await p.keyboard.press('Escape');
+  await button.click();await p.waitForTimeout(450);const modal=await p.locator('.product-modal .modal-container').boundingBox();assert.ok(modal);assert.ok(Math.abs((modal.y+modal.height)-844)<2,JSON.stringify(modal));await p.keyboard.press('Escape');
  });
  await check('Product card metadata and modal close control follow RTL/LTR direction',async()=>{
   const expected={fa:'rtl',ar:'rtl',en:'ltr',tr:'ltr'};

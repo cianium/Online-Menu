@@ -17,7 +17,8 @@
   function clear(message){
     latest=null;$('revenue-export').disabled=true;$('revenue-content').hidden=true;$('revenue-filters').hidden=true;$('revenue-status').textContent=t(message);
     $('revenue-bars').replaceChildren();$('revenue-table-body').replaceChildren();$('revenue-bucket').replaceChildren();$('revenue-currency').replaceChildren();
-    for(const id of ['revenue-total','revenue-count','revenue-average','revenue-change','revenue-previous','revenue-detail','revenue-range-label','revenue-axis-max','revenue-axis-start','revenue-axis-end','revenue-excluded'])$(id).textContent='';
+    $('revenue-top-items').replaceChildren();
+    for(const id of ['revenue-customers','revenue-total','revenue-count','revenue-average','revenue-change','revenue-previous','revenue-detail','revenue-range-label','revenue-axis-max','revenue-axis-start','revenue-axis-end','revenue-excluded'])$(id).textContent='';
   }
   function detail(){
     const b=latest?.buckets[Number($('revenue-bucket').value)];
@@ -37,6 +38,11 @@
       $('revenue-status').textContent=t(report.count?'مبلغ سفارش‌های نمونه؛ درآمد یا پرداخت واقعی نیست.':'در این بازه سفارش نمونه‌ای ثبت نشده است.');
       $('revenue-total').textContent=money(report.total,report.currency);
       $('revenue-count').textContent=n(report.count);
+      $('revenue-customers').textContent=n(report.customers);
+      $('revenue-top-items').replaceChildren(...report.topItems.map(([name,quantity])=>{
+        const item=el('li');item.append(el('bdi',name),el('span',n(quantity)));return item;
+      }));
+      $('revenue-ranking').hidden=!report.topItems.length;
       $('revenue-average').textContent=money(report.average,report.currency);
       $('revenue-change').textContent=report.change===null?'—':new Intl.NumberFormat(lang(),{style:'percent',maximumFractionDigits:1,signDisplay:'exceptZero'}).format(report.change/100);
       $('revenue-previous').textContent=t('دوره قبل')+': '+money(report.previousTotal,report.currency)+' ('+dateLabel(report.previousStart)+' – '+dateLabel(report.previousEnd)+')';

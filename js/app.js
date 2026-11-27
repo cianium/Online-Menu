@@ -15,13 +15,13 @@
 const ROMANO_STORAGE_KEYS = {
 
     restaurant:
-        "romano_restaurant",
+        globalThis.RomanoDemoBranches?.scope("romano_restaurant") ?? "romano_restaurant",
 
     categories:
-        "romano_categories",
+        globalThis.RomanoDemoBranches?.scope("romano_categories") ?? "romano_categories",
 
     products:
-        "romano_products"
+        globalThis.RomanoDemoBranches?.scope("romano_products") ?? "romano_products"
 
 };
 
@@ -414,7 +414,7 @@ async function initializeApplication() {
     } catch (error) {
         const cached = getStoredData(cacheKey, null);
         const age = Date.now() - Number(cached?.savedAt);
-        if ((!error.status || error.status >= 500) && age >= 0 && age < 86400000 && validSnapshot(cached?.data)) {
+        if (!window.RomanoPublicAPI.standalone && (!error.status || error.status >= 500) && age >= 0 && age < 86400000 && validSnapshot(cached?.data)) {
             applySnapshot(cached.data);
             menuDataMode = "offline";
         } else {
@@ -583,6 +583,13 @@ function renderRestaurantInformation() {
         }
     );
 
+
+    if (menuDataMode === "demo" && window.RomanoDemoBranches?.id) {
+        try {
+            const branch = window.RomanoDemoBranches.context();
+            document.getElementById("customer-brand-tagline").textContent = branch.name;
+        } catch { /* The next data refresh handles a removed or corrupt local registry. */ }
+    }
 
     DOM.restaurantAddress.forEach(
         element => {
@@ -2023,7 +2030,7 @@ function renderNavigation() {
         item.dataset.categoryLink = "true";
         item.innerHTML = `
             <a href="#category-${escapeAttribute(category.id)}" data-category-link="true">
-                <span class="navigation-category-media">${category.image ? `<img src="${escapeAttribute(getSafeImageSource(category.image))}" alt="${escapeAttribute(category.name)}" loading="lazy" decoding="async" width="96" height="64">` : `<span class="image-fallback">${escapeHTML(getImageFallbackLabel(category.name))}</span>`}</span>
+                <span class="navigation-category-media">${category.image ? `<img src="${escapeAttribute(getSafeImageSource(category.image))}" alt="" loading="lazy" decoding="async" width="96" height="64">` : `<span class="image-fallback">${escapeHTML(getImageFallbackLabel(category.name))}</span>`}</span>
                 <span class="navigation-category-name">${escapeHTML(category.name)}</span>
             </a>
         `;
@@ -2724,7 +2731,7 @@ window.addEventListener("storage", event => {
     }
 
     window.addEventListener("storage", event => {
-        if (menuDataMode === "demo" && ["romano_products", "romano_categories"].includes(event.key)) {
+        if (menuDataMode === "demo" && [ROMANO_STORAGE_KEYS.products, ROMANO_STORAGE_KEYS.categories].includes(event.key)) {
             window.setTimeout(renderSignatureDish, 40);
         }
     });

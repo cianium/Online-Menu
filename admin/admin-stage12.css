@@ -174,3 +174,8 @@ html[dir="rtl"] .sidebar-navigation .nav-item.active {box-shadow:inset -3px 0 0 
 }
 @media(max-width:390px) {.revenue-kpis{grid-template-columns:minmax(0,1fr)}.revenue-heading>button{width:100%}}
 @media(prefers-reduced-motion:reduce) {.revenue-bar{transition:none}}
+
+.revenue-member-count{display:flex;gap:.75rem;align-items:baseline;margin:0}
+#revenue-top-items{margin:0;padding-inline-start:1.75rem}
+#revenue-top-items li{padding:.4rem .25rem;border-block-end:1px solid var(--admin-line);overflow-wrap:anywhere}
+#revenue-top-items li span{margin-inline-start:.75rem;font-variant-numeric:tabular-nums;font-weight:700}

@@ -10,6 +10,7 @@
   let orderBaselineReady = false;
   let orderDataAvailable = false;
   let refreshVersion = 0;
+  let tableVersion = 0;
 
   function updateSoundButton() {
     const button=document.querySelector("#orders-sound");
@@ -95,6 +96,7 @@
           : `${number(order.total)} · ${t('واحد پول ثبت نشده')}`;
         return `<article class="order-ticket sample-order-ticket">
           <time datetime="${safe(order.createdAt)}" dir="auto">${safe(date.format(new Date(order.createdAt)))}</time>
+          ${order.tableName ? '<span data-admin-user-text="true">'+safe(order.tableName)+'</span>' : ''}
           <ul class="order-ticket-items" data-admin-user-text="true">${order.items.map(item=>`<li><bdi>${safe(item.name)}</bdi> × ${number(item.quantity)}</li>`).join('')}</ul>
           <footer class="order-ticket-footer"><strong dir="auto">${safe(total)}</strong></footer>
         </article>`;
@@ -236,6 +238,8 @@
     if(!select) return;
     const preview=document.querySelector('#sample-qr-preview');
     preview.hidden=window.RomanoAPI.enabled;
+    const sample = window.RomanoDemoBranches;
+    if (sample) preview.querySelector('a').href = sample.link('../?qr=demo', sample.id);
     const image=preview.querySelector('.ops-qr-image');
     if(!preview.hidden && !image.firstChild && typeof window.QRCode==='function') {
       const link=preview.querySelector('a');
@@ -297,10 +301,12 @@
     const host=document.querySelector("#ops-tables");
     if(!host) return;
     const selected=select?.value || "";
+    const version=++tableVersion;
+    host.replaceChildren();
     if(!window.RomanoAPI?.enabled||!selected) {host.textContent=t(window.RomanoAPI?.enabled?"رستوران عملیاتی هنوز پیکربندی نشده است.":"تنظیمات عملیاتی در نسخه مستقل در دسترس نیست.");return;}
     try {
       const result=await window.RomanoAPI.tables(selected);
-      if(select.value!==selected) return;
+      if(version!==tableVersion || select.value!==selected) return;
       const tables=Array.isArray(result?.tables)?result.tables:[];
       if(!tables.length){host.textContent=t("میزی ثبت نشده است.");return;}
       host.innerHTML=tables.map((table)=>`
@@ -345,7 +351,7 @@
         }catch{opsMessage("باطل‌کردن QR انجام نشد.");}
         finally{button.disabled=false;}
       }));
-    } catch { host.textContent=t("عملیات انجام نشد."); }
+    } catch { if (version===tableVersion) host.textContent=t("عملیات انجام نشد."); }
   }
 
   async function addTable(event) {

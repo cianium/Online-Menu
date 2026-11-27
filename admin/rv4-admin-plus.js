@@ -410,6 +410,7 @@
         `;
         settings.parentElement?.appendChild(wrap);
         const toast = (msg, type = "success") => window.RomanoToast ? window.RomanoToast(msg, type) : window.alert(msg);
+        initStandaloneBackup(wrap,toast);
         wrap.querySelector("[data-rv4-export]").addEventListener("click", () => {
             if (typeof state === "undefined") return;
             const payload = {
@@ -483,6 +484,76 @@
             } finally {
                 event.target.value = "";
                 if (restoreButton.isConnected && !restoreButton.disabled) restoreButton.focus();
+            }
+        });
+    }
+
+    function initStandaloneBackup(wrap,toast) {
+        const branches=window.RomanoDemoBranches, backup=window.RomanoDemoBackup;
+        if(!branches||!backup||branches.id!==''||branches.table!==null)return;
+        const section=document.createElement('section');
+        section.id='sample-backup-tools';
+        section.setAttribute('aria-labelledby','sample-backup-title');
+        section.className='gateway-settings';
+        section.innerHTML=`
+            <h2 id="sample-backup-title">پشتیبان همه شعبه‌ها</h2>
+            <p>شامل منو، میزها، اعضا، سفارش‌ها، پیش‌نویس وفاداری و نظرات همه شعبه‌ها؛ فایل حاوی اطلاعات شخصی است و باید خصوصی بماند.</p>
+            <p>برای بازیابی کامل از یک مرورگر یا پروفایل خالی استفاده کنید و تب‌های دیگر را ببندید. اطلاعات موجود بازنویسی نمی‌شوند.</p>
+            <div class="gateway-settings-form">
+                <button type="button" class="secondary-button" data-sample-export>خروجی همه شعبه‌ها</button>
+                <button type="button" class="secondary-button" data-sample-restore>بازیابی همه شعبه‌ها</button>
+                <input type="file" accept=".json,application/json" data-sample-import hidden>
+            </div>`;
+        wrap.append(section);
+        const exportButton=section.querySelector('[data-sample-export]');
+        const restoreButton=section.querySelector('[data-sample-restore]');
+        const input=section.querySelector('[data-sample-import]');
+        const ready=()=>typeof adminInitialized!=='undefined'&&adminInitialized&&!window.RomanoAPI?.enabled&&!document.querySelector('.admin-app').inert;
+        function validateRecords(data,raw) {
+            const catalog={schema:'romano.menu-backup',schemaVersion:1,
+                restaurant:data.restaurant??restaurantData,categories:data.categories??categories,products:data.products??products};
+            if(!isValidBackup(catalog))throw Error('BACKUP_INVALID');
+            const ids=new Set(catalog.categories.map(row=>String(row.id).trim()));
+            if(catalog.products.some(row=>row.category&&!ids.has(row.category)))throw Error('BACKUP_INVALID');
+            window.RomanoDemoMembers.read({getItem:()=>raw.members});
+            window.AdminStage12Model.readRules(raw.rules);
+            window.RomanoDemoReview.parse(raw.review);
+            if(data.rating!==null&&!window.AdminStage12Model.localRating(data.rating))throw Error('BACKUP_INVALID');
+        }
+        exportButton.addEventListener('click',()=>{
+            if(!ready()||saveInProgress)return;
+            try{
+                const payload=backup.capture(localStorage,branches.read(),branches.validateDirectory,validateRecords);
+                const url=URL.createObjectURL(new Blob([JSON.stringify(payload)],{type:'application/json'}));
+                const link=document.createElement('a');
+                link.href=url;link.download='ramen-standalone-branches-'+new Date().toISOString().slice(0,10)+'.json';
+                document.body.append(link);link.click();link.remove();
+                setTimeout(()=>URL.revokeObjectURL(url),1000);
+                toast('نسخه پشتیبان آماده شد.');
+            }catch{toast('فایل پشتیبان معتبر نیست یا ذخیره‌سازی انجام نشد.','danger');}
+        });
+        restoreButton.addEventListener('click',()=>{if(ready()&&!saveInProgress)input.click();});
+        input.addEventListener('change',async()=>{
+            const file=input.files?.[0];
+            if(!file)return;
+            try{
+                if(!ready()||saveInProgress||!navigator.locks||file.size>backup.maxBytes)throw Error('BACKUP_INVALID');
+                if(backup.occupied(localStorage))throw Error('BACKUP_NOT_EMPTY');
+                const text=await file.text();
+                if(!(await window.RomanoConfirm('همه داده‌های پشتیبان در این محیط خالی بازیابی شوند؟')))return;
+                if(!ready()||saveInProgress)throw Error('BACKUP_INVALID');
+                exportButton.disabled=restoreButton.disabled=true;
+                const result=await navigator.locks.request(branches.registry,()=>{
+                    try{backup.restore(localStorage,text,branches.validateDirectory,validateRecords);return {};}
+                    catch(error){return {error:error.message};}
+                });
+                if(result.error)throw Error(result.error);
+                window.location.reload();
+            }catch(error){
+                toast(error.message==='BACKUP_NOT_EMPTY'?'برای بازیابی همه شعبه‌ها از محیط خالی استفاده کنید.':error.message==='BACKUP_ROLLBACK'?'بازیابی ناقص است؛ داده‌ها را بررسی کنید و دوباره وارد نکنید.':'فایل پشتیبان معتبر نیست یا ذخیره‌سازی انجام نشد.','danger');
+            }finally{
+                input.value='';exportButton.disabled=restoreButton.disabled=false;
+                if(restoreButton.isConnected)restoreButton.focus();
             }
         });
     }

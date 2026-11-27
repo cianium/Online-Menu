@@ -44,6 +44,14 @@ test('Web Locks callback stays fulfilled on stale writes and quota failures; cal
   assert.equal(localStorage.getItem('romano_products'),'[{"id":"new"}]');
   assert.deepEqual(outcomes,[true,false,false]);
 });
+test('Inactive branch guard rejects catalog writes without swallowing the error',async()=>{
+  const localStorage=storage(),ctx=adminContext(localStorage);
+  localStorage.setItem('romano_products','[]');
+  vm.runInContext('localCatalogRevision=readCatalogRevision()',ctx);
+  ctx.RomanoDemoBranches={context(){throw Error('BRANCH_MISSING');}};
+  await assert.rejects(vm.runInContext('commitLocalCatalog([[STORAGE_KEYS.products,[{id:"new"}]]])',ctx),/BRANCH_MISSING/);
+  assert.equal(localStorage.getItem('romano_products'),'[]');
+});
 function cartContext(mode='demo') {
   const source=read('js/commerce.js'),localStorage=storage();
   const ctx=vm.createContext({localStorage,menuDataMode:mode,menu:[{id:'a',price:10},{id:'b',price:20},{id:'zero',price:0}],saved:[],getProductById:id=>ctx.menu.find(p=>p.id===id&&p.active!==false)});

@@ -80,6 +80,8 @@ The showcase job captures the current standalone menu and admin workspace in Chr
 | Favorites and cart experience | Available | Included |
 | Four languages and RTL/LTR | Available | Included |
 | Catalog management and local persistence | Available | Server-backed catalog |
+| Multi-branch sample workspaces and table QR links | Browser-local, standalone export | Configured branches and signed sessions |
+| Branch activation and all-branch business-data backup | Available in standalone export | Separate server operations required |
 | Signed table QR sessions | — | Configuration required |
 | Server-authoritative orders and tracking | — | Configuration required |
 | Order queue and kitchen display (KDS) | — | Configuration required |
@@ -92,9 +94,9 @@ The showcase job captures the current standalone menu and admin workspace in Chr
 
 [Open customer entry](https://cianium.github.io/Online-Menu/?qr=demo) · [Open the demo admin workspace](https://cianium.github.io/Online-Menu/admin/) · [Published source identity](https://cianium.github.io/Online-Menu/VERSION.json)
 
-The audited R12 standalone snapshot is served from `pages-demo`; `main` is the canonical source branch. The public site is for sample data only, not a private staff login, real payment service or shared customer database. Customer entry uses a fictional name and phone number. Demo admin credentials are `demo-admin` / `Demo-Only-2026`; these public values are not real authentication.
+`pages-demo` contains the public standalone snapshot. `main` is the canonical source branch. Match a published build to its source with `VERSION.json`. See the [R16 candidate notes](docs/releases/R16_CANDIDATE_FA.md) for the current development track and verified revision evidence. The public site is for sample data only, not a private staff login, real payment service or shared customer database. Customer entry uses a fictional name and phone number. Demo admin credentials are `demo-admin` / `Demo-Only-2026`; these public values are not real authentication.
 
-The standalone R12 release gates cover Node tests, PostgreSQL contracts, Edge Function type checks, Chromium/Firefox/WebKit flows, four-language responsive views and automated accessibility scans. They do not certify the optional connected Supabase/Vercel services, real payments, native Safari or field Core Web Vitals. Historical showcase images retain their own revision provenance.
+The standalone release gates cover Node tests, PostgreSQL contracts, Edge Function type checks, Chromium/Firefox/WebKit flows, four-language responsive views and automated accessibility scans. They do not certify optional connected backend services, real payments, native Safari or field Core Web Vitals. Historical showcase images retain their own revision provenance.
 
 ## Quick start
 
@@ -127,7 +129,7 @@ The included Node.js preview server binds only to loopback and serves the public
 > [!NOTE]
 > The standalone demo is for evaluation, not a production admin login or a shared database. Use sample data only. Changes remain in the current browser/origin; real table sessions, order fulfillment and payments require the connected services. Fonts and sample imagery are bundled locally, so the core demo does not depend on third-party assets.
 
-The admin workspace manages the existing restaurant demo. Creating new restaurant branches is intentionally unavailable.
+In the standalone export, the admin can create and rename sample branches, assign table QR links, deactivate/reactivate non-primary branches from the primary workspace and export business data for all branches. Full restore requires an empty browser profile and other tabs closed; backups contain personal information and must remain private. These browser-local operations are not server-side tenant isolation or cross-device QR ordering.
 
 ### Export a private demo for a future VPS
 
@@ -201,7 +203,7 @@ flowchart TD
     M -->|"Standalone"| L["Bundled catalog + localStorage"]
     M -->|"Local connected development"| N["Fastify API"]
     N --> P["PostgreSQL"]
-    M -->|"Configured hosted environment"| V["Vercel API routing"]
+    M -->|"Optional legacy hosted environment"| V["API routing (not required for demo)"]
     V --> S["Supabase Edge Functions"]
     S --> D["Supabase PostgreSQL"]
     S --> Z["ZarinPal adapter"]
@@ -222,7 +224,6 @@ The Fastify and hosted Supabase paths are not assumed to have identical capabili
 ![Supabase](https://img.shields.io/badge/Supabase-1C1C1C?style=for-the-badge&logo=supabase&logoColor=3FCF8E)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Deno](https://img.shields.io/badge/Deno-202020?style=for-the-badge&logo=deno&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-202020?style=for-the-badge&logo=vercel&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-B8753C?style=for-the-badge)
 ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
 
@@ -235,7 +236,7 @@ The Fastify and hosted Supabase paths are not assumed to have identical capabili
 | Local API | Fastify · Node.js · PostgreSQL |
 | Hosted API | Supabase Edge Functions · Deno · TypeScript |
 | Database | PostgreSQL 17 in commerce migration QA |
-| Hosting configuration | Vercel routing and security headers |
+| Delivery | GitHub Actions artifacts · optional GitHub Pages snapshot · local launcher |
 | Quality | Node test runner · Playwright · GitHub Actions |
 
 <details>
@@ -335,9 +336,9 @@ Report vulnerabilities privately through the [security policy](SECURITY.md).
 > [!IMPORTANT]
 > The current source identifies itself as **vq.3 / 3.0.0**. This is not a claim that a specific live deployment has passed acceptance testing. The hosted migration path depends on an existing catalog schema baseline; do not assume an empty Supabase project can be bootstrapped from the commerce migrations alone.
 
-The documented deployment target is [food.kiankhayat.me](https://food.kiankhayat.me). Its availability and deployed revision are not independently verified here.
+GitHub is the canonical source and delivery location. Download the revision-matched commercial-demo artifact from [GitHub Actions](https://github.com/cianium/Online-Menu/actions), or build locally. The standalone demo does not require Vercel. Automatic Vercel deployments are disabled for all branches; legacy routing/security configuration is retained for optional connected-mode reference. The former hosted domain is not a supported current delivery target.
 
-Before enabling live ordering or payment, follow the [deployment guide](docs/DEPLOY_VQ3_FA.md), verify tenant isolation, configure currency conversion and signed table sessions, and validate PSP request/callback/retry handling in a controlled environment.
+Before enabling live ordering or payment in a separately approved connected environment, review the [historical hosted deployment guide](docs/DEPLOY_VQ3_FA.md), verify tenant isolation, configure currency conversion and signed table sessions, and validate PSP request/callback/retry handling in a controlled environment.
 
 ## Flagship library
 
@@ -375,6 +376,8 @@ Choose the material that fits your role: discover the product, evaluate the engi
 
 <div dir="rtl" align="right">
 
+<a href="docs/releases/R16_CANDIDATE_FA.md">یادداشت‌های کاندید R16</a>
+
 **رامن (RAMEN)** یک منوی دیجیتال چندزبانه و محیط مدیریت رستوران است؛ از تجربه مشاهده منو برای مهمان تا مدیریت کاتالوگ، سفارش میز، صف آشپزخانه و پرداخت مستقیم شعبه در حالت متصل.
 
 برای تجربه نسخه مستقل، کافی است پس از دریافت مخزن، دستور <code>npm run demo</code> را اجرا کنید. منوی مشتری و پنل مدیریت بدون نیاز به دیتابیس، حساب ابری یا کلید API قابل مشاهده هستند. تغییرات نمونه در مرورگر ذخیره می‌شوند. برای ساخت بسته مستقل نصب آینده روی VPS، دستور <code>npm run demo:export</code> در دسترس است؛ این دستور انتشار یا نصب روی سرور انجام نمی‌دهد.
@@ -393,7 +396,7 @@ Choose the material that fits your role: discover the product, evaluate the engi
 
 قائمة طعام رقمية متعددة اللغات ومساحة لإدارة المطعم، مع تجربة مصممة للهواتف وإدارة المنتجات والفئات والأسعار. يمكن تشغيل العرض المستقل باستخدام <code>npm run demo</code> دون قاعدة بيانات أو حساب سحابي. يتطلب الطلب الحقيقي وشاشة المطبخ والدفع إعداد الخدمات المتصلة والتحقق منها.
 
-<a href="docs/flagship/ar.md">دليل المنتج والمستخدم</a>
+<a href="docs/flagship/ar.md">دليل المنتج والمستخدم</a> · <a href="docs/releases/R16_CANDIDATE_FA.md">ملاحظات الإصدار المرشّح R16 (بالفارسية)</a>
 
 </div>
 
@@ -403,7 +406,7 @@ Choose the material that fits your role: discover the product, evaluate the engi
 
 Mobil öncelikli, çok dilli dijital menü ve restoran yönetim alanı. Ürünleri, kategorileri ve fiyatları keşfedin ve yönetin. Bağımsız demo `npm run demo` komutuyla veritabanı veya bulut hesabı olmadan çalışır. Gerçek masa siparişi, mutfak ekranı ve ödeme için bağlantılı hizmetlerin yapılandırılması ve doğrulanması gerekir.
 
-[Türkçe ürün ve kullanıcı rehberi](docs/flagship/tr.md)
+[Türkçe ürün ve kullanıcı rehberi](docs/flagship/tr.md) · [R16 aday sürüm notları (Farsça)](docs/releases/R16_CANDIDATE_FA.md)
 
 ---
 

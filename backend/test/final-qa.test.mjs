@@ -53,7 +53,7 @@ test('Static HTML protects URL referrers and preserves indexing policy',()=>{
 
 test('Public asset budgets prevent major regressions in the initial UI',()=>{
  const size=p=>fs.statSync(new URL('../../'+p,import.meta.url)).size;
- for(const [name,limit] of [['assets/images/hero/hero.jpg',80*1024],['assets/images/logo/logo.png',128*1024]]) assert.ok(size(name)<=limit,name);
+ for(const [name,limit] of [['assets/images/hero/hero.jpg',80*1024],['assets/images/logo/logo.png',128*1024],['assets/images/logo/brand-mark-144.webp',12*1024]]) assert.ok(size(name)<=limit,name);
  const html=read('index.html');
  const resources=[...html.matchAll(/(?:src|href)="((?:js|css)\/[^"]+\.(?:js|css))"/g)].map(m=>m[1]);
  assert.ok(resources.length>10);
