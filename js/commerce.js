@@ -13,6 +13,47 @@
   const t = (key) => text[lang()]?.[key] || text.fa[key] || key;
   const tenant = () => window.RomanoDemoBranches?.scope("romano") ?? (typeof restaurantSlug === "string" ? restaurantSlug : "romano");
   const standalone = window.RomanoPublicAPI.standalone;
+  // Keep chat assets outside the initial menu payload. Fixed local paths support subpath hosting.
+  const connectAssets = (() => {
+    const base = new URL("../", document.currentScript.src), pending = new Map();
+    let rotateGuest = false;
+    function asset(path, ready, style = false) {
+      if (ready()) return Promise.resolve();
+      if (pending.has(path)) return pending.get(path);
+      const job = new Promise((resolve, reject) => {
+        const node = document.createElement(style ? "link" : "script");
+        if (style) { node.rel = "stylesheet"; node.href = new URL(path, base).href; }
+        else { node.src = new URL(path, base).href; node.async = false; }
+        const finish = ok => {
+          clearTimeout(timer); node.onload = node.onerror = null;
+          if (ok && ready()) resolve(); else { node.remove(); reject(Error("CONNECT_ASSET")); }
+        };
+        const timer = setTimeout(() => finish(false), 10000);
+        node.onload = () => finish(true); node.onerror = () => finish(false);
+        document.head.append(node);
+      }).finally(() => pending.delete(path));
+      pending.set(path, job); return job;
+    }
+    const loadLive = () => asset("js/connect-live.js", () => Boolean(window.RomanoConnectLive));
+    async function loadEngine() {
+      await asset("js/connect-core.js", () => Boolean(window.RomanoConnectCore));
+      await asset("js/connect-demo.js", () => Boolean(window.RomanoConnectDemo));
+      if (rotateGuest) { rotateGuest = false; try { RomanoConnectDemo.forget(); } catch {} }
+    }
+    async function loadChat() {
+      await Promise.all([loadEngine(), loadLive(), asset("css/connect.css", () =>
+        [...document.styleSheets].some(sheet => sheet.href === new URL("css/connect.css", base).href), true)]);
+      await asset("js/connect-customer.js", () => Boolean(window.RomanoCustomerChat));
+    }
+    function forgetGuest() {
+      if (window.RomanoCustomerChat) { RomanoCustomerChat.clear(); return; }
+      if (window.RomanoConnectDemo) { try { RomanoConnectDemo.forget(); } catch {} return; }
+      rotateGuest = true;
+      try { sessionStorage.removeItem("romano_connect_guest_v1"); } catch {}
+    }
+    return Object.freeze({loadEngine,loadLive,loadChat,forgetGuest});
+  })();
+  window.RomanoConnectAssets = connectAssets;
   const isDemo = () => typeof menuDataMode !== "undefined" && menuDataMode === "demo";
   const cartKey = () => `online_menu_cart_vq3:${tenant()}`;
   const orderKey = () => `online_menu_last_order_vq3:${tenant()}`;
@@ -324,12 +365,12 @@
     trigger.setAttribute('aria-expanded','false');
     const updateLabel = () => document.querySelector('.ramen-bottom-nav')?.setAttribute('aria-label',(contactWords[lang()] || contactWords.fa).nav);
     const close = () => { if (dialog.open) dialog.close(); };
-    let origin = null, activePanel = null;
+    let origin = null, activePanel = null, panelRevision = 0;
     const profileId=()=>window.RomanoCustomerEntry?.current()?.id||"";
     let connectProfile=profileId();
     const openPanel = (panel='chat', opener=trigger, replace=false, restoreLanguage=false) => {
       if (dialog.open && !replace) return;
-      const wasOpen=dialog.open;
+      const wasOpen=dialog.open, revision=++panelRevision;
       if(panel!=='chat')window.RomanoCustomerChat?.suspend();
       if(!wasOpen)origin=opener;
       activePanel=panel;
@@ -360,7 +401,18 @@
         guestServices(content,element,demo);
       }else if(demo)content.append(element('p',words.demo,'ramen-contact-note'));
       if(panel==='profile' && !window.RomanoCustomerEntry?.renderProfile(content,close))content.append(element('p',labels.guest,'ramen-contact-note'));
-      if(panel==='chat')content.append(element('p',labels.chatMissing,'ramen-contact-note'));
+      if(panel==='chat'){
+        const loading=element('p',({fa:'در حال بارگذاری چت…',en:'Loading chat…',tr:'Sohbet yükleniyor…',ar:'جارٍ تحميل المحادثة…'})[lang()],'ramen-contact-note');loading.setAttribute('role','status');
+        const retry=element('button',t('retry'),'feedback-save');retry.type='button';retry.hidden=true;
+        retry.addEventListener('click',()=>openPanel('chat',origin,true));
+        const contactButton=element('button',words.phone,'feedback-save');contactButton.type='button';contactButton.addEventListener('click',()=>openPanel('contact',origin,true));
+        content.append(loading,retry,contactButton);
+        connectAssets.loadChat().then(()=>{
+          if(dialog.open&&activePanel==='chat'&&revision===panelRevision)openPanel('chat',origin,true);
+        }).catch(()=>{
+          if(dialog.open&&activePanel==='chat'&&revision===panelRevision){loading.textContent=labels.chatMissing;retry.hidden=false;}
+        });
+      }
       if(panel==='feedback') {
         content.append(element('p',demo?labels.draft:labels.unavailable,'ramen-contact-note'));
         if(demo) {
@@ -396,7 +448,7 @@
       if(panel==='contact' && (demo || mode==='public' || mode==='offline') && address)appendInfo(words.address,address,null,'auto');
       if((panel==='contact'||panel==='chat') && social && /^https?:\/\//i.test(social) && (mode==='public' || mode==='offline')){const url=getSafeExternalUrl(social);if(url)appendInfo(words.social,words.social,url);}
       if(panel==='contact'){
-        if(chat){const backToChat=element('button',chat.words(lang()).chat,'connect-secondary');backToChat.type='button';backToChat.dataset.connectChat='';backToChat.addEventListener('click',()=>openPanel('chat',origin,true));content.prepend(backToChat);}
+        {const backToChat=element('button',chat?chat.words(lang()).chat:labels.chat,chat?'connect-secondary':'feedback-save');backToChat.type='button';backToChat.dataset.connectChat='';backToChat.addEventListener('click',()=>openPanel('chat',origin,true));content.prepend(backToChat);}
         if(!content.querySelector('.ramen-contact-item'))content.append(element('p',words.missing,'ramen-contact-note'));
         const cfg=config();
         if(cfg?.hours[lang()])appendInfo(x(8),cfg.hours[lang()],null);
@@ -428,10 +480,10 @@
       if(panel==='cart')openDrawer();
       else if(['contact','chat','profile','feedback','waiter'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
     });
-    dialog.addEventListener('close',()=>{window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');window.RomanoCustomerChat?.suspend();if(origin?.isConnected)origin.focus();origin=null;activePanel=null;});
+    dialog.addEventListener('close',()=>{panelRevision++;window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');window.RomanoCustomerChat?.suspend();if(origin?.isConnected)origin.focus();origin=null;activePanel=null;});
     document.addEventListener('romano:language-changed',()=>{if(dialog.open&&activePanel==='chat'){const restore=document.activeElement?.classList.contains('connect-language');openPanel('chat',origin,true,restore);}else close();updateLabel();});
     document.addEventListener('romano:connect-session-changed',()=>{window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
-    document.addEventListener('romano:demo-membership-changed',()=>{const next=profileId();if(next===connectProfile)return;connectProfile=next;window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
+    document.addEventListener('romano:demo-membership-changed',()=>{const next=profileId();if(next===connectProfile)return;connectProfile=next;connectAssets.forgetGuest();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
     window.addEventListener('romano:data-updated',()=>{if(typeof menuDataMode!=='undefined'&&menuDataMode!=='demo')window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
     updateLabel();
   }
@@ -770,7 +822,9 @@
     const params = new URLSearchParams(location.search);
     const qrToken = params.get("qr");
     if (!qrToken || window.RomanoCustomerEntry?.isDemoQr() || standalone) return;
-    window.RomanoConnectLive?.clearBinding();
+    if(window.RomanoConnectLive)window.RomanoConnectLive.clearBinding();
+    else try{sessionStorage.removeItem("romano_connect_binding_v1");}catch{}
+    const liveAssets=connectAssets.loadLive().catch(()=>null);
     document.dispatchEvent(new CustomEvent("romano:connect-session-changed"));
     try {
       const response = await fetch("/api/v1/orders/session", {
@@ -780,6 +834,7 @@
       const body = await response.json().catch(() => null);
       if (!response.ok || !body?.data) throw new Error("QR_SESSION_FAILED");
       const {connectBinding,...tableData}=body.data;
+      await liveAssets;
       window.RomanoConnectLive?.setBinding(connectBinding);
       tableSession = tableData;
       save(`online_menu_table_vq3:${tenant()}`, tableSession);
@@ -822,8 +877,11 @@
       }
       submitting=true;render();showMessage('');
       try {
-        const members=window.RomanoDemoMembers;
+        const members=window.RomanoDemoMembers, memberId=entry.current()?.id;
+        if(guestContext().code)await connectAssets.loadEngine().catch(()=>{});
+        if(!isDemo()||!memberId||entry.current()?.id!==memberId)throw Error("ORDER_CONTEXT_CHANGED");
         const order=await members.mutate(()=>{
+          if(!isDemo()||entry.current()?.id!==memberId)throw Error("ORDER_CONTEXT_CHANGED");
           cart=normalizeCart(read(cartKey(),cart));
           const items=visibleCartEntries().map(([id,quantity])=>({productId:id,name:localized(product(id)).name,quantity,price:product(id).price}));
           if(!items.length)return null;

@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r24-live-language`;
+const CACHE_NAME = `${menuCachePrefix}r25-lazy-connect`;
 const CORE_ASSETS = [
   "./",
   "./index.html",
