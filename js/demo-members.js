@@ -57,6 +57,7 @@
     const id=session.getItem(activeKey);return id?read(storage).find(r=>r.id===id)||null:null;
   }
   function register(storage,session,nameValue,phoneValue){
+    branch?.context();
     const memberName=name(nameValue),p=phone(phoneValue);
     if(!memberName||memberName.length>80||!validPhone(p))throw Error('INVALID_INPUT');
     const rows=read(storage),current=rows.find(r=>r.id===session.getItem(activeKey));
@@ -78,6 +79,7 @@
     return member;
   }
   function addOrder(storage,session,items,total,currency){
+    branch?.context();
     const rows=read(storage),current=rows.find(r=>r.id===session.getItem(activeKey));
     if(!current)throw Error('NO_PROFILE');
     if(!Array.isArray(items)||!items.length||items.length>100||!Number.isFinite(total)||total<=0||items.some(i=>!i||typeof i.name!=='string'||!Number.isSafeInteger(i.quantity)||i.quantity<1||i.quantity>99||!Number.isFinite(i.price)||i.price<=0))throw Error('INVALID_ORDER');
