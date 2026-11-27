@@ -78,12 +78,16 @@
   if(!demo())return false;
   const member=current();
   if(!member){const button=text('button','join','feedback-save');button.type='button';button.addEventListener('click',()=>{closePanel();open();});host.append(text('p','notice','ramen-contact-note'),button);return true;}
-  host.append(el('strong',member.name),text('h3','history'));
+  host.append(el('strong',member.name));
+  const points=model.pointsFor(member);
+  if(points)host.append(el('p',({fa:'امتیاز نمونه',en:'Sample points',tr:'Örnek puan',ar:'نقاط تجريبية'}[lang()]||'')+': '+new Intl.NumberFormat(lang()).format(points)));
+  host.append(text('h3','history'));
   if(!member.orders.length)host.append(text('p','empty','ramen-contact-note'));
   for(const order of member.orders){
    const card=el('article',undefined,'ramen-contact-item');
    card.append(el('small',new Date(order.createdAt).toLocaleDateString(lang())));
-   for(const item of order.items)card.append(el('span',item.name+' × '+item.quantity));
+   for(const item of order.items){card.append(el('span',item.name+' × '+item.quantity));if(item.note)card.append(el('span',item.note,'hp-history-notes'));}
+   if(order.notes)card.append(el('span',order.notes,'hp-history-notes'));
    card.append(el('strong',order.currency&&window.OnlineMenuMoney?window.OnlineMenuMoney.formatCatalog(order.total,{currency:order.currency,language:lang()}):typeof formatPrice==='function'?formatPrice(order.total):String(order.total)));host.append(card);
   }
   const logout=text('button','logout','feedback-save');logout.type='button';logout.addEventListener('click',()=>{try{model.signOut(sessionStorage);}catch{}closePanel();announce();});host.append(logout);return true;

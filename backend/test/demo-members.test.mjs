@@ -101,3 +101,40 @@ test('Both international prefixes recover the same legacy membership and preserv
  assert.throws(()=>model.register(db,session,'Other','0012025550101'),/EXISTING_PROFILE/);
  assert.equal(model.read(db).length,1);
 });
+
+test('Optional sample order notes persist safely and reject invalid input without changing history',()=>{
+ const db=storage(),session=storage();model.register(db,session,'Sample','+12025550124');
+ const items=[{name:'Dish',quantity:1,price:5}];
+ const legacy=model.addOrder(db,session,items,5,'IRT');
+ assert.equal(legacy.notes,undefined);
+ const order=model.addOrder(db,session,items,5,'IRT','  Fictional note  ');
+ assert.equal(order.notes,'Fictional note');
+ assert.equal(model.active(db,session).orders[0].notes,'Fictional note');
+ assert.throws(()=>model.addOrder(db,session,items,5,'IRT','x'.repeat(1001)),/INVALID_ORDER/);
+ assert.throws(()=>model.addOrder(db,session,items,5,'IRT',{}),/INVALID_ORDER/);
+ assert.equal(model.active(db,session).orders.length,2);
+});
+
+test('Demo hospitality coupon and points are validated, recorded and scoped to new orders',()=>{
+ const db=storage(),session=storage();model.register(db,session,'Sample','+12025550135');
+ const config={...model.settings(db),coupon:'DEMO10',percent:10,points:25};model.saveSettings(db,config);
+ const items=[{name:'Dish',quantity:2,price:100,note:'No onions'}];
+ assert.equal(model.discountFor(200,10,'IRT'),20);
+ assert.throws(()=>model.addOrder(db,session,items,200,'IRT','','DEMO10'),/INVALID_ORDER/);
+ const order=model.addOrder(db,session,items,180,'IRT','Sample','DEMO10');
+ assert.equal(order.offer.discount,20);assert.equal(order.points,25);assert.equal(order.items[0].note,'No onions');assert.equal(model.pointsFor(model.active(db,session)),25);
+ assert.throws(()=>model.addOrder(db,session,items,180,'IRT','','WRONG'),/HP_COUPON/);
+ assert.throws(()=>model.saveSettings(db,{...config,map:'javascript:alert(1)'}));
+ assert.equal(model.active(db,session).orders.length,1);
+});
+
+test('Bundle coupons require both distinct products and preserve eligibility in the order',()=>{
+ const db=storage(),session=storage();model.register(db,session,'Sample','+12025550136');
+ const cfg={...model.settings(db),bundle:['a','b'],coupon:'BUNDLE10',percent:10};model.saveSettings(db,cfg);
+ const a={productId:'a',name:'A',quantity:1,price:100},b={productId:'b',name:'B',quantity:1,price:100};
+ assert.throws(()=>model.addOrder(db,session,[a],90,'IRT','','BUNDLE10'),/HP_COUPON/);
+ const saved=model.addOrder(db,session,[a,b],180,'IRT','','BUNDLE10');
+ assert.deepEqual(saved.offer.bundle,['a','b']);assert.equal(saved.offer.discount,20);
+ assert.throws(()=>model.saveSettings(db,{...cfg,bundle:['a','a']}));
+ assert.equal(model.active(db,session).orders.length,1);
+});

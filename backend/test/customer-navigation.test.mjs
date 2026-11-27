@@ -59,7 +59,8 @@ test('Admin header preserves navigation hooks and moves logout outside the heade
 test('Catalog disclosures and sticky layout retain accessible controls, horizontal category navigation and cache registration',()=>{
  const js=read('js/menu-experience.js'),css=read('css/catalog-browse.css'),html=read('index.html'),sw=read('sw.js');
  for(const name of ['search','filter']) {
-   assert.match(js,new RegExp('id="menu-'+name+'-toggle" aria-expanded="false" aria-controls="menu-'+name+'-panel"'));
+   if(name==="search"){assert.match(js,/search\.id = 'menu-search-toggle'/);assert.match(js,/search\.setAttribute\('aria-expanded','false'\)/);assert.match(js,/search\.setAttribute\('aria-controls','menu-search-panel'\)/);assert.match(js,/header\.querySelector\('#romano-language-toggle'\)\.after\(search\)/);}
+   else assert.match(js,new RegExp('id="menu-'+name+'-toggle" aria-expanded="false" aria-controls="menu-'+name+'-panel"'));
    assert.match(js,new RegExp('id="menu-'+name+'-panel" class="browse-panel" hidden'));
  }
  assert.match(js,/new ResizeObserver\(measure\)/);assert.match(js,/setPanel\(null,true\)/);

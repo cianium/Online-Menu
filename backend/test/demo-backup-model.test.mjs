@@ -69,3 +69,13 @@ test('Failed quota write rolls back inserted records without touching unrelated 
   assert.throws(()=>model.restore(dest,JSON.stringify(capture()),validateDirectory,validateRecords),/QUOTA/);
   assert.deepEqual([...dest.data],[['unrelated','keep']]);
 });
+
+test('Hospitality settings round trip and legacy v1 backups without them still restore',()=>{
+ const db=source();db.setItem('online_menu_hospitality_v1:romano:branch:'+id,JSON.stringify({suggestions:[],coupon:'DEMO10',percent:10}));
+ const payload=model.capture(db,directory,validateDirectory,validateRecords),dest=storage();
+ model.restore(dest,JSON.stringify(payload),validateDirectory,validateRecords);
+ assert.equal(dest.getItem('online_menu_hospitality_v1:romano:branch:'+id),db.getItem('online_menu_hospitality_v1:romano:branch:'+id));
+ for(const record of payload.records)delete record.data.hospitality;
+ const legacy=storage();model.restore(legacy,JSON.stringify(payload),validateDirectory,validateRecords);
+ assert.equal(legacy.getItem('online_menu_hospitality_v1:romano:branch:'+id),null);
+});

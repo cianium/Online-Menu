@@ -13,7 +13,8 @@
        const name=document.createElement('strong');name.dataset.adminUserText='true';name.textContent=member.name;
        const phone=document.createElement('bdi');phone.dir='ltr';phone.textContent='•••'+member.phone.slice(-4);
        const count=document.createElement('span');count.textContent=t('تعداد سفارش‌های نمونه')+': '+new Intl.NumberFormat(document.documentElement.lang).format(member.orders.length);
-       row.append(name,phone,count);list.append(row);
+       const points=document.createElement('span');points.dataset.adminUserText='true';points.textContent=({fa:'امتیاز نمونه',en:'Sample points',tr:'Örnek puan',ar:'نقاط تجريبية'}[document.documentElement.lang]||'Sample points')+': '+new Intl.NumberFormat(document.documentElement.lang).format(model.pointsFor(member));
+       row.append(name,phone,count,points);list.append(row);
      }
    }catch{const p=document.createElement('p');p.textContent=t('خواندن داده محلی ممکن نیست.');list.append(p);}
  }

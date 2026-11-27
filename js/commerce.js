@@ -61,6 +61,7 @@
     const valid = Object.fromEntries(visibleCartEntries());
     if (Object.keys(valid).length === Object.keys(cart).length) return;
     cart = normalizeCart(valid);
+    for(const id of itemNotes.keys())if(!cart[id])itemNotes.delete(id);
     save(cartKey(), cart);
   }
   function localized(item) { return window.ROMANO_I18N?.localizeProduct?.(item) || item; }
@@ -150,6 +151,123 @@
     ar:{profile:"الملف الشخصي",guest:"تتصفح القائمة كضيف. حسابات العملاء غير مفعلة.",chat:"محادثة",chatMissing:"المحادثة المباشرة غير متصلة. استخدم وسائل التواصل المتاحة.",feedback:"التقييم والملاحظات",draft:"التقييم التجريبي يبقى في هذا المتصفح ولا يرسل للمطعم.",unavailable:"إرسال التقييمات عبر الإنترنت غير مفعل.",save:"حفظ التقييم المحلي",saved:"حُفظ التقييم في هذا المتصفح فقط.",storageError:"التخزين المحلي غير متاح.",rating:"التقييم",comment:"تعليق اختياري (500 حرف؛ دون معلومات شخصية)",less:"تقليل الكمية",more:"زيادة الكمية",methods:"طريقة الدفع"}
   };
   const panelText = () => panelWords[lang()] || panelWords.fa;
+  // All new customer-facing copy is localized; no demo action reaches restaurant staff.
+  const hospitality = {
+    fa:{services:"خدمات مهمان",quick:"خدمات میز",waiter:"فراخوان گارسون",bill:"درخواست صورتحساب",water:"درخواست آب",napkin:"درخواست دستمال",local:"درخواست‌ها فقط در این مرورگر شبیه‌سازی می‌شوند و به پرسنل ارسال نمی‌شوند.",unconnected:"خدمات آنلاین میز هنوز فعال نیست.",selectTable:"برای خدمات میز، QR معتبر میز را باز کنید.",request:"درخواست آزمایشی ثبت شد",cancel:"لغو درخواست",review:"ثبت نظر و امتیاز",copy:"کپی آدرس",copied:"آدرس کپی شد",copyFailed:"کپی ممکن نشد؛ آدرس را دستی انتخاب کنید.",suggest:"سفارش خود را کامل کنید",unit:"قیمت واحد",undo:"بازگرداندن",removed:"محصول حذف شد",continue:"ادامه انتخاب",join:"ورود برای تکمیل سفارش",items:"آیتم",summary:"خلاصه سفارش",branch:"شعبه",unknown:"میز مشخص نشده",noteLocal:"فقط توضیحات ساختگی وارد کنید.",demo:"نسخه آزمایشی؛ سفارش ارسال نمی‌شود."},
+    en:{services:"Guest services",quick:"Table services",waiter:"Call waiter",bill:"Request bill",water:"Request water",napkin:"Request napkins",local:"Requests are simulated in this browser only; nothing is sent to staff.",unconnected:"Online table services are not enabled.",selectTable:"Open a valid table QR to use table services.",request:"Sample request saved",cancel:"Cancel request",review:"Rating & feedback",copy:"Copy address",copied:"Address copied",copyFailed:"Could not copy. Select the address manually.",suggest:"Complete your order",unit:"Unit price",undo:"Undo",removed:"Item removed",continue:"Continue browsing",join:"Sign in to complete order",items:"items",summary:"Order summary",branch:"Branch",unknown:"No table selected",noteLocal:"Use fictional notes only.",demo:"Demo only; orders are not sent."},
+    tr:{services:"Misafir hizmetleri",quick:"Masa hizmetleri",waiter:"Garson çağır",bill:"Hesap iste",water:"Su iste",napkin:"Peçete iste",local:"İstekler yalnızca bu tarayıcıda simüle edilir; personele gönderilmez.",unconnected:"Çevrimiçi masa hizmetleri etkin değil.",selectTable:"Masa hizmetleri için geçerli masa QR kodunu açın.",request:"Örnek istek kaydedildi",cancel:"İsteği iptal et",review:"Puan ve geri bildirim",copy:"Adresi kopyala",copied:"Adres kopyalandı",copyFailed:"Kopyalanamadı. Adresi elle seçin.",suggest:"Siparişinizi tamamlayın",unit:"Birim fiyat",undo:"Geri al",removed:"Ürün kaldırıldı",continue:"Menüye dön",join:"Siparişi tamamlamak için giriş yap",items:"ürün",summary:"Sipariş özeti",branch:"Şube",unknown:"Masa seçilmedi",noteLocal:"Yalnızca kurgusal not yazın.",demo:"Demo; siparişler gönderilmez."},
+    ar:{services:"خدمات الضيوف",quick:"خدمات الطاولة",waiter:"استدعاء النادل",bill:"طلب الفاتورة",water:"طلب الماء",napkin:"طلب المناديل",local:"تُحاكى الطلبات في هذا المتصفح فقط ولا تُرسل للموظفين.",unconnected:"خدمات الطاولة عبر الإنترنت غير مفعلة.",selectTable:"افتح رمز QR صالحًا للطاولة لاستخدام الخدمات.",request:"حُفظ الطلب التجريبي",cancel:"إلغاء الطلب",review:"التقييم والملاحظات",copy:"نسخ العنوان",copied:"تم نسخ العنوان",copyFailed:"تعذر النسخ. حدد العنوان يدويًا.",suggest:"أكمل طلبك",unit:"سعر الوحدة",undo:"تراجع",removed:"تم حذف المنتج",continue:"متابعة التصفح",join:"سجّل الدخول لإكمال الطلب",items:"عناصر",summary:"ملخص الطلب",branch:"الفرع",unknown:"لم تُحدد طاولة",noteLocal:"اكتب ملاحظات وهمية فقط.",demo:"نسخة تجريبية؛ لا تُرسل الطلبات."}
+  };
+  const h = key => hospitality[lang()]?.[key] || hospitality.fa[key];
+  let lastRemoved = null;
+  let orderNotes = "";
+  const itemNotes=new Map();
+  let couponCode="",appliedCoupon="";
+  const extra={fa:["تخفیف نمونه","کد تخفیف","اعمال","کد نامعتبر یا بدون تخفیف","امتیاز نمونه","یادداشت محصول / حساسیت غذایی","پذیرفته شد","انجام شد","ساعات کاری","مسیریابی","واتس‌اپ","حذف تخفیف"],en:["Sample discount","Promo code","Apply","Invalid code or no discount","Sample points","Item note / food allergy","Accepted","Completed","Opening hours","Directions","WhatsApp","Remove discount"],tr:["Örnek indirim","İndirim kodu","Uygula","Geçersiz kod veya indirim yok","Örnek puan","Ürün notu / gıda alerjisi","Kabul edildi","Tamamlandı","Çalışma saatleri","Yol tarifi","WhatsApp","İndirimi kaldır"],ar:["خصم تجريبي","رمز الخصم","تطبيق","رمز غير صالح أو لا يوجد خصم","نقاط تجريبية","ملاحظة المنتج / حساسية غذائية","تم القبول","مكتمل","ساعات العمل","الاتجاهات","واتساب","إزالة الخصم"]};
+  const x=i=>(extra[lang()]||extra.fa)[i];
+  const bundleText=()=>({fa:"پیشنهاد ترکیبی",en:"Bundle offer",tr:"Kombinasyon teklifi",ar:"عرض المجموعة"}[lang()]||"Bundle offer");
+  const subtotalText=()=>({fa:"جمع محصولات",en:"Subtotal",tr:"Ara toplam",ar:"المجموع الفرعي"}[lang()]||"Subtotal");
+  const config=()=>{try{return isDemo()?window.RomanoDemoMembers.settings(localStorage):null;}catch{return null;}};
+  function eligible(cfg){return cfg&&window.RomanoDemoMembers.eligibleBundle(cfg.bundle,visibleCartEntries().map(([productId,quantity])=>({productId,quantity})));}
+  function discount(){const cfg=config();return cfg&&appliedCoupon&&cfg.coupon===appliedCoupon&&eligible(cfg)?window.RomanoDemoMembers.discountFor(total(),cfg.percent,restaurantConfig.currency):0;}
+  const requestKinds = ["waiter","bill","water","napkin"];
+  function guestContext() {
+    if (isDemo()) {
+      try {
+        const model=window.RomanoDemoBranches, branch=model?.context();
+        const table=branch?.tables.find(row=>row.code===model.table);
+        return {branch:branch?.name || "", table:table?.name || "", code:table?.code || ""};
+      } catch { return {}; }
+    }
+    return {branch:"",table:tableSession?.table?.name || tableSession?.table?.code || "",code:""};
+  }
+  function contextLabel() {
+    const context=guestContext();
+    return [context.branch && h("branch")+": "+context.branch,context.table ? t("table")+" "+context.table : h("unknown")].filter(Boolean).join(" · ");
+  }
+  function guestServices(content, element, demo) {
+    const section=element("section",null,"hp-services");
+    section.append(element("h3",h("quick")),element("p",contextLabel(),"hp-context"));
+    const context=guestContext();
+    const enabled=demo && Boolean(context.code);
+    const model=window.RomanoDemoMembers;
+    const key= model.requestPrefix+context.code;
+    const status=element("p",enabled?h("local"):demo?h("selectTable")+" "+h("local"):h("unconnected"),"hp-service-notice");
+    const grid=element("div",null,"hp-service-grid");
+    const live=element("p",null,"hp-service-live");live.setAttribute("role","status");
+    function readRequests() {
+      try{return enabled?model.requests(localStorage,context.code):{};}catch{live.textContent=panelText().storageError;return {};}
+    }
+    const icons={waiter:"M3 17h18M5 17a7 7 0 0 1 14 0M12 7V5m-2 0h4M2 20h20",bill:"M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6m-6 4h6",water:"M12 3c-2 4-6 8-6 12a6 6 0 0 0 12 0c0-4-4-8-6-12Z",napkin:"M4 4h16v16H4zM4 20 20 4M12 12h8v8"};
+    for(const kind of requestKinds) {
+      const button=element("button",null,"hp-service-action");button.type="button";button.disabled=!enabled;
+      const icon=document.createElementNS("http://www.w3.org/2000/svg","svg");icon.setAttribute("viewBox","0 0 24 24");icon.setAttribute("class","hp-service-icon");icon.setAttribute("aria-hidden","true");icon.setAttribute("focusable","false");
+      const stroke=document.createElementNS("http://www.w3.org/2000/svg","path");stroke.setAttribute("d",icons[kind]);icon.append(stroke);
+      const label=element("strong",h(kind));const detail=element("span",null,"hp-service-detail");
+      button.append(icon,label,detail);
+      function refresh() {
+        const state=readRequests()[kind];
+        const active=state==="pending"||state==="accepted";
+        button.disabled=!enabled||state==="accepted";
+        button.setAttribute("aria-pressed",String(active));
+        button.setAttribute("aria-label",h(kind)+(state==="pending"?" — "+h("cancel"):state==="accepted"?" — "+x(6):state==="completed"?" — "+x(7):""));
+        detail.textContent=state==="pending"?h("cancel"):state==="accepted"?x(6):state==="completed"?x(7):"";
+      }
+      button.addEventListener("click",async()=>{
+        if(!isDemo() || guestContext().code!==context.code || !enabled)return;
+        button.disabled=true;
+        try {
+          const before=readRequests()[kind], next=before==="pending"?undefined:"pending";
+          await model.mutate(()=>model.setRequest(localStorage,context.code,kind,next,before));
+          live.textContent=h(kind)+" — "+h(next?"request":"cancel")+" · "+h("local");
+        }catch{live.textContent=panelText().storageError;}
+        finally{refresh();}
+      });
+      section.addEventListener("hp-request-updated",refresh);
+      refresh();grid.append(button);
+    }
+    section.dataset.requestKey=key;
+    section.append(status,grid,live);content.append(section);
+  }
+  function renderSuggestions() {
+    const host=document.querySelector("#hp-suggestions");if(!host)return;
+    const selected=visibleCartEntries();
+    const groups=new Set(selected.map(([id])=>product(id)?.category));
+    // Category diversity is a suggestion heuristic, not a personalized or AI recommendation.
+    const candidates=[];
+    if(selected.length && typeof menuProducts!=="undefined" && Array.isArray(menuProducts)){
+      const suggestedGroups=new Set(groups);
+      const cfg=config();
+      for(const id of [...new Set([...(cfg?.bundle||[]),...(cfg?.suggestions||[])])]){const item=product(id);if(item&&!cart[id]&&candidates.length<3){candidates.push(item);suggestedGroups.add(item.category);}}
+      for(const item of menuProducts){
+        if(candidates.length>=3)break;
+        if(item.active===false || !product(item.id) || cart[item.id] || candidates.some(p=>p.id===item.id) || suggestedGroups.has(item.category))continue;
+        candidates.push(item);suggestedGroups.add(item.category);
+        if(candidates.length===3)break;
+      }
+    }
+    const previous=document.activeElement?.dataset?.hpAdd;
+    host.hidden=!candidates.length;
+    host.replaceChildren();
+    if(!candidates.length){if(previous && document.querySelector("#commerce-drawer.is-open"))document.querySelector("#commerce-submit")?.focus();return;}
+    const title=document.createElement("h3");title.textContent=h("suggest");host.append(title);
+    const grid=document.createElement("div");grid.className="hp-suggestion-grid";
+    for(const item of candidates){
+      const card=document.createElement("article");card.className="hp-suggestion";
+      const name=document.createElement("strong");name.textContent=localized(item).name;
+      const price=document.createElement("span");price.textContent=money(item.price);
+      const button=document.createElement("button");button.type="button";button.dataset.hpAdd=item.id;button.textContent="+ "+t("add");button.disabled=submitting;
+      button.setAttribute("aria-label",t("add")+": "+name.textContent);button.addEventListener("click",()=>add(item.id));
+      card.append(name,price,button);grid.append(card);
+    }
+    host.append(grid);
+    if(previous && document.querySelector("#commerce-drawer.is-open"))(grid.querySelector("button")||document.querySelector("#commerce-submit"))?.focus({preventScroll:true});
+  }
+  function removeCartItem(id) {
+    if(submitting || !cart[id])return;
+    lastRemoved={id,quantity:cart[id],note:itemNotes.get(id)};itemNotes.delete(id);
+    delete cart[id];save(cartKey(),cart);render();announce(h("removed"));
+  }
   function initializeContactPanel() {
     const trigger = document.querySelector('[data-ramen-nav="contact"]');
     if (!trigger || typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) return;
@@ -173,14 +291,20 @@
       const element = (tag, value, cls) => { const node=document.createElement(tag); if(value)node.textContent=value; if(cls)node.className=cls; return node; };
       const header=element('header',null,'ramen-contact-head');
       const labels=panelText();
-      const heading=element('h2',panel==='contact'?words.title:labels[panel]||words.title);heading.id='ramen-contact-title';
+      const heading=element('h2',panel==='contact'?h('services'):labels[panel]||words.title);heading.id='ramen-contact-title';
       const dismiss=element('button',undefined,'ramen-contact-close');dismiss.type='button';dismiss.setAttribute('aria-label',words.close);dismiss.addEventListener('click',close);
       const closeGlyph=element('span','×');closeGlyph.setAttribute('aria-hidden','true');dismiss.append(closeGlyph);
       header.append(heading,dismiss);
       const content=element('div',null,'ramen-contact-content');
       const mode=typeof menuDataMode !== 'undefined' ? menuDataMode : 'loading';
       const demo=mode==='demo';
-      if(demo)content.append(element('p',words.demo,'ramen-contact-note'));
+      dialog.classList.toggle('hp-contact',panel==='contact');
+      if(panel==='contact'){
+        const identity=element('div',null,'hp-identity');
+        const brand=element('strong',document.querySelector('[data-restaurant-brand]')?.textContent.trim() || 'ROMANO');
+        identity.append(brand,element('span',contextLabel(),'hp-context'));content.append(identity);
+        guestServices(content,element,demo);
+      }else if(demo)content.append(element('p',words.demo,'ramen-contact-note'));
       if(panel==='profile' && !window.RomanoCustomerEntry?.renderProfile(content,close))content.append(element('p',labels.guest,'ramen-contact-note'));
       if(panel==='chat')content.append(element('p',labels.chatMissing,'ramen-contact-note'));
       if(panel==='feedback') {
@@ -217,7 +341,24 @@
       if((panel==='contact'||panel==='chat') && (demo || mode==='public' || mode==='offline') && phone)appendInfo(words.phone,phone,!demo && /^\+?[\d\s().-]{5,25}$/.test(phone)?'tel:'+phone.replace(/[^+\d]/g,''):null,'ltr');
       if(panel==='contact' && (demo || mode==='public' || mode==='offline') && address)appendInfo(words.address,address,null);
       if((panel==='contact'||panel==='chat') && social && /^https?:\/\//i.test(social) && (mode==='public' || mode==='offline')){const url=getSafeExternalUrl(social);if(url)appendInfo(words.social,words.social,url);}
-      if(panel==='contact' && !content.querySelector('.ramen-contact-item'))content.append(element('p',words.missing,'ramen-contact-note'));
+      if(panel==='contact'){
+        if(!content.querySelector('.ramen-contact-item'))content.append(element('p',words.missing,'ramen-contact-note'));
+        const cfg=config();
+        if(cfg?.hours[lang()])appendInfo(x(8),cfg.hours[lang()],null);
+        if(cfg?.map)appendInfo(x(9),x(9),cfg.map);
+        if(cfg?.whatsapp)appendInfo(x(10),x(10),cfg.whatsapp);
+        if(demo)content.append(element('p',words.demo,'ramen-contact-note'));
+        const actions=element('div',null,'hp-contact-actions');
+        if(address && navigator.clipboard?.writeText && (demo||mode==='public'||mode==='offline')){
+          const copy=element('button',h('copy'));copy.type='button';
+          const result=element('p',null,'hp-service-live');result.setAttribute('role','status');
+          copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(address);result.textContent=h('copied');}catch{result.textContent=h('copyFailed');}});
+          actions.append(copy,result);
+        }
+        const feedback=element('button',h('review'));feedback.type='button';
+        feedback.addEventListener('click',()=>{const previous=origin;dialog.addEventListener('close',()=>openPanel('feedback',previous),{once:true});close();});
+        actions.append(feedback);content.append(actions);
+      }
       dialog.replaceChildren(header,content);
       dialog.showModal();document.body.classList.add('ramen-contact-open');if(panel==='contact'){trigger.setAttribute('aria-controls',dialog.id);trigger.setAttribute('aria-expanded','true');}dismiss.focus();
     };
@@ -245,22 +386,27 @@
       <div class="commerce-backdrop" data-commerce-close hidden></div>
       <section class="commerce-drawer" id="commerce-drawer" role="dialog" aria-modal="true" aria-labelledby="commerce-title" aria-hidden="true" tabindex="-1" inert>
         <header class="commerce-drawer-head">
-          <div><small>ROMANO</small><h2 id="commerce-title">${safe(t("cart"))}</h2></div>
+          <div><small>ROMANO</small><h2 id="commerce-title">${safe(t("cart"))}</h2><p class="hp-context" id="hp-cart-context"></p></div>
           <button class="commerce-close" type="button" data-commerce-close aria-label="${safe(t("close"))}">×</button>
         </header>
         <div class="commerce-scroll">
         <div class="commerce-order-status" id="commerce-order-status" hidden></div>
         <p class="ramen-contact-note" id="commerce-demo-status" role="status" hidden></p>
         <div class="commerce-items" id="commerce-items"></div>
+        <div class="hp-undo" id="hp-undo" hidden><span>${safe(h("removed"))}</span><button type="button" id="hp-undo-button">${safe(h("undo"))}</button></div>
+        <button class="hp-continue" type="button" id="hp-continue" hidden>${safe(h("continue"))}</button>
+        <section class="hp-suggestions" id="hp-suggestions" hidden></section>
         <div class="commerce-options" id="commerce-options">
-          <label class="commerce-note"><span>${safe(t("note"))}</span><textarea id="commerce-notes" maxlength="1000" rows="2" placeholder="${safe(t("noteHint"))}"></textarea></label>
+          <label class="commerce-note"><span>${safe(t("note"))}</span><textarea id="commerce-notes" maxlength="1000" rows="2" placeholder="${safe(t("noteHint"))}">${safe(orderNotes)}</textarea><span id="hp-note-local" hidden>${safe(h("noteLocal"))}</span></label>
+          <div id="hp-offer" hidden><label for="hp-code">${safe(x(1))}</label><div class="hp-code-row"><input id="hp-code" maxlength="24" value="${safe(couponCode)}" dir="ltr" autocomplete="off"><button type="button" id="hp-apply">${safe(x(2))}</button></div><p id="hp-bundle" class="hp-context" hidden></p><p id="hp-coupon-status" role="status"></p></div>
+          <p id="hp-points" class="hp-context" hidden></p>
           <fieldset class="commerce-pay-method"><legend>${safe(panelText().methods)}</legend>
             <label><input type="radio" name="commerce-payment" value="later" checked> <span>${safe(t("later"))}</span></label>
             <label hidden><input type="radio" name="commerce-payment" value="online" disabled> <span>${safe(t("online"))}</span></label>
           </fieldset>
         </div></div>
         <div class="commerce-checkout" id="commerce-checkout">
-          <div class="commerce-total-row"><span>${safe(t("total"))}</span><strong id="commerce-total"></strong></div>
+          <div class="hp-summary">${safe(h("summary"))}</div><div class="commerce-total-row" id="hp-subtotal" hidden><span>${safe(subtotalText())}</span><strong id="hp-subtotal-value"></strong></div><div class="commerce-total-row" id="hp-discount" hidden><span>${safe(x(0))}</span><strong id="hp-discount-value"></strong></div><div class="commerce-total-row"><span>${safe(t("total"))}</span><strong id="commerce-total"></strong></div>
           <p class="commerce-message" id="commerce-message" role="alert"></p>
           <button class="commerce-submit" id="commerce-submit" type="button">${safe(t("checkout"))}</button>
         </div>
@@ -270,6 +416,22 @@
     document.querySelector("#commerce-cart-bar").addEventListener("click", openDrawer);
     document.querySelectorAll("[data-commerce-close]").forEach((button) => button.addEventListener("click", closeDrawer));
     document.querySelector("#commerce-submit").addEventListener("click", submitOrder);
+    document.querySelector("#hp-continue").addEventListener("click",closeDrawer);
+    document.querySelector("#hp-code").addEventListener("input",event=>{couponCode=event.target.value;});
+    document.querySelector("#hp-apply").addEventListener("click",()=>{
+      if(submitting)return;
+      const cfg=config(),code=couponCode.trim().toUpperCase();
+      if(appliedCoupon){appliedCoupon="";couponCode="";document.querySelector("#hp-code").value="";render();return;}
+      if(!cfg?.coupon||code!==cfg.coupon||!eligible(cfg)||!window.RomanoDemoMembers.discountFor(total(),cfg.percent,restaurantConfig.currency)){document.querySelector("#hp-coupon-status").textContent=x(3);return;}
+      appliedCoupon=code;render();
+    });
+    document.querySelector("#commerce-notes").addEventListener("input",event=>{orderNotes=event.target.value;});
+    document.querySelector("#hp-undo-button").addEventListener("click",()=>{
+      if(!lastRemoved||submitting)return;
+      const {id,quantity,note}=lastRemoved;lastRemoved=null;if(note)itemNotes.set(id,note);
+      if(product(id)?.active!==false && product(id)){cart[id]=Math.min(99,(cart[id]||0)+quantity);save(cartKey(),cart);}
+      render();document.querySelector("#commerce-items button:not([disabled])")?.focus({preventScroll:true});
+    });
     bindDrawerKeyboard();
   }
 
@@ -369,6 +531,7 @@
   function add(id) {
     const item = product(id);
     if (!item || !(item.price > 0)) return;
+    if(submitting)return;
     const previous = Number(cart[id] || 0);
     if (previous >= 99) { showAddFeedback(item, false); return; }
     demoOrderSaved=false;
@@ -379,7 +542,8 @@
   }
   function change(id, delta) {
     const next = Number(cart[id] || 0) + delta;
-    if (next <= 0) delete cart[id]; else cart[id] = Math.min(99, next);
+    if(submitting)return;
+    if (next <= 0) {removeCartItem(id);return;} else cart[id] = Math.min(99, next);
     save(cartKey(), cart);
     render();
   }
@@ -393,7 +557,30 @@
     bar.querySelector(".commerce-cart-count").textContent = String(amount);
     bar.querySelector(".commerce-cart-label").textContent = activeOrder && amount === 0 ? t("view") : t("cart");
     bar.querySelector(".commerce-cart-total").textContent = amount ? money(total()) : `#${activeOrder?.orderNumber || ""}`;
-    document.querySelector("#commerce-total").textContent = money(total());
+    const cfg=config(), savings=discount();
+    if(!savings)appliedCoupon="";
+    document.querySelector("#commerce-total").textContent = money(total()-savings);
+    document.querySelector("#hp-offer").hidden=!cfg?.coupon;
+    document.querySelector("#hp-code").disabled=submitting||Boolean(appliedCoupon);
+    document.querySelector("#hp-apply").disabled=submitting;
+    document.querySelector("#hp-apply").textContent=x(appliedCoupon?11:2);
+    document.querySelector("#hp-coupon-status").textContent=savings?cfg.percent+"% · "+appliedCoupon:"";
+    const bundle=document.querySelector("#hp-bundle"),bundleItems=(cfg?.bundle||[]).map(id=>product(id));
+    bundle.hidden=!bundleItems.length||bundleItems.some(item=>!item);
+    bundle.textContent=bundle.hidden?"":bundleText()+": "+bundleItems.map(item=>localized(item).name).join(" + ");
+    document.querySelector("#hp-subtotal").hidden=!savings;
+    document.querySelector("#hp-subtotal-value").textContent=savings?money(total()):"";
+    document.querySelector("#hp-discount").hidden=!savings;
+    document.querySelector("#hp-discount-value").textContent=savings?money(savings):"";
+    const points=document.querySelector("#hp-points");
+    points.hidden=!cfg?.points;points.textContent=cfg?.points?x(4)+": +"+new Intl.NumberFormat(lang()).format(cfg.points):"";
+    document.querySelector("#commerce-title").textContent=t("cart")+(amount?" · "+new Intl.NumberFormat(lang()).format(amount):"");
+    document.querySelector("#hp-cart-context").textContent=contextLabel();
+    document.querySelector("#hp-undo").hidden=!lastRemoved || !product(lastRemoved.id);
+    document.querySelector("#hp-undo-button").disabled=submitting;
+    document.querySelector("#hp-continue").hidden=amount!==0;
+    document.querySelector("#commerce-notes").disabled=submitting;
+    renderSuggestions();
     const host = document.querySelector("#commerce-items");
     const focused = document.activeElement;
     const previousControl = focused?.closest('#commerce-items button') ? {id:focused.dataset.productId,change:focused.dataset.cartChange,remove:focused.hasAttribute('data-cart-remove')} : null;
@@ -403,10 +590,11 @@
       const view = localized(item);
       return `<article class="commerce-item">
         <div class="commerce-item-media">${item.image ? `<img src="${safe(item.image)}" alt="${safe(view.name)}" width="64" height="64">` : `<span class="image-fallback">${safe(Array.from(view.name||"?")[0])}</span>`}</div>
-        <div><h3>${safe(view.name)}</h3><span>${safe(money(item.price * quantity))}</span>
-          <div class="commerce-quantity" aria-label="${safe(view.name)}"><button type="button" data-cart-change="-1" data-product-id="${safe(id)}" aria-label="${safe(panelText().less)}: ${safe(view.name)}">−</button><b>${quantity}</b><button type="button" data-cart-change="1" data-product-id="${safe(id)}" aria-label="${safe(panelText().more)}: ${safe(view.name)}">+</button></div>
+        <div class="hp-item-copy"><h3>${safe(view.name)}</h3><span class="hp-unit">${safe(h("unit"))}: ${safe(money(item.price))}</span><strong class="hp-line-total">${safe(money(item.price * quantity))}</strong>
+          <div class="commerce-quantity" aria-label="${safe(view.name)}"><button type="button" data-cart-change="-1" data-product-id="${safe(id)}" aria-label="${safe(panelText().less)}: ${safe(view.name)}" ${submitting?"disabled":""}>−</button><b>${quantity}</b><button type="button" data-cart-change="1" data-product-id="${safe(id)}" aria-label="${safe(panelText().more)}: ${safe(view.name)}" ${submitting||quantity>=99?"disabled":""}>+</button></div>
         </div>
-        <button class="commerce-remove" type="button" data-cart-remove data-product-id="${safe(id)}" aria-label="${safe(t("remove"))}: ${safe(view.name)}">${safe(t("remove"))}</button>
+        ${isDemo()?'<label class="hp-item-note"><span>'+safe(x(5))+'</span><input maxlength="200" data-hp-note="'+safe(id)+'" value="'+safe(itemNotes.get(id)||"")+'" '+(submitting?'disabled':'')+'></label>':""}
+        <button class="commerce-remove" type="button" data-cart-remove data-product-id="${safe(id)}" aria-label="${safe(t("remove"))}: ${safe(view.name)}" ${submitting?"disabled":""}>${safe(t("remove"))}</button>
       </article>`;
     }).join("");
     host.innerHTML = rows || `<p class="commerce-empty">${safe(t("empty"))}</p>`;
@@ -414,8 +602,9 @@
     const checkout = document.querySelector("#commerce-checkout");
     if (checkout) checkout.hidden = amount === 0;
     document.querySelector("#commerce-options").hidden = amount === 0;
+    host.querySelectorAll("[data-hp-note]").forEach(input=>input.addEventListener("input",()=>itemNotes.set(input.dataset.hpNote,input.value)));
     host.querySelectorAll("[data-cart-change]").forEach((button) => button.addEventListener("click", () => change(button.dataset.productId, Number(button.dataset.cartChange))));
-    host.querySelectorAll("[data-cart-remove]").forEach((button) => button.addEventListener("click", () => { delete cart[button.dataset.productId]; save(cartKey(), cart); render(); }));
+    host.querySelectorAll("[data-cart-remove]").forEach((button) => button.addEventListener("click", () => removeCartItem(button.dataset.productId)));
     if(previousControl && document.querySelector('#commerce-drawer.is-open')) {
       const next=[...host.querySelectorAll('button')].find(b=>b.dataset.productId===previousControl.id && b.dataset.cartChange===previousControl.change && b.hasAttribute('data-cart-remove')===previousControl.remove);
       (next || host.querySelector('button') || document.querySelector('.commerce-close'))?.focus({preventScroll:true});
@@ -423,7 +612,7 @@
     const submit = document.querySelector("#commerce-submit");
     submit.disabled = amount === 0 || submitting;
     const entry=window.RomanoCustomerEntry;
-    submit.textContent = submitting ? t("sending") : isDemo() ? entry.t(entry.current()?"order":"join") : t("checkout");
+    submit.textContent = submitting ? t("sending") : isDemo() ? (entry.current()?entry.t("order"):h("join")) : t("checkout");
     renderStatus();
     renderSession();
   }
@@ -446,11 +635,12 @@
     renderPaymentMethods();
     const demo=isDemo();
     const notice=document.querySelector('#commerce-demo-status');
-    if(notice){notice.hidden=!demo;notice.textContent=demo?window.RomanoCustomerEntry.t(demoOrderSaved?"saved":"notice"):"";}
+    if(notice){notice.hidden=!demo;notice.textContent=demo?(demoOrderSaved?window.RomanoCustomerEntry.t("saved"):h("demo")):"";}
     const pay=document.querySelector('.commerce-pay-method');
     if(pay)pay.hidden=demo;
     const notes=document.querySelector('.commerce-note');
-    if(notes)notes.hidden=demo;
+    if(notes)notes.hidden=false;
+    document.querySelector("#hp-note-local").hidden=!demo;
     if(demo)badge.hidden=true;
     const message=document.querySelector('#commerce-message');
     if(message && !demo && !tableSession && count()>0 && !message.textContent)message.textContent=t('scan');
@@ -558,10 +748,10 @@
         const members=window.RomanoDemoMembers;
         const order=await members.mutate(()=>{
           cart=normalizeCart(read(cartKey(),cart));
-          const items=visibleCartEntries().map(([id,quantity])=>({name:localized(product(id)).name,quantity,price:product(id).price}));
+          const items=visibleCartEntries().map(([id,quantity])=>({productId:id,name:localized(product(id)).name,quantity,price:product(id).price,note:(itemNotes.get(id)||"").trim()}));
           if(!items.length)return null;
-          const saved=members.addOrder(localStorage,sessionStorage,items,total(),restaurantConfig.currency);
-          cart=normalizeCart({});save(cartKey(),cart);
+          const saved=members.addOrder(localStorage,sessionStorage,items,total()-discount(),restaurantConfig.currency,orderNotes.trim(),appliedCoupon);
+          cart=normalizeCart({});save(cartKey(),cart);lastRemoved=null;orderNotes="";itemNotes.clear();appliedCoupon=couponCode="";document.querySelector("#hp-code").value="";document.querySelector("#commerce-notes").value="";
           return saved;
         });
         if(order){
@@ -595,7 +785,7 @@
       activeOrder = body.data;
       save(orderKey(), activeOrder);
       remove(orderRequestKey());
-      cart = normalizeCart({}); save(cartKey(), cart);
+      cart = normalizeCart({}); save(cartKey(), cart);lastRemoved=null;orderNotes="";document.querySelector("#commerce-notes").value="";
       render(); startPolling();
       if (payment === "online") await startPayment(activeOrder.id);
     } catch (error) {
@@ -693,6 +883,9 @@
     window.addEventListener("romano:data-updated", () => { reconcileCart(); enhanceProducts(); render(); });
     document.addEventListener("romano:demo-membership-changed",render);
     window.addEventListener("storage", event => {
+      const service=document.querySelector(".hp-services[data-request-key]");
+      if(service && (event.key===null||event.key===service.dataset.requestKey))service.dispatchEvent(new Event("hp-request-updated"));
+      if(event.key===window.RomanoDemoMembers?.settingsKey){render();return;}
       if (event.key !== null && event.key !== cartKey()) return;
       cart = normalizeCart(read(cartKey(), {}));
       reconcileCart(); render();

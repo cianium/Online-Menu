@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r17-hero-clean-eyebrow`;
+const CACHE_NAME = `${menuCachePrefix}r18-hospitality-bundles`;
 const CORE_ASSETS = [
   "./",
   "./index.html",
