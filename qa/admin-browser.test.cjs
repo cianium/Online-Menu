@@ -271,7 +271,7 @@ await check('Order filter group accessible name is localized in all four languag
     await page.evaluate(()=>navigateTo('settings'));
     for(const lang of ['fa','en','tr','ar']){
       await page.evaluate(l=>ROMANO_ADMIN_I18N.setLanguage(l),lang);
-      assert.equal(await page.locator('#create-branch-form,[name=branchName],[name=branchSlug],[name=priceMultiplier]').count(),0);
+      assert.equal(await page.locator('#create-branch-form,[name=branchName],[name=branchSlug],[name=priceMultiplier],#sample-branch-select,[name=sampleName],[name=sampleRename]').count(),0);
       assert.equal(await page.evaluate(()=>typeof RomanoAPI.createBranch),'undefined');
       assert.equal(await page.locator('#ops-branch').isDisabled(),true);
       assert.equal(await page.locator('#create-table-form button').isDisabled(),true);

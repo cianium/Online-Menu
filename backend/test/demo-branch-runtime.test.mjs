@@ -26,98 +26,36 @@ function fixture({url='https://demo.example/menu/',mode='standalone',locks=true,
   return {model:window.RomanoDemoBranches,db};
 }
 
-test('Connected mode does not expose the standalone branch registry',()=>{
-  assert.equal(fixture({mode:'connected'}).model,undefined);
+test('Connected mode does not expose the demo table registry',()=>assert.equal(fixture({mode:'connected'}).model,undefined));
+test('Single restaurant preserves primary keys and rejects branch creation, rename and switching',async()=>{
+ const {model,db}=fixture();
+ const old=randomUUID();db.set(registry,JSON.stringify([{id:'',name:'Main',tables:[]},{id:old,name:'Archived',tables:[{code:'T1',name:'Old table'}]}]));
+ assert.equal(model.scope('romano_products'),'romano_products');assert.equal(model.read().length,1);
+ await assert.rejects(model.save('create','Other'),/BRANCH_INPUT/);
+ await assert.rejects(model.save('rename','Other'),/BRANCH_INPUT/);
+ assert.equal(model.setActive,undefined);
+ assert.throws(()=>fixture({db,url:'https://demo.example/?demoBranch='+old}).model.context(),/BRANCH_MISSING/);
+ assert.throws(()=>model.link('../?qr=demo',old,'T1'),/BRANCH_MISSING/);
+ await model.save('table','Window','T1');
+ assert.equal(JSON.parse(db.get(registry))[1].tables[0].name,'Old table');
+ assert.equal(model.read()[0].tables[0].name,'Window');
 });
-
-test('Primary data retains original unscoped keys and legacy labels',()=>{
-  const {model,db}=fixture();
-  assert.equal(model.scope('romano_products'),'romano_products');
-  assert.equal(model.read()[0].id,'');
-  db.set(registry,JSON.stringify([{id:'',name:'Main  branch',tables:[]}]));
-  assert.equal(model.read()[0].name,'Main  branch');
-  assert.throws(()=>fixture({db:new Map([[registry,'{']])}).model.read());
+test('Table codes are unique and produce a table-only QR link',async()=>{
+ const {model,db}=fixture();
+ await Promise.all([model.save('table','Window','T1'),model.save('table','Garden','T2')]);
+ await assert.rejects(model.save('table','Duplicate','T1'),/BRANCH_INPUT/);
+ await assert.rejects(model.save('table','Bad','<bad>'),/BRANCH_INPUT/);
+ const qr=new URL(model.link('../?qr=demo&demoBranch=old','','T1'));
+ assert.equal(qr.searchParams.has('demoBranch'),false);
+ assert.equal(qr.searchParams.get('demoTable'),'T1');
+ assert.equal(fixture({db,url:qr.href}).model.context().tables[0].name,'Window');
+ qr.searchParams.set('demoTable','unknown');
+ assert.throws(()=>fixture({db,url:qr.href}).model.context(),/BRANCH_MISSING/);
 });
-
-test('Branch creation normalizes names and rejects duplicate legacy variants',async()=>{
-  const {model,db}=fixture();
-  db.set(registry,JSON.stringify([{id:'',name:'Main  branch',tables:[]}]));
-  await assert.rejects(model.save('create','ＭＡＩＮ branch'),/BRANCH_INPUT/);
-  const id=await model.save('create','  شعبه   دوم  ');
-  assert.equal(model.read().find(row=>row.id===id).name,'شعبه دوم');
-  await assert.rejects(model.save('create','شعبه دوم'),/BRANCH_INPUT/);
-  await assert.rejects(model.save('create','bad\u202ename'),/BRANCH_INPUT/);
-  await assert.rejects(model.save('create',123),/BRANCH_INPUT/);
-  await model.save('create','شعبه\u200cها');
+test('Legacy multi-location backup cannot silently restore into one restaurant',()=>{
+ const {model}=fixture();
+ assert.throws(()=>model.validateDirectory([{id:'',name:'Main',tables:[]},{id:randomUUID(),name:'Old',tables:[]}]),/BRANCH_DATA/);
 });
-
-test('Serialized writes retain branch IDs and existing tables',async()=>{
-  const {model,db}=fixture();
-  const ids=await Promise.all([model.save('create','North'),model.save('create','South')]);
-  assert.equal(new Set(ids).size,2);
-  assert.equal(model.read().length,3);
-  const branch=fixture({db,url:'https://demo.example/admin/?demoBranch='+ids[0]}).model;
-  await branch.save('table','Window','T1');
-  await branch.save('rename','North harbour');
-  assert.equal(branch.context().name,'North harbour');
-  assert.equal(branch.context().tables[0].code,'T1');
-  assert.equal(branch.scope('romano_products'),'romano_products:branch:'+ids[0]);
-  await assert.rejects(branch.save('table','Duplicate','T1'),/BRANCH_INPUT/);
-});
-
-test('Routing rejects unknown branch or table and clears obsolete link parameters',async()=>{
-  const {model,db}=fixture();
-  const id=await model.save('create','North');
-  const branch=fixture({db,url:'https://demo.example/admin/?demoBranch='+id}).model;
-  await branch.save('table','Window','T1');
-  const qr=new URL(branch.link('../?qr=demo',id,'T1'));
-  assert.equal(fixture({db,url:qr.href}).model.context().id,id);
-  qr.searchParams.set('demoTable','unknown');
-  assert.throws(()=>fixture({db,url:qr.href}).model.context(),/BRANCH_MISSING/);
-  qr.searchParams.set('demoBranch',randomUUID());
-  assert.throws(()=>fixture({db,url:qr.href}).model.context(),/BRANCH_MISSING/);
-  const primary=new URL(branch.link('../?qr=demo&demoBranch=old&demoTable=old','',''));
-  assert.equal(primary.searchParams.has('demoBranch'),false);
-  assert.equal(primary.searchParams.has('demoTable'),false);
-  assert.equal(primary.searchParams.get('qr'),'demo');
-});
-
-test('Unavailable Web Locks or corrupt storage never silently resets registry',async()=>{
-  const {model,db}=fixture({locks:false});
-  await assert.rejects(model.save('create','North'),/BRANCH_STORAGE/);
-  assert.equal(db.has(registry),false);
-  db.set(registry,'invalid');
-  const next=fixture({db}).model;
-  await assert.rejects(next.save('create','North'));
-  assert.equal(db.get(registry),'invalid');
-});
-
-test('Archive rejects branch entry and writes; reactivation retains identity, tables and scoped data',async()=>{
-  const {model,db}=fixture();
-  const id=await model.save('create','North');
-  const branch=fixture({db,url:'https://demo.example/admin/?demoBranch='+id}).model;
-  await branch.save('table','Window','T1');
-  const scoped=branch.scope('romano_products');
-  db.set(scoped,'[{"id":"existing"}]');
-  await assert.rejects(model.setActive('',false),/BRANCH_INPUT/);
-  await assert.rejects(branch.setActive(id,false),/BRANCH_INPUT/);
-  await model.setActive(id,false);
-  assert.equal(model.read().find(row=>row.id===id).active,false);
-  assert.throws(()=>branch.context(),/BRANCH_MISSING/);
-  assert.throws(()=>fixture({db,url:'https://demo.example/menu/?demoBranch='+id+'&demoTable=T1'}).model.context(),/BRANCH_MISSING/);
-  await assert.rejects(branch.save('rename','Archived'),/BRANCH_MISSING/);
-  await assert.rejects(model.save('create','North'),/BRANCH_INPUT/);
-  assert.equal(db.get(scoped),'[{"id":"existing"}]');
-  await model.setActive(id,true);
-  assert.equal(branch.context().id,id);
-  assert.equal(branch.context().tables[0].code,'T1');
-  assert.equal(db.get(scoped),'[{"id":"existing"}]');
-});
-
-test('Persisted lifecycle state must be boolean and primary must remain active',()=>{
-  const {model,db}=fixture();
-  for(const active of [false,'false',null]){
-    db.set(registry,JSON.stringify([{id:'',name:'Main',tables:[],active}]));
-    assert.throws(()=>model.read(),/BRANCH_DATA/);
-  }
+test('Table writes fail closed without serialization',async()=>{
+ await assert.rejects(fixture({locks:false}).model.save('table','Window','T1'),/BRANCH_STORAGE/);
 });
