@@ -592,11 +592,9 @@ html[dir] .hero-title {align-items:flex-start;inline-size:100%;}
 .hero-button>span:first-child {white-space:nowrap;}
 
 /* Compact customer header — text language, adjacent search, filter at rail start. */
-#site-header .header-container {grid-template-columns:minmax(0,1fr) repeat(4,auto);min-height:56px;gap:5px;padding-block:5px;width:min(calc(100% - 20px),1240px);}
 #site-header .brand {gap:6px;justify-self:stretch;}
 #site-header .brand-logo {flex-basis:34px;inline-size:34px;block-size:34px;border-radius:9px;}
-#site-header .brand-name {font-size:clamp(14px,2.2vw,19px);}
-#site-header :is(#romano-language-toggle,#menu-search-toggle,.ramen-header-cart,.menu-toggle,#menu-filter-toggle) {position:relative;display:grid;place-items:center;inline-size:44px;min-inline-size:44px;block-size:44px;min-block-size:44px;padding:0;margin:0;border:1px solid #d6ae7045;border-radius:12px;background:#211b15;color:#f2d39d;}
+#site-header :is(#romano-language-toggle,#menu-search-toggle,.ramen-header-cart,.menu-toggle,#menu-filter-toggle) {position:relative;display:grid;place-items:center;padding:0;margin:0;color:#f2d39d;}
 #site-header #menu-toggle {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;}
 #site-header #menu-toggle > span {position:static;display:block;flex:0 0 2px;inline-size:18px;block-size:2px;margin:0;padding:0;border-radius:2px;background:currentColor;transform:none;opacity:1;}
 #site-header #menu-toggle.is-active > span:nth-child(1) {transform:translateY(6px) rotate(45deg);}
@@ -605,7 +603,6 @@ html[dir] .hero-title {align-items:flex-start;inline-size:100%;}
 #site-header #romano-language-label {display:inline;direction:ltr;font:700 13px/1 Inter,sans-serif;letter-spacing:.03em;}
 #site-header #menu-search-toggle svg {inline-size:20px;block-size:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;}
 #site-header #menu-search-toggle.has-value::after {content:"";position:absolute;inset-block-start:5px;inset-inline-end:5px;inline-size:7px;block-size:7px;border-radius:50%;background:#e9c789;}
-#site-header :is(.r17-browse-host,.menu-browser) {min-height:50px;}
 #site-header .menu-browser {display:block;width:100%;padding:0 10px 4px;max-width:1240px;}
 #site-header .r17-browse-row {display:flex;align-items:center;gap:6px;min-width:0;}
 #site-header .r17-browse-row .menu-icon-actions {flex:none;}
@@ -614,7 +611,6 @@ html[dir] .hero-title {align-items:flex-start;inline-size:100%;}
 #site-header .browse-category-rail button {min-height:44px;padding:4px 8px;font-size:12px;}
 #site-header .browse-query {padding:2px 0;}
 #site-header .browse-panel {padding-block:5px;}
-@media(max-width:360px){#site-header .header-container{width:calc(100% - 12px);gap:4px;}#site-header .brand-logo{flex-basis:27px;inline-size:27px;block-size:27px;}#site-header .brand{gap:4px;}#site-header .brand-name{font-size:13px;}}
 /* Center all hero content at the top, extending the photo to the bottom navigation. */
 html[dir] .hero-section {min-height:max(300px,calc(100dvh - var(--r17-header-height,106px) - var(--customer-nav-reserve,0px)));height:auto;align-items:start;text-align:center;grid-template-columns:minmax(0,1fr);}
 html[dir] .hero-content {width:min(calc(100% - 32px),1180px);max-width:100%;align-items:center;justify-content:flex-start;justify-self:center;text-align:center;padding-block:clamp(30px,7vh,80px) 28px;gap:12px;}
@@ -626,23 +622,20 @@ html[dir] .hero-overlay {background:linear-gradient(180deg,#080705b0 0%,#0807059
 
 /* Hospitality Premium — scoped customer panels, logical directions and accessible touch targets. */
 .hp-context{margin:4px 0 0;color:#c4b8a7;font-size:.78rem;line-height:1.5;overflow-wrap:anywhere}
-#commerce-drawer .commerce-item{grid-template-columns:64px minmax(0,1fr) auto;align-items:start;gap:10px;padding:12px;border:1px solid #d6ae7025;border-radius:16px;background:#ffffff05}
-#commerce-drawer .commerce-item-media{inline-size:64px;block-size:64px;border-radius:12px}
+#commerce-drawer .commerce-item{border:1px solid #d6ae7025;border-radius:16px;background:#ffffff05}
+#commerce-drawer .commerce-item-media{border-radius:12px}
 .hp-item-copy{display:grid;gap:4px;min-width:0}
 #commerce-drawer .hp-unit{color:#bcb0a2;font-size:11px;overflow-wrap:anywhere}
 .hp-line-total{color:#ebc98e;font-size:14px;overflow-wrap:anywhere}
-#commerce-drawer .commerce-quantity{width:max-content;max-width:100%;margin:4px 0 0;gap:6px}
+#commerce-drawer .commerce-quantity{width:max-content;max-width:100%}
 #commerce-drawer .commerce-quantity button{border-radius:12px}
 #commerce-drawer .commerce-remove{font-size:12px;text-decoration:none;border-radius:10px;background:#ffffff05;color:#e0b6a5}
-.hp-summary{font-size:12px;color:#c4b8a7}
 #commerce-drawer #commerce-demo-status{margin-block:10px 0;font-size:12px;color:#c4b8a7}
 .hp-undo{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border:1px solid #d6ae7040;border-radius:12px;color:#ecd9bc;font-size:13px}
 .hp-undo button,.hp-continue,.hp-suggestion button,.hp-contact-actions button{min-height:44px;border-radius:11px;border:1px solid #d6ae7050;background:#d6ae7010;color:#f1d8b0;font:inherit;cursor:pointer;padding:6px 12px}
-.hp-continue{margin-block:10px}
-.hp-suggestions{padding-block:14px}
 .hp-suggestions h3,.hp-services h3{font-size:15px;color:#f7f0e7;margin:0 0 10px}
-.hp-suggestion-grid{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(132px,48%);gap:8px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:inline proximity;padding-block:4px}
-.hp-suggestion{display:grid;gap:6px;align-content:space-between;padding:12px;min-width:0;border:1px solid #d6ae7025;border-radius:14px;background:#ffffff05;scroll-snap-align:start;font-size:12px;overflow-wrap:anywhere}
+.hp-suggestion-grid{display:grid;grid-auto-flow:column;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:inline proximity}
+.hp-suggestion{display:grid;align-content:space-between;min-width:0;border:1px solid #d6ae7025;background:#ffffff05;scroll-snap-align:start;font-size:12px;overflow-wrap:anywhere}
 .hp-suggestion span{color:#ebc98e}
 .hp-suggestion button{font-size:12px}
 #commerce-drawer .commerce-note{margin-block:8px 14px}
@@ -665,16 +658,13 @@ html[dir] .hero-overlay {background:linear-gradient(180deg,#080705b0 0%,#0807059
 .hp-contact-actions{display:grid;gap:8px}
 #hp-undo[hidden],#hp-continue[hidden],#hp-suggestions[hidden],#hp-note-local[hidden]{display:none!important}
 :is(#commerce-drawer,.hp-contact) button:focus-visible{outline:2px solid #ebc98e;outline-offset:3px}
-@media(max-width:420px){#commerce-drawer .commerce-item{grid-template-columns:52px minmax(0,1fr);gap:9px}#commerce-drawer .commerce-item-media{inline-size:52px;block-size:52px}#commerce-drawer .commerce-remove{grid-column:2;justify-self:start;min-height:44px}}
 
 .hp-service-icon{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .hp-history-notes{white-space:pre-wrap;overflow-wrap:anywhere;color:#c4b8a7}
 
 /* Demo hospitality offers and item instructions. */
-.hp-item-note{grid-column:2/-1;display:grid;gap:4px;color:#c4b8a7;font-size:12px;min-width:0}.hp-item-note input,.hp-code-row input{width:100%;min-width:0;min-height:44px;border:1px solid #d6ae7035;border-radius:10px;padding:8px;color:#f7f0e7;background:#100e0c;font:inherit}.hp-code-row{display:flex;gap:8px}.hp-code-row button{min-height:44px;border-radius:10px;border:1px solid #d6ae7050;background:#d6ae7010;color:#f1d8b0;padding:8px 12px;font:inherit}#hp-offer{display:grid;gap:6px;color:#c4b8a7;font-size:13px;padding-block:8px}#hp-offer[hidden],#hp-discount[hidden],#hp-points[hidden]{display:none!important}#hp-coupon-status{margin:0}#hp-coupon-status:empty{display:none}#hp-discount strong{color:#b6d1af}@media(max-width:420px){#commerce-drawer .hp-item-note{grid-column:1/-1}#commerce-drawer .commerce-remove{grid-column:2;justify-self:end}}
+.hp-code-row input{width:100%;min-width:0;min-height:44px;border:1px solid #d6ae7035;border-radius:10px;padding:8px;color:#f7f0e7;background:#100e0c;font:inherit}.hp-code-row{display:flex;gap:8px}.hp-code-row button{min-height:44px;border-radius:10px;border:1px solid #d6ae7050;background:#d6ae7010;color:#f1d8b0;padding:8px 12px;font:inherit}#hp-offer{display:grid;gap:6px;color:#c4b8a7;font-size:13px;padding-block:8px}#hp-offer[hidden],#hp-discount[hidden],#hp-points[hidden]{display:none!important}#hp-coupon-status{margin:0}#hp-coupon-status:empty{display:none}#hp-discount strong{color:#b6d1af}
 
-/* At very narrow widths use two compact rows rather than clip the localized wordmark or reduce touch targets. */
-@media(max-width:360px){#site-header .header-container{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding-inline:0;}#site-header .header-container>.brand{grid-column:1/-1;justify-content:center;width:100%;min-width:0;gap:6px}#site-header .brand-content{flex:0 1 auto;width:auto;min-inline-size:0}#site-header .brand-name{font-size:15px}#site-header .header-container>:is(#romano-language-toggle,#menu-search-toggle,.ramen-header-cart,.menu-toggle){justify-self:center;inline-size:44px;min-inline-size:44px;block-size:44px;min-block-size:44px;}}
 #hp-subtotal[hidden],#hp-bundle[hidden]{display:none!important}
 
 /* R21 compact cart and photo-led add-ons. */
