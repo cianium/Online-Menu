@@ -261,7 +261,8 @@ const start=function startInbox(root,copy,model){
   function build(){
     if(!actor){showNotice();return;}
     const t=w(),heading=el("div",null,"page-heading"),h=el("h1",t.title);h.id="connect-inbox-title";
-    heading.append(el("span",t.mode,"page-eyebrow"),h,el("p",t.notice,"connect-inbox-notice"));
+    const branchName=root.RomanoDemoBranches?.context()?.name||t.primary;
+    heading.append(el("span",t.mode,"page-eyebrow"),h,el("p",t.branch+": "+branchName,"connect-inbox-notice"),el("p",t.notice,"connect-inbox-notice"));
     const toolbar=el("div",null,"connect-inbox-toolbar"),search=el("input"),statusFilter=el("select");
     search.type="search";search.placeholder=t.search;search.setAttribute("aria-label",t.search);search.value=query;search.maxLength=200;
     statusFilter.setAttribute("aria-label",t.filter);
@@ -311,9 +312,9 @@ const start=function startInbox(root,copy,model){
     const actions=el("div",null,"connect-inbox-actions"),select=el("select");
     select.id="connect-inbox-assignee";select.setAttribute("aria-label",t.assignment);
     for(const id of model.roster){const o=el("option",staffName(id));o.value=id;select.append(o);}select.value=model.roster.includes(c.assigneeId)?c.assigneeId:model.roster[0];
-    const assign=button(t.assign,"secondary-button",()=>mutate({type:"assign",assigneeId:select.value}));select.disabled=assign.disabled=!permissions.assign||busy;
+    const assign=button(t.assign,"secondary-button",()=>mutate({type:"assign",assigneeId:select.value}));assign.dataset.connectAction="assign";select.disabled=assign.disabled=!permissions.assign||busy;
     actions.append(select,assign);
-    for(const [type,label] of [["resolve","resolve"],["reopen","reopen"],["close","close"]]){const b=button(t[label],"secondary-button",()=>{if(type==="close"&&!root.confirm(t.confirm))return;mutate({type});});b.disabled=!permissions[type]||busy;actions.append(b);}
+    for(const [type,label] of [["resolve","resolve"],["reopen","reopen"],["close","close"]]){const b=button(t[label],"secondary-button",()=>{if(type==="close"&&!root.confirm(t.confirm))return;mutate({type});});b.dataset.connectAction=type;b.disabled=!permissions[type]||busy;actions.append(b);}
     header.append(actions);
     const log=el("div",null,"connect-inbox-log");log.setAttribute("role","log");log.setAttribute("aria-label",t.log);log.tabIndex=0;
     for(const m of detail.messages){
@@ -322,7 +323,7 @@ const start=function startInbox(root,copy,model){
     }
     const footer=el("div",null,"connect-inbox-compose"),quick=el("div",null,"connect-inbox-quick");quick.setAttribute("role","group");quick.setAttribute("aria-label",t.quick);
     const form=el("form"),input=el("textarea");input.id="connect-inbox-reply";input.rows=2;input.maxLength=4000;input.dir="auto";input.setAttribute("aria-label",t.reply);input.placeholder=t.reply;input.value=draft;
-    const send=el("button",t.send,"primary-button");send.type="submit";
+    const send=el("button",t.send,"primary-button");send.type="submit";send.dataset.connectAction="send";
     const counter=el("span",null,"connect-inbox-counter");counter.dir="ltr";
     function update(){const n=Array.from(input.value.trim()).length;counter.textContent=format(n)+" / 2000";send.disabled=busy||!permissions.reply||n===0||n>2000;input.disabled=busy||!permissions.reply;}
     for(const k of ["q1","q2","q3"]){const b=button(t[k],"secondary-button",()=>{const next=(input.value.trim()?input.value.trim()+"\n":"")+t[k];if(Array.from(next).length>2000){ui.statusLine.textContent=t.invalid;return;}input.value=draft=next;pending=null;update();input.focus();});b.disabled=busy||!permissions.reply;quick.append(b);}
@@ -345,11 +346,11 @@ const start=function startInbox(root,copy,model){
     refreshing=true;const run=generation,id=selection;
     try{
       const next=await engine.list(a);
-      if(run!==generation||!identity()||actor!==a)return;
+      if(run!==generation||busy||!identity()||actor!==a)return;
       rows=next;
       if(isPage()&&ui&&id&&selection===id){
         if(!rows.some(r=>r.id===id)){selection=null;detail=null;draft="";pending=null;}
-        else{const nextDetail=await engine.readStaff(a,id);if(run!==generation||!identity()||actor!==a||selection!==id)return;detail=nextDetail;mark(detail.conversation,detail.messages);}
+        else{const nextDetail=await engine.readStaff(a,id);if(run!==generation||busy||!identity()||actor!==a||selection!==id)return;detail=nextDetail;mark(detail.conversation,detail.messages);}
       }
       if(isPage()&&ui){if(ui.statusLine.textContent===w().loading||force)ui.statusLine.textContent="";renderList();renderDetail(force);}
       updateBadge();
@@ -358,17 +359,17 @@ const start=function startInbox(root,copy,model){
   }
   async function mutate(command){
     const a=syncIdentity();if(!a||!detail||busy||!isPage())return;
-    const c=detail.conversation,run=generation;
+    const c=detail.conversation;
     if(command.type==="assign"&&!model.roster.includes(command.assigneeId))return;
     if(!model.permissions(c,Date.now())[command.type==="send"?"reply":command.type])return;
-    busy=true;renderDetail(true);
+    const run=++generation;busy=true;renderDetail(true);
     try{
       const next=await engine.command(a,c.id,{...command,expectedVersion:c.version});
       if(run!==generation||!identity()||actor!==a||!isPage())return;
       detail=next;if(command.type==="send"){draft="";pending=null;}ui.statusLine.textContent=w().saved;
     }catch(error){
       if(run===generation&&ui&&isPage()){ui.statusLine.textContent=error.message==="CONNECT_STALE"?w().stale:error.message==="CONNECT_INVALID_MESSAGE"?w().invalid:w().error;}
-    }finally{busy=false;if(run===generation&&ui&&isPage()){renderDetail(true);await refresh();}else root.setTimeout(()=>refresh(),0);}
+    }finally{busy=false;if(run===generation&&ui&&isPage()){renderDetail(true);await refresh();}root.setTimeout(()=>refresh(),0);}
   }
   function navigate(){
     generation++;

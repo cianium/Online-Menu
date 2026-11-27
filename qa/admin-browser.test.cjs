@@ -43,6 +43,42 @@ async function check(name, action) { await action(); results.push(name); console
     await loginDemoAdmin(page);
   });
   await check('Local demo boot and seed catalog', async () => assert.equal(await page.evaluate(() => state.products.length), 21));
+  await check('Connect inbox receives local guest messages, replies, assigns and resolves',async()=>{
+    const guest=await context.newPage();
+    try{
+      await guest.goto(base+'/');
+      await guest.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode==='demo'&&Boolean(window.RomanoConnectDemo));
+      const session=await guest.evaluate(async()=>{const s=RomanoConnectDemo.session('primary','primary:qa-guest');await RomanoConnectDemo.send(s,crypto.randomUUID(),'<b>Guest QA message</b>','en');return s;});
+      await page.evaluate(()=>{ROMANO_ADMIN_I18N.setLanguage('en');navigateTo('connect');});
+      const row=page.locator('[data-conversation-id="'+session.conversationId+'"]');
+      await row.waitFor({state:'visible'});
+      assert.equal(await row.locator('.connect-inbox-unread').textContent(),'1');
+      await row.click();
+      await page.locator('.connect-inbox-log').waitFor({state:'visible'});
+      assert.equal(await page.locator('.connect-inbox-message p').first().textContent(),'<b>Guest QA message</b>');
+      assert.equal(await page.locator('.connect-inbox-message p b').count(),0);
+      await page.waitForFunction(()=>!document.querySelector('.connect-inbox-row[aria-pressed="true"] .connect-inbox-unread'));
+      await page.locator('#connect-inbox-assignee').selectOption('demo-agent-1');
+      await page.locator('[data-connect-action="assign"]').click();
+      await page.waitForFunction(()=>document.querySelector('.connect-inbox-detail-head p')?.textContent.includes('Demo agent 1'));
+      await page.locator('#connect-inbox-reply').fill('QA local reply');
+      await page.locator('[data-connect-action="send"]').click();
+      await page.waitForFunction(()=>Array.from(document.querySelectorAll('.connect-inbox-message p')).some(n=>n.textContent==='QA local reply'));
+      await guest.waitForFunction(async s=>(await RomanoConnectDemo.get(s)).messages.some(m=>m.text==='QA local reply'&&!m.own),session);
+      await page.locator('[data-connect-action="resolve"]').click();
+      await page.waitForFunction(()=>document.querySelector('[data-connect-action="reopen"]')&&!document.querySelector('[data-connect-action="reopen"]').disabled);
+      await page.locator('[data-connect-action="reopen"]').click();
+      await page.waitForFunction(()=>document.querySelector('#connect-inbox-reply')&&!document.querySelector('#connect-inbox-reply').disabled);
+      await page.setViewportSize({width:390,height:844});
+      await page.locator('.connect-inbox-back').click();
+      assert.equal(await row.isVisible(),true);
+      await page.locator('.connect-inbox-toolbar input').fill('no matching conversation');
+      assert.equal(await row.count(),0);
+      await page.locator('.connect-inbox-toolbar input').fill('');
+      await page.evaluate(()=>navigateTo('dashboard'));
+      await page.setViewportSize({width:1440,height:1000});
+    }finally{await guest.close();}
+  });
   await check('Sample revenue filters and accessible empty state in four locales',async()=>{
     await page.evaluate(()=>navigateTo('dashboard'));
     for(const lang of ['fa','en','tr','ar']){
