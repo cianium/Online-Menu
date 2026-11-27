@@ -91,3 +91,33 @@ test('Unavailable Web Locks or corrupt storage never silently resets registry',a
   await assert.rejects(next.save('create','North'));
   assert.equal(db.get(registry),'invalid');
 });
+
+test('Archive rejects branch entry and writes; reactivation retains identity, tables and scoped data',async()=>{
+  const {model,db}=fixture();
+  const id=await model.save('create','North');
+  const branch=fixture({db,url:'https://demo.example/admin/?demoBranch='+id}).model;
+  await branch.save('table','Window','T1');
+  const scoped=branch.scope('romano_products');
+  db.set(scoped,'[{"id":"existing"}]');
+  await assert.rejects(model.setActive('',false),/BRANCH_INPUT/);
+  await assert.rejects(branch.setActive(id,false),/BRANCH_INPUT/);
+  await model.setActive(id,false);
+  assert.equal(model.read().find(row=>row.id===id).active,false);
+  assert.throws(()=>branch.context(),/BRANCH_MISSING/);
+  assert.throws(()=>fixture({db,url:'https://demo.example/menu/?demoBranch='+id+'&demoTable=T1'}).model.context(),/BRANCH_MISSING/);
+  await assert.rejects(branch.save('rename','Archived'),/BRANCH_MISSING/);
+  await assert.rejects(model.save('create','North'),/BRANCH_INPUT/);
+  assert.equal(db.get(scoped),'[{"id":"existing"}]');
+  await model.setActive(id,true);
+  assert.equal(branch.context().id,id);
+  assert.equal(branch.context().tables[0].code,'T1');
+  assert.equal(db.get(scoped),'[{"id":"existing"}]');
+});
+
+test('Persisted lifecycle state must be boolean and primary must remain active',()=>{
+  const {model,db}=fixture();
+  for(const active of [false,'false',null]){
+    db.set(registry,JSON.stringify([{id:'',name:'Main',tables:[],active}]));
+    assert.throws(()=>model.read(),/BRANCH_DATA/);
+  }
+});
