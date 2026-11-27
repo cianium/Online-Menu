@@ -1,4 +1,4 @@
-/* Branch-local sample hospitality administration. Never executes real campaigns or staff requests. */
+/* Single-restaurant sample hospitality administration. Never executes real campaigns or staff requests. */
 (()=>{
 "use strict";
 const model=window.RomanoDemoMembers, branch=window.RomanoDemoBranches;
@@ -11,7 +11,7 @@ ar:["إعدادات خدمات الضيوف (تجريبي)","الإعدادات 
 const languages=["fa","en","tr","ar"];
 const t=i=>(copy[window.ROMANO_ADMIN_I18N?.language]||copy.fa)[i];
 const node=(tag,value,cls)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;if(cls)n.className=cls;n.dataset.adminUserText="true";return n;};
-const local=()=>typeof adminInitialized!=="undefined"&&adminInitialized&&!window.RomanoAPI.enabled&&!document.querySelector(".admin-app").inert;
+const local=()=>typeof adminInitialized!=="undefined"&&adminInitialized&&adminDemoMode&&demoAdminSignedIn()&&!window.RomanoAPI.enabled&&!document.querySelector(".admin-app").inert;
 function renderSettings(){
  settings.hidden=!local();settings.replaceChildren();if(settings.hidden)return;
  settings.append(node("h2",t(0)),node("p",t(1)));
@@ -35,19 +35,64 @@ function renderSettings(){
  await model.mutate(()=>{if(!local()||localStorage.getItem(model.settingsKey)!==baseline)throw Error("STALE");model.saveSettings(localStorage,next);baseline=localStorage.getItem(model.settingsKey);});status.textContent=t(10);
  }catch{status.textContent=t(11);}finally{save.disabled=false;}});
 }
-function renderRequests(){
- requests.hidden=!local()||!branch;requests.replaceChildren();if(requests.hidden)return;
- requests.append(node("h2",t(12)),node("p",t(1)));let count=0;
- try{const current=branch.context()||branch.read().find(r=>r.id===branch.id);
- for(const table of current?.tables||[]){const values=model.requests(localStorage,table.code);
- for(const [kind,status] of Object.entries(values)){count++;const row=node("article",undefined,"demo-member-row");row.append(node("strong",table.name+" · "+t(19+model.kinds.indexOf(kind))),node("span",t({pending:13,accepted:14,completed:15}[status])));
- if(status!=="completed"){for(const next of status==="pending"?["accepted","completed"]:["completed"]){const button=node("button",t(next==="accepted"?16:17),"secondary-button");button.type="button";button.addEventListener("click",async()=>{if(!local())return;button.disabled=true;try{await model.mutate(()=>model.setRequest(localStorage,table.code,kind,next,status));renderRequests();}catch{row.append(node("p",t(11)));button.disabled=false;}});row.append(button);}}
- requests.append(row);}}
- if(!count)requests.append(node("p",t(18)));
- }catch{requests.append(node("p",t(11)));}
+const serviceCopy={
+ fa:{high:"بالا",normal:"عادی",low:"کم",priority:"اولویت",average:"میانگین زمان پذیرش",samples:"نمونه‌های زمان‌دار",seconds:"ثانیه",unknown:"نامشخص",filter:"فیلتر وضعیت",all:"همه",created:"زمان ثبت",response:"زمان پذیرش",stale:"درخواست تغییر کرده است. فهرست به‌روز شد.",blocked:"ذخیره‌سازی هم‌زمان در این مرورگر پشتیبانی نمی‌شود."},
+ en:{high:"High",normal:"Normal",low:"Low",priority:"Priority",average:"Mean time to acceptance",samples:"Timed samples",seconds:"s",unknown:"Unknown",filter:"Filter status",all:"All",created:"Created",response:"Time to acceptance",stale:"Request changed. Queue refreshed.",blocked:"Serialized storage is not supported in this browser."},
+ tr:{high:"Yüksek",normal:"Normal",low:"Düşük",priority:"Öncelik",average:"Ortalama kabul süresi",samples:"Süreli örnekler",seconds:"sn",unknown:"Bilinmiyor",filter:"Durum filtresi",all:"Tümü",created:"Oluşturuldu",response:"Kabul süresi",stale:"İstek değişti. Liste yenilendi.",blocked:"Bu tarayıcı sıralı depolamayı desteklemiyor."},
+ ar:{high:"مرتفعة",normal:"عادية",low:"منخفضة",priority:"الأولوية",average:"متوسط وقت القبول",samples:"عينات موقّتة",seconds:"ث",unknown:"غير معروف",filter:"تصفية الحالة",all:"الكل",created:"وقت التسجيل",response:"وقت القبول",stale:"تغير الطلب. تم تحديث القائمة.",blocked:"لا يدعم هذا المتصفح التخزين المتسلسل."}
+};
+let requestFilter="all",requestBusy=false;
+function renderRequests(message=""){
+ const visible=local()&&Boolean(branch);
+ requests.hidden=!visible;requests.replaceChildren();if(!visible)return;
+ const lang=window.ROMANO_ADMIN_I18N?.language||"fa",w=serviceCopy[lang]||serviceCopy.fa;
+ const number=n=>new Intl.NumberFormat(lang,{maximumFractionDigits:1}).format(n);
+ const statusLabel=s=>t({pending:13,accepted:14,completed:15}[s]);
+ const duration=ms=>ms===null?w.unknown:number(ms/1000)+" "+w.seconds;
+ const notice=node("p",message,"hp-queue-notice");notice.setAttribute("role","status");
+ requests.append(node("h2",t(12)),node("p",t(1)),notice);
+ try{
+  const current=branch.read()[0],rows=model.serviceQueue(localStorage,current?.tables||[]),stats=model.serviceStats(rows);
+  const metrics=node("div",undefined,"hp-queue-metrics");
+  for(const [label,value] of [[t(13),number(stats.pending)],[t(14),number(stats.accepted)],[t(15),number(stats.completed)],[w.average,duration(stats.meanResponseMs)]]){
+   const card=node("div",undefined,"hp-queue-metric");card.append(node("span",label),node("strong",value));metrics.append(card);
+  }
+  requests.append(metrics,node("p",w.samples+": "+number(stats.responseSamples),"hp-queue-note"));
+  const label=node("label",undefined,"hp-queue-filter");label.append(node("span",w.filter));
+  const filter=node("select");for(const value of ["all","pending","accepted","completed"]){const option=node("option",value==="all"?w.all:statusLabel(value));option.value=value;filter.append(option);}
+  filter.value=requestFilter;filter.addEventListener("change",()=>{requestFilter=filter.value;renderRequests();requests.querySelector("select")?.focus();});label.append(filter);requests.append(label);
+  const supported=Boolean(navigator.locks?.request);if(!supported)notice.textContent=w.blocked;
+  const filtered=rows.filter(r=>requestFilter==="all"||r.state===requestFilter);
+  for(const r of filtered){
+   const row=node("article",undefined,"demo-member-row hp-queue-row");row.dataset.serviceKind=r.kind;row.dataset.tableCode=r.tableCode;
+   const title=node("strong",r.tableName+" · "+t(19+model.kinds.indexOf(r.kind)));title.dir="auto";
+   row.append(title,node("span",statusLabel(r.state)),node("span",w.priority+": "+w[({3:"high",2:"normal",1:"low"})[r.priority]],"hp-queue-priority"));
+   const created=r.createdAt===null?w.unknown:new Intl.DateTimeFormat(lang,{dateStyle:"short",timeStyle:"short"}).format(r.createdAt);
+   row.append(node("small",w.created+": "+created));
+   if(r.acceptedAt!==null&&r.createdAt!==null)row.append(node("small",w.response+": "+duration(r.acceptedAt-r.createdAt)));
+   if(r.state!=="completed"){
+    const actions=node("div",undefined,"hp-queue-actions");
+    for(const next of r.state==="pending"?["accepted","completed"]:["completed"]){
+     const button=node("button",t(next==="accepted"?16:17),"secondary-button");button.type="button";button.dataset.serviceAction=next;button.disabled=requestBusy||!supported;
+     button.addEventListener("click",async()=>{
+      if(!local()||requestBusy||!button.isConnected)return;requestBusy=true;requests.querySelectorAll("button").forEach(b=>b.disabled=true);
+      let errorMessage="";
+      try{await model.mutateRequest(r.tableCode,()=>{if(!local())throw Error("HP_AUTH");return model.setRequest(localStorage,r.tableCode,r.kind,next,r.state,r.id);});}
+      catch(e){errorMessage=e.message==="HP_STALE"?w.stale:t(11);}
+      finally{requestBusy=false;renderRequests(errorMessage);document.dispatchEvent(new CustomEvent("romano:table-services-changed"));}
+     });actions.append(button);
+    }
+    row.append(actions);
+   }
+   requests.append(row);
+  }
+  if(!filtered.length)requests.append(node("p",t(18)));
+ }catch{notice.textContent=t(11);}
 }
 document.addEventListener("romano:admin-page-changed",ev=>{if(ev.detail?.page==="settings")renderSettings();if(ev.detail?.page==="orders")renderRequests();});
 document.addEventListener("romano:language-changed",()=>{renderSettings();renderRequests();});
 window.addEventListener("storage",ev=>{if(ev.key===null||ev.key?.startsWith(model.requestPrefix))renderRequests();});
-document.getElementById("orders-refresh")?.addEventListener("click",renderRequests);
+document.getElementById("orders-refresh")?.addEventListener("click",()=>renderRequests());
+window.addEventListener("storage",ev=>{if(ev.key===null||ev.key===branch?.registry)renderRequests();});
+const app=document.querySelector(".admin-app");if(app)new MutationObserver(()=>{if(!local())renderRequests();}).observe(app,{attributes:true,attributeFilter:["inert"]});
 })();

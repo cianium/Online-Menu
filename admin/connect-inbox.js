@@ -53,7 +53,9 @@ const copy={
     "order": "سفارش مرتبط",
     "noOrder": "سفارش مرتبط ثبت نشده",
     "orderMissing": "جزئیات سفارش در دسترس نیست",
-    "quantity": "تعداد"
+    "quantity": "تعداد",
+    "services": "مدیریت خدمات این میز",
+    "requests": "درخواست‌های فعال میز"
   },
   "en": {
     "title": "Conversation inbox",
@@ -107,7 +109,9 @@ const copy={
     "order": "Linked order",
     "noOrder": "No linked order",
     "orderMissing": "Order details unavailable",
-    "quantity": "Quantity"
+    "quantity": "Quantity",
+    "services": "Manage table services",
+    "requests": "Active table requests"
   },
   "tr": {
     "title": "Sohbet gelen kutusu",
@@ -161,7 +165,9 @@ const copy={
     "order": "Bağlı sipariş",
     "noOrder": "Bağlı sipariş yok",
     "orderMissing": "Sipariş ayrıntıları kullanılamıyor",
-    "quantity": "Adet"
+    "quantity": "Adet",
+    "services": "Masa hizmetlerini yönet",
+    "requests": "Aktif masa istekleri"
   },
   "ar": {
     "title": "صندوق المحادثات",
@@ -215,7 +221,9 @@ const copy={
     "order": "الطلب المرتبط",
     "noOrder": "لا يوجد طلب مرتبط",
     "orderMissing": "تفاصيل الطلب غير متاحة",
-    "quantity": "الكمية"
+    "quantity": "الكمية",
+    "services": "إدارة خدمات الطاولة",
+    "requests": "طلبات الطاولة النشطة"
   }
 };
 const model=(function inboxModel(){
@@ -348,6 +356,13 @@ const start=function startInbox(root,copy,model){
       if(order){const items=el("ul");for(const item of order.items){const li=el("li",item.name+" × "+format(item.quantity));li.dir="auto";items.append(li);}context.append(items);}
       else context.append(el("p",t.orderMissing));
     }else context.append(el("p",t.noOrder));
+    if(c.tableId){
+      const link=button(t.services,"secondary-button",()=>{if(identity()&&typeof navigateTo==="function")navigateTo("orders");});
+      const serviceCount=el("p",null,"connect-inbox-service-count");
+      serviceCount.dataset.tableCode=c.tableId;
+      context.append(serviceCount,link);
+      try{const values=root.RomanoDemoMembers.requests(root.localStorage,c.tableId);serviceCount.textContent=t.requests+": "+format(Object.values(values).filter(s=>s==="pending"||s==="accepted").length);}catch{serviceCount.textContent=t.error;}
+    }
     header.append(context);
     const actions=el("div",null,"connect-inbox-actions"),select=el("select");
     select.id="connect-inbox-assignee";select.setAttribute("aria-label",t.assignment);
@@ -416,6 +431,12 @@ const start=function startInbox(root,copy,model){
     if(!isPage()){selection=null;detail=null;draft="";pending=null;ui=null;host.replaceChildren(el("h1",w().title));host.firstChild.id="connect-inbox-title";return;}
     if(syncIdentity()){build();refresh();}else showNotice();
   }
+  function refreshServiceCount(){
+    const count=host.querySelector(".connect-inbox-service-count");if(!count||!isPage()||!identity())return;
+    try{const values=root.RomanoDemoMembers.requests(root.localStorage,count.dataset.tableCode);count.textContent=w().requests+": "+format(Object.values(values).filter(s=>s==="pending"||s==="accepted").length);}catch{count.textContent=w().error;}
+  }
+  root.addEventListener("storage",e=>{if(e.key===null||e.key?.startsWith(root.RomanoDemoMembers?.requestPrefix||"\u0000"))refreshServiceCount();});
+  doc.addEventListener("romano:table-services-changed",refreshServiceCount);
   doc.addEventListener("romano:admin-page-changed",navigate);
   doc.addEventListener("romano:language-changed",()=>{if(isPage()){if(syncIdentity()){build();refresh();}else showNotice();}updateBadge();});
   doc.addEventListener("romano:demo-membership-changed",()=>refresh());

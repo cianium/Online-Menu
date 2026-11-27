@@ -49,3 +49,6 @@
 
 
 #branch-management.has-sample-tables{display:none}
+
+/* Table-service queue, four locales and responsive controls. */
+.hp-queue-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;margin-block:12px}.hp-queue-metric{border:1px solid var(--admin-line);border-radius:12px;padding:12px;display:grid;gap:4px;min-width:0;background:var(--admin-surface-raised)}.hp-queue-metric span,.hp-queue-note,.hp-queue-row small{color:var(--admin-ink-soft);font-size:12px;overflow-wrap:anywhere}.hp-queue-metric strong{font-size:20px}.hp-queue-filter{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-block:8px}.hp-queue-filter select{min-height:44px;max-width:100%}.hp-queue-row{margin-block:8px;overflow-wrap:anywhere}.hp-queue-priority{font-size:12px;color:var(--admin-accent-bright)}.hp-queue-actions{display:flex;gap:8px;flex-wrap:wrap}.hp-queue-actions button{min-height:44px}.hp-queue-notice:empty{display:none}

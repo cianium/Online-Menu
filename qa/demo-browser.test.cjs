@@ -307,6 +307,11 @@ const readyCustomer = async page => {
       await customer.waitForFunction(()=>document.querySelector('.hp-service-action').getAttribute('aria-pressed')==='false');
       await service.click();
       await customer.waitForFunction(()=>RomanoDemoMembers.requests(localStorage,'T1').waiter==='pending');
+      const requestId=await customer.evaluate(()=>RomanoDemoMembers.requestDetails(localStorage,'T1').waiter.id);
+      await guestPanel.locator('.ramen-contact-close').click();
+      await customer.locator('[data-ramen-nav="contact"]').click();
+      await guestPanel.locator('.connect-service-compact .hp-service-action').first().waitFor({state:'visible'});
+      assert.equal(await guestPanel.locator('.connect-service-compact .hp-service-action').first().getAttribute('aria-pressed'),'true');
       await admin.evaluate(()=>navigateTo('orders'));
       const ticket=admin.locator('#hp-admin-requests article').first();
       await ticket.waitFor({state:'visible'});
@@ -314,6 +319,9 @@ const readyCustomer = async page => {
       await customer.waitForFunction(()=>document.querySelector('.hp-service-action').disabled&&RomanoDemoMembers.requests(localStorage,'T1').waiter==='accepted');
       await ticket.locator('button').first().click();
       await customer.waitForFunction(()=>!document.querySelector('.hp-service-action').disabled&&RomanoDemoMembers.requests(localStorage,'T1').waiter==='completed');
+      const lifecycle=await customer.evaluate(()=>RomanoDemoMembers.requestDetails(localStorage,'T1').waiter);
+      assert.equal(lifecycle.id,requestId);assert.ok(lifecycle.acceptedAt>=lifecycle.createdAt);assert.ok(lifecycle.completedAt>=lifecycle.acceptedAt);
+      assert.ok((await admin.locator('.hp-queue-metrics').innerText()).trim());
       await guestPanel.locator('.ramen-contact-close').click();
       await customer.setViewportSize({width:1440,height:900});
       await customer.evaluate(()=>{RomanoCommerce.add(menuProducts.find(p=>p.active!==false&&p.price>0).id);RomanoCommerce.open();});
