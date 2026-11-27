@@ -39,6 +39,7 @@
     <link rel="stylesheet" href="admin-polish.css">
     <link rel="stylesheet" href="admin-stage12.css">
     <link rel="stylesheet" href="../css/interaction-system.css">
+    <link rel="stylesheet" href="connect-inbox.css">
 
     <noscript><link rel="stylesheet" href="../css/no-script.css"></noscript>
 </head>
@@ -166,6 +167,7 @@
                 <span>تنظیمات رستوران</span>
             </button>
 
+            <button class="nav-item" data-page="connect" type="button"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 5h16v12H9l-5 4V5Z"/><path d="M8 9h8M8 13h5"/></svg></span><span>صندوق مکالمات</span><b class="orders-nav-badge" id="connect-nav-badge" hidden>0</b></button>
             <button class="nav-item" data-page="loyalty" type="button"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5v1"/></svg></span><span>باشگاه مشتریان</span></button>
         </nav>
 
@@ -467,6 +469,8 @@
             <!-- ===================================
                  ORDERS
             ==================================== -->
+
+            <section class="admin-page" id="page-connect" aria-labelledby="connect-inbox-title"><div id="connect-inbox" data-admin-user-text="true"><h1 id="connect-inbox-title">صندوق مکالمات</h1></div></section>
 
             <section class="admin-page" id="page-orders" aria-labelledby="orders-title">
                 <div class="page-heading page-heading-row">
@@ -1465,6 +1469,9 @@
 <script src="admin-stage12.js"></script>
 <script src="demo-members-panel.js"></script>
 <script src="hospitality.js"></script>
+    <script src="../js/connect-core.js"></script>
+    <script src="../js/connect-demo.js"></script>
+    <script src="connect-inbox.js"></script>
 <script src="demo-branches.js"></script>
 <script src="revenue-model.js"></script>
 <script src="revenue.js"></script>

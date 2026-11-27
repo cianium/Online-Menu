@@ -70,6 +70,7 @@
       "خانه": ["Home", "Ana sayfa", "الرئيسية"],
       "تنظیمات": ["Settings", "Ayarlar", "الإعدادات"],
       "باشگاه مشتریان": ["Customer club", "Müşteri kulübü", "نادي العملاء"],
+        "صندوق مکالمات": ["Conversation inbox", "Sohbet gelen kutusu", "صندوق المحادثات"],
       "ناوبری سریع مدیریت": ["Quick admin navigation", "Hızlı yönetim menüsü", "التنقل السريع للإدارة"],
       "خلاصه عملیات": ["Operations overview", "Operasyon özeti", "ملخص العمليات"],
       "مبلغ سفارش‌های نمونه؛ درآمد یا پرداخت واقعی نیست.": ["Sample order value; not real revenue or payments.","Örnek sipariş tutarı; gerçek gelir veya ödeme değildir.","قيمة الطلبات التجريبية؛ ليست إيرادات أو مدفوعات فعلية."],

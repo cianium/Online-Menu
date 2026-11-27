@@ -154,7 +154,7 @@ await check('Order filter group accessible name is localized in all four languag
       assert.match(await page.title(), /ROMANO|رومانو/);
       for (const width of [1920,1440,1024,768,430,390,375,360,320]) {
         await page.setViewportSize({width,height:900});
-        for (const section of ['dashboard','orders','products','categories','settings','loyalty']) {
+        for (const section of ['dashboard','orders','products','categories','settings','loyalty','connect']) {
           await page.evaluate(section => navigateTo(section),section);
           await page.waitForTimeout(50);
           if(width < 1000) assert.equal(await page.locator("#sidebar").isVisible(),false);
