@@ -149,15 +149,17 @@
           <div id="menu-search-active" class="browse-query" hidden></div>
           <div id="menu-search-panel" class="browse-panel" hidden><div class="menu-search-field">${icon('search')}<label class="sr-only" for="rv4-menu-search"></label><input id="rv4-menu-search" type="search" autocomplete="off" aria-controls="menu-categories"></div></div>
           <div id="menu-filter-panel" class="browse-panel" hidden><h3 id="menu-filter-title"></h3><div class="menu-tools"><label for="menu-sort" id="menu-sort-label" class="sr-only"></label><select id="menu-sort"></select><button id="menu-favorites-toggle" type="button" aria-pressed="false"></button><button id="menu-reset" type="button"></button></div></div>`;
-        section.prepend(controls);
-        // Status is intentionally not sticky: it must not consume the browsing viewport.
-        const status=document.createElement('div');status.id='menu-data-status';status.className='menu-data-status';status.setAttribute('role','status');status.innerHTML='<span></span><button type="button"></button>';controls.after(status);
+        const header = document.querySelector('#site-header');
+        header.append(controls);
+        // Keep the data-mode disclosure compact and adjacent to the browse controls.
+        const status=document.createElement('div');status.id='menu-data-status';status.className='menu-data-status';status.setAttribute('role','status');status.innerHTML='<span></span><button type="button"></button>';controls.append(status);
         section.setAttribute('aria-labelledby','browse-title');
         const live=document.createElement('div');live.id='menu-announcement';live.setAttribute('role','status');live.setAttribute('aria-live','polite');document.body.appendChild(live);
         const measure=()=>{
-            const header=document.querySelector('.site-header');
-            section.style.setProperty('--browse-header-offset',`${header?.getBoundingClientRect().height||0}px`);
-            section.style.setProperty('--browse-bar-height',`${controls.getBoundingClientRect().height}px`);
+            const height = Math.ceil(header.getBoundingClientRect().height);
+            document.documentElement.style.setProperty('--r17-header-height', height + 'px');
+            section.style.setProperty('--browse-header-offset', height + 'px');
+            section.style.setProperty('--browse-bar-height', '0px');
         };
         if('ResizeObserver' in window){const observer=new ResizeObserver(measure);observer.observe(controls);const header=document.querySelector('.site-header');if(header)observer.observe(header);}
         window.addEventListener('resize',measure,{passive:true});measure();
@@ -165,6 +167,7 @@
         controls.addEventListener('keydown',event=>{if(event.key==='Escape'&&openPanel){event.preventDefault();event.stopPropagation();setPanel(null,true);}});
         document.addEventListener('click',event=>{if(openPanel&&!controls.contains(event.target))setPanel(null,controls.contains(document.activeElement));});
         controls.querySelector('#rv4-menu-search').addEventListener('input',event=>{query=event.target.value;redraw();});
+        controls.querySelector('#rv4-menu-search').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();setPanel(null,true);section.scrollIntoView({behavior:'auto',block:'start'});}});
         controls.querySelector('#menu-sort').addEventListener('change',event=>{order=event.target.value;redraw();});
         controls.querySelector('#menu-favorites-toggle').addEventListener('click',()=>{onlyFavorites=!onlyFavorites;redraw();});
         controls.querySelector('#menu-reset').addEventListener('click',()=>{query='';category='all';onlyFavorites=false;order='menu';controls.querySelector('input').value='';redraw();setPanel(null,true);});

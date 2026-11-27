@@ -446,7 +446,6 @@ async function initializeApplication() {
 
     initializeCategoryObserver();
     initializePrimaryNavigationObserver();
-    window.renderSignatureDish?.();
     window.dispatchEvent(new CustomEvent("romano:data-updated"));
 
     document.addEventListener("romano:language-changed", () => {
@@ -455,7 +454,6 @@ async function initializeApplication() {
         renderFeaturedProducts();
         renderMenuCategories();
         renderNavigation();
-        if (typeof window.renderSignatureDish === "function") window.renderSignatureDish();
         enhanceHorizontalScrollers();
         initializeCategoryObserver();
         initializePrimaryNavigationObserver();
@@ -802,8 +800,8 @@ function renderFeaturedProducts() {
         getFeaturedProducts();
 
 
-    // The first featured item has its own signature card; do not repeat it.
-    const railProducts = featured.slice(1);
+    // One shared card design, including the first featured dish.
+    const railProducts = featured;
     DOM.featuredProducts.hidden = railProducts.length === 0;
     const shell = DOM.featuredProducts.closest(".products-scroll-shell");
     if (shell) shell.hidden = railProducts.length === 0;
@@ -2474,7 +2472,6 @@ window.addEventListener("storage", event => {
     enhanceHorizontalScrollers(); initializeCategoryObserver(); initializePrimaryNavigationObserver();
     if (window.RomanoActiveProduct && !getProductById(window.RomanoActiveProduct.id)) closeProductModal();
     else if (window.RomanoActiveProduct) openProductModal(window.RomanoActiveProduct.id);
-    window.renderSignatureDish?.();
     window.dispatchEvent(new CustomEvent("romano:data-updated"));
 });
 
@@ -2562,10 +2559,23 @@ window.addEventListener("storage", event => {
         button.setAttribute("aria-label", window.ROMANO_I18N?.ui?.("backToTop") || "بازگشت به بالای صفحه");
         button.innerHTML = "↑";
         document.body.appendChild(button);
-        const update = () => button.classList.toggle("is-visible", window.scrollY > window.innerHeight * 0.7);
-        update();
+        let previous = Math.max(0, window.scrollY), anchor = previous, direction = 0;
+        const show = visible => {
+            button.classList.toggle("is-visible", visible);
+            button.tabIndex = visible ? 0 : -1;
+            button.setAttribute("aria-hidden", String(!visible));
+        };
+        show(false);
+        const update = () => {
+            const y = Math.max(0, window.scrollY);
+            const next = Math.sign(y - previous);
+            if (next && next !== direction) { anchor = previous; direction = next; }
+            if (y < window.innerHeight * .65 || direction > 0) show(false);
+            else if (direction < 0 && anchor - y >= 12) show(true);
+            previous = y;
+        };
         window.addEventListener("scroll", update, { passive: true });
-        button.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+        button.addEventListener("click", () => window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
     }
 
 
@@ -2675,66 +2685,13 @@ window.addEventListener("storage", event => {
         return typeof menuProducts !== "undefined" && Array.isArray(menuProducts) ? menuProducts : [];
     }
 
-    function getFeatured() {
-        return getProducts().filter(p => isAvailableProduct(p) && p.featured === true);
-    }
-
-    function renderSignatureDish() {
-        const host = document.querySelector("#signature-dish");
-        if (!host) return;
-        const product = window.ROMANO_I18N?.localizeProduct(getFeatured()[0]) || getFeatured()[0];
-        if (!product) {
-            host.hidden = true;
-            return;
-        }
-
-        host.hidden = false;
-        host.innerHTML = `
-            <div class="romano-signature-dish__media">
-                ${product.image ? `<img src="${escapeAttribute(product.image)}" alt="${escapeAttribute(product.name)}" loading="lazy" decoding="async">` : `<div class="image-fallback" aria-hidden="true">${escapeHTML(getImageFallbackLabel(product.name))}</div>`}
-            </div>
-            <div class="romano-signature-dish__copy">
-                <span class="romano-signature-dish__eyebrow">${escapeHTML(window.ROMANO_I18N?.ui?.("signatureEyebrow", product.categoryName || "ROMANO") || `SIGNATURE DISH · ${product.categoryName || "ROMANO"}`)}</span>
-                <h3 class="romano-signature-dish__title">${escapeHTML(product.name)}</h3>
-                <p class="romano-signature-dish__desc">${escapeHTML(product.description || (window.ROMANO_I18N?.ui?.("signatureFallback") || "انتخاب ویژه‌ی امروز رمانو."))}</p>
-                <div class="romano-signature-dish__footer">
-                    <span class="romano-signature-dish__price">${escapeHTML(formatPrice(product.price))}</span>
-                    <button class="romano-signature-dish__button" type="button" data-signature-product="${escapeHTML(product.id)}">${window.ROMANO_I18N?.ui?.("signatureButton") || "مشاهده جزئیات"}</button>
-                </div>
-            </div>
-        `;
-
-        const button = host.querySelector("[data-signature-product]");
-        button?.addEventListener("click", event => {
-            if (typeof window.openProductModal === "function") window.openProductModal(product.id, event.currentTarget);
-        });
-    }
-
-    window.renderSignatureDish = renderSignatureDish;
-
-    function initSignatureDish() {
-        renderSignatureDish();
-        window.addEventListener("romano:data-updated", renderSignatureDish);
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initSignatureDish, { once: true });
-    } else {
-        initSignatureDish();
-    }
-
-    /* Keep signature card in sync after the admin panel changes localStorage. */
     if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
         navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(error => {
             console.warn("ROMANO service worker registration skipped:", error);
         });
     }
 
-    window.addEventListener("storage", event => {
-        if (menuDataMode === "demo" && [ROMANO_STORAGE_KEYS.products, ROMANO_STORAGE_KEYS.categories].includes(event.key)) {
-            window.setTimeout(renderSignatureDish, 40);
-        }
-    });
+
 })();
 
 

@@ -301,7 +301,7 @@ async function ready(p){
     assert.equal(await p.locator('#menu-filter-panel').isVisible(),false);
     for(const trigger of [searchToggle,filterToggle]){const r=await trigger.boundingBox();assert.ok(r&&r.width>=44&&r.height>=44,JSON.stringify({lang,width,id:await trigger.getAttribute("id"),rect:r}));assert.ok(await trigger.getAttribute('aria-label'));}
     await p.evaluate(()=>window.scrollBy({top:260,behavior:'instant'}));
-    const pinned=await p.evaluate(()=>{const h=document.querySelector('.site-header').getBoundingClientRect(),bar=document.querySelector('.menu-browser').getBoundingClientRect();return{gap:bar.top-h.bottom,height:bar.height}});
+    const pinned=await p.evaluate(()=>{const header=document.querySelector('.site-header'),h=header.getBoundingClientRect(),bar=header.querySelector('.menu-browser').getBoundingClientRect();return{gap:bar.bottom-h.bottom,height:bar.height}});
     assert.ok(Math.abs(pinned.gap)<=2,JSON.stringify({lang,width,pinned}));assert.ok(pinned.height<180);
     const grid=await cards.first().evaluate(n=>{const rail=n.parentElement,style=getComputedStyle(rail);return {flow:style.gridAutoFlow,overflow:style.overflowX,scroll:rail.scrollWidth,client:rail.clientWidth,card:n.getBoundingClientRect().width};});
     assert.equal(grid.flow,'column');assert.equal(grid.overflow,'auto');assert.ok(grid.card<=grid.client);if(width<=767)assert.ok(grid.scroll>grid.client);
@@ -314,7 +314,9 @@ async function ready(p){
   }
   await p.setViewportSize({width:390,height:844});
  });
- await check('Featured signature and product rail do not duplicate the same dish',async()=>{
+ await check('Every featured dish uses the shared card renderer without duplication',async()=>{
+  assert.equal(await p.locator('#signature-dish').count(),0);
+  assert.equal(await p.locator('#featured-products .product-card .product-card-button').count(),await p.locator('#featured-products .product-card').count());
   const ids=await p.evaluate(()=>[document.querySelector('[data-signature-product]')?.dataset.signatureProduct,...Array.from(document.querySelectorAll('#featured-products .product-card'),n=>n.dataset.productId)].filter(Boolean));
   assert.equal(ids.length,new Set(ids).size);assert.equal(ids.length,await p.evaluate(()=>getFeaturedProducts().length));
  });
@@ -457,7 +459,9 @@ async function ready(p){
  await check('Mobile back-to-top control stays clear of bottom navigation',async()=>{
   await p.setViewportSize({width:390,height:900});
   await p.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));
-  await p.waitForFunction(()=>document.querySelector('.rv4-back-top')?.classList.contains('is-visible'));
+  await p.waitForFunction(()=>!document.querySelector('.rv4-back-top')?.classList.contains('is-visible'));
+   await p.evaluate(()=>window.scrollBy({top:-80,behavior:'instant'}));
+   await p.waitForFunction(()=>document.querySelector('.rv4-back-top')?.classList.contains('is-visible'));
   const topBox=await p.locator('.rv4-back-top').boundingBox();
   const navBox=await p.locator('.ramen-bottom-nav').boundingBox();
   assert.ok(topBox && navBox && topBox.y+topBox.height<=navBox.y-8,JSON.stringify({topBox,navBox}));

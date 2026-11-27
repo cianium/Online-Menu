@@ -329,13 +329,53 @@
     cartFocusOrigin = null;
   }
 
+  const feedbackWords = {
+    fa:["به سبد اضافه شد","حداکثر تعداد انتخاب شده است"],
+    ar:["تمت الإضافة إلى السلة","تم بلوغ الحد الأقصى"],
+    en:["Added to your cart","Maximum quantity reached"],
+    tr:["Sepete eklendi","En yüksek adede ulaşıldı"]
+  };
+  let feedbackTimer = 0;
+  function showAddFeedback(item, added) {
+    const message = (feedbackWords[lang()] || feedbackWords.fa)[added?0:1];
+    let toast = document.getElementById("r17-cart-feedback");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "r17-cart-feedback";
+      toast.className = "r17-cart-feedback";
+      toast.setAttribute("role", "status");
+      toast.setAttribute("aria-atomic", "true");
+      toast.innerHTML = '<span class="r17-feedback-icon" aria-hidden="true"></span><div><strong></strong><span class="r17-feedback-product"></span></div><bdi class="r17-feedback-count"></bdi>';
+      document.body.append(toast);
+    }
+    toast.querySelector(".r17-feedback-icon").textContent = added ? "✓" : "!";
+    toast.querySelector("strong").textContent = message;
+    toast.querySelector(".r17-feedback-product").textContent = localized(item).name;
+    toast.querySelector(".r17-feedback-count").textContent = new Intl.NumberFormat(lang()).format(count());
+    toast.dataset.state = added ? "added" : "limit";
+    toast.classList.remove("is-visible");
+    void toast.offsetWidth;
+    toast.classList.add("is-visible");
+    clearTimeout(feedbackTimer);
+    feedbackTimer = setTimeout(()=>toast.classList.remove("is-visible"), 3200);
+    if (added && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      for (const node of document.querySelectorAll("#ramen-header-cart,#ramen-bottom-cart")) {
+        node.classList.remove("r17-cart-pulse");
+        void node.offsetWidth;
+        node.classList.add("r17-cart-pulse");
+      }
+    }
+  }
   function add(id) {
-    if (!product(id)) return;
+    const item = product(id);
+    if (!item || !(item.price > 0)) return;
+    const previous = Number(cart[id] || 0);
+    if (previous >= 99) { showAddFeedback(item, false); return; }
     demoOrderSaved=false;
-    cart[id] = Math.min(99, Number(cart[id] || 0) + 1);
+    cart[id] = previous + 1;
     save(cartKey(), cart);
     render();
-    announce(`${localized(product(id)).name}: ${t("add")}`);
+    showAddFeedback(item, true);
   }
   function change(id, delta) {
     const next = Number(cart[id] || 0) + delta;
@@ -656,7 +696,7 @@
       cart = normalizeCart(read(cartKey(), {}));
       reconcileCart(); render();
     });
-    document.addEventListener("romano:language-changed", () => window.setTimeout(() => { if (document.querySelector("#commerce-drawer")?.classList.contains("is-open")) closeDrawer(); document.querySelector("#commerce-cart-bar")?.remove(); document.querySelector("#commerce-drawer")?.remove(); document.querySelector(".commerce-backdrop")?.remove(); document.querySelector("#commerce-session")?.remove(); document.querySelector("#commerce-live")?.remove(); document.querySelector("#commerce-payment-toast")?.remove(); buildShell(); updateCustomerNavigation(); enhanceProducts(); render(); }, 0));
+    document.addEventListener("romano:language-changed", () => window.setTimeout(() => { document.getElementById("r17-cart-feedback")?.remove(); clearTimeout(feedbackTimer); if (document.querySelector("#commerce-drawer")?.classList.contains("is-open")) closeDrawer(); document.querySelector("#commerce-cart-bar")?.remove(); document.querySelector("#commerce-drawer")?.remove(); document.querySelector(".commerce-backdrop")?.remove(); document.querySelector("#commerce-session")?.remove(); document.querySelector("#commerce-live")?.remove(); document.querySelector("#commerce-payment-toast")?.remove(); buildShell(); updateCustomerNavigation(); enhanceProducts(); render(); }, 0));
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
   window.RomanoCommerce = Object.freeze({ add, open: openDrawer });
