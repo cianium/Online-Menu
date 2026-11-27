@@ -329,13 +329,54 @@
     cartFocusOrigin = null;
   }
 
-  function add(id) {
-    if (!product(id)) return;
+  const feedbackCopy={
+    fa:{added:"به سبد اضافه شد",limit:"حداکثر تعداد این محصول در سبد است"},
+    en:{added:"Added to your cart",limit:"Maximum quantity reached"},
+    tr:{added:"Sepete eklendi",limit:"En yüksek adede ulaşıldı"},
+    ar:{added:"تمت الإضافة إلى السلة",limit:"تم بلوغ الحد الأقصى للكمية"}
+  };
+  let feedbackTimer;
+  function showCartFeedback(item,source,limit=false){
+    const words=feedbackCopy[lang()]||feedbackCopy.fa;
+    const title=limit?words.limit:words.added;
+    const name=localized(item).name;
+    let toast=document.querySelector(".ramen-cart-feedback");
+    if(!toast){
+      toast=document.createElement("div");
+      toast.className="ramen-cart-feedback";
+      toast.setAttribute("aria-hidden","true");
+      const mark=document.createElement("span");mark.className="cart-feedback-mark";
+      const copy=document.createElement("div");copy.className="cart-feedback-copy";
+      copy.append(document.createElement("strong"),document.createElement("span"));
+      const quantity=document.createElement("span");quantity.className="cart-feedback-quantity";
+      toast.append(mark,copy,quantity);document.body.append(toast);
+    }
+    toast.querySelector(".cart-feedback-mark").textContent=limit?"!":"✓";
+    toast.querySelector("strong").textContent=title;
+    toast.querySelector(".cart-feedback-copy span").textContent=name;
+    toast.querySelector(".cart-feedback-quantity").textContent="×"+new Intl.NumberFormat(lang()).format(cart[item.id]||0);
+    toast.classList.toggle("is-limit",limit);
+    toast.classList.remove("is-visible");
+    void toast.offsetWidth;
+    toast.classList.add("is-visible");
+    clearTimeout(feedbackTimer);
+    feedbackTimer=setTimeout(()=>toast.classList.remove("is-visible"),2800);
+    announce(`${name}: ${title}`);
+    if(!limit&&!matchMedia("(prefers-reduced-motion: reduce)").matches){
+      for(const node of [source,...document.querySelectorAll(".ramen-header-cart-count,.ramen-bottom-cart-count")]){
+        node?.animate?.([{transform:"scale(1)"},{transform:"scale(1.18)"},{transform:"scale(1)"}],{duration:360,easing:"ease-out"});
+      }
+    }
+  }
+  function add(id,source) {
+    const item=product(id);
+    if (!item) return;
+    if(Number(cart[id]||0)>=99){showCartFeedback(item,source,true);return;}
     demoOrderSaved=false;
-    cart[id] = Math.min(99, Number(cart[id] || 0) + 1);
+    cart[id] = Number(cart[id] || 0) + 1;
     save(cartKey(), cart);
     render();
-    announce(`${localized(product(id)).name}: ${t("add")}`);
+    showCartFeedback(item,source);
   }
   function change(id, delta) {
     const next = Number(cart[id] || 0) + delta;
@@ -436,7 +477,7 @@
       button.type = "button";
       button.className = "commerce-card-add";
       button.textContent = `+ ${t("add")}`;
-      button.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); add(card.dataset.productId); });
+      button.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); add(card.dataset.productId,event.currentTarget); });
       const details = card.querySelector(".product-card-button");
       const body = card.querySelector(".product-body");
       if (details && body) {
@@ -458,9 +499,12 @@
       modalAdd.type = "button";
       modalAdd.className = "commerce-modal-add";
       modalContent.append(modalAdd);
-      modalAdd.addEventListener("click", () => { if (window.RomanoActiveProduct?.id) add(window.RomanoActiveProduct.id); });
+      modalAdd.addEventListener("click", event => { if (window.RomanoActiveProduct?.id) add(window.RomanoActiveProduct.id,event.currentTarget); });
     }
-    if (modalAdd) modalAdd.textContent = `+ ${t("add")}`;
+    if (modalAdd) {
+      modalAdd.textContent = `+ ${t("add")}`;
+      modalAdd.hidden=Boolean(window.RomanoActiveProduct&&!product(window.RomanoActiveProduct.id));
+    }
   }
 
   async function openQrSession() {
