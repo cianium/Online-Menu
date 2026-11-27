@@ -676,3 +676,36 @@ html[dir] .hero-overlay {background:linear-gradient(180deg,#080705b0 0%,#0807059
 /* At very narrow widths use two compact rows rather than clip the localized wordmark or reduce touch targets. */
 @media(max-width:360px){#site-header .header-container{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding-inline:0;}#site-header .header-container>.brand{grid-column:1/-1;justify-content:center;width:100%;min-width:0;gap:6px}#site-header .brand-content{flex:0 1 auto;width:auto;min-inline-size:0}#site-header .brand-name{font-size:15px}#site-header .header-container>:is(#romano-language-toggle,#menu-search-toggle,.ramen-header-cart,.menu-toggle){justify-self:center;inline-size:44px;min-inline-size:44px;block-size:44px;min-block-size:44px;}}
 #hp-subtotal[hidden],#hp-bundle[hidden]{display:none!important}
+
+/* R21 compact cart and photo-led add-ons. */
+#commerce-drawer{overflow:hidden}
+#commerce-drawer .commerce-drawer-head{flex:0 0 auto;padding-block-end:10px}
+#commerce-drawer .commerce-scroll{flex:1 1 auto;min-block-size:0;overscroll-behavior:contain;overflow-y:auto;overflow-anchor:none}
+#commerce-drawer .commerce-items{gap:8px;padding-block:10px}
+#commerce-drawer .commerce-item{grid-template-columns:64px minmax(0,1fr);align-items:center;gap:10px;padding:10px}
+#commerce-drawer .commerce-item-media{inline-size:64px;block-size:64px}
+#commerce-drawer .commerce-item-media img,.hp-suggestion-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#commerce-drawer .hp-item-copy{grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 8px}
+#commerce-drawer .hp-item-copy h3{grid-column:1/-1;margin:0;font-size:14px;overflow-wrap:anywhere}
+#commerce-drawer .hp-unit{grid-column:1/-1}
+#commerce-drawer .hp-line-total{min-width:0}
+#commerce-drawer .commerce-quantity{margin:0;gap:3px;justify-self:end}
+#commerce-drawer .commerce-quantity b{min-inline-size:18px;text-align:center;font-variant-numeric:tabular-nums}
+#commerce-drawer .commerce-quantity button:disabled{opacity:.4;cursor:default}
+#commerce-drawer .commerce-item.is-zero{border-style:dashed;background:#ffffff02}
+#commerce-drawer .commerce-item.is-zero .hp-line-total{opacity:.6}
+#commerce-drawer .commerce-remove{grid-column:2;justify-self:end;min-height:44px;padding-inline:12px;border:1px solid #bc8b7945}
+#commerce-drawer #hp-continue{flex:0 0 auto;min-height:44px;margin:6px 0 0;background:transparent}
+#commerce-drawer .commerce-checkout{flex:0 0 auto;padding-block-start:8px;box-shadow:none}
+#commerce-drawer .commerce-message:empty{display:none}
+#commerce-drawer .hp-summary{display:none}
+#commerce-drawer .hp-suggestions{padding-block:8px}
+.hp-suggestion-grid{grid-auto-columns:minmax(138px,46%);gap:10px;padding:3px 2px 8px}
+.hp-suggestion{padding:8px;gap:6px;border-radius:14px;grid-template-rows:auto minmax(2.6em,auto) auto auto}
+.hp-suggestion-media{position:relative;display:grid;place-items:center;aspect-ratio:10/7;overflow:hidden;border-radius:10px;background:#30271d;color:#e4c18b}
+.hp-suggestion-media .image-fallback{position:static;font-size:24px}
+.hp-suggestion strong{font-size:13px;line-height:1.35}
+.hp-suggestion button{width:100%;background:#d6ae7018;font-weight:700}
+@media(max-width:420px){#commerce-drawer .commerce-item{grid-template-columns:52px minmax(0,1fr);padding:9px;gap:8px}#commerce-drawer .commerce-item-media{inline-size:52px;block-size:52px}#commerce-drawer .hp-item-copy{grid-template-columns:minmax(0,1fr)}#commerce-drawer .commerce-quantity{justify-self:start}}
+@media(min-width:421px){#commerce-drawer .hp-line-total{font-size:13px}}
+@media(prefers-reduced-motion:no-preference){#commerce-drawer{transition:transform .16s ease-out}.commerce-backdrop{transition:opacity .16s ease-out}}

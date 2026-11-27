@@ -139,6 +139,8 @@
     function setPanel(name, restoreFocus=false) {
         const previous=openPanel;
         openPanel=name;
+        if(name)window.RamenOverlayHistory.enter("browse",()=>setPanel(null,true));
+        else if(previous)window.RamenOverlayHistory.leave("browse");
         for(const id of ['search','filter']) {
             byId(`menu-${id}-panel`).hidden=name!==id;
             byId(`menu-${id}-toggle`).setAttribute('aria-expanded',String(name===id));

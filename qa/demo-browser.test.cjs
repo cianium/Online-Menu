@@ -323,14 +323,14 @@ const readyCustomer = async page => {
       await customer.setViewportSize({width:1440,height:900});
       await customer.evaluate(()=>{RomanoCommerce.add(menuProducts.find(p=>p.active!==false&&p.price>0).id);RomanoCommerce.open();});
       await customer.locator('#commerce-notes').fill('Sample note');
-      await customer.locator('[data-hp-note]').fill('No onions');
+      assert.equal(await customer.locator('[data-hp-note]').count(),0);
       await customer.locator('#hp-code').fill('DEMO10');
       await customer.locator('#hp-apply').click();
       await customer.locator('#hp-discount').waitFor({state:'visible'});
       await customer.locator('#commerce-submit').click();
       await customer.waitForFunction(()=>RomanoCustomerEntry.current()?.orders[0]?.tableName==='Window table');
       assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders[0].notes),'Sample note');
-      assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders[0].items[0].note),'No onions');
+      assert.ok(!(await customer.evaluate(()=>RomanoCustomerEntry.current().orders[0].items[0].note)));
       assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders[0].offer.code),'DEMO10');
       assert.equal(await customer.evaluate(()=>RomanoDemoMembers.pointsFor(RomanoCustomerEntry.current())),25);
       await admin.evaluate(()=>navigateTo('orders'));

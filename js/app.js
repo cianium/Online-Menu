@@ -7,6 +7,52 @@
 
 "use strict";
 
+// History entries belong to customer overlays, not to individual UI buttons.
+window.RamenOverlayHistory = (() => {
+    const key = "__ramenCustomerOverlay";
+    let active = null, pending = false, serial = 0, restoration;
+    const state = () => history.state && typeof history.state === "object" ? {...history.state} : {};
+    const clean = () => { const value=state(); delete value[key]; return value; };
+    const url = () => location.pathname + location.search + location.hash;
+    function push(record) {
+        if (record.baseUrl && url() === record.url) history.replaceState(clean(), "", record.baseUrl);
+        restoration = history.scrollRestoration;
+        history.scrollRestoration = "manual";
+        history.pushState({...clean(),[key]:record.token}, "", record.url || url());
+    }
+    function enter(id, close, options={}) {
+        if (active?.id === id) return;
+        const next={id,close,token:Date.now()+"-"+(++serial),url:options.url,baseUrl:options.baseUrl};
+        const replace=active && history.state?.[key] === active.token;
+        active=next;
+        if(pending)return;
+        if(replace)history.replaceState({...clean(),[key]:next.token},"",next.url||url());
+        else push(next);
+    }
+    function leave(id, baseUrl) {
+        if(active?.id!==id)return;
+        const record=active;active=null;
+        if(pending||history.state?.[key]!==record.token)return;
+        if(baseUrl)history.replaceState(state(),"",baseUrl);
+        pending=true;history.back();
+    }
+    window.addEventListener("popstate",()=>{
+        if(pending){
+            pending=false;
+            if(restoration)history.scrollRestoration=restoration;
+            if(active)push(active);
+            return;
+        }
+        if(active&&history.state?.[key]!==active.token){
+            const record=active;active=null;
+            if(restoration)history.scrollRestoration=restoration;
+            record.close();
+        }else if(!active&&history.state?.[key])history.replaceState(clean(),"",url());
+    });
+    if(history.state?.[key])history.replaceState(clean(),"",url());
+    return Object.freeze({enter,leave});
+})();
+
 
 /* =========================================================
    01. ROMANO STORAGE
@@ -1633,7 +1679,10 @@ function openProductModal(productId, opener = null) {
     );
 
     syncBodyScrollLock();
-    history.replaceState(null, "", `${location.pathname}${location.search}#product-${encodeURIComponent(product.id)}`);
+    if(opening)window.RamenOverlayHistory.enter("product",closeProductModal,{
+        url:`${location.pathname}${location.search}#product-${encodeURIComponent(product.id)}`,
+        baseUrl:`${location.pathname}${location.search}${productModalPreviousHash}`
+    });
     document.dispatchEvent(new CustomEvent("romano:product-opened", { detail: { id: product.id } }));
     // Focus only after all synchronous overlay changes, and never steal focus on a content refresh.
     if (opening || !DOM.productModal.contains(document.activeElement)) DOM.modalClose?.focus({preventScroll:true});
@@ -1646,7 +1695,7 @@ function openProductModal(productId, opener = null) {
  */
 
 function closeProductModal() {
-    if (!DOM.productModal) return;
+    if (!DOM.productModal?.classList.contains("is-open")) return;
 
     DOM.productModal.classList.remove("is-open");
     DOM.productModal.setAttribute("aria-hidden", "true");
@@ -1657,7 +1706,7 @@ function closeProductModal() {
     productModalPreviousFocus = null;
     productModalReturnTarget = null;
     window.RomanoActiveProduct = null;
-    if (location.hash.startsWith("#product-")) history.replaceState(null, "", `${location.pathname}${location.search}${productModalPreviousHash}`);
+    window.RamenOverlayHistory.leave("product", `${location.pathname}${location.search}${productModalPreviousHash}`);
 
     // Restore immediately; a queued callback could interfere with a newly opened overlay.
     const focus = element => {
@@ -1911,6 +1960,7 @@ function openNavigation() {
         "aria-hidden",
         "false"
     );
+    window.RamenOverlayHistory.enter("navigation",closeNavigation);
 
 
     DOM.menuToggle?.setAttribute(
@@ -1950,7 +2000,7 @@ function openNavigation() {
 
 function closeNavigation() {
 
-    if (!DOM.mainNavigation) {
+    if (!DOM.mainNavigation?.classList.contains("is-open")) {
 
         return;
 
@@ -1966,6 +2016,7 @@ function closeNavigation() {
     DOM.mainNavigation.classList.remove(
         "is-open"
     );
+    window.RamenOverlayHistory.leave("navigation");
 
 
     DOM.menuToggle?.classList.remove(

@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r20-ramen-localized-address`;
+const CACHE_NAME = `${menuCachePrefix}r21-fast-cart-history`;
 const CORE_ASSETS = [
   "./",
   "./index.html",

@@ -13,22 +13,23 @@
  const demo=()=>typeof menuDataMode!=='undefined'&&menuDataMode==='demo';
  const current=()=>{try{return demo()?model.active(localStorage,sessionStorage):null;}catch{return null;}};
  const el=(tag,value,cls)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;if(cls)n.className=cls;return n;};
- let dialog,opener,required=false,entered=false,pending=false;
+ let dialog,opener,returnToCart=null,required=false,entered=false,pending=false;
  const qr=()=>new URLSearchParams(location.search).get('qr')==='demo';
  function announce(){document.dispatchEvent(new CustomEvent('romano:demo-membership-changed'));}
- function removeMarker(){const url=new URL(location.href);if(qr()){url.searchParams.delete('qr');history.replaceState(null,'',url.pathname+url.search+url.hash);}}
+ function removeMarker(){const url=new URL(location.href);if(qr()){url.searchParams.delete('qr');history.replaceState(history.state,'',url.pathname+url.search+url.hash);}}
  function close(){if(dialog?.open)dialog.close();}
  function labels(){if(!dialog?.open)return;dialog.querySelectorAll('[data-member-text]').forEach(n=>n.textContent=t(n.dataset.memberText));dialog.querySelector('select').value=lang();dialog.querySelector('select').setAttribute('aria-label',t('language'));}
  function text(tag,key,cls){const n=el(tag,t(key),cls);n.dataset.memberText=key;return n;}
- function open(must=false){
+ function open(must=false,onReturn=null){
   if(!demo()||typeof HTMLDialogElement==='undefined'||!HTMLDialogElement.prototype.showModal)return false;
   required=must;
   if(dialog?.open)return true;
+  returnToCart=typeof onReturn==="function"?onReturn:null;
   opener=document.activeElement;
   dialog=document.querySelector('#customer-entry');
   if(!dialog){dialog=el('dialog',undefined,'customer-entry');dialog.id='customer-entry';dialog.setAttribute('aria-labelledby','customer-entry-title');document.body.append(dialog);
    dialog.addEventListener('cancel',e=>{if(required||pending)e.preventDefault();});
-   dialog.addEventListener('close',()=>{if(opener?.isConnected&&!opener.closest('[inert]'))opener.focus({preventScroll:true});});
+   dialog.addEventListener('close',()=>{window.RamenOverlayHistory.leave("entry");const resume=returnToCart;returnToCart=null;if(resume)resume();else if(opener?.isConnected&&!opener.closest('[inert]'))opener.focus({preventScroll:true});});
   }
   const panel=el('section',undefined,'customer-entry-panel'),top=el('div',undefined,'customer-entry-top');
   const brand=el('div',undefined,'customer-entry-brand'),logo=el('img');
@@ -72,7 +73,9 @@
     panel.append(el('p',table ? window.ROMANO_I18N.displayBrand(branch.name)+' · '+window.ROMANO_I18N.displayBrand(table.name) : window.ROMANO_I18N.displayBrand(branch.name)));
   }
   panel.append(text('p','intro'),form,notice,guest);
-  dialog.replaceChildren(panel);dialog.showModal();name.focus();return true;
+  dialog.replaceChildren(panel);dialog.showModal();
+  window.RamenOverlayHistory.enter("entry",()=>{if(required)entered=true;close();});
+  name.focus();return true;
  }
  function renderProfile(host,closePanel){
   if(!demo())return false;

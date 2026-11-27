@@ -348,7 +348,7 @@ async function ready(p){
   await cartButton.click();
   assert.equal(await p.locator('.commerce-items .commerce-empty').isVisible(),true);
   assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
-  await p.locator('[data-commerce-close]').last().click();
+  await p.locator('#hp-continue').click();
   const add=cards.first().locator('.commerce-card-add');assert.equal(await add.isVisible(),true);await add.click();
   assert.equal(await p.locator('#commerce-checkout').isVisible(),true);
   assert.equal(await p.locator('#r17-cart-feedback').getAttribute('data-state'),'added');
@@ -362,7 +362,7 @@ async function ready(p){
    await p.keyboard.press('Shift+Tab');
    assert.equal(await p.evaluate(()=>document.activeElement?.id),'commerce-submit');
    await p.keyboard.press('Tab');
-   assert.equal(await p.evaluate(()=>document.activeElement?.classList.contains('commerce-close')),true);
+   assert.equal(await p.evaluate(()=>document.activeElement?.dataset.cartChange),'-1');
    await p.keyboard.press('Escape');
    assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'true');
    assert.equal(await p.evaluate(()=>document.activeElement?.id),'ramen-bottom-cart');
@@ -370,11 +370,11 @@ async function ready(p){
   });
   await p.locator('.commerce-quantity button[data-cart-change="1"]').click();assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
   assert.equal(await p.evaluate(()=>document.activeElement.dataset.cartChange),'1');
-  const note=p.locator('[data-hp-note]').first();
-  await note.fill('Sample note');await note.focus();
-  await note.evaluate(input=>input.setSelectionRange(2,6));
-  await p.evaluate(()=>document.dispatchEvent(new CustomEvent('romano:demo-membership-changed')));
-  assert.deepEqual(await note.evaluate(input=>({focused:document.activeElement===input,value:input.value,start:input.selectionStart,end:input.selectionEnd})),{focused:true,value:'Sample note',start:2,end:6});
+  assert.equal(await p.locator('[data-hp-note],.commerce-close,[data-cart-remove]').count(),0);
+  const suggestions=p.locator('.hp-suggestion');
+  assert.ok(await suggestions.count()>0);
+  assert.equal(await p.locator('.hp-suggestion-media').count(),await suggestions.count());
+  assert.ok(await p.locator('.hp-suggestion-media img').count()>0);
   assert.equal(await p.locator('.site-wrapper').evaluate(n=>n.inert),true);
   assert.equal(await p.locator('#commerce-options').isVisible(),true);
   const summary=await p.locator('#commerce-submit').boundingBox();assert.ok(summary && summary.y+summary.height<=844);
@@ -386,16 +386,22 @@ async function ready(p){
   await p.screenshot({path:path.join(out,'customer-entry-fa-390.png')});
   await p.keyboard.press('Escape');
   await entry.waitFor({state:'hidden'});
-  await cartButton.click();
+  await p.waitForFunction(()=>document.querySelector('#commerce-drawer').classList.contains('is-open'));
   assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
-  await p.locator('[data-cart-remove]').click();
+  const minus=p.locator('[data-cart-change="-1"]');
+  await minus.click();assert.equal(await p.locator('[data-cart-remove]').count(),0);
+  await minus.click();assert.equal(await p.locator('.commerce-quantity b').textContent(),'0');
   assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
+  assert.equal(await p.locator('[data-cart-remove]').isVisible(),true);
+  await p.locator('[data-cart-change="1"]').click();
+  assert.equal(await p.locator('[data-cart-remove]').count(),0);
+  await minus.click();await p.locator('[data-cart-remove]').click();
   assert.equal(await p.locator('#hp-undo').isVisible(),true);
   await p.locator('#hp-undo-button').click();
-  assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
-  await p.locator('[data-cart-remove]').click();
+  assert.equal(await p.locator('.commerce-quantity b').textContent(),'1');
+  await minus.click();await p.locator('[data-cart-remove]').click();
   assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
-  await p.locator('[data-commerce-close]').last().click();
+  await p.locator('#hp-continue').click();
  });
  await check('Language changes close an open cart without leaving the page inert',async()=>{
   const cartButton=p.locator('#ramen-bottom-cart');
@@ -569,7 +575,7 @@ async function ready(p){
     const drawerBox=await p.locator('#commerce-drawer').boundingBox();
     assert.ok(drawerBox&&drawerBox.width>300&&drawerBox.x>=0&&drawerBox.x+drawerBox.width<=width, 'Cart drawer did not finish entering the viewport: '+JSON.stringify(drawerBox));
     await p.screenshot({path:path.join(out,`customer-cart-${lang}-${width}.png`)});
-    await p.locator('#commerce-drawer .commerce-close').click();
+    await p.locator('#hp-continue').click();
     await p.waitForFunction(()=>document.querySelector('#commerce-drawer')?.getAttribute('aria-hidden')==='true');
    }
   }
