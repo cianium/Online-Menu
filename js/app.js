@@ -582,7 +582,7 @@ function renderRestaurantInformation() {
     if (menuDataMode === "demo" && window.RomanoDemoBranches?.id) {
         try {
             const branch = window.RomanoDemoBranches.context();
-            document.getElementById("customer-brand-tagline").textContent = branch.name;
+            document.getElementById("customer-brand-tagline").textContent = window.ROMANO_I18N.displayBrand(branch.name);
         } catch { /* The next data refresh handles a removed or corrupt local registry. */ }
     }
 
@@ -2654,7 +2654,7 @@ window.addEventListener("storage", event => {
         actions.querySelector("[data-rv4-share]").addEventListener("click", async () => {
             const product = getActiveProduct();
             if (!product) return;
-            const shareData = { title: `ROMANO | ${product.name}`, text: product.description || product.name, url: productUrl(product) };
+            const shareData = { title: `RAMEN | ${product.name}`, text: product.description || product.name, url: productUrl(product) };
             if (typeof navigator.share === "function") {
                 try { await navigator.share(shareData); return; }
                 catch (error) { if (error?.name === "AbortError") return; }
