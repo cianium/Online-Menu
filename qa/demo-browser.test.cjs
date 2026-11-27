@@ -342,9 +342,14 @@ const readyCustomer = async page => {
         await restored.evaluate(()=>navigateTo('settings'));
         assert.equal(await restored.evaluate(()=>RomanoDemoBackup.occupied(localStorage)),false);
         await restored.locator('[data-sample-import]').setInputFiles({name:'branches.json',mimeType:'application/json',buffer:bytes});
-        await restored.locator('.rv4-confirm-dialog[open] [value=confirm]').click();
-        await restored.waitForFunction(id=>window.RomanoDemoBranches?.read().some(row=>row.id===id&&row.active===false),branchId);
+        // Restore commits storage before reloading; wait for the new document, not the old registry.
+        await Promise.all([
+          restored.waitForEvent('framenavigated',{predicate:frame=>frame===restored.mainFrame()}),
+          restored.locator('.rv4-confirm-dialog[open] [value=confirm]').click()
+        ]);
+        await restored.waitForLoadState('domcontentloaded');
         await loginDemoAdmin(restored);
+        await restored.waitForFunction(id=>Boolean(window.RomanoDemoMembers)&&window.RomanoDemoBranches?.read().some(row=>row.id===id&&row.active===false),branchId);
         assert.equal(await restored.evaluate(id=>JSON.parse(localStorage.getItem('online_menu_demo_members_v1:romano:branch:'+id))[0].orders.length,branchId),1);
         assert.equal(await restored.evaluate(()=>RomanoDemoMembers.read(localStorage).length),3);
       } finally {await isolated.close();}
