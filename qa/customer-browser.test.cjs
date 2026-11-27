@@ -229,6 +229,10 @@ async function ready(p){
   await p.locator('[data-commerce-close]').last().click();
   const add=cards.first().locator('.commerce-card-add');assert.equal(await add.isVisible(),true);await add.click();
   assert.equal(await p.locator('#commerce-checkout').isVisible(),true);
+  assert.equal(await p.locator('#r17-cart-feedback').getAttribute('data-state'),'added');
+  assert.ok(await p.locator('#r17-cart-feedback').isVisible());
+  assert.ok((await p.locator('#r17-cart-feedback .r17-feedback-product').textContent()).trim());
+  assert.equal(await p.locator('#r17-cart-feedback .r17-feedback-count').textContent(),await p.evaluate(()=>new Intl.NumberFormat(document.documentElement.lang).format(1)));
   assert.equal(await cartButton.isVisible(),true);assert.equal(await p.locator('.ramen-bottom-cart-count').textContent(),await p.evaluate(()=>new Intl.NumberFormat(document.documentElement.lang).format(1)));
   await cartButton.click();assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'false');
   await check('Cart drawer traps keyboard focus and restores its opener',async()=>{
@@ -377,8 +381,9 @@ async function ready(p){
    assert.equal(headerDirection,lang==='fa'||lang==='ar'?'rtl':'ltr','Header direction mismatch '+lang+'/'+width);
    const brandParts=await p.locator('.brand-logo, .brand-content').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right,display:getComputedStyle(node).display,width:r.width};}));
    assert.equal(brandParts.length,2);
-   if(width<=360)assert.equal(brandParts[0].display,'none','Compact header intentionally hides logo at '+lang+'/'+width);
-   else if(lang==='fa'||lang==='ar')assert.ok(brandParts[0].left>brandParts[1].left,'RTL brand logo must follow wordmark '+lang+'/'+width);
+   assert.notEqual(brandParts[0].display,'none','Brand mark remains visible at '+lang+'/'+width);
+   assert.ok(await p.locator('#romano-language-toggle .language-toggle-icon').isVisible(),'Missing language icon '+lang+'/'+width);
+   if(lang==='fa'||lang==='ar')assert.ok(brandParts[0].left>brandParts[1].left,'RTL brand logo must follow wordmark '+lang+'/'+width);
    else assert.ok(brandParts[0].left<brandParts[1].left,'LTR brand logo must precede wordmark '+lang+'/'+width);
    const wordmark=await p.locator('.brand-name').evaluate(node=>{const range=document.createRange();range.selectNodeContents(node);return {text:node.textContent.trim(),textWidth:range.getBoundingClientRect().width,clientWidth:node.clientWidth};});
    assert.ok(wordmark.clientWidth>0&&wordmark.textWidth<=wordmark.clientWidth+1,'Restaurant wordmark is clipped '+lang+'/'+width+': '+JSON.stringify(wordmark));
