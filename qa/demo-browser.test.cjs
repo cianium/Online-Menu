@@ -208,13 +208,27 @@ const readyCustomer = async page => {
     assert.ok(await admin.locator('#revenue-bars span').count()>=12);
     await admin.locator('#revenue-period').selectOption('30');
     console.log('PASS: sample revenue aggregates saved order and filters without fabricated income');
-    await customer.reload();await readyCustomer(customer);
+    // Force a cold, delayed panel asset: opening a dialog is not proof its content is ready.
+    let releasePanel;
+    const panelGate=new Promise(resolve=>{releasePanel=resolve;});
+    const panelPattern='**/js/customer-panels.js';
+    await customer.route(panelPattern,async route=>{await panelGate;await route.continue();});
+    const profileDialog=customer.locator('#ramen-contact-dialog');
+    try {
+      await customer.reload();await readyCustomer(customer);
+      assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders.length),1);
+      await customer.locator('#menu-toggle').click();
+      await customer.locator('[data-nav-panel=profile]').click();
+      await profileDialog.locator('[data-panel-state="loading"]').waitFor({state:'visible'});
+      assert.equal(await profileDialog.getByText('Loading…',{exact:true}).isVisible(),true);
+    } finally {releasePanel();}
+    await profileDialog.locator('[data-panel-state="ready"]').waitFor({state:'visible'});
+    const historyHeading=profileDialog.getByRole('heading',{name:'Sample order history',exact:true});
+    await historyHeading.waitFor({state:'visible'});
+    assert.equal(await profileDialog.locator('article.ramen-contact-item').count(),1);
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders.length),1);
-    await customer.locator('#menu-toggle').click();
-    await customer.locator('[data-nav-panel=profile]').click();
-    await customer.locator('#ramen-contact-dialog').waitFor({state:'visible'});
-    assert.ok((await customer.locator('#ramen-contact-dialog').innerText()).includes('Sample order history'));
-    await customer.locator('#ramen-contact-dialog').getByRole('button',{name:'Sign out of sample profile'}).click();
+    await customer.unroute(panelPattern);
+    await profileDialog.getByRole('button',{name:'Sign out of sample profile'}).click();
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current()),null);
     await customer.locator('#menu-toggle').click();
     await customer.locator('[data-nav-panel=profile]').click();

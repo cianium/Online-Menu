@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r25-keyboard-scroll`;
+const CACHE_NAME = `${menuCachePrefix}r25-panel-stabilization`;
 const CORE_ASSETS = [
   "./",
   "./index.html",

@@ -41,7 +41,9 @@ test('Bottom navigation has the requested physical DOM order and contact remains
  assert.match(js,/trigger\.removeAttribute\('aria-controls'\)/);
  assert.match(js,/event\.key===' '/);
  assert.match(js,/document\.createElement\('dialog'\)/);assert.match(js,/dialog\.showModal\(\)/);
- assert.match(js,/mode==='public' \|\| mode==='offline'/);assert.match(js,/if\(demo\)content\.append/);
+ const panels=read('js/customer-panels.js');
+ assert.match(js,/panels\.render\(\{panel,content,element,demo,mode,/);
+ assert.match(panels,/mode==='public' \|\| mode==='offline'/);assert.match(panels,/if\(demo\)content\.append/);
  assert.match(css,/prefers-reduced-motion:reduce/);assert.match(css,/--ui-touch:44px/);
 });
 
@@ -118,9 +120,11 @@ test('Profile, chat and local feedback labels are translated in all four languag
   assert.ok(labels.every(Boolean));values.push(labels.join('|'));
  }
  assert.equal(new Set(values).size,4);
- const js=read('js/commerce.js'),panel=js.slice(js.indexOf('function initializeContactPanel()'),js.indexOf('function buildShell()'));
+ const js=read('js/commerce.js'),shell=js.slice(js.indexOf('function initializeContactPanel()'),js.indexOf('function buildShell()')),panel=read('js/customer-panels.js');
+ assert.match(shell,/panels\.render\(\{panel,content,element,demo,mode,/);
  assert.match(panel,/if\(demo\) \{/);assert.match(panel,/review\.submit\(localStorage,tenant\(\),selected,comment\.value,id\)/);
- assert.doesNotMatch(panel,/\bfetch\(/);assert.match(panel,/labels\.storageError/);
+ assert.match(panel,/!isDemo\(\)\|\|!content\.isConnected/);
+ assert.doesNotMatch(shell+panel,/\bfetch\(/);assert.match(panel,/labels\.storageError/);
 });
 
 
@@ -135,9 +139,9 @@ test('Named action collections have group semantics; the Instagram placeholder n
 
 test('Telephone numbers are isolated left-to-right in footer and contact dialog',()=>{
  assert.match(read('index.html'),/data-restaurant-phone dir="ltr"/);
- const commerce=read('js/commerce.js');
- assert.match(commerce,/if\(direction\)valueNode.dir=direction/);
- assert.match(commerce,/appendInfo\(words.phone,[^\n]*null,'ltr'\)/);
+ const panels=read('js/customer-panels.js');
+ assert.match(panels,/if\(direction\)valueNode.dir=direction/);
+ assert.match(panels,/appendInfo\(words.phone,[^\n]*null,'ltr'\)/);
  assert.match(read('css/interaction-system.css'),/span\[dir="ltr"\] \{ unicode-bidi:isolate/);
 });
 

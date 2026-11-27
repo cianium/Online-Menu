@@ -30,7 +30,7 @@ Designed for guests. Built for restaurant teams.
 
 **A menu worth exploring. A workspace worth working in.**
 
-RAMEN brings together a visual, mobile-first guest menu and a dedicated restaurant management workspace. Its standalone demo makes the product easy to explore without a database or cloud account. A separate connected implementation provides the foundation for signed table QR sessions, ordering, kitchen workflows and direct branch payments.
+RAMEN brings together a visual, mobile-first guest menu and a dedicated restaurant management workspace. Its standalone demo makes the product easy to explore without a database or cloud account. A separate connected implementation provides the foundation for signed table QR sessions, ordering, kitchen workflows and direct restaurant payments.
 
 <table>
 <tr>
@@ -80,12 +80,12 @@ The showcase job captures the current standalone menu and admin workspace in Chr
 | Favorites and cart experience | Available | Included |
 | Four languages and RTL/LTR | Available | Included |
 | Catalog management and local persistence | Available | Server-backed catalog |
-| Multi-branch sample workspaces and table QR links | Browser-local, standalone export | Configured branches and signed sessions |
-| Branch activation and all-branch business-data backup | Available in standalone export | Separate server operations required |
+| Single restaurant, admin-created tables and table QR links | Browser-local, standalone export | Configured restaurant and signed sessions; staging verification required |
+| Primary restaurant business-data backup | Available in standalone export | Separate server operations required |
 | Signed table QR sessions | — | Configuration required |
 | Server-authoritative orders and tracking | — | Configuration required |
 | Order queue and kitchen display (KDS) | — | Configuration required |
-| Direct branch payment via ZarinPal | — | Merchant setup & validation |
+| Direct restaurant payment via ZarinPal | — | Merchant setup & validation |
 | Server-side roles and tenant isolation | — | Staging validation required |
 
 **Connected** means the implementation exists in the source, not that a production service is active or certified. The local Fastify API is not assumed to have full parity with hosted commerce APIs.
@@ -94,7 +94,7 @@ The showcase job captures the current standalone menu and admin workspace in Chr
 
 [Open customer entry](https://cianium.github.io/Online-Menu/?qr=demo) · [Open the demo admin workspace](https://cianium.github.io/Online-Menu/admin/) · [Published source identity](https://cianium.github.io/Online-Menu/VERSION.json)
 
-`pages-demo` contains the public standalone snapshot. `main` is the canonical source branch. Match a published build to its source with `VERSION.json`. See the [R16 candidate notes](docs/releases/R16_CANDIDATE_FA.md) for the current development track and verified revision evidence. The public site is for sample data only, not a private staff login, real payment service or shared customer database. Customer entry uses a fictional name and phone number. Demo admin credentials are `demo-admin` / `Demo-Only-2026`; these public values are not real authentication.
+`pages-demo` contains the public standalone snapshot. `main` is the canonical source branch. Match a published build to its source with `VERSION.json`. The published R23 snapshot predates the single-restaurant R24 candidate. See [R24 scope](docs/R24_SINGLE_RESTAURANT.md) and [live Connect limitations](docs/R24_LIVE_CONNECT.md). The candidate is not an approved release. The public site is for sample data only, not a private staff login, real payment service or shared customer database. Customer entry uses a fictional name and phone number. Demo admin credentials are `demo-admin` / `Demo-Only-2026`; these public values are not real authentication.
 
 The standalone release gates cover Node tests, PostgreSQL contracts, Edge Function type checks, Chromium/Firefox/WebKit flows, four-language responsive views and automated accessibility scans. They do not certify optional connected backend services, real payments, native Safari or field Core Web Vitals. Historical showcase images retain their own revision provenance.
 
@@ -129,7 +129,7 @@ The included Node.js preview server binds only to loopback and serves the public
 > [!NOTE]
 > The standalone demo is for evaluation, not a production admin login or a shared database. Use sample data only. Changes remain in the current browser/origin; real table sessions, order fulfillment and payments require the connected services. Fonts and sample imagery are bundled locally, so the core demo does not depend on third-party assets.
 
-In the standalone export, the admin can create and rename sample branches, assign table QR links, deactivate/reactivate non-primary branches from the primary workspace and export business data for all branches. Full restore requires an empty browser profile and other tabs closed; backups contain personal information and must remain private. These browser-local operations are not server-side tenant isolation or cross-device QR ordering.
+In the R24 standalone candidate, the admin creates uniquely coded tables and their QR links within a single restaurant. Multi-location management is disabled; historical location records are preserved for compatibility but excluded from new primary-restaurant backups. Full restore requires an empty browser profile and other tabs closed; backups can contain personal information and must remain private. These browser-local operations are not server-side tenant isolation or cross-device QR ordering.
 
 ### Export a private demo for a future VPS
 
@@ -163,7 +163,7 @@ A dedicated admin interface for catalog management. The local demo supports edit
 
 ### 03 — From table to kitchen
 
-The vq.3 commerce source includes signed table QR sessions, server-priced orders, an order queue and kitchen display (KDS), and a branch-level ZarinPal payment adapter. The intended settlement model routes payment directly through the branch merchant account rather than holding restaurant funds on the platform. These flows need real server configuration and staging validation before use with guests.
+The vq.3 commerce source includes signed table QR sessions, server-priced orders, an order queue and kitchen display (KDS), and a ZarinPal payment adapter. The intended settlement model routes payment directly through the restaurant merchant account rather than holding restaurant funds on the platform. These flows need real server configuration and staging validation before use with guests.
 
 ```mermaid
 flowchart LR
@@ -171,13 +171,13 @@ flowchart LR
     B --> C["Cart & order"]
     C --> D["Server validation"]
     D --> E["Kitchen display"]
-    D --> F["Branch payment"]
+    D --> F["Restaurant payment"]
     F --> G["Server verification"]
     E --> H["Order tracking"]
     G --> H
 ```
 
-*Connected-mode concept: the exact ordering and payment path depends on branch configuration.*
+*Connected-mode concept: the exact ordering and payment path depends on restaurant configuration.*
 
 ## Four languages, one experience
 
@@ -329,9 +329,9 @@ Report vulnerabilities privately through the [security policy](SECURITY.md).
 | Static demo export for future private VPS hosting | Included; hosting and access controls not configured by export |
 | Four-language catalog experience | Included in both interfaces |
 | Local Fastify/PostgreSQL backend | Included; local setup required |
-| QR ordering, KDS and branch payments | Connected implementation; feature flags and setup required |
+| QR ordering, KDS and restaurant payments | Connected implementation; feature flags and setup required |
 | Production service availability | Requires independent verification |
-| Live payment and merchant onboarding | Requires branch configuration and sandbox acceptance |
+| Live payment and merchant onboarding | Requires restaurant merchant configuration and sandbox acceptance |
 
 > [!IMPORTANT]
 > The current source identifies itself as **vq.3 / 3.0.0**. This is not a claim that a specific live deployment has passed acceptance testing. The hosted migration path depends on an existing catalog schema baseline; do not assume an empty Supabase project can be bootstrapped from the commerce migrations alone.
@@ -378,7 +378,7 @@ Choose the material that fits your role: discover the product, evaluate the engi
 
 <a href="docs/releases/R16_CANDIDATE_FA.md">یادداشت‌های کاندید R16</a>
 
-**رامن (RAMEN)** یک منوی دیجیتال چندزبانه و محیط مدیریت رستوران است؛ از تجربه مشاهده منو برای مهمان تا مدیریت کاتالوگ، سفارش میز، صف آشپزخانه و پرداخت مستقیم شعبه در حالت متصل.
+**رامن (RAMEN)** یک منوی دیجیتال چندزبانه و محیط مدیریت رستوران است؛ از تجربه مشاهده منو برای مهمان تا مدیریت کاتالوگ، سفارش میز، صف آشپزخانه و پرداخت مستقیم رستوران در حالت متصل.
 
 برای تجربه نسخه مستقل، کافی است پس از دریافت مخزن، دستور <code>npm run demo</code> را اجرا کنید. منوی مشتری و پنل مدیریت بدون نیاز به دیتابیس، حساب ابری یا کلید API قابل مشاهده هستند. تغییرات نمونه در مرورگر ذخیره می‌شوند. برای ساخت بسته مستقل نصب آینده روی VPS، دستور <code>npm run demo:export</code> در دسترس است؛ این دستور انتشار یا نصب روی سرور انجام نمی‌دهد.
 
