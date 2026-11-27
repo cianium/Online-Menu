@@ -307,6 +307,28 @@ const readyCustomer = async page => {
       await branches.waitFor({state:'visible'});
       assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).length),3);
       assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).some(member=>member.name==='Branch Member')),false);
+      const branchId=new URL(link).searchParams.get('demoBranch');
+      const target=branches.locator('#sample-branch-target');
+      const toggle=branches.locator('#sample-branch-active-toggle');
+      await target.selectOption(branchId);
+      await customer.goto(link);await readyCustomer(customer);
+      assert.equal(await customer.evaluate(()=>menuDataMode),'demo');
+      admin.once('dialog',dialog=>dialog.accept());
+      await toggle.click();
+      await admin.waitForFunction(id=>RomanoDemoBranches.read().find(row=>row.id===id)?.active===false,branchId);
+      await customer.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode==='unavailable');
+      assert.equal(await branches.locator('#sample-branch-select option').count(),1);
+      await customer.goto(link);await readyCustomer(customer);
+      assert.equal(await customer.evaluate(()=>menuDataMode),'unavailable');
+      await toggle.click();
+      await admin.waitForFunction(id=>RomanoDemoBranches.read().find(row=>row.id===id)?.active===true,branchId);
+      await branches.locator('#sample-branch-select').selectOption(branchId);
+      await admin.waitForURL(url=>url.searchParams.get('demoBranch')===branchId);
+      await branches.waitFor({state:'visible'});
+      assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).find(member=>member.name==='Branch Member')?.orders.length),1);
+      await customer.goto(link);await readyCustomer(customer);
+      assert.equal(await customer.evaluate(()=>menuDataMode),'demo');
+      console.log('PASS: branch archive blocks open and new QR sessions; reactivation preserves order history');
       console.log('PASS: local branch creation, rename, isolated catalog and memberships, table QR, invalid entry, order and return to primary');
     }
     await customer.goto(new URL('./?restaurant=standalone-qa-missing',base).href); await readyCustomer(customer);
