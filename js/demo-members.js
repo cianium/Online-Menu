@@ -10,7 +10,7 @@
   const validItem=i=>i&&typeof i.name==='string'&&i.name.length<=150&&Number.isSafeInteger(i.quantity)&&i.quantity>=1&&i.quantity<=99&&Number.isFinite(i.price)&&i.price>0&&(i.productId===undefined||(typeof i.productId==="string"&&i.productId.length>0&&i.productId.length<=150))&&(i.note===undefined||(typeof i.note==="string"&&i.note.length<=200));
   const catalogCurrency=value=>{const code=String(value||'IRT').trim().toUpperCase();return /^[A-Z]{3}$/.test(code)&&code!=='IRR'?code:'IRT';};
   const validDate=d=>typeof d==='string'&&Number.isFinite(Date.parse(d));
-  const validOrder=o=>o&&(o.notes===undefined||(typeof o.notes==="string"&&o.notes.length<=1000))&&(o.tableName===undefined||(typeof o.tableName==='string'&&o.tableName.length<=80))&&typeof o.id==='string'&&(o.currency===undefined||(typeof o.currency==='string'&&o.currency===catalogCurrency(o.currency)))&&validDate(o.createdAt)&&Array.isArray(o.items)&&o.items.length>0&&o.items.length<=100&&o.items.every(validItem)&&Number.isFinite(o.total)&&o.total>0&&validAmounts(o)&&(o.points===undefined||(Number.isInteger(o.points)&&o.points>=0&&o.points<=1000));
+  const validOrder=o=>o&&(o.notes===undefined||(typeof o.notes==="string"&&o.notes.length<=1000))&&(o.tableName===undefined||(typeof o.tableName==='string'&&o.tableName.length<=80))&&(o.tableCode===undefined||(typeof o.tableCode==='string'&&/^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/.test(o.tableCode)))&&(o.connectVisitId===undefined||(typeof o.connectVisitId==='string'&&/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(o.connectVisitId)&&o.tableCode!==undefined))&&typeof o.id==='string'&&(o.currency===undefined||(typeof o.currency==='string'&&o.currency===catalogCurrency(o.currency)))&&validDate(o.createdAt)&&Array.isArray(o.items)&&o.items.length>0&&o.items.length<=100&&o.items.every(validItem)&&Number.isFinite(o.total)&&o.total>0&&validAmounts(o)&&(o.points===undefined||(Number.isInteger(o.points)&&o.points>=0&&o.points<=1000));
   const settingsKey=scope("online_menu_hospitality_v1:romano");
   const requestPrefix=scope("online_menu_guest_requests_v1:romano")+":";
   const kinds=Object.freeze(["waiter","bill","water","napkin"]);
@@ -154,6 +154,9 @@
     if (branch?.table) {
       const table = branch.context().tables.find(t => t.code === branch.table);
       order.tableName = table.name;
+      order.tableCode = table.code;
+      // Chat metadata is optional: a chat storage failure must not block ordering.
+      try{const visit=globalThis.RomanoConnectDemo?.currentVisit();if(visit?.tableId===table.code)order.connectVisitId=visit.visitId;}catch{}
     }
     if(typeof notes!=="string"||notes.length>1000)throw Error("INVALID_ORDER");
     if(notes.trim())order.notes=notes.trim();

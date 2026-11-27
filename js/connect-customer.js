@@ -190,7 +190,7 @@ const customerChat=function customerChat(core,copy,engine,root){
     async function refresh(){
       if(!eligible||!current()||refreshing||busy)return;
       refreshing=true;
-      try{if(!session)session=engine.session(branchId,scope);const data=await engine.get(session);if(!current()||busy)return;display(data);if(!ended&&status.textContent!==w.saved)status.textContent="";}
+      try{if(!session)session=engine.sessionForCurrent();const data=await engine.get(session);if(!current()||busy)return;display(data);if(!ended&&status.textContent!==w.saved)status.textContent="";}
       catch(error){if(current()&&!busy)showError(error);}
       finally{refreshing=false;}
     }
@@ -209,7 +209,7 @@ const customerChat=function customerChat(core,copy,engine,root){
     });
     foot.append(count,send);form.append(input,foot);
     const retry=btn(w.retry,"connect-secondary",()=>refresh());retry.hidden=true;
-    const reset=btn(w.newChat,"connect-reset",()=>{if(!eligible||busy)return;if((draft||timeline.querySelector(".connect-message"))&&!root.confirm(w.confirm))return;try{engine.forget();}catch(error){showError(error);return;}draft="";pending=null;render(host,options);});
+    const reset=btn(w.newChat,"connect-reset",()=>{if(!eligible||busy)return;if((draft||timeline.querySelector(".connect-message"))&&!root.confirm(w.confirm))return;try{engine.newConversation();}catch(error){showError(error);return;}draft="";pending=null;render(host,options);});
     reset.hidden=!eligible;bottom.append(quick,status,form,retry,reset);host.append(head,timeline,bottom);update();
     if(eligible){
       const off=engine.subscribe(()=>refresh()),timer=root.setInterval(()=>{if(current()&&doc.visibilityState!=="hidden")refresh();},2000);

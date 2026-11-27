@@ -75,6 +75,13 @@
     }else{
       if(c.status==="closed")fail("CONNECT_INACTIVE");
       switch(command.type){
+        case "link_order":{
+          // The adapter must verify order ownership and visit context before invoking this command.
+          if(staff||!c.tableId||!c.tableSessionId||c.status==="resolved")fail("CONNECT_FORBIDDEN");
+          const orderId=requireId(command.orderId);
+          if(c.orderId===orderId)return {conversation:c,message:null,replayed:true};
+          patch.orderId=orderId;break;
+        }
         case "assign":{
           if(!staff||c.status==="resolved")fail("CONNECT_FORBIDDEN");
           const target=requireId(command.assigneeId);

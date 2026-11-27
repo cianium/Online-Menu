@@ -19,11 +19,51 @@ const createDemoEngine=function createDemoEngine(core,platform){
     platform.sessionStorage.setItem(key,JSON.stringify(s));mustRotate=false;return s;
   }
   function forget(){mustRotate=true;platform.sessionStorage.removeItem(key);}
+  function stored(){try{return JSON.parse(platform.sessionStorage.getItem(key)||"null");}catch{fail("CONNECT_STORAGE");}}
+  function currentContext(){
+    if(typeof platform.context!=="function")fail("CONNECT_INVALID_CONTEXT");
+    const c=platform.context();
+    if(!c||(c.tableId!==null&&(!id(c.tableId)||c.tableId.length>32))||(c.profileId!==null&&!id(c.profileId)))fail("CONNECT_INVALID_CONTEXT");
+    return c;
+  }
+  function sessionForCurrent(){
+    const c=currentContext(),now=platform.now(),scope=JSON.stringify([c.tableId,c.profileId]);
+    let s=stored();
+    const same=!mustRotate&&validSession(s)&&s.branchId==="primary"&&s.scope===scope&&s.contextVersion===1&&s.tableId===c.tableId&&s.profileId===c.profileId&&id(s.visitId)&&time(s.issuedAt)&&s.issuedAt<=now&&now-s.issuedAt<TTL;
+    if(same)return s;
+    s={guestId:platform.uuid(),conversationId:platform.uuid(),branchId:"primary",scope,contextVersion:1,tableId:c.tableId,profileId:c.profileId,visitId:platform.uuid(),issuedAt:now};
+    platform.sessionStorage.setItem(key,JSON.stringify(s));mustRotate=false;return s;
+  }
+  function newConversation(){
+    const s=sessionForCurrent(),next={...s,conversationId:platform.uuid()};
+    platform.sessionStorage.setItem(key,JSON.stringify(next));return next;
+  }
+  function currentVisit(){
+    const s=sessionForCurrent();
+    return s.tableId&&s.profileId?{tableId:s.tableId,visitId:s.visitId}:null;
+  }
+  function checkContext(s){
+    if(s.contextVersion!==1)return;
+    const c=currentContext(),active=stored(),now=platform.now();
+    if(mustRotate||!active||active.conversationId!==s.conversationId||active.guestId!==s.guestId||active.visitId!==s.visitId||active.issuedAt!==s.issuedAt||active.scope!==s.scope||s.tableId!==c.tableId||s.profileId!==c.profileId||active.tableId!==s.tableId||active.profileId!==s.profileId||s.branchId!=="primary"||!id(s.visitId)||!time(s.issuedAt))fail("CONNECT_NOT_FOUND");
+    if(now<s.issuedAt||now-s.issuedAt>=TTL)fail("CONNECT_EXPIRED");
+  }
+  function latestOrder(s){
+    if(s.contextVersion!==1||!s.tableId||!s.profileId||typeof platform.latestOrder!=="function")return null;
+    const o=platform.latestOrder(s);
+    if(o==null)return null;
+    if(!id(o.id)||o.tableCode!==s.tableId||o.connectVisitId!==s.visitId||!Number.isFinite(Date.parse(o.createdAt))||Date.parse(o.createdAt)<s.issuedAt)fail("CONNECT_INVALID_CONTEXT");
+    return o.id;
+  }
+  function checkRecord(c,s){
+    validate(c);
+    if(s.contextVersion===1&&(c.tableId!==s.tableId||c.tableSessionId!==(s.tableId?s.visitId:null)))fail("CONNECT_NOT_FOUND");
+  }
   function validate(c){
     const ok=c&&c.schemaVersion===1&&id(c.id)&&c.restaurantId==="romano"&&id(c.branchId)&&id(c.guestId)&&
-      c.tableId===null&&c.tableSessionId===null&&c.orderId===null&&core.languages.includes(c.language)&&core.statuses.includes(c.status)&&
+      ((c.tableId===null&&c.tableSessionId===null&&c.orderId===null)||(id(c.tableId)&&c.tableId.length<=32&&id(c.tableSessionId)&&(c.orderId===null||id(c.orderId))))&&core.languages.includes(c.language)&&core.statuses.includes(c.status)&&
       (c.assigneeId===null||id(c.assigneeId))&&Number.isSafeInteger(c.version)&&c.version>=1&&time(c.createdAt)&&time(c.updatedAt)&&time(c.expiresAt)&&
-      c.createdAt<=c.updatedAt&&c.updatedAt<c.expiresAt&&c.expiresAt-c.createdAt===TTL&&Array.isArray(c.messages)&&c.messages.length<=core.maxMessages&&c.version>=c.messages.length+1;
+      c.createdAt<=c.updatedAt&&c.updatedAt<c.expiresAt&&c.expiresAt-c.createdAt<=TTL&&Array.isArray(c.messages)&&c.messages.length<=core.maxMessages&&c.version>=c.messages.length+1;
     if(!ok)fail("CONNECT_INVALID_STORAGE");
     const seen=new Set();let last=c.createdAt;
     for(const [i,m] of c.messages.entries()){
@@ -34,7 +74,7 @@ const createDemoEngine=function createDemoEngine(core,platform){
     }
     return c;
   }
-  function guest(s){if(!validSession(s))fail("CONNECT_INVALID_CONTEXT");return actorFor(s);}
+  function guest(s){if(!validSession(s))fail("CONNECT_INVALID_CONTEXT");checkContext(s);return actorFor(s);}
   function staff(a){if(!a||a.restaurantId!=="romano"||!id(a.branchId)||!id(a.id)||!["agent","manager"].includes(a.role))fail("CONNECT_FORBIDDEN");return a;}
   function project(c,a,now){
     let cursor=0,rows=[],page;
@@ -44,17 +84,32 @@ const createDemoEngine=function createDemoEngine(core,platform){
   async function get(s){
     const a=guest(s),c=await platform.db.get(s.conversationId);
     if(!c)return {conversation:null,messages:[]};
-    validate(c);return project(c,a,platform.now());
+    checkRecord(c,s);
+    const data=project(c,a,platform.now()),orderId=latestOrder(s);
+    if(!orderId||c.orderId===orderId||!["new","in_progress"].includes(c.status))return data;
+    let changed=false;
+    const result=await platform.db.change(s.conversationId,current=>{
+      checkContext(s);
+      if(!current)fail("CONNECT_NOT_FOUND");checkRecord(current,s);
+      const verified=latestOrder(s),now=Math.max(platform.now(),current.updatedAt);
+      if(!verified||current.orderId===verified||!["new","in_progress"].includes(current.status))return {record:null,remove:[],value:project(current,a,now)};
+      const r=core.apply(current,a,{type:"link_order",orderId:verified,expectedVersion:current.version},now);
+      changed=!r.replayed;
+      return {record:changed?r.conversation:null,remove:[],value:project(r.conversation,a,now)};
+    });
+    if(changed)platform.notify();return result;
   }
   async function send(s,clientId,text,language){
     const a=guest(s),result=await platform.db.change(s.conversationId,(current,all)=>{
+      checkContext(s);
       const now=platform.now();let c=current,remove=[];
       if(!c){
         const rows=all.map(validate);
         remove=rows.filter(x=>x.expiresAt+RETENTION<=now).map(x=>x.id);
         if(rows.length-remove.length>=MAX)fail("CONNECT_STORAGE_LIMIT");
-        c=core.create({id:s.conversationId,language,expiresAt:now+TTL},a,now);
-      }else validate(c);
+        const tableId=s.contextVersion===1?s.tableId:null;
+        c=core.create({id:s.conversationId,language,expiresAt:s.contextVersion===1?s.issuedAt+TTL:now+TTL,tableId,tableSessionId:tableId?s.visitId:null,orderId:latestOrder(s)},a,now);
+      }else checkRecord(c,s);
       const r=core.apply(c,a,{type:"send",clientId,text,language,expectedVersion:c.version},Math.max(now,c.updatedAt));
       return {record:r.replayed?null:r.conversation,remove,value:project(r.conversation,a,now)};
     });
@@ -78,7 +133,7 @@ const createDemoEngine=function createDemoEngine(core,platform){
     });
     platform.notify();return result;
   }
-  return Object.freeze({session,forget,get,send,list,readStaff,command,validate,subscribe:platform.subscribe});
+  return Object.freeze({session,sessionForCurrent,newConversation,currentVisit,forget,get,send,list,readStaff,command,validate,subscribe:platform.subscribe});
 };
 const browserPlatform=function browserPlatform(root){
   "use strict";
@@ -120,7 +175,20 @@ const browserPlatform=function browserPlatform(root){
   function emit(){for(const fn of listeners){try{fn();}catch{/* observer cannot affect commit */}}}
   function notify(){emit();try{channel?.postMessage("changed");}catch{}}
   function subscribe(fn){listeners.add(fn);return ()=>listeners.delete(fn);}
-  return {db:{get,all,change},get sessionStorage(){return root.sessionStorage;},uuid:()=>root.crypto.randomUUID(),now:()=>Date.now(),notify,subscribe};
+  function context(){
+    if(typeof menuDataMode==="undefined"||menuDataMode!=="demo")throw Error("CONNECT_INVALID_CONTEXT");
+    const registry=root.RomanoDemoBranches;
+    const row=registry?.context(),tableId=registry?.table??null;
+    if(tableId!==null&&!row?.tables.some(t=>t.code===tableId))throw Error("CONNECT_INVALID_CONTEXT");
+    const profile=root.RomanoDemoMembers?.active(root.localStorage,root.sessionStorage);
+    return {tableId,profileId:profile?.id??null};
+  }
+  function latestOrder(s){
+    const c=context();if(c.tableId!==s.tableId||c.profileId!==s.profileId)return null;
+    const member=root.RomanoDemoMembers?.active(root.localStorage,root.sessionStorage);
+    return member?.orders.find(o=>o.tableCode===s.tableId&&o.connectVisitId===s.visitId&&Date.parse(o.createdAt)>=s.issuedAt)||null;
+  }
+  return {db:{get,all,change},get sessionStorage(){return root.sessionStorage;},uuid:()=>root.crypto.randomUUID(),now:()=>Date.now(),notify,subscribe,context,latestOrder};
 };
 if(typeof module==='object'&&module.exports)module.exports={createDemoEngine,browserPlatform};
 else if(root.RomanoConnectCore)root.RomanoConnectDemo=createDemoEngine(root.RomanoConnectCore,browserPlatform(root));

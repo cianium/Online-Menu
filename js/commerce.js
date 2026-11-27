@@ -823,6 +823,8 @@
           demoOrderSaved=true;
           announce(entry.t("saved"));
           if(document.querySelector("#commerce-drawer.is-open"))document.querySelector("#commerce-title")?.focus({preventScroll:true});
+          // Update an existing chat's verified order context without affecting the saved order.
+          try{const engine=window.RomanoConnectDemo;if(engine&&order.connectVisitId){const s=engine.sessionForCurrent();if(s.visitId===order.connectVisitId)await engine.get(s);}}catch{/* later chat refresh reconciles */}
           document.dispatchEvent(new CustomEvent("romano:demo-membership-changed"));
         }
       } catch {showMessage(entry.t("orderError"));}
