@@ -275,6 +275,33 @@ async function ready(p){
    }
   }
  });
+ await check('Copy product link falls back safely and gives localized feedback',async()=>{
+  const failure={fa:'کپی نشد؛ دوباره تلاش کنید',ar:'تعذر النسخ؛ حاول مجددًا',en:'Copy failed; try again',tr:'Kopyalanamadı; tekrar deneyin'};
+  for(const lang of ['fa','ar','en','tr']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   await cards.first().locator('.product-card-button').click();
+   await p.evaluate(()=>{
+    Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{throw Error('denied')}}});
+    document.execCommand=()=>{window.__qaCopied=document.activeElement.value;return true;};
+   });
+   try{
+    const copy=p.locator('[data-rv4-copy]');
+    await copy.click();
+    await p.waitForFunction(()=>Boolean(window.__qaCopied));
+    assert.match(await p.evaluate(()=>window.__qaCopied),/#product-/);
+    await p.waitForFunction(()=>document.querySelector('[data-rv4-copy]').textContent===ROMANO_I18N.ui('copied'));
+    assert.equal(await copy.evaluate(n=>document.activeElement===n),true);
+    assert.equal(await p.locator('#product-modal textarea[readonly]').count(),0);
+    await p.evaluate(()=>{document.execCommand=()=>{throw Error('unavailable')};});
+    await copy.click();
+    await p.waitForFunction(message=>document.querySelector('[data-rv4-copy]').textContent===message,failure[lang]);
+    assert.equal(await p.locator('#product-modal textarea[readonly]').count(),0);
+   }finally{
+    await p.evaluate(()=>{delete navigator.clipboard;delete document.execCommand;delete window.__qaCopied;});
+    await p.keyboard.press('Escape');
+   }
+  }
+ });
  await check('Cart supports add, quantity and sample registration at checkout',async()=>{
   const cartButton=p.locator('#ramen-bottom-cart');
   await cartButton.click();
