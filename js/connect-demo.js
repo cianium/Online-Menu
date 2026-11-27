@@ -11,6 +11,7 @@ const createDemoEngine=function createDemoEngine(core,platform){
   const actorFor=(s)=>({id:s.guestId,role:"guest",restaurantId:"romano",branchId:s.branchId});
   function validSession(s){return s&&id(s.guestId)&&id(s.conversationId)&&id(s.branchId)&&typeof s.scope==="string"&&s.scope.length<=200;}
   function session(branchId,scope){
+    if(typeof platform.context==="function")fail("CONNECT_INVALID_CONTEXT");
     if(!id(branchId)||typeof scope!=="string"||scope.length>200)fail("CONNECT_INVALID_CONTEXT");
     let s;try{s=JSON.parse(platform.sessionStorage.getItem(key)||"null");}catch{fail("CONNECT_STORAGE");}
     if(s!==null&&!validSession(s))fail("CONNECT_STORAGE");
@@ -43,7 +44,7 @@ const createDemoEngine=function createDemoEngine(core,platform){
     return s.tableId&&s.profileId?{tableId:s.tableId,visitId:s.visitId}:null;
   }
   function checkContext(s){
-    if(s.contextVersion!==1)return;
+    if(s.contextVersion!==1){if(typeof platform.context==="function")fail("CONNECT_NOT_FOUND");return;}
     const c=currentContext(),active=stored(),now=platform.now();
     if(mustRotate||!active||active.conversationId!==s.conversationId||active.guestId!==s.guestId||active.visitId!==s.visitId||active.issuedAt!==s.issuedAt||active.scope!==s.scope||s.tableId!==c.tableId||s.profileId!==c.profileId||active.tableId!==s.tableId||active.profileId!==s.profileId||s.branchId!=="primary"||!id(s.visitId)||!time(s.issuedAt))fail("CONNECT_NOT_FOUND");
     if(now<s.issuedAt||now-s.issuedAt>=TTL)fail("CONNECT_EXPIRED");
@@ -83,6 +84,7 @@ const createDemoEngine=function createDemoEngine(core,platform){
   }
   async function get(s){
     const a=guest(s),c=await platform.db.get(s.conversationId);
+    checkContext(s);
     if(!c)return {conversation:null,messages:[]};
     checkRecord(c,s);
     const data=project(c,a,platform.now()),orderId=latestOrder(s);

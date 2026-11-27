@@ -48,7 +48,7 @@ async function check(name, action) { await action(); results.push(name); console
     try{
       await guest.goto(base+'/');
       await guest.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode==='demo'&&Boolean(window.RomanoConnectDemo));
-      const session=await guest.evaluate(async()=>{const s=RomanoConnectDemo.session('primary','primary:qa-guest');await RomanoConnectDemo.send(s,crypto.randomUUID(),'<b>Guest QA message</b>','en');return s;});
+      const session=await guest.evaluate(async()=>{const s=RomanoConnectDemo.sessionForCurrent();await RomanoConnectDemo.send(s,crypto.randomUUID(),'<b>Guest QA message</b>','en');return s;});
       await page.evaluate(()=>{ROMANO_ADMIN_I18N.setLanguage('en');navigateTo('connect');});
       const row=page.locator('[data-conversation-id="'+session.conversationId+'"]');
       await row.waitFor({state:'visible'});

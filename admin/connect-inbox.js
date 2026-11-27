@@ -47,7 +47,13 @@ const copy={
     "inactive": "این مکالمه امکان دریافت پاسخ ندارد.",
     "count": "تعداد پیام‌ها",
     "read": "خوانده شد",
-    "invalid": "پیام باید بین ۱ تا ۲۰۰۰ نویسه باشد."
+    "invalid": "پیام باید بین ۱ تا ۲۰۰۰ نویسه باشد.",
+    "table": "میز",
+    "noTable": "بدون میز",
+    "order": "سفارش مرتبط",
+    "noOrder": "سفارش مرتبط ثبت نشده",
+    "orderMissing": "جزئیات سفارش در دسترس نیست",
+    "quantity": "تعداد"
   },
   "en": {
     "title": "Conversation inbox",
@@ -95,7 +101,13 @@ const copy={
     "inactive": "This conversation cannot receive replies.",
     "count": "Messages",
     "read": "Read",
-    "invalid": "Enter a message of 1 to 2,000 characters."
+    "invalid": "Enter a message of 1 to 2,000 characters.",
+    "table": "Table",
+    "noTable": "No table",
+    "order": "Linked order",
+    "noOrder": "No linked order",
+    "orderMissing": "Order details unavailable",
+    "quantity": "Quantity"
   },
   "tr": {
     "title": "Sohbet gelen kutusu",
@@ -143,7 +155,13 @@ const copy={
     "inactive": "Bu sohbet yanıt alamaz.",
     "count": "Mesajlar",
     "read": "Okundu",
-    "invalid": "1 ile 2.000 karakter arasında mesaj yazın."
+    "invalid": "1 ile 2.000 karakter arasında mesaj yazın.",
+    "table": "Masa",
+    "noTable": "Masa yok",
+    "order": "Bağlı sipariş",
+    "noOrder": "Bağlı sipariş yok",
+    "orderMissing": "Sipariş ayrıntıları kullanılamıyor",
+    "quantity": "Adet"
   },
   "ar": {
     "title": "صندوق المحادثات",
@@ -191,7 +209,13 @@ const copy={
     "inactive": "لا يمكن لهذه المحادثة تلقي الردود.",
     "count": "الرسائل",
     "read": "مقروءة",
-    "invalid": "أدخل رسالة من ١ إلى ٢٠٠٠ حرف."
+    "invalid": "أدخل رسالة من ١ إلى ٢٠٠٠ حرف.",
+    "table": "الطاولة",
+    "noTable": "بلا طاولة",
+    "order": "الطلب المرتبط",
+    "noOrder": "لا يوجد طلب مرتبط",
+    "orderMissing": "تفاصيل الطلب غير متاحة",
+    "quantity": "الكمية"
   }
 };
 const model=(function inboxModel(){
@@ -203,11 +227,18 @@ const model=(function inboxModel(){
     return rows.filter(row=>{
       if(filter==="unread"&&!unread(row,seen[row.id]))return false;
       if(filter!=="all"&&filter!=="unread"&&status(row,now)!==filter)return false;
-      return !q||[row.id,row.lastMessage?.text,row.assigneeId].some(v=>typeof v==="string"&&v.toLocaleLowerCase().includes(q));
+      return !q||[row.id,row.lastMessage?.text,row.assigneeId,row.tableId,row.orderId].some(v=>typeof v==="string"&&v.toLocaleLowerCase().includes(q));
     });
   }
   function permissions(c,now){const active=Boolean(c&&now<c.expiresAt&&c.status!=="closed");return {reply:active&&c.status!=="resolved",assign:active&&c.status!=="resolved",resolve:active&&["new","in_progress"].includes(c.status),reopen:active&&c.status==="resolved",close:active};}
-  return Object.freeze({roster,status,unread,select,permissions});
+  function orderSummary(c,members){
+    if(!c?.orderId||!c.tableId||!c.tableSessionId||!Array.isArray(members))return null;
+    const matches=members.flatMap(m=>Array.isArray(m.orders)?m.orders:[]).filter(o=>o.id===c.orderId&&o.tableCode===c.tableId&&o.connectVisitId===c.tableSessionId);
+    if(matches.length!==1)return null;
+    const o=matches[0];
+    return {id:o.id,items:o.items.map(i=>({name:i.name,quantity:i.quantity}))};
+  }
+  return Object.freeze({roster,status,unread,select,permissions,orderSummary});
 })();
 const start=function startInbox(root,copy,model){
   "use strict";
@@ -290,7 +321,8 @@ const start=function startInbox(root,copy,model){
       const preview=el("p",r.lastMessage?.text||"");preview.dir="auto";
       const meta=el("div",null,"connect-inbox-row-meta");meta.append(el("span",staffName(r.assigneeId)),el("time",date(r.updatedAt)));
       const unread=model.unread(r,seen[r.id]);if(unread){const u=el("b",format(unread),"connect-inbox-unread");u.setAttribute("aria-label",t.unread+": "+format(unread));meta.append(u);}
-      n.append(top,preview,meta);return n;
+      const context=el("p",r.tableId?t.table+" · "+r.tableId:t.noTable);context.dir="auto";
+      n.append(top,context,preview,meta);return n;
     });
     ui.list.replaceChildren(...(nodes.length?nodes:[el("p",t.empty,"connect-inbox-empty")]));
     if(focused)nodes.find(n=>n.dataset.conversationId===focused)?.focus({preventScroll:true});
@@ -308,6 +340,15 @@ const start=function startInbox(root,copy,model){
     const back=button(t.back,"secondary-button connect-inbox-back",()=>{selection=null;detail=null;draft="";pending=null;ui.renderedVersion=null;renderList();renderDetail(true);ui.list.querySelector("button")?.focus();});
     const title=el("h2",t.guest+" · "+c.id.slice(-8));title.tabIndex=-1;title.id="connect-inbox-conversation-title";
     top.append(title,el("span",t[model.status(c,Date.now())],"connect-inbox-pill"));header.append(back,top,el("p",t.assignment+": "+staffName(c.assigneeId)));
+    const context=el("div",null,"connect-inbox-context");
+    const table=el("p",c.tableId?t.table+" · "+c.tableId:t.noTable);table.dir="auto";context.append(table);
+    if(c.orderId){
+      const label=el("p",t.order+" · "+c.orderId);label.dir="auto";context.append(label);
+      let order=null;try{order=model.orderSummary(c,root.RomanoDemoMembers.read(root.localStorage));}catch{}
+      if(order){const items=el("ul");for(const item of order.items){const li=el("li",item.name+" × "+format(item.quantity));li.dir="auto";items.append(li);}context.append(items);}
+      else context.append(el("p",t.orderMissing));
+    }else context.append(el("p",t.noOrder));
+    header.append(context);
     const actions=el("div",null,"connect-inbox-actions"),select=el("select");
     select.id="connect-inbox-assignee";select.setAttribute("aria-label",t.assignment);
     for(const id of model.roster){const o=el("option",staffName(id));o.value=id;select.append(o);}select.value=model.roster.includes(c.assigneeId)?c.assigneeId:model.roster[0];

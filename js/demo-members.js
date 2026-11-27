@@ -142,6 +142,8 @@
     if(!current)throw Error('NO_PROFILE');
     if(!Array.isArray(items)||!items.length||items.length>100||!Number.isFinite(total)||total<=0||items.some(i=>!i||typeof i.name!=='string'||!Number.isSafeInteger(i.quantity)||i.quantity<1||i.quantity>99||!Number.isFinite(i.price)||i.price<=0||(i.note!==undefined&&(typeof i.note!=="string"||i.note.length>200))))throw Error('INVALID_ORDER');
     if(current.orders.length>=100)throw Error('LIMIT');
+    let visit=null;
+    if(branch?.table){try{visit=globalThis.RomanoConnectDemo?.currentVisit()||null;}catch{}}
     const order={id:uuid(),createdAt:new Date().toISOString(),currency:catalogCurrency(currency),items:items.map(i=>({name:i.name.slice(0,150),quantity:i.quantity,price:i.price,...(i.productId?{productId:i.productId}:{}),...(i.note?{note:i.note}:{})})),total};
     const config=settings(storage);
     if(coupon){
@@ -156,7 +158,7 @@
       order.tableName = table.name;
       order.tableCode = table.code;
       // Chat metadata is optional: a chat storage failure must not block ordering.
-      try{const visit=globalThis.RomanoConnectDemo?.currentVisit();if(visit?.tableId===table.code)order.connectVisitId=visit.visitId;}catch{}
+      if(visit?.tableId===table.code)order.connectVisitId=visit.visitId;
     }
     if(typeof notes!=="string"||notes.length>1000)throw Error("INVALID_ORDER");
     if(notes.trim())order.notes=notes.trim();

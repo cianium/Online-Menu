@@ -219,7 +219,7 @@ async function ready(p){
     await engine.command(a,guest.conversationId,{type:'send',clientId:crypto.randomUUID(),text:'R24 demo staff reply',language:'en',expectedVersion:data.conversation.version});
    },guest);
    await p.waitForFunction(()=>Array.from(document.querySelectorAll('.connect-message.is-staff .connect-bubble')).some(n=>n.textContent==='R24 demo staff reply'));
-   const isolated=await staffTab.evaluate(async branch=>{const s=RomanoConnectDemo.session(branch,branch+':independent');return (await RomanoConnectDemo.get(s)).messages.length;},guest.branchId);
+   const isolated=await staffTab.evaluate(async()=>{const s=RomanoConnectDemo.sessionForCurrent();return (await RomanoConnectDemo.get(s)).messages.length;});
    assert.equal(isolated,0);
   }finally{await staffTab.close();}
   await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
