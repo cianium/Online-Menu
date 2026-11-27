@@ -187,7 +187,7 @@
     const context=guestContext();
     return [context.branch && h("branch")+": "+context.branch,context.table ? t("table")+" "+context.table : h("unknown")].filter(Boolean).join(" · ");
   }
-  function guestServices(content, element, demo) {
+  function guestServices(content, element, demo, kinds=requestKinds) {
     const section=element("section",null,"hp-services");
     section.append(element("h3",h("quick")),element("p",contextLabel(),"hp-context"));
     const context=guestContext();
@@ -201,7 +201,7 @@
       try{return enabled?model.requests(localStorage,context.code):{};}catch{live.textContent=panelText().storageError;return {};}
     }
     const icons={waiter:"M3 17h18M5 17a7 7 0 0 1 14 0M12 7V5m-2 0h4M2 20h20",bill:"M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6m-6 4h6",water:"M12 3c-2 4-6 8-6 12a6 6 0 0 0 12 0c0-4-4-8-6-12Z",napkin:"M4 4h16v16H4zM4 20 20 4M12 12h8v8"};
-    for(const kind of requestKinds) {
+    for(const kind of kinds) {
       const button=element("button",null,"hp-service-action");button.type="button";button.disabled=!enabled;
       const icon=document.createElementNS("http://www.w3.org/2000/svg","svg");icon.setAttribute("viewBox","0 0 24 24");icon.setAttribute("class","hp-service-icon");icon.setAttribute("aria-hidden","true");icon.setAttribute("focusable","false");
       const stroke=document.createElementNS("http://www.w3.org/2000/svg","path");stroke.setAttribute("d",icons[kind]);icon.append(stroke);
@@ -295,6 +295,13 @@
     const detail=score!==null?words[2]:isDemo()?words[1]:words[3];
     node.querySelector("#hero-rating-detail").textContent=detail;
     node.setAttribute("aria-label",[words[0],percent,detail,h("review")].join(" · "));
+    const nav=document.querySelector("#navigation-rating");
+    nav.replaceChildren(...[...node.children].map(child=>{const copy=child.cloneNode(true);copy.removeAttribute("id");copy.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));return copy;}));
+    nav.hidden=false;
+    nav.setAttribute("aria-label",[words[0],percent,detail].join(" · "));
+    document.querySelector("#navigation-service-toggle").setAttribute("aria-label",h("services"));
+    document.querySelector('[data-nav-panel="contact"]').textContent=(contactWords[lang()]||contactWords.fa).phone;
+    document.querySelector('[data-nav-panel="waiter"]').textContent=h("waiter");
   }
   function initializeContactPanel() {
     const trigger = document.querySelector('[data-ramen-nav="contact"]');
@@ -319,7 +326,7 @@
       const element = (tag, value, cls) => { const node=document.createElement(tag); if(value)node.textContent=value; if(cls)node.className=cls; return node; };
       const header=element('header',null,'ramen-contact-head');
       const labels=panelText();
-      const heading=element('h2',panel==='contact'?h('services'):labels[panel]||words.title);heading.id='ramen-contact-title';
+      const heading=element('h2',panel==='contact'?h('services'):panel==='waiter'?h('waiter'):labels[panel]||words.title);heading.id='ramen-contact-title';
       const dismiss=element('button',undefined,'ramen-contact-close');dismiss.type='button';dismiss.setAttribute('aria-label',words.close);dismiss.addEventListener('click',close);
       const closeGlyph=element('span','×');closeGlyph.setAttribute('aria-hidden','true');dismiss.append(closeGlyph);
       header.append(heading,dismiss);
@@ -327,6 +334,7 @@
       const mode=typeof menuDataMode !== 'undefined' ? menuDataMode : 'loading';
       const demo=mode==='demo';
       dialog.classList.toggle('hp-contact',panel==='contact');
+      if(panel==='waiter')guestServices(content,element,demo,['waiter']);
       if(panel==='contact'){
         const identity=element('div',null,'hp-identity');
         const brand=element('strong',document.querySelector('[data-restaurant-brand]')?.textContent.trim() || 'RAMEN');
@@ -396,7 +404,7 @@
     document.addEventListener('romano:open-customer-panel',event=>{
       const panel=event.detail?.panel;
       if(panel==='cart')openDrawer();
-      else if(['contact','chat','profile','feedback'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
+      else if(['contact','chat','profile','feedback','waiter'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
     });
     dialog.addEventListener('close',()=>{window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');if(origin?.isConnected)origin.focus();origin=null;});
     document.addEventListener('romano:language-changed',()=>{close();updateLabel();});

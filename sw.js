@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r22-compact-header-rating`;
+const CACHE_NAME = `${menuCachePrefix}r23-navigation-services`;
 const CORE_ASSETS = [
   "./",
   "./index.html",

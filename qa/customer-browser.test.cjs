@@ -45,12 +45,8 @@ async function ready(p){
     assert.equal(await dialog.locator('.ramen-contact-item > span[dir="auto"]').textContent(),expected,lang+' contact address');
     await p.keyboard.press('Escape');await p.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open);
     await p.locator('#menu-toggle').click();
-    const nav=p.locator('.navigation-footer-meta > span');
-    const navLabel={fa:'منوی دیجیتال RAMEN',en:'RAMEN · DIGITAL MENU',tr:'RAMEN · DİJİTAL MENÜ',ar:'رامن · القائمة الرقمية'}[lang];
-    await p.waitForFunction(()=>document.querySelector('#main-navigation').getAttribute('aria-hidden')==='false');
-    await nav.waitFor({state:'visible'});
-    await p.waitForFunction(label=>document.querySelector('.navigation-footer-meta > span')?.innerText.trim()===label,navLabel);
-    assert.equal((await nav.textContent()).trim(),navLabel);
+    assert.equal(await p.locator('.navigation-footer-meta,.navigation-menu-cta').count(),0);
+    assert.equal(await p.locator('#navigation-rating .hero-stars span').count(),5);
     await p.locator('#navigation-close').click();
     await p.waitForFunction(()=>document.querySelector('#main-navigation').getAttribute('aria-hidden')==='true');
     assert.equal(await p.locator('.commerce-drawer small').textContent(),'RAMEN');
@@ -73,7 +69,7 @@ async function ready(p){
    assert.ok(geometry.button>=geometry.content-1&&geometry.end<=geometry.hero+1);
   }
   await p.evaluate(()=>{const model=RomanoDemoReview;const review=model.submit(localStorage,'romano',4,'Sample review','qa-hero-rating');model.moderate(localStorage,'romano',review,'approved');window.dispatchEvent(new StorageEvent('storage',{key:model.key('romano')}));});
-  assert.equal(await rating.locator('.is-filled').count(),4);
+  assert.equal(await rating.locator('.is-filled').count(),4);assert.equal(await p.locator('#navigation-rating .is-filled').count(),4);
   assert.equal(await rating.locator('#hero-satisfaction').textContent(),await p.evaluate(()=>new Intl.NumberFormat(ROMANO_I18N.language,{style:'percent'}).format(.8)));
   await rating.click();await p.locator('#ramen-contact-dialog').waitFor({state:'visible'});await p.keyboard.press('Escape');
   await p.evaluate(()=>{localStorage.removeItem(RomanoDemoReview.key('romano'));window.dispatchEvent(new StorageEvent('storage',{key:RomanoDemoReview.key('romano')}));ROMANO_I18N.setLanguage('fa',false);});
@@ -183,7 +179,7 @@ async function ready(p){
    await dialog.locator('.feedback-save').click();
    const review=await p.evaluate(()=>JSON.parse(localStorage.getItem('online_menu_demo_review_v2:romano')));assert.equal(review.rating,4);assert.equal(review.status,'pending');assert.equal(review.comment,'<b>Demo comment</b>');
    await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
-   await p.locator('#menu-toggle').click();await nav.locator('[data-nav-panel="chat"]').click();
+   await p.locator('#menu-toggle').click();await nav.locator('#navigation-service-toggle').click();await nav.locator('[data-nav-panel="chat"]').click();
    await dialog.waitFor({state:'visible'});assert.ok((await dialog.locator('.ramen-contact-note').last().innerText()).trim());
    await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
   }
@@ -692,13 +688,20 @@ async function ready(p){
    if(await nav.getAttribute('aria-hidden')==='true')await p.locator('#menu-toggle').click();
    await p.waitForFunction(()=>document.querySelector('#main-navigation')?.getAttribute('aria-hidden')==='false');
    const footer=p.locator('.navigation-footer');
-   const cta=p.locator('.navigation-menu-cta');
+   const cta=p.locator('[data-nav-panel="feedback"]');
    assert.equal(await footer.evaluate(node=>getComputedStyle(node).direction),expected[lang].dir,lang+' footer direction');
    assert.equal(await cta.evaluate(node=>getComputedStyle(node).direction),expected[lang].dir,lang+' CTA direction');
    assert.match(await footer.evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expected[lang].font),lang+' footer font');
    assert.match(await cta.evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expected[lang].font),lang+' CTA font');
    assert.ok((await cta.boundingBox()).height>=40,lang+' CTA touch target');
    assert.ok((await cta.textContent()).trim().length>0,lang+' CTA label');
+   const toggle=nav.locator('#navigation-service-toggle'),options=nav.locator('#navigation-service-options');
+   assert.equal(await nav.locator('#navigation-rating .hero-stars span').count(),5);
+   await toggle.click();assert.equal(await options.isVisible(),true);
+   assert.equal(await options.locator('button').count(),3);
+   await p.keyboard.press('Escape');assert.equal(await options.isVisible(),false);assert.equal(await nav.getAttribute('aria-hidden'),'false');
+   await toggle.click();await p.evaluate(()=>history.back());await options.waitFor({state:'hidden'});assert.equal(await nav.getAttribute('aria-hidden'),'false');
+   await toggle.click();await options.locator('[data-nav-panel="waiter"]').click();const waiter=p.locator('#ramen-contact-dialog');await waiter.waitFor({state:'visible'});assert.equal(await waiter.locator('.hp-service-action').count(),1);await p.keyboard.press('Escape');await waiter.waitFor({state:'hidden'});await p.locator('#menu-toggle').click();
    await p.locator('#navigation-close').click();
    await p.waitForFunction(()=>document.querySelector('#main-navigation')?.getAttribute('aria-hidden')==='true');
   }

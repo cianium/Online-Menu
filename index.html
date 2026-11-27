@@ -252,12 +252,18 @@
                     </div>
 
                     <div class="navigation-footer">
+                        <div class="hero-rating navigation-rating" id="navigation-rating" hidden></div>
                         <div class="navigation-contact-actions">
-                            <button type="button" data-nav-panel="contact" data-i18n="تماس با رستوران">تماس با رستوران</button>
-                            <button type="button" data-nav-panel="chat" data-i18n="چت">چت</button>
                             <button type="button" data-nav-panel="feedback" data-i18n="ثبت امتیاز و رضایت">ثبت امتیاز و رضایت</button>
+                            <div class="navigation-service">
+                                <button type="button" id="navigation-service-toggle" aria-expanded="false" aria-controls="navigation-service-options"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13v-2a9 9 0 0 1 18 0v2M3 12h3v6H4a1 1 0 0 1-1-1Zm18 0h-3v6h2a1 1 0 0 0 1-1ZM18 18c0 2-2 3-6 3"/></svg></button>
+                                <div id="navigation-service-options" hidden>
+                                    <button type="button" data-nav-panel="contact"></button>
+                                    <button type="button" data-nav-panel="chat" data-i18n="چت">چت</button>
+                                    <button type="button" data-nav-panel="waiter"></button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="navigation-footer-meta"><span data-i18n="منوی دیجیتال RAMEN">منوی دیجیتال RAMEN</span><button type="button" class="navigation-menu-cta" data-navigation-menu-cta>مشاهده منو</button></div>
                     </div>
 
                 </div>
@@ -311,8 +317,8 @@
 
                     <button class="hero-rating" id="hero-rating" type="button" hidden>
                         <span class="hero-stars" aria-hidden="true"><span>☆</span><span>☆</span><span>☆</span><span>☆</span><span>☆</span></span>
-                        <span class="hero-rating-copy"><strong id="hero-satisfaction">—</strong><span id="hero-rating-label">رضایت مشتریان</span></span>
-                        <span id="hero-rating-detail"></span>
+                        <span class="hero-rating-copy"><strong id="hero-satisfaction">—</strong><span class="hero-rating-label" id="hero-rating-label">رضایت مشتریان</span></span>
+                        <span class="hero-rating-detail" id="hero-rating-detail"></span>
                     </button>
                 </div>
 

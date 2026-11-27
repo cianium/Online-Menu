@@ -18,7 +18,7 @@ window.RamenOverlayHistory = (() => {
     function enter(id,close,options={}){
         if(active?.id===id)return;
         const previous=active;
-        const next={id,close,token:Date.now()+"-"+(++serial),base:previous?.base||options.baseUrl||url()};
+        const next={id,close,token:Date.now()+"-"+(++serial),base:previous?.base||options.baseUrl||url(),onBack:options.onBack};
         const replace=Boolean(previous&&history.state?.[key]===previous.token)||Boolean(idle&&history.state?.[idleKey]===idle.token&&url()===idle.url);
         active=next;
         if(previous)previous.close();
@@ -41,7 +41,9 @@ window.RamenOverlayHistory = (() => {
     }
     window.addEventListener("popstate",()=>{
         if(active&&history.state?.[key]!==active.token){
-            const record=active;active=null;idle=null;restore();record.close();return;
+            const record=active;
+            if(record.onBack?.()){history.pushState({...clean(),[key]:record.token},"",url());return;}
+            active=null;idle=null;restore();record.close();return;
         }
         if(!active&&history.state?.[key])history.replaceState(clean(),"",url());
         // If a user backs out of an already dismissed same-URL slot, consume
@@ -1823,7 +1825,7 @@ function initializeMenu() {
 
             if (event.key === "Escape") {
                 event.preventDefault();
-                closeNavigation();
+                if(!closeNavigationServices())closeNavigation();
                 return;
             }
 
@@ -1868,22 +1870,16 @@ function initializeMenu() {
         }
     );
 
-    // Keep the menu CTA as a shortcut to the full menu, without adding
-    // another top-level route to the hamburger list.
-    document
-        .querySelector("[data-navigation-menu-cta]")
-        ?.addEventListener(
-            "click",
-            () => {
-                closeNavigation();
-                document
-                    .querySelector("#menu")
-                    ?.scrollIntoView({
-                        behavior: customerScrollBehavior(),
-                        block: "start"
-                    });
-            }
-        );
+    const service=document.querySelector("#navigation-service-toggle");
+    service.addEventListener("click",()=>{
+        if(!closeNavigationServices()){
+            document.querySelector("#navigation-service-options").hidden=false;
+            service.setAttribute("aria-expanded","true");
+        }
+    });
+    DOM.mainNavigation.addEventListener("click",event=>{
+        if(!event.target.closest(".navigation-service"))closeNavigationServices(false);
+    });
 
     // Close this drawer before opening another overlay; focus returns to the hamburger.
     DOM.mainNavigation.querySelectorAll("[data-nav-panel]").forEach(button => {
@@ -1962,7 +1958,7 @@ function openNavigation() {
         "aria-hidden",
         "false"
     );
-    window.RamenOverlayHistory.enter("navigation",closeNavigation);
+    window.RamenOverlayHistory.enter("navigation",closeNavigation,{onBack:closeNavigationServices});
 
 
     DOM.menuToggle?.setAttribute(
@@ -2000,6 +1996,16 @@ function openNavigation() {
  * Close navigation.
  */
 
+function closeNavigationServices(focus=true){
+    const options=document.querySelector("#navigation-service-options");
+    if(!options||options.hidden)return false;
+    options.hidden=true;
+    const toggle=document.querySelector("#navigation-service-toggle");
+    toggle.setAttribute("aria-expanded","false");
+    if(focus)toggle.focus({preventScroll:true});
+    return true;
+}
+
 function closeNavigation() {
 
     if (!DOM.mainNavigation?.classList.contains("is-open")) {
@@ -2018,6 +2024,7 @@ function closeNavigation() {
     DOM.mainNavigation.classList.remove(
         "is-open"
     );
+    closeNavigationServices(false);
     window.RamenOverlayHistory.leave("navigation");
 
 
