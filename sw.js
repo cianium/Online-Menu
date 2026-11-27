@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r25-lazy-connect`;
+const CACHE_NAME = `${menuCachePrefix}r25-lazy-panels`;
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -26,6 +26,7 @@ const CORE_ASSETS = [
   "./js/connect-demo.js",
   "./js/connect-live.js",
   "./js/connect-customer.js",
+  "./js/customer-panels.js",
   "./js/demo-review.js",
   "./js/demo-members.js",
   "./js/customer-entry.js",

@@ -51,7 +51,7 @@ test('Notifications occur only after a committed mutation and can unsubscribe',a
 test('Customer chat localizes all labels and precaches local-only scripts',()=>{
  const read=p=>fs.readFileSync(new URL('../../'+p,import.meta.url),'utf8'),html=read('index.html'),sw=read('sw.js');
  for(const lang of core.languages){assert.deepEqual(Object.keys(copy[lang]).sort(),Object.keys(copy.fa).sort());assert.ok(Object.values(copy[lang]).every(Boolean));}
- const assets=['js/connect-core.js','js/connect-demo.js','js/connect-live.js','js/connect-customer.js','css/connect.css'];
+ const assets=['js/connect-core.js','js/connect-demo.js','js/connect-live.js','js/connect-customer.js','js/customer-panels.js','css/connect.css'];
  const loader=read('js/commerce.js');
  assert.ok(html.includes('js/commerce.js'));
  for(const p of assets){assert.ok(!html.includes(p),p+' must be lazy');assert.ok(loader.includes(p));assert.ok(sw.includes(p));}
