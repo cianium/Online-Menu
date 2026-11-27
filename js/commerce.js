@@ -25,6 +25,8 @@
   let cartKeyboardBound = false;
   let cartBackground = [];
   let pollTimer = 0;
+  let polling = false;
+  let paymentPending = false;
   let submitting = false;
   let demoOrderSaved = false;
 
@@ -465,7 +467,7 @@
     drawer.setAttribute("aria-hidden", "false");
     drawer.classList.add("is-open");
     backdrop.hidden = false;
-    requestAnimationFrame(() => backdrop.classList.add("is-open"));
+    requestAnimationFrame(() => { if (drawer.classList.contains("is-open")) backdrop.classList.add("is-open"); });
     document.body.classList.add("commerce-open");
     cartBackground = [...document.querySelectorAll(".site-wrapper,.ramen-bottom-nav")].map(node=>({node,previous:node.inert}));
     cartBackground.forEach(({node})=>{node.inert=true;});
@@ -584,6 +586,7 @@
     const host = document.querySelector("#commerce-items");
     const focused = document.activeElement;
     const previousControl = focused?.closest('#commerce-items button') ? {id:focused.dataset.productId,change:focused.dataset.cartChange,remove:focused.hasAttribute('data-cart-remove')} : null;
+    const previousNote = focused?.matches('#commerce-items [data-hp-note]') ? {id:focused.dataset.hpNote,start:focused.selectionStart,end:focused.selectionEnd,direction:focused.selectionDirection} : null;
     const rows = visibleCartEntries().map(([id, quantity]) => {
       const item = product(id);
       if (!item) return "";
@@ -605,9 +608,14 @@
     host.querySelectorAll("[data-hp-note]").forEach(input=>input.addEventListener("input",()=>itemNotes.set(input.dataset.hpNote,input.value)));
     host.querySelectorAll("[data-cart-change]").forEach((button) => button.addEventListener("click", () => change(button.dataset.productId, Number(button.dataset.cartChange))));
     host.querySelectorAll("[data-cart-remove]").forEach((button) => button.addEventListener("click", () => removeCartItem(button.dataset.productId)));
+    if(previousNote && document.querySelector('#commerce-drawer.is-open')) {
+      const next=[...host.querySelectorAll('[data-hp-note]')].find(input=>input.dataset.hpNote===previousNote.id && !input.disabled);
+      if(next){next.focus({preventScroll:true});next.setSelectionRange(previousNote.start,previousNote.end,previousNote.direction);}
+      else document.querySelector(".commerce-close")?.focus({preventScroll:true});
+    }
     if(previousControl && document.querySelector('#commerce-drawer.is-open')) {
       const next=[...host.querySelectorAll('button')].find(b=>b.dataset.productId===previousControl.id && b.dataset.cartChange===previousControl.change && b.hasAttribute('data-cart-remove')===previousControl.remove);
-      (next || host.querySelector('button') || document.querySelector('.commerce-close'))?.focus({preventScroll:true});
+      ((next && !next.disabled ? next : null) || host.querySelector('button:not([disabled])') || document.querySelector('.commerce-close'))?.focus({preventScroll:true});
     }
     const submit = document.querySelector("#commerce-submit");
     submit.disabled = amount === 0 || submitting;
@@ -701,7 +709,7 @@
     try {
       const response = await fetch("/api/v1/orders/session", {
         method: "POST", credentials: "include", headers: { "content-type": "application/json", accept: "application/json" },
-        body: JSON.stringify({ qrToken }),
+        body: JSON.stringify({ qrToken }), signal: AbortSignal.timeout(10000),
       });
       const body = await response.json().catch(() => null);
       if (!response.ok || !body?.data) throw new Error("QR_SESSION_FAILED");
@@ -778,7 +786,7 @@
       const payload = { ...draft, idempotencyKey:persistentIdempotency(orderRequestKey(), "order", fingerprint) };
       const response = await fetch("/api/v1/orders/submit", {
         method: "POST", credentials: "include", headers: { "content-type": "application/json", accept: "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload), signal: AbortSignal.timeout(15000),
       });
       const body = await response.json().catch(() => null);
       if (!response.ok || !body?.data?.id) throw new Error(body?.error?.code || "ORDER_FAILED");
@@ -807,11 +815,13 @@
   }
 
   async function startPayment(orderId) {
+    if (paymentPending) return;
+    paymentPending = true;
     const storageKey = paymentRequestKey(orderId);
     try {
       const response = await fetch("/api/v1/payments/start", {
         method: "POST", credentials: "include", headers: { "content-type": "application/json", accept: "application/json" },
-        body: JSON.stringify({ orderId, idempotencyKey:persistentIdempotency(storageKey, "payment", orderId) }),
+        body: JSON.stringify({ orderId, idempotencyKey:persistentIdempotency(storageKey, "payment", orderId) }), signal: AbortSignal.timeout(15000),
       });
       const body = await response.json().catch(() => null);
       if (!response.ok || !body?.data?.redirectUrl) throw new Error(body?.error?.code || "PAYMENT_FAILED");
@@ -821,12 +831,13 @@
     } catch (error) {
       if (["PAYMENT_ATTEMPT_FINALIZED", "PAYMENT_PROVIDER_REJECTED", "ORDER_ALREADY_PAID"].includes(String(error?.message))) remove(storageKey);
       showMessage(t("paymentError"));
-    }
+    } finally { paymentPending = false; }
   }
 
   async function pollOrder() {
     const id=activeOrder?.id;
-    if (!id) return;
+    if (!id || polling || document.hidden) return;
+    polling = true;
     try {
       const response = await fetch(`/api/v1/orders/${encodeURIComponent(id)}`, { credentials: "include", headers: { accept: "application/json" }, signal:AbortSignal.timeout(7000) });
       const body = await response.json().catch(() => null);
@@ -834,6 +845,7 @@
       if (response.ok && body?.data?.id===id) { activeOrder = body.data; save(orderKey(), activeOrder); render(); }
       if (["completed", "rejected", "cancelled"].includes(activeOrder.status)) stopPolling();
     } catch { /* Keep the last known status while offline. */ }
+    finally { polling = false; }
   }
   function startPolling() { stopPolling(); pollOrder(); pollTimer = window.setInterval(pollOrder, 8000); }
   function stopPolling() { if (pollTimer) window.clearInterval(pollTimer); pollTimer = 0; }
@@ -878,6 +890,7 @@
     // Enhance synchronously at the actual render boundary, not on a delayed click.
     // This keeps the cart actions present after filtering/refresh and avoids moving
     // the opener after the product dialog has already restored keyboard focus.
+    document.addEventListener("visibilitychange", () => { if (!document.hidden && pollTimer) pollOrder(); });
     document.addEventListener("romano:catalog-rendered", enhanceProducts);
     document.addEventListener("romano:product-opened", enhanceProducts);
     window.addEventListener("romano:data-updated", () => { reconcileCart(); enhanceProducts(); render(); });
