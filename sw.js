@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r17-customer-experience`;
+const CACHE_NAME = `${menuCachePrefix}r17-compact-header-hero`;
 const CORE_ASSETS = [
   "./",
   "./index.html",

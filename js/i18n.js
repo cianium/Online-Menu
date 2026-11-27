@@ -256,6 +256,11 @@
             if (own[key]) { fields[key] = own[key]; return; }
             const value = config[key] ?? "";
             const seed = restaurant[key]?.fa ?? "";
+            // Known demo brand, not arbitrary tenant names.
+            if (key === "name" && ["رامن", "رامين", "RAMEN"].includes(String(value).trim())) {
+                fields[key] = ({fa:"رامن",ar:"رامن",en:"RAMEN",tr:"RAMEN"})[current];
+                return;
+            }
             fields[key] = seedValue(value, seed, restaurant[key]?.[current]);
         });
         return { ...config, ...fields };
@@ -573,7 +578,7 @@
         const actions = { fa: "تغییر زبان", en: "Change language", tr: "Dili değiştir", ar: "تغيير اللغة" };
         button.setAttribute("aria-label", `${labels[current]} · ${actions[current]}`);
         const label = button.querySelector("#romano-language-label");
-        if (label) label.textContent = labels[current];
+        if (label) label.textContent = current.toUpperCase();
     }
 
     function setLanguage(lang, announce = true) {
@@ -594,7 +599,7 @@
         document.dispatchEvent(new CustomEvent("romano:language-changed", { detail: { lang: current } }));
         if (announce) {
             const label = document.querySelector("#romano-language-label");
-            if (label) label.textContent = ({fa:"فارسی",en:"English",tr:"Türkçe",ar:"العربية"})[current];
+            if (label) label.textContent = current.toUpperCase();
         }
     }
 

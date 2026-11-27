@@ -287,7 +287,7 @@ async function ready(p){
   const prices=await p.evaluate(()=>[...document.querySelectorAll('#menu .product-card')].map(c=>getProductById(c.dataset.productId).price));assert.deepEqual(prices,[...prices].sort((a,b)=>a-b));
   await openSearch();await p.locator('#rv4-menu-search').fill('no-product-xyz');assert.equal(await cards.count(),0);assert.equal(await p.locator('#menu-empty').count(),1);
   await resetFilters();assert.equal(await cards.count(),21);
-  await p.locator('[data-browse-category]').nth(1).click();assert.equal(await cards.count(),3);await resetFilters();
+  await p.locator('[data-browse-category]').first().click();assert.equal(await cards.count(),3);await resetFilters();
  });
  await check('Favorites persist, filter and clear',async()=>{
   await cards.first().locator('[data-favorite-product]').click();assert.equal(await p.locator('.product-modal').getAttribute('aria-hidden'),'true');
@@ -370,23 +370,24 @@ async function ready(p){
    const labels={fa:{home:'خانه',menu:'منو',featured:'ویژه‌ها',contact:'ارتباط',cart:'سبد',cartAria:'سبد سفارش',menuEyebrow:'منوی رستوران',categories:'انتخاب شما',featuredTitle:'انتخاب ویژه.',story:'ساده نیست خاص است'},en:{home:'Home',menu:'Menu',featured:'Featured',contact:'Contact',cart:'Cart',cartAria:'Your order',menuEyebrow:'RESTAURANT MENU',categories:'Your Choice',featuredTitle:'Featured Selection.',story:'It is not ordinary.'},tr:{home:'Ana Sayfa',menu:'Menü',featured:'Öne çıkanlar',contact:'İletişim',cart:'Sepet',cartAria:'Siparişiniz',menuEyebrow:'RESTORAN MENÜSÜ',categories:'Sizin Seçiminiz',featuredTitle:'Özel Seçim.',story:'Sıradan değil özel.'},ar:{home:'الرئيسية',menu:'القائمة',featured:'المميز',contact:'اتصل بنا',cart:'السلة',cartAria:'طلبك',menuEyebrow:'قائمة المطعم',categories:'اختيارك',featuredTitle:'اختيار مميز.',story:'الأمر ليس عاديًا.'}}[lang];
    for(const key of ['home','menu','featured','contact','cart']) assert.equal(await p.locator('[data-ramen-label="'+key+'"]').textContent(),labels[key]);
    const normalizedText=selector=>p.locator(selector).innerText().then(value=>value.replace(/\s+/g,' ').trim());
-   assert.equal(await p.locator('#menu-browser-eyebrow').textContent(),labels.menuEyebrow);
+   assert.equal(await p.locator('#site-header #menu-browser-eyebrow,#site-header #menu-result-count,#site-header #menu-data-status,#site-header [data-browse-category="all"]').count(),0);
    assert.equal(await normalizedText('#categories .section-title'),labels.categories);
    assert.equal(await normalizedText('#featured .section-title'),labels.featuredTitle);
    assert.equal(await p.locator('.story-section,.contact-section').count(),0);
    assert.equal(await p.locator('footer #contact').count(),1);
    assert.equal(await p.locator('#ramen-header-cart').getAttribute('aria-label'),labels.cartAria);
-   const headerBoxes=await p.locator('.header-container .brand, #romano-language-toggle, #ramen-header-cart, #menu-toggle').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {name:node.className||node.id,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};}));
-   assert.equal(headerBoxes.length,4,JSON.stringify(headerBoxes));
+   const headerBoxes=await p.locator('.header-container .brand, #romano-language-toggle, #menu-search-toggle, #ramen-header-cart, #menu-toggle').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {name:node.className||node.id,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};}));
+   assert.equal(headerBoxes.length,5,JSON.stringify(headerBoxes));
    const headerDirection=await p.locator('.header-container').evaluate(node=>getComputedStyle(node).direction);
    assert.equal(headerDirection,lang==='fa'||lang==='ar'?'rtl':'ltr','Header direction mismatch '+lang+'/'+width);
    const brandParts=await p.locator('.brand-logo, .brand-content').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right,display:getComputedStyle(node).display,width:r.width};}));
    assert.equal(brandParts.length,2);
    assert.notEqual(brandParts[0].display,'none','Brand mark remains visible at '+lang+'/'+width);
-   assert.ok(await p.locator('#romano-language-toggle .language-toggle-icon').isVisible(),'Missing language icon '+lang+'/'+width);
+   assert.equal(await p.locator('#romano-language-label').innerText(),lang.toUpperCase());
+   assert.equal(await p.locator('#romano-language-toggle .language-toggle-icon').count(),0);
    const hero=await p.locator('.hero-content').boundingBox();
-   const usableWidth=await p.evaluate(()=>document.documentElement.clientWidth);
-   assert.ok(hero&&hero.width>=Math.min(usableWidth-48,700),'Hero track collapsed '+lang+'/'+width+': '+JSON.stringify({hero,usableWidth}));
+   const usableWidth=await p.locator('.hero-section').evaluate(n=>n.clientWidth);
+   assert.ok(hero&&hero.width>=Math.min(usableWidth-32,700)-1,'Hero track collapsed '+lang+'/'+width+': '+JSON.stringify({hero,usableWidth}));
    if(lang==='fa'||lang==='ar')assert.ok(brandParts[0].left>brandParts[1].left,'RTL brand logo must follow wordmark '+lang+'/'+width);
    else assert.ok(brandParts[0].left<brandParts[1].left,'LTR brand logo must precede wordmark '+lang+'/'+width);
    const wordmark=await p.locator('.brand-name').evaluate(node=>{const range=document.createRange();range.selectNodeContents(node);return {text:node.textContent.trim(),textWidth:range.getBoundingClientRect().width,clientWidth:node.clientWidth};});
@@ -523,7 +524,7 @@ async function ready(p){
    const text=selector=>p.locator(selector).innerText().then(v=>v.replace(/\s+/g,' ').trim());
    assert.equal((await text('.hero-eyebrow')),e.tagline,lang+' hero tagline');
    assert.equal(await p.locator('.hero-content').evaluate(n=>getComputedStyle(n).direction),dir,lang+' hero direction');
-   assert.equal(await p.locator('.hero-title').evaluate(n=>getComputedStyle(n).textAlign),'start',lang+' hero title alignment');
+   assert.equal(await p.locator('.hero-title').evaluate(n=>getComputedStyle(n).textAlign),'center',lang+' hero title alignment');
    assert.match(await p.locator('.hero-content').evaluate(n=>getComputedStyle(n).fontFamily),new RegExp(font),lang+' hero font');
    assert.equal(await p.locator('.story-section,.contact-section').count(),0);
    assert.equal(await text('.footer-address'),data.restaurant.address,lang+' actual restaurant address');
@@ -551,7 +552,7 @@ async function ready(p){
   await p.evaluate(()=>ROMANO_I18N.setLanguage('en',false));
   assert.equal((await readEyebrow()).trim(),'Cafe & Restaurant');
   assert.equal(await p.locator('.hero-eyebrow').evaluate(el=>getComputedStyle(el).direction),'ltr');
-  assert.equal(await p.locator('.hero-title').evaluate(el=>getComputedStyle(el).textAlign),'start');
+  assert.equal(await p.locator('.hero-title').evaluate(el=>getComputedStyle(el).textAlign),'center');
   await p.evaluate(()=>ROMANO_I18N.setLanguage('tr',false));
   assert.equal((await readEyebrow()).trim(),'Kafe & Restoran');
   await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));

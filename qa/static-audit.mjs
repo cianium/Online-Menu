@@ -73,7 +73,7 @@ check(/\.navigation-footer\s*\{[^}]*direction:\s*inherit/s.test(read("css/romano
 check(/<span class="hero-eyebrow">\s*کافه و رستوران\s*<\/span>/.test(read("index.html")) && read("js/i18n.js").includes('set(".hero-eyebrow", pick(restaurant.tagline))'), "Hero eyebrow must be semantic and localized from restaurant tagline.");
 check(!read("css/romano.css").includes("hero-section::before"), "Hero eyebrow must not be duplicated by generated CSS content.");
 check(!read("js/i18n.js").includes("Designed by Cian Khayat"), "Obsolete developer credit remains in customer localization.");
-check(read("js/menu-experience.js").includes('id="menu-browser-eyebrow"') && read("js/i18n.js").includes('"menuEyebrow"'), "Customer menu eyebrow is not localized.");
+check(read("js/menu-experience.js").includes('id="browse-title"') && read("js/menu-experience.js").includes("t('menuIntro')") && !read("js/menu-experience.js").includes('id="menu-browser-eyebrow"'), "Customer catalog must retain a localized accessible heading without visible header copy.");
 check(read("js/app.js").split("getImageFallbackLabel(").length >= 5, "Customer product image fallbacks must use localized product initials in cards, modal and broken-image states.");
 check(!read("js/menu-experience.js").includes('class="section-eyebrow">ROMANO'), "Customer menu still contains a hard-coded platform heading.");
 check(read("sw.js").includes('url.pathname.includes("/admin/")'), "Service worker does not explicitly exclude admin.");
