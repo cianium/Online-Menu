@@ -188,10 +188,11 @@
       const value=read(key,{});
       return Object.fromEntries(requestKinds.filter(kind=>value?.[kind]===true).map(kind=>[kind,true]));
     }
-    const icons={waiter:"♧",bill:"≡",water:"◈",napkin:"▤"};
+    const icons={waiter:"M3 17h18M5 17a7 7 0 0 1 14 0M12 7V5m-2 0h4M2 20h20",bill:"M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6m-6 4h6",water:"M12 3c-2 4-6 8-6 12a6 6 0 0 0 12 0c0-4-4-8-6-12Z",napkin:"M4 4h16v16H4zM4 20 20 4M12 12h8v8"};
     for(const kind of requestKinds) {
       const button=element("button",null,"hp-service-action");button.type="button";button.disabled=!enabled;
-      const icon=element("span",icons[kind],"hp-service-icon");icon.setAttribute("aria-hidden","true");
+      const icon=document.createElementNS("http://www.w3.org/2000/svg","svg");icon.setAttribute("viewBox","0 0 24 24");icon.setAttribute("class","hp-service-icon");icon.setAttribute("aria-hidden","true");icon.setAttribute("focusable","false");
+      const stroke=document.createElementNS("http://www.w3.org/2000/svg","path");stroke.setAttribute("d",icons[kind]);icon.append(stroke);
       const label=element("strong",h(kind));const detail=element("span",null,"hp-service-detail");
       button.append(icon,label,detail);
       function refresh() {
@@ -218,8 +219,15 @@
     const selected=visibleCartEntries();
     const groups=new Set(selected.map(([id])=>product(id)?.category));
     // Category diversity is a suggestion heuristic, not a personalized or AI recommendation.
-    const candidates=selected.length && typeof products!=="undefined" && Array.isArray(products)
-      ? products.filter(item=>item.active!==false && product(item.id) && !cart[item.id] && !groups.has(item.category)).slice(0,3):[];
+    const candidates=[];
+    if(selected.length && typeof menuProducts!=="undefined" && Array.isArray(menuProducts)){
+      const suggestedGroups=new Set(groups);
+      for(const item of menuProducts){
+        if(item.active===false || !product(item.id) || cart[item.id] || suggestedGroups.has(item.category))continue;
+        candidates.push(item);suggestedGroups.add(item.category);
+        if(candidates.length===3)break;
+      }
+    }
     const previous=document.activeElement?.dataset?.hpAdd;
     host.hidden=!candidates.length;
     host.replaceChildren();

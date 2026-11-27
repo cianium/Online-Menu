@@ -101,3 +101,16 @@ test('Both international prefixes recover the same legacy membership and preserv
  assert.throws(()=>model.register(db,session,'Other','0012025550101'),/EXISTING_PROFILE/);
  assert.equal(model.read(db).length,1);
 });
+
+test('Optional sample order notes persist safely and reject invalid input without changing history',()=>{
+ const db=storage(),session=storage();model.register(db,session,'Sample','+12025550124');
+ const items=[{name:'Dish',quantity:1,price:5}];
+ const legacy=model.addOrder(db,session,items,5,'IRT');
+ assert.equal(legacy.notes,undefined);
+ const order=model.addOrder(db,session,items,5,'IRT','  Fictional note  ');
+ assert.equal(order.notes,'Fictional note');
+ assert.equal(model.active(db,session).orders[0].notes,'Fictional note');
+ assert.throws(()=>model.addOrder(db,session,items,5,'IRT','x'.repeat(1001)),/INVALID_ORDER/);
+ assert.throws(()=>model.addOrder(db,session,items,5,'IRT',{}),/INVALID_ORDER/);
+ assert.equal(model.active(db,session).orders.length,2);
+});

@@ -666,3 +666,6 @@ html[dir] .hero-overlay {background:linear-gradient(180deg,#080705b0 0%,#0807059
 #hp-undo[hidden],#hp-continue[hidden],#hp-suggestions[hidden],#hp-note-local[hidden]{display:none!important}
 :is(#commerce-drawer,.hp-contact) button:focus-visible{outline:2px solid #ebc98e;outline-offset:3px}
 @media(max-width:420px){#commerce-drawer .commerce-item{grid-template-columns:52px minmax(0,1fr);gap:9px}#commerce-drawer .commerce-item-media{inline-size:52px;block-size:52px}#commerce-drawer .commerce-remove{grid-column:2;justify-self:start;min-height:44px}}
+
+.hp-service-icon{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.hp-history-notes{white-space:pre-wrap;overflow-wrap:anywhere;color:#c4b8a7}
