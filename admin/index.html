@@ -813,29 +813,15 @@
                 </form>
 
                 <section class="panel" id="hp-admin-settings" hidden></section>
-                <section class="gateway-settings" id="demo-branches" hidden aria-labelledby="sample-branches-title">
-                    <h2 id="sample-branches-title">شعبه‌های آزمایشی</h2>
-                    <p>کاتالوگ، اعضا و سفارش‌های هر شعبه در همین مرورگر جداگانه ذخیره می‌شوند.</p>
-                    <label class="sample-branch-field"><span>انتخاب شعبه</span><select id="sample-branch-select" data-admin-user-text="true"></select></label>
-                    <form class="gateway-settings-form" data-action="create">
-                        <label><span>نام شعبه جدید</span><input name="sampleName" maxlength="80" required></label>
-                        <button type="submit" class="secondary-button">افزودن شعبه آزمایشی</button>
-                    </form>
-                    <form class="gateway-settings-form" data-action="rename">
-                        <label><span>نام شعبه فعال</span><input name="sampleRename" maxlength="80" required></label>
-                        <button type="submit" class="secondary-button">ذخیره نام شعبه</button>
-                    </form>
-                    <form class="gateway-settings-form" id="sample-branch-lifecycle" hidden>
-                        <label><span>مدیریت وضعیت شعبه</span><select id="sample-branch-target" data-admin-user-text="true"></select></label>
-                        <p>غیرفعال‌سازی، ورود و سفارش جدید را متوقف می‌کند؛ اطلاعات قبلی حذف نمی‌شوند.</p>
-                        <button type="submit" class="secondary-button" id="sample-branch-active-toggle">غیرفعال‌کردن</button>
-                    </form>
+                <section class="gateway-settings" id="demo-tables" hidden aria-labelledby="sample-tables-title">
+                    <h2 id="sample-tables-title">میزها و سفارش QR</h2>
+                    <p>برای هر میز کد و نام تعیین کنید و QR اختصاصی آن را بسازید.</p>
                     <form class="gateway-settings-form" id="sample-table-form" data-action="table">
                         <label><span>کد میز (لاتین)</span><input name="sampleTableCode" dir="ltr" maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_\-]*" required></label>
                         <label><span>نام میز</span><input name="sampleTableName" maxlength="80" required></label>
                         <button class="secondary-button" type="submit">افزودن میز</button>
                     </form>
-                    <label class="sample-branch-field" hidden><span>میز</span><select id="sample-table-select" data-admin-user-text="true"></select></label>
+                    <label class="sample-table-field" hidden><span>میز</span><select id="sample-table-select" data-admin-user-text="true"></select></label>
                     <div class="ops-qr-result" id="sample-table-qr" hidden>
                         <div class="ops-qr-image" aria-hidden="true"></div>
                         <a class="secondary-button" target="_blank" rel="noopener noreferrer">باز کردن ورود آزمایشی مشتری</a>
@@ -848,7 +834,7 @@
                         <p data-admin-i18n="میزها و سفارش‌گیری برای رستوران از قبل پیکربندی‌شده مدیریت می‌شوند.">میزها و سفارش‌گیری برای رستوران از قبل پیکربندی‌شده مدیریت می‌شوند.</p>
                     </div>
                     <div class="gateway-settings-form">
-                        <label><span data-admin-i18n="انتخاب شعبه">انتخاب شعبه</span><select id="ops-branch" disabled></select></label>
+                        <select id="ops-branch" hidden aria-hidden="true" tabindex="-1" disabled></select>
                         <label class="gateway-check"><input id="ops-qr-enabled" type="checkbox" disabled><span data-admin-i18n="فعال‌سازی سفارش QR">فعال‌سازی سفارش QR</span></label>
                         <button class="secondary-button" id="ops-save-branch" type="button" disabled data-admin-i18n="ذخیره وضعیت سفارش‌گیری">ذخیره وضعیت سفارش‌گیری</button>
                     </div>
@@ -858,25 +844,17 @@
                         <button class="primary-button" type="submit" disabled data-admin-i18n="افزودن میز">افزودن میز</button>
                     </form>
                     <div id="ops-tables" class="ops-tables" aria-live="polite">تنظیمات عملیاتی در نسخه مستقل در دسترس نیست.</div>
-                    <div class="ops-qr-result" id="sample-qr-preview" hidden>
-                        <div class="ops-qr-image" aria-hidden="true"></div>
-                        <div>
-                            <h3>QR ورود آزمایشی</h3>
-                            <p>برای باز کردن فرم عضویت نمونه اسکن کنید.</p>
-                            <a class="secondary-button" href="../?qr=demo" target="_blank" rel="noopener noreferrer">باز کردن ورود آزمایشی مشتری</a>
-                        </div>
-                    </div>
                     <p id="ops-message" role="status" aria-live="polite"></p>
                 </section>
 
                 <section class="gateway-settings" aria-labelledby="gateway-settings-title">
                     <div>
                         <span class="page-eyebrow">تسویه مستقیم</span>
-                        <h2 id="gateway-settings-title">درگاه پرداخت شعبه</h2>
+                        <h2 id="gateway-settings-title">درگاه پرداخت رستوران</h2>
                         <p>مبالغ سفارش مستقیماً به پذیرنده خود رستوران واریز می‌شود.</p>
                     </div>
                     <form id="gateway-settings-form" class="gateway-settings-form">
-                        <label><span>شعبه</span><select id="gateway-branch" required disabled></select></label>
+                        <select id="gateway-branch" hidden aria-hidden="true" tabindex="-1" disabled></select>
                         <label><span>درگاه</span><select id="gateway-provider"><option value="zarinpal">زرین‌پال</option></select></label>
                         <label class="gateway-merchant"><span>شناسه پذیرنده</span><input id="gateway-merchant-id" type="text" inputmode="latin" autocomplete="off" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label>
                         <label class="gateway-check"><input id="gateway-sandbox" type="checkbox" checked><span>محیط آزمایشی</span></label>

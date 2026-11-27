@@ -371,7 +371,6 @@ async function saveBranchGateway(member: Member, branchId: string, body: unknown
 }
 
 
-const branchSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const tableCodePattern = /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function record(value: unknown): Record<string,unknown> | null {
@@ -382,20 +381,6 @@ async function ownedBranch(member: Member, branchId: string) {
   const {data,error}=await service.from("branches")
     .select("id,restaurant_id,active,qr_ordering_enabled,currency_code,menu_price_to_minor_multiplier")
     .eq("restaurant_id",member.restaurant_id).eq("id",branchId).maybeSingle();
-  if(error) throw error;
-  return data;
-}
-async function saveBranch(member: Member, body: unknown) {
-  const value=record(body);
-  if(!value || typeof value.name !== "string" || value.name.trim().length<1 || value.name.trim().length>120
-     || typeof value.slug !== "string" || value.slug.length>80 || !branchSlugPattern.test(value.slug)
-     || value.currencyCode !== "IRR" || value.currencyExponent !== 0
-     || !Number.isSafeInteger(value.priceMultiplier) || Number(value.priceMultiplier)<1 || Number(value.priceMultiplier)>1000) return null;
-  const {data,error}=await service.from("branches").insert({
-    restaurant_id:member.restaurant_id, slug:value.slug, name:value.name.trim(),
-    currency_code:"IRR", currency_exponent:0, menu_price_to_minor_multiplier:value.priceMultiplier,
-    active:true, qr_ordering_enabled:false, auto_accept_qr_orders:false
-  }).select("id,slug,name,active,qr_ordering_enabled,currency_code").single();
   if(error) throw error;
   return data;
 }
@@ -567,11 +552,7 @@ Deno.serve(async req => {
       return reply(await branchSettings(m),id,200,newCookies);
     }
     if(path==="/admin/branches" && req.method==="POST") {
-      const m=resolveMember(p,undefined,"manager");
-      if(!m) return failure("FORBIDDEN","Manager access required.",id,403,newCookies);
-      const created=await saveBranch(m,await readBody(req,16_384));
-      if(!created) return failure("VALIDATION_ERROR","Invalid branch input.",id,422,newCookies);
-      return reply({branch:created},id,201,newCookies);
+      return failure("FEATURE_DISABLED","Additional restaurant locations are not supported.",id,405,newCookies);
     }
     const branchSettingsMatch=path.match(/^\/admin\/branches\/([0-9a-f-]{36})\/settings$/i);
     if(branchSettingsMatch && req.method==="PUT") {
