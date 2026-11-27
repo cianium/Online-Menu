@@ -10,7 +10,7 @@
   const validItem=i=>i&&typeof i.name==='string'&&i.name.length<=150&&Number.isSafeInteger(i.quantity)&&i.quantity>=1&&i.quantity<=99&&Number.isFinite(i.price)&&i.price>0;
   const catalogCurrency=value=>{const code=String(value||'IRT').trim().toUpperCase();return /^[A-Z]{3}$/.test(code)&&code!=='IRR'?code:'IRT';};
   const validDate=d=>typeof d==='string'&&Number.isFinite(Date.parse(d));
-  const validOrder=o=>o&&(o.tableName===undefined||(typeof o.tableName==='string'&&o.tableName.length<=80))&&typeof o.id==='string'&&(o.currency===undefined||(typeof o.currency==='string'&&o.currency===catalogCurrency(o.currency)))&&validDate(o.createdAt)&&Array.isArray(o.items)&&o.items.length>0&&o.items.length<=100&&o.items.every(validItem)&&Number.isFinite(o.total)&&o.total>0&&Math.abs(o.items.reduce((sum,i)=>sum+i.price*i.quantity,0)-o.total)<0.000001;
+  const validOrder=o=>o&&(o.notes===undefined||(typeof o.notes==="string"&&o.notes.length<=1000))&&(o.tableName===undefined||(typeof o.tableName==='string'&&o.tableName.length<=80))&&typeof o.id==='string'&&(o.currency===undefined||(typeof o.currency==='string'&&o.currency===catalogCurrency(o.currency)))&&validDate(o.createdAt)&&Array.isArray(o.items)&&o.items.length>0&&o.items.length<=100&&o.items.every(validItem)&&Number.isFinite(o.total)&&o.total>0&&Math.abs(o.items.reduce((sum,i)=>sum+i.price*i.quantity,0)-o.total)<0.000001;
   const uuid=()=>globalThis.crypto.randomUUID();
   const lockKey=key+':mutation-lock';
   const delay=ms=>new Promise(resolve=>globalThis.setTimeout(resolve,ms));
@@ -78,7 +78,7 @@
     catch(e){try{if(old===null)storage.removeItem(key);else storage.setItem(key,old);}catch{}throw e;}
     return member;
   }
-  function addOrder(storage,session,items,total,currency){
+  function addOrder(storage,session,items,total,currency,notes=""){
     branch?.context();
     const rows=read(storage),current=rows.find(r=>r.id===session.getItem(activeKey));
     if(!current)throw Error('NO_PROFILE');
@@ -89,6 +89,8 @@
       const table = branch.context().tables.find(t => t.code === branch.table);
       order.tableName = table.name;
     }
+    if(typeof notes!=="string"||notes.length>1000)throw Error("INVALID_ORDER");
+    if(notes.trim())order.notes=notes.trim();
     if(!validOrder(order))throw Error('INVALID_ORDER');
     storage.setItem(key,JSON.stringify(rows.map(r=>r.id===current.id?{...r,orders:[order,...r.orders]}:r)));
     return order;

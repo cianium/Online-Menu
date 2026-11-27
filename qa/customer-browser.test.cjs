@@ -36,6 +36,8 @@ async function ready(p){
    assert.equal(await trigger.getAttribute('aria-expanded'),'true');
    assert.equal(await trigger.getAttribute('aria-controls'),'ramen-contact-dialog');
    assert.ok((await dialog.locator('h2').innerText()).trim());
+   assert.equal(await dialog.locator('.hp-service-action').count(),4);
+   assert.equal(await dialog.locator('.hp-service-action:disabled').count(),4,'no table context must not simulate requests');
    assert.equal(await dialog.locator('a[href^="tel:"]').count(),0,'sample phone must not initiate a call');
    assert.equal(await dialog.locator('.ramen-contact-item > span[dir="ltr"]').count(),1);
    assert.equal(await dialog.locator('.ramen-contact-item > span[dir="ltr"]').evaluate(n=>getComputedStyle(n).direction),'ltr');
@@ -260,6 +262,11 @@ async function ready(p){
   await p.keyboard.press('Escape');
   await entry.waitFor({state:'hidden'});
   await cartButton.click();
+  assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
+  await p.locator('[data-cart-remove]').click();
+  assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
+  assert.equal(await p.locator('#hp-undo').isVisible(),true);
+  await p.locator('#hp-undo-button').click();
   assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
   await p.locator('[data-cart-remove]').click();
   assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
