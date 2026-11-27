@@ -430,6 +430,7 @@
     });
     dialog.addEventListener('close',()=>{window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');window.RomanoCustomerChat?.suspend();if(origin?.isConnected)origin.focus();origin=null;activePanel=null;});
     document.addEventListener('romano:language-changed',()=>{if(dialog.open&&activePanel==='chat'){const restore=document.activeElement?.classList.contains('connect-language');openPanel('chat',origin,true,restore);}else close();updateLabel();});
+    document.addEventListener('romano:connect-session-changed',()=>{window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
     document.addEventListener('romano:demo-membership-changed',()=>{const next=profileId();if(next===connectProfile)return;connectProfile=next;window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
     window.addEventListener('romano:data-updated',()=>{if(typeof menuDataMode!=='undefined'&&menuDataMode!=='demo')window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
     updateLabel();
@@ -768,7 +769,9 @@
   async function openQrSession() {
     const params = new URLSearchParams(location.search);
     const qrToken = params.get("qr");
-    if (!qrToken || window.RomanoCustomerEntry?.isDemoQr()) return;
+    if (!qrToken || window.RomanoCustomerEntry?.isDemoQr() || standalone) return;
+    window.RomanoConnectLive?.clearBinding();
+    document.dispatchEvent(new CustomEvent("romano:connect-session-changed"));
     try {
       const response = await fetch("/api/v1/orders/session", {
         method: "POST", credentials: "include", headers: { "content-type": "application/json", accept: "application/json" },
@@ -776,8 +779,11 @@
       });
       const body = await response.json().catch(() => null);
       if (!response.ok || !body?.data) throw new Error("QR_SESSION_FAILED");
-      tableSession = body.data;
+      const {connectBinding,...tableData}=body.data;
+      window.RomanoConnectLive?.setBinding(connectBinding);
+      tableSession = tableData;
       save(`online_menu_table_vq3:${tenant()}`, tableSession);
+      document.dispatchEvent(new CustomEvent("romano:connect-session-changed"));
       params.delete("qr");
       history.replaceState(history.state, "", `${location.pathname}${params.size ? `?${params}` : ""}${location.hash}`);
       render();

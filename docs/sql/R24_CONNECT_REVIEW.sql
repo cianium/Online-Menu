@@ -147,12 +147,12 @@ begin
  then raise exception 'CONNECT_FORBIDDEN' using errcode='42501'; end if;
  if p_op='list' then
   return coalesce((select jsonb_agg(q.payload order by q.updated_at desc,q.id) from (
-    select c.id,c.updated_at,public.romano_connect_metadata(c.id,true) ||
+    select conv.id,conv.updated_at,public.romano_connect_metadata(conv.id,true) ||
     jsonb_build_object('lastMessage',(select public.romano_connect_message_json(m,true) from public.romano_connect_messages m
-     where m.conversation_id=c.id order by m.sequence desc limit 1)) payload
-    from public.romano_connect_conversations c join public.table_session_tokens t on t.id=c.guest_token_id
-    where t.restaurant_id=p_restaurant and c.expires_at>v_now-interval '24 hours'
-    order by c.updated_at desc,c.id limit 50
+     where m.conversation_id=conv.id order by m.sequence desc limit 1)) payload
+    from public.romano_connect_conversations conv join public.table_session_tokens t on t.id=conv.guest_token_id
+    where t.restaurant_id=p_restaurant and conv.expires_at>v_now-interval '24 hours'
+    order by conv.updated_at desc,conv.id limit 50
   ) q),'[]'::jsonb);
  end if;
  if p_op is null or p_op not in ('get','send','assign','resolve','reopen','close') then raise exception 'CONNECT_INVALID_REQUEST' using errcode='22023'; end if;

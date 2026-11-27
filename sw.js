@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r24-table-services`;
+const CACHE_NAME = `${menuCachePrefix}r24-live-transport`;
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -24,6 +24,7 @@ const CORE_ASSETS = [
   "./js/commerce.js",
   "./js/connect-core.js",
   "./js/connect-demo.js",
+  "./js/connect-live.js",
   "./js/connect-customer.js",
   "./js/demo-review.js",
   "./js/demo-members.js",

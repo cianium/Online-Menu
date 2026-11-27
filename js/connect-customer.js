@@ -32,7 +32,17 @@ const copy={
     "loading": "در حال بارگذاری…",
     "retry": "تلاش مجدد",
     "orderQuestion": "وضعیت سفارش من چگونه است؟",
-    "orderLocal": "سفارش مرتبط در همین مرورگر ثبت شده است؛ وضعیت آماده‌سازی آنلاین نیست."
+    "orderLocal": "سفارش مرتبط در همین مرورگر ثبت شده است؛ وضعیت آماده‌سازی آنلاین نیست.",
+    "live": "ارتباط با سرور",
+    "liveNotice": "پیام‌ها به سرور ارسال می‌شوند؛ وضعیت حضور کارکنان تأیید نشده است.",
+    "scanAgain": "برای ارتباط آنلاین، QR میز را دوباره اسکن کنید.",
+    "connecting": "در حال اتصال…",
+    "connected": "ارتباط با سرور برقرار است",
+    "disconnected": "اتصال قطع است؛ تلاش مجدد انجام می‌شود.",
+    "serverSaved": "در سرور ثبت شد",
+    "liveStaff": "کارکنان رستوران",
+    "rateLimited": "تعداد پیام‌ها زیاد است؛ کمی بعد دوباره تلاش کنید.",
+    "unavailable": "ارتباط آنلاین در حال حاضر در دسترس نیست."
   },
   "en": {
     "title": "Chat with the restaurant",
@@ -65,7 +75,17 @@ const copy={
     "loading": "Loading…",
     "retry": "Retry",
     "orderQuestion": "What is the status of my order?",
-    "orderLocal": "Linked order saved locally; live preparation status is unavailable."
+    "orderLocal": "Linked order saved locally; live preparation status is unavailable.",
+    "live": "Server chat",
+    "liveNotice": "Messages are sent to the server; staff presence is not verified.",
+    "scanAgain": "Scan the table QR again for online chat.",
+    "connecting": "Connecting…",
+    "connected": "Server connection established",
+    "disconnected": "Disconnected; retrying.",
+    "serverSaved": "Saved on server",
+    "liveStaff": "Restaurant staff",
+    "rateLimited": "Too many messages. Try again shortly.",
+    "unavailable": "Online chat is currently unavailable."
   },
   "tr": {
     "title": "Restoranla sohbet",
@@ -98,7 +118,17 @@ const copy={
     "loading": "Yükleniyor…",
     "retry": "Tekrar dene",
     "orderQuestion": "Siparişimin durumu nedir?",
-    "orderLocal": "Bağlı sipariş yerel olarak kaydedildi; canlı hazırlık durumu kullanılamıyor."
+    "orderLocal": "Bağlı sipariş yerel olarak kaydedildi; canlı hazırlık durumu kullanılamıyor.",
+    "live": "Sunucu sohbeti",
+    "liveNotice": "Mesajlar sunucuya gönderilir; personelin çevrimiçi durumu doğrulanmaz.",
+    "scanAgain": "Çevrimiçi sohbet için masa QR kodunu tekrar tarayın.",
+    "connecting": "Bağlanıyor…",
+    "connected": "Sunucu bağlantısı kuruldu",
+    "disconnected": "Bağlantı kesildi; yeniden deneniyor.",
+    "serverSaved": "Sunucuya kaydedildi",
+    "liveStaff": "Restoran personeli",
+    "rateLimited": "Çok fazla mesaj. Biraz sonra tekrar deneyin.",
+    "unavailable": "Çevrimiçi sohbet şu anda kullanılamıyor."
   },
   "ar": {
     "title": "محادثة المطعم",
@@ -131,7 +161,17 @@ const copy={
     "loading": "جارٍ التحميل…",
     "retry": "إعادة المحاولة",
     "orderQuestion": "ما حالة طلبي؟",
-    "orderLocal": "حُفظ الطلب المرتبط محليًا؛ حالة التحضير المباشرة غير متاحة."
+    "orderLocal": "حُفظ الطلب المرتبط محليًا؛ حالة التحضير المباشرة غير متاحة.",
+    "live": "محادثة عبر الخادم",
+    "liveNotice": "تُرسل الرسائل إلى الخادم؛ لم يتم التحقق من حضور الموظفين.",
+    "scanAgain": "امسح رمز الطاولة مرة أخرى للمحادثة عبر الإنترنت.",
+    "connecting": "جارٍ الاتصال…",
+    "connected": "تم الاتصال بالخادم",
+    "disconnected": "انقطع الاتصال؛ جارٍ إعادة المحاولة.",
+    "serverSaved": "حُفظ على الخادم",
+    "liveStaff": "موظفو المطعم",
+    "rateLimited": "رسائل كثيرة. حاول مجددًا بعد قليل.",
+    "unavailable": "المحادثة عبر الإنترنت غير متاحة حاليًا."
   }
 };
 const customerChat=function customerChat(core,copy,engine,root){
@@ -146,8 +186,11 @@ const customerChat=function customerChat(core,copy,engine,root){
   function render(host,options){
     suspend();const run=generation;
     const {language,mode,branchId,context,brand,onContact,onLanguage,onServices}=options,w=words(language);
-    const eligible=mode==="demo"&&typeof branchId==="string"&&typeof root.crypto?.randomUUID==="function";
-    const scope=branchId+":"+String(options.tableCode||"")+":"+String(options.profileId||"guest");
+    const liveMode=mode==="public",liveClient=root.RomanoConnectLive;
+    const proof=liveMode?liveClient?.binding():null;
+    const eligible=(mode==="demo"&&typeof branchId==="string"||liveMode&&Boolean(proof))&&typeof root.crypto?.randomUUID==="function";
+    const transport=liveMode?liveClient:engine;
+    const scope=liveMode?"public:"+String(proof||"missing"):branchId+":"+String(options.tableCode||"")+":"+String(options.profileId||"guest");
     if(!eligible){if(draftScope!==null)clear();}
     if(draftScope!==scope){draft="";pending=null;draftScope=scope;}
     const current=()=>run===generation&&host.isConnected&&host.closest("dialog")?.open;
@@ -157,25 +200,25 @@ const customerChat=function customerChat(core,copy,engine,root){
     const avatar=node("span","R","connect-avatar");avatar.setAttribute("aria-hidden","true");
     const details=node("div",null,"connect-identity-text"),name=node("strong",brand||"RAMEN");name.dir="auto";
     details.append(name,node("span",context,"connect-context"));identity.append(avatar,details);
-    summary.append(identity,node("span",eligible?w.demo:w.offline,"connect-badge"));
+    const connection=node("span",liveMode?(eligible?w.connecting:w.offline):eligible?w.demo:w.offline,"connect-badge");connection.setAttribute("role","status");summary.append(identity,connection);
     const toolbar=node("div",null,"connect-toolbar"),contact=btn(w.contact,"connect-secondary",onContact);
     contact.dataset.connectContact="";
     const selector=node("select",null,"connect-language");selector.setAttribute("aria-label",w.language);
     for(const [value,label] of [["fa","فارسی"],["ar","العربية"],["en","English"],["tr","Türkçe"]]){const o=node("option",label);o.value=value;selector.append(o);}
     selector.value=language;selector.addEventListener("change",()=>onLanguage(selector.value));toolbar.append(contact,selector);
     const orderStatus=node("p",null,"connect-order-local");orderStatus.hidden=true;
-    head.append(summary,toolbar,node("p",eligible?w.notice:w.fallback,"ramen-contact-note connect-notice"),orderStatus);
+    head.append(summary,toolbar,node("p",liveMode?(eligible?w.liveNotice:w.scanAgain):eligible?w.notice:w.fallback,"ramen-contact-note connect-notice"),orderStatus);
     const timeline=node("div",null,"connect-timeline");timeline.setAttribute("role","log");timeline.setAttribute("aria-label",w.log);timeline.setAttribute("aria-live","polite");timeline.tabIndex=0;
-    const empty=node("div",null,"connect-empty"),symbol=node("span","···","connect-symbol");symbol.setAttribute("aria-hidden","true");empty.append(symbol,node("h3",w.hello),node("p",eligible?w.hint:w.fallback));timeline.append(empty);
+    const empty=node("div",null,"connect-empty"),symbol=node("span","···","connect-symbol");symbol.setAttribute("aria-hidden","true");empty.append(symbol,node("h3",w.hello),node("p",liveMode?(eligible?w.liveNotice:w.scanAgain):eligible?w.hint:w.fallback));timeline.append(empty);
     function bubble(m){
       const row=node("article",null,"connect-message"),body=node("p",m.text,"connect-bubble"),meta=node("div",null,"connect-meta");
       row.classList.toggle("is-staff",!m.own);body.dir="auto";body.lang=m.language;
       const time=node("time",new Intl.DateTimeFormat(language,{hour:"2-digit",minute:"2-digit"}).format(m.createdAt));time.dateTime=new Date(m.createdAt).toISOString();
-      meta.append(node("span",m.own?w.you:w.staff),time,node("span",w.saved));row.append(body,meta);return row;
+      meta.append(node("span",m.own?w.you:liveMode?w.liveStaff:w.staff),time,node("span",liveMode?w.serverSaved:w.saved));row.append(body,meta);return row;
     }
     const bottom=node("div",null,"connect-bottom"),quick=node("div",null,"connect-quick"),chips=node("div",null,"connect-chips");
     quick.setAttribute("role","group");quick.setAttribute("aria-label",w.quick);quick.append(node("span",w.quick,"connect-quick-label"),chips);
-    const status=node("p",eligible?w.loading:"","connect-status");status.setAttribute("role","status");
+    const status=node("p",eligible?(liveMode?w.connecting:w.loading):liveMode?w.scanAgain:"","connect-status");status.setAttribute("role","status");
     const form=node("form",null,"connect-compose"),input=node("textarea",null,"connect-input");
     input.id="connect-message-input";input.rows=2;input.maxLength=core.maxText*2;input.dir="auto";input.setAttribute("aria-label",w.input);input.placeholder=w.placeholder;input.value=eligible?draft:"";
     const foot=node("div",null,"connect-compose-footer"),count=node("span",null,"connect-count"),send=node("button",w.send,"connect-send");send.type="submit";count.dir="ltr";
@@ -189,19 +232,32 @@ const customerChat=function customerChat(core,copy,engine,root){
         timeline.replaceChildren(...(data.messages.length?data.messages.map(bubble):[empty]));lastVersion=v;
         if(atBottom)timeline.scrollTop=timeline.scrollHeight;
       }
-      orderStatus.hidden=!data.conversation?.orderId;orderStatus.textContent=orderStatus.hidden?"":w.orderLocal;
-      ended=Boolean(data.conversation&&["closed","resolved"].includes(data.conversation.status));
+      if(liveMode)connection.textContent=w.connected;
+      orderStatus.hidden=liveMode||!data.conversation?.orderId;orderStatus.textContent=orderStatus.hidden?"":w.orderLocal;
+      ended=Boolean(data.conversation&&(["closed","resolved"].includes(data.conversation.status)||Date.now()>=data.conversation.expiresAt));
       enabled=!ended;loaded=true;retry.hidden=true;if(ended)status.textContent=w.ended;update();
     }
     function showError(error){
-      enabled=false;loaded=false;ended=["CONNECT_EXPIRED","CONNECT_MESSAGE_LIMIT","CONNECT_INACTIVE"].includes(error.message);
-      status.textContent=ended?w.ended:w.error;retry.hidden=ended;update();
+      enabled=false;loaded=false;
+      const revoked=liveMode&&["CONNECT_EXPIRED","CONNECT_NOT_FOUND","CONNECT_FORBIDDEN"].includes(error.message);
+      ended=revoked||["CONNECT_EXPIRED","CONNECT_MESSAGE_LIMIT","CONNECT_INACTIVE"].includes(error.message);
+      if(revoked){timeline.replaceChildren(empty);draft="";pending=null;input.value="";session=null;liveClient.clearBinding();}
+      if(liveMode)connection.textContent=w.disconnected;
+      status.textContent=revoked?w.scanAgain:error.message==="CONNECT_RATE_LIMIT"?w.rateLimited:ended?w.ended:liveMode?(error.message==="CONNECT_UNAVAILABLE"?w.unavailable:w.disconnected):w.error;
+      retry.hidden=ended;update();
     }
     async function refresh(){
-      if(!eligible||!current()||refreshing||busy)return;
+      if(!eligible||!current()||refreshing||busy)return null;
+      if(liveMode&&!liveClient.binding())return null;
       refreshing=true;
-      try{if(!session)session=engine.sessionForCurrent();const data=await engine.get(session);if(!current()||busy)return;display(data);if(!ended&&status.textContent!==w.saved)status.textContent="";}
-      catch(error){if(current()&&!busy)showError(error);}
+      try{
+        if(!session)session=transport.sessionForCurrent();
+        const data=await transport.get(session);
+        if(!current()||busy)return null;
+        display(data);if(!ended&&status.textContent!==(liveMode?w.serverSaved:w.saved))status.textContent="";
+        return true;
+      }
+      catch(error){if(current()&&!busy)showError(error);return false;}
       finally{refreshing=false;}
     }
     for(const key of ["question","orderQuestion"]){const chip=btn(w[key],"connect-chip",()=>{if(!enabled||busy)return;const next=(input.value.trim()?input.value.trim()+"\n":"")+w[key];if(Array.from(next).length>core.maxText){status.textContent=w.invalid;return;}input.value=next;draft=next;pending=null;update();input.focus();});chips.append(chip);}
@@ -211,20 +267,26 @@ const customerChat=function customerChat(core,copy,engine,root){
       const attempt=pending&&pending.text===input.value?pending:{id:root.crypto.randomUUID(),text:input.value,language};
       pending=attempt;busy=true;update();
       try{
-        const data=await engine.send(session,attempt.id,attempt.text,attempt.language);
+        const data=await transport.send(session,attempt.id,attempt.text,attempt.language);
         if(pending===attempt){pending=null;draft="";}
-        if(current()){input.value=draft;display(data);status.textContent=w.saved;timeline.scrollTop=timeline.scrollHeight;}
+        if(current()){input.value=draft;display(data);status.textContent=liveMode?w.serverSaved:w.saved;timeline.scrollTop=timeline.scrollHeight;}
       }catch(error){if(current()){if(error.message==="CONNECT_INVALID_MESSAGE"){status.textContent=w.invalid;pending=null;}else showError(error);}}
       finally{busy=false;if(current())update();else root.setTimeout(()=>{if(activeRefresh)activeRefresh();},0);}
     });
     foot.append(count,send);form.append(input,foot);
     const retry=btn(w.retry,"connect-secondary",()=>refresh());retry.hidden=true;
     const reset=btn(w.newChat,"connect-reset",()=>{if(!eligible||busy)return;if((draft||timeline.querySelector(".connect-message"))&&!root.confirm(w.confirm))return;try{engine.newConversation();}catch(error){showError(error);return;}draft="";pending=null;render(host,options);});
-    reset.hidden=!eligible;if(typeof onServices==="function")onServices(bottom);bottom.append(quick,status,form,retry,reset);host.append(head,timeline,bottom);update();
+    reset.hidden=!eligible||liveMode;if(typeof onServices==="function")onServices(bottom);bottom.append(quick,status,form,retry,reset);host.append(head,timeline,bottom);update();
     if(eligible){
-      const off=engine.subscribe(()=>refresh()),timer=root.setInterval(()=>{if(current()&&doc.visibilityState!=="hidden")refresh();},2000);
-      activeRefresh=refresh;dispose=()=>{off();root.clearInterval(timer);if(activeRefresh===refresh)activeRefresh=null;};
-      root.setTimeout(refresh,0);
+      if(liveMode){
+        const poll=liveClient.createPoller(refresh,{interval:5000,maxDelay:30000,visible:()=>current()&&doc.visibilityState!=="hidden"});
+        const wake=()=>poll.wake();doc.addEventListener("visibilitychange",wake);root.addEventListener("online",wake);
+        activeRefresh=refresh;dispose=()=>{poll.stop();doc.removeEventListener("visibilitychange",wake);root.removeEventListener("online",wake);if(activeRefresh===refresh)activeRefresh=null;};
+      }else{
+        const off=engine.subscribe(()=>refresh()),timer=root.setInterval(()=>{if(current()&&doc.visibilityState!=="hidden")refresh();},2000);
+        activeRefresh=refresh;dispose=()=>{off();root.clearInterval(timer);if(activeRefresh===refresh)activeRefresh=null;};
+        root.setTimeout(refresh,0);
+      }
     }
   }
   let activeRefresh=null;
