@@ -199,6 +199,31 @@ async function ready(p){
   }
   await p.evaluate(()=>{localStorage.removeItem('online_menu_demo_rating:romano');localStorage.removeItem('online_menu_demo_review_v2:romano');ROMANO_I18N.setLanguage('fa',false);});
  });
+ await check('Connect IndexedDB survives reload and receives a same-origin staff reply',async()=>{
+  await p.setViewportSize({width:390,height:844});await p.reload();await ready(p);
+  const trigger=p.locator('[data-ramen-nav="contact"]');await trigger.click();
+  const dialog=p.locator('#ramen-contact-dialog');
+  await p.waitForFunction(()=>document.querySelector('#connect-message-input')&&!document.querySelector('#connect-message-input').disabled);
+  await dialog.locator('#connect-message-input').fill('R24 demo persistence check');
+  await dialog.locator('.connect-send').click();
+  await p.waitForFunction(()=>Array.from(document.querySelectorAll('.connect-bubble')).at(-1)?.textContent==='R24 demo persistence check');
+  const guest=await p.evaluate(()=>JSON.parse(sessionStorage.getItem('romano_connect_guest_v1')));
+  await p.reload();await ready(p);await trigger.click();
+  await p.waitForFunction(()=>Array.from(document.querySelectorAll('.connect-bubble')).at(-1)?.textContent==='R24 demo persistence check');
+  const staffTab=await ctx.newPage();
+  try{
+   await staffTab.goto(base);await ready(staffTab);
+   await staffTab.evaluate(async guest=>{
+    const engine=RomanoConnectDemo,a={id:'qa-staff',role:'manager',restaurantId:'romano',branchId:guest.branchId};
+    const data=await engine.readStaff(a,guest.conversationId);
+    await engine.command(a,guest.conversationId,{type:'send',clientId:crypto.randomUUID(),text:'R24 demo staff reply',language:'en',expectedVersion:data.conversation.version});
+   },guest);
+   await p.waitForFunction(()=>Array.from(document.querySelectorAll('.connect-message.is-staff .connect-bubble')).some(n=>n.textContent==='R24 demo staff reply'));
+   const isolated=await staffTab.evaluate(async branch=>{const s=RomanoConnectDemo.session(branch,branch+':independent');return (await RomanoConnectDemo.get(s)).messages.length;},guest.branchId);
+   assert.equal(isolated,0);
+  }finally{await staffTab.close();}
+  await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
+ });
  await check('Hamburger navigation covers the complete desktop viewport',async()=>{
   await p.setViewportSize({width:1440,height:900});
   await p.reload();await ready(p);

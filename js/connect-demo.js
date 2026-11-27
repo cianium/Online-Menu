@@ -7,17 +7,18 @@ const createDemoEngine=function createDemoEngine(core,platform){
   const time=v=>Number.isSafeInteger(v)&&v>=0&&v<=8640000000000000;
   const fail=code=>{throw Error(code);};
   const key="romano_connect_guest_v1";
+  let mustRotate=false;
   const actorFor=(s)=>({id:s.guestId,role:"guest",restaurantId:"romano",branchId:s.branchId});
   function validSession(s){return s&&id(s.guestId)&&id(s.conversationId)&&id(s.branchId)&&typeof s.scope==="string"&&s.scope.length<=200;}
   function session(branchId,scope){
     if(!id(branchId)||typeof scope!=="string"||scope.length>200)fail("CONNECT_INVALID_CONTEXT");
     let s;try{s=JSON.parse(platform.sessionStorage.getItem(key)||"null");}catch{fail("CONNECT_STORAGE");}
     if(s!==null&&!validSession(s))fail("CONNECT_STORAGE");
-    if(s?.branchId===branchId&&s.scope===scope)return s;
+    if(!mustRotate&&s?.branchId===branchId&&s.scope===scope)return s;
     s={guestId:platform.uuid(),conversationId:platform.uuid(),branchId,scope};
-    platform.sessionStorage.setItem(key,JSON.stringify(s));return s;
+    platform.sessionStorage.setItem(key,JSON.stringify(s));mustRotate=false;return s;
   }
-  function forget(){platform.sessionStorage.removeItem(key);}
+  function forget(){mustRotate=true;platform.sessionStorage.removeItem(key);}
   function validate(c){
     const ok=c&&c.schemaVersion===1&&id(c.id)&&c.restaurantId==="romano"&&id(c.branchId)&&id(c.guestId)&&
       c.tableId===null&&c.tableSessionId===null&&c.orderId===null&&core.languages.includes(c.language)&&core.statuses.includes(c.status)&&

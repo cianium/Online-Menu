@@ -319,6 +319,8 @@
     const updateLabel = () => document.querySelector('.ramen-bottom-nav')?.setAttribute('aria-label',(contactWords[lang()] || contactWords.fa).nav);
     const close = () => { if (dialog.open) dialog.close(); };
     let origin = null, activePanel = null;
+    const profileId=()=>window.RomanoCustomerEntry?.current()?.id||"";
+    let connectProfile=profileId();
     const openPanel = (panel='chat', opener=trigger, replace=false, restoreLanguage=false) => {
       if (dialog.open && !replace) return;
       const wasOpen=dialog.open;
@@ -342,7 +344,7 @@
       if(panel==='chat'&&chat){
         let branchId=null;
         if(demo){try{window.RomanoDemoBranches?.context();branchId=window.RomanoDemoBranches?.id||'primary';}catch{/* invalid demo branch */}}
-        chat.render(content,{language:lang(),mode,branchId,tableCode:guestContext().code,context:contextLabel(),brand:document.querySelector('[data-restaurant-brand]')?.textContent.trim(),onContact:()=>openPanel('contact',origin,true),onLanguage:value=>window.ROMANO_I18N.setLanguage(value,false)});
+        chat.render(content,{language:lang(),mode,branchId,tableCode:guestContext().code,profileId:profileId(),context:contextLabel(),brand:document.querySelector('[data-restaurant-brand]')?.textContent.trim(),onContact:()=>openPanel('contact',origin,true),onLanguage:value=>window.ROMANO_I18N.setLanguage(value,false)});
       }else{
       if(panel==='waiter')guestServices(content,element,demo,['waiter']);
       if(panel==='contact'){
@@ -422,7 +424,7 @@
     });
     dialog.addEventListener('close',()=>{window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');window.RomanoCustomerChat?.suspend();if(origin?.isConnected)origin.focus();origin=null;activePanel=null;});
     document.addEventListener('romano:language-changed',()=>{if(dialog.open&&activePanel==='chat'){const restore=document.activeElement?.classList.contains('connect-language');openPanel('chat',origin,true,restore);}else close();updateLabel();});
-    document.addEventListener('romano:demo-membership-changed',()=>{window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
+    document.addEventListener('romano:demo-membership-changed',()=>{const next=profileId();if(next===connectProfile)return;connectProfile=next;window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
     window.addEventListener('romano:data-updated',()=>{if(typeof menuDataMode!=='undefined'&&menuDataMode!=='demo')window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
     updateLabel();
   }

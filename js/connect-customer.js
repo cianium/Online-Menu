@@ -139,7 +139,7 @@ const customerChat=function customerChat(core,copy,engine,root){
     suspend();const run=generation;
     const {language,mode,branchId,context,brand,onContact,onLanguage}=options,w=words(language);
     const eligible=mode==="demo"&&typeof branchId==="string"&&typeof root.crypto?.randomUUID==="function";
-    const scope=branchId+":"+String(options.tableCode||"");
+    const scope=branchId+":"+String(options.tableCode||"")+":"+String(options.profileId||"guest");
     if(!eligible){if(draftScope!==null)clear();}
     if(draftScope!==scope){draft="";pending=null;draftScope=scope;}
     const current=()=>run===generation&&host.isConnected&&host.closest("dialog")?.open;
@@ -174,6 +174,7 @@ const customerChat=function customerChat(core,copy,engine,root){
     function update(){count.textContent=Array.from(input.value).length+" / "+core.maxText;input.disabled=!enabled||busy;send.disabled=!valid();for(const c of chips.children)c.disabled=!enabled||busy;reset.disabled=busy;retry.disabled=busy;selector.disabled=busy;contact.disabled=busy;}
     function display(data){
       const v=data.conversation?.version??0;
+      if(v<lastVersion)return;
       if(v!==lastVersion){
         const atBottom=lastVersion<0||timeline.scrollHeight-timeline.scrollTop-timeline.clientHeight<80;
         timeline.replaceChildren(...(data.messages.length?data.messages.map(bubble):[empty]));lastVersion=v;
@@ -189,8 +190,8 @@ const customerChat=function customerChat(core,copy,engine,root){
     async function refresh(){
       if(!eligible||!current()||refreshing||busy)return;
       refreshing=true;
-      try{if(!session)session=engine.session(branchId,scope);const data=await engine.get(session);if(!current())return;display(data);if(!ended&&status.textContent!==w.saved)status.textContent="";}
-      catch(error){if(current())showError(error);}
+      try{if(!session)session=engine.session(branchId,scope);const data=await engine.get(session);if(!current()||busy)return;display(data);if(!ended&&status.textContent!==w.saved)status.textContent="";}
+      catch(error){if(current()&&!busy)showError(error);}
       finally{refreshing=false;}
     }
     for(const key of ["waiter","bill","water","question"]){const chip=btn(w[key],"connect-chip",()=>{if(!enabled||busy)return;const next=(input.value.trim()?input.value.trim()+"\n":"")+w[key];if(Array.from(next).length>core.maxText){status.textContent=w.invalid;return;}input.value=next;draft=next;pending=null;update();input.focus();});chips.append(chip);}
