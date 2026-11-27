@@ -774,7 +774,7 @@ async function ready(p){
  });
  await check('Blocked storage still permits browsing and session favorites',async()=>{
   const c=await browser.newContext({serviceWorkers:'block'});await c.addInitScript(()=>{Storage.prototype.getItem=()=>{throw Error('blocked')};Storage.prototype.setItem=()=>{throw Error('blocked')}});
-  const s=await c.newPage();s.on('pageerror',e=>errors.push(String(e)));await s.goto(base);await ready(s);await s.locator('[data-ramen-nav="menu"]').click();assert.equal(await s.locator('#menu .product-card').count(),21);
+  const s=await c.newPage();s.on('pageerror',e=>errors.push(String(e)));await s.goto(base);await ready(s);await s.locator('.hero-button').click();await s.locator('#menu').waitFor({state:'visible'});assert.equal(await s.locator('#menu .product-card').count(),21);
   await s.locator('#menu .product-card [data-favorite-product]').first().click();assert.equal(await s.locator('#menu .product-card [data-favorite-product]').first().getAttribute('aria-pressed'),'true');await c.close();
  });
  await check('Mobile back-to-top control stays clear of bottom navigation',async()=>{
