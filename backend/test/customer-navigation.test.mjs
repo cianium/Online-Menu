@@ -69,11 +69,13 @@ test('Catalog disclosures and sticky layout retain accessible controls, horizont
  assert.match(html,/css\/catalog-browse\.css/);assert.match(sw,/css\/catalog-browse\.css/);
 });
 
-test('Category shortcuts reset conflicting filters and featured signature is not duplicated',()=>{
+test('Category shortcuts reset conflicting filters and featured cards share one renderer',()=>{
  const app=read('js/app.js'),browser=read('js/menu-experience.js');
  assert.match(app,/selectCategory\(categoryId, true\)/);assert.match(app,/selectCategory\(id, true\)/);
  assert.match(browser,/if\(reset\) \{query='';order='menu';onlyFavorites=false/);
- assert.match(app,/const railProducts = featured.slice\(1\)/);
+ assert.match(app,/const railProducts = featured;/);
+ assert.doesNotMatch(read('index.html'),/id="signature-dish"/);
+ assert.doesNotMatch(app,/function renderSignatureDish\(/);
 });
 
 test('Browsing translations preserve literal search input in every supported locale',async()=>{
@@ -160,4 +162,16 @@ test('Commerce enhances freshly rendered cards synchronously and preserves focus
  assert.match(js,/document\.addEventListener\("romano:product-opened", enhanceProducts\)/);
  assert.doesNotMatch(js,/setTimeout\(enhanceProducts/);
  assert.match(js,/restoreDetailsFocus && !details\.closest\("\[inert\]"\)/);
+});
+
+test('R17 toolbar, visible language icon, and directional back-to-top are wired',()=>{
+ const app=read('js/app.js'),browse=read('js/menu-experience.js'),css=read('css/customer-polish.css'),commerce=read('js/commerce.js');
+ assert.match(browse,/document\.querySelector\('#site-header'\)\.append\(controls\)/);
+ assert.match(browse,/controls\.append\(status\)/);
+ assert.match(css,/\.language-toggle-icon \{display:block/);
+ assert.match(app,/setVisible\(delta < 0\)/);
+ assert.match(app,/DOM\.modalMeta\.replaceChildren/);
+ assert.match(commerce,/previous >= 99/);
+ assert.match(commerce,/showAddFeedback\(item,cart\[id\],source\)/);
+ assert.match(css,/\.r17-cart-feedback\.is-visible/);
 });

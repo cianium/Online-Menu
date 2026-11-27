@@ -329,13 +329,59 @@
     cartFocusOrigin = null;
   }
 
-  function add(id) {
-    if (!product(id)) return;
+  const addFeedbackText = {
+    fa: {added:"به سبد اضافه شد",limit:"حداکثر تعداد این محصول در سبد"},
+    en: {added:"Added to cart",limit:"Maximum quantity reached"},
+    ar: {added:"تمت الإضافة إلى السلة",limit:"تم بلوغ الحد الأقصى للكمية"},
+    tr: {added:"Sepete eklendi",limit:"En yüksek adede ulaşıldı"}
+  };
+  let feedbackTimer;
+  const pulseTimers = new WeakMap();
+  function pulse(node) {
+    if (!node) return;
+    clearTimeout(pulseTimers.get(node));
+    node.classList.remove("r17-cart-pulse");
+    void node.offsetWidth;
+    node.classList.add("r17-cart-pulse");
+    pulseTimers.set(node,setTimeout(()=>node.classList.remove("r17-cart-pulse"),700));
+  }
+  function showAddFeedback(item, quantity, source, limit = false) {
+    const words = addFeedbackText[lang()] || addFeedbackText.fa;
+    const name = localized(item).name;
+    const title = limit ? words.limit : words.added;
+    const detail = name + " · ×" + new Intl.NumberFormat(lang()).format(quantity);
+    let toast = document.getElementById("r17-cart-feedback");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "r17-cart-feedback";
+      toast.className = "r17-cart-feedback";
+      toast.setAttribute("aria-hidden","true");
+      toast.innerHTML = '<span class="r17-feedback-mark">✓</span><div><strong></strong><small></small></div>';
+      document.body.append(toast);
+    }
+    toast.querySelector(".r17-feedback-mark").textContent = limit ? "!" : "✓";
+    toast.querySelector("strong").textContent = title;
+    toast.querySelector("small").textContent = detail;
+    toast.classList.toggle("is-limit",limit);
+    toast.classList.add("is-visible");
+    clearTimeout(feedbackTimer);
+    feedbackTimer = setTimeout(()=>toast.classList.remove("is-visible"),2400);
+    announce(title + " — " + detail);
+    if (!limit) {
+      pulse(source);
+      document.querySelectorAll(".ramen-header-cart-count,.ramen-bottom-cart-count,.navigation-cart-count").forEach(pulse);
+    }
+  }
+  function add(id, source) {
+    const item = product(id);
+    if (!item) return;
+    const previous = Number(cart[id] || 0);
+    if (previous >= 99) { showAddFeedback(item,99,source,true); return; }
     demoOrderSaved=false;
-    cart[id] = Math.min(99, Number(cart[id] || 0) + 1);
+    cart[id] = previous + 1;
     save(cartKey(), cart);
     render();
-    announce(`${localized(product(id)).name}: ${t("add")}`);
+    showAddFeedback(item,cart[id],source);
   }
   function change(id, delta) {
     const next = Number(cart[id] || 0) + delta;
@@ -436,7 +482,7 @@
       button.type = "button";
       button.className = "commerce-card-add";
       button.textContent = `+ ${t("add")}`;
-      button.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); add(card.dataset.productId); });
+      button.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); add(card.dataset.productId,button); });
       const details = card.querySelector(".product-card-button");
       const body = card.querySelector(".product-body");
       if (details && body) {
@@ -458,7 +504,7 @@
       modalAdd.type = "button";
       modalAdd.className = "commerce-modal-add";
       modalContent.append(modalAdd);
-      modalAdd.addEventListener("click", () => { if (window.RomanoActiveProduct?.id) add(window.RomanoActiveProduct.id); });
+      modalAdd.addEventListener("click", () => { if (window.RomanoActiveProduct?.id) add(window.RomanoActiveProduct.id,modalAdd); });
     }
     if (modalAdd) modalAdd.textContent = `+ ${t("add")}`;
   }

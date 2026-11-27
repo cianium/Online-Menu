@@ -149,19 +149,20 @@
           <div id="menu-search-active" class="browse-query" hidden></div>
           <div id="menu-search-panel" class="browse-panel" hidden><div class="menu-search-field">${icon('search')}<label class="sr-only" for="rv4-menu-search"></label><input id="rv4-menu-search" type="search" autocomplete="off" aria-controls="menu-categories"></div></div>
           <div id="menu-filter-panel" class="browse-panel" hidden><h3 id="menu-filter-title"></h3><div class="menu-tools"><label for="menu-sort" id="menu-sort-label" class="sr-only"></label><select id="menu-sort"></select><button id="menu-favorites-toggle" type="button" aria-pressed="false"></button><button id="menu-reset" type="button"></button></div></div>`;
-        section.prepend(controls);
-        // Status is intentionally not sticky: it must not consume the browsing viewport.
-        const status=document.createElement('div');status.id='menu-data-status';status.className='menu-data-status';status.setAttribute('role','status');status.innerHTML='<span></span><button type="button"></button>';controls.after(status);
+        document.querySelector('#site-header').append(controls);
+        // Keep the demo/offline disclosure in the compact header, not in the catalog.
+        const status=document.createElement('div');status.id='menu-data-status';status.className='menu-data-status';status.setAttribute('role','status');status.innerHTML='<span></span><button type="button"></button>';controls.append(status);
         section.setAttribute('aria-labelledby','browse-title');
         const live=document.createElement('div');live.id='menu-announcement';live.setAttribute('role','status');live.setAttribute('aria-live','polite');document.body.appendChild(live);
         const measure=()=>{
             const header=document.querySelector('.site-header');
             section.style.setProperty('--browse-header-offset',`${header?.getBoundingClientRect().height||0}px`);
             section.style.setProperty('--browse-bar-height',`${controls.getBoundingClientRect().height}px`);
+            document.documentElement.style.setProperty('--r17-header-height',`${Math.ceil(header?.getBoundingClientRect().height||0)}px`);
         };
         if('ResizeObserver' in window){const observer=new ResizeObserver(measure);observer.observe(controls);const header=document.querySelector('.site-header');if(header)observer.observe(header);}
         window.addEventListener('resize',measure,{passive:true});measure();
-        for(const id of ['search','filter']) byId(`menu-${id}-toggle`).addEventListener('click',()=>setPanel(openPanel===id?null:id,openPanel===id));
+        for(const id of ['search','filter']) byId(`menu-${id}-toggle`).addEventListener('click',()=>{const closing=openPanel===id;setPanel(closing?null:id,closing);if(!closing)section.scrollIntoView({behavior:'instant',block:'start'});});
         controls.addEventListener('keydown',event=>{if(event.key==='Escape'&&openPanel){event.preventDefault();event.stopPropagation();setPanel(null,true);}});
         document.addEventListener('click',event=>{if(openPanel&&!controls.contains(event.target))setPanel(null,controls.contains(document.activeElement));});
         controls.querySelector('#rv4-menu-search').addEventListener('input',event=>{query=event.target.value;redraw();});
