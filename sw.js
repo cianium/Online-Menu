@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r21-fast-cart-history`;
+const CACHE_NAME = `${menuCachePrefix}r22-compact-header-rating`;
 const CORE_ASSETS = [
   "./",
   "./index.html",

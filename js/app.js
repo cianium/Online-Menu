@@ -9,51 +9,51 @@
 
 // History entries belong to customer overlays, not to individual UI buttons.
 window.RamenOverlayHistory = (() => {
-    const key = "__ramenCustomerOverlay";
-    let active = null, pending = false, serial = 0, restoration;
-    const state = () => history.state && typeof history.state === "object" ? {...history.state} : {};
-    const clean = () => { const value=state(); delete value[key]; return value; };
-    const url = () => location.pathname + location.search + location.hash;
-    function push(record) {
-        if (record.baseUrl && url() === record.url) history.replaceState(clean(), "", record.baseUrl);
-        restoration = history.scrollRestoration;
-        history.scrollRestoration = "manual";
-        history.pushState({...clean(),[key]:record.token}, "", record.url || url());
-    }
-    function enter(id, close, options={}) {
-        if (active?.id === id) return;
-        const next={id,close,token:Date.now()+"-"+(++serial),url:options.url,baseUrl:options.baseUrl};
+    const key="__ramenCustomerOverlay", idleKey="__ramenCustomerIdle";
+    let active=null,idle=null,serial=0,restoration;
+    const state=()=>history.state&&typeof history.state==="object"?{...history.state}:{};
+    const clean=()=>{const value=state();delete value[key];delete value[idleKey];return value;};
+    const url=()=>location.pathname+location.search+location.hash;
+    const restore=()=>{if(restoration)history.scrollRestoration=restoration;restoration=null;};
+    function enter(id,close,options={}){
+        if(active?.id===id)return;
         const previous=active;
-        const replace=previous && history.state?.[key] === previous.token;
+        const next={id,close,token:Date.now()+"-"+(++serial),base:previous?.base||options.baseUrl||url()};
+        const replace=Boolean(previous&&history.state?.[key]===previous.token)||Boolean(idle&&history.state?.[idleKey]===idle.token&&url()===idle.url);
         active=next;
         if(previous)previous.close();
-        if(pending)return;
-        if(replace)history.replaceState({...clean(),[key]:next.token},"",next.url||url());
-        else push(next);
+        idle=null;
+        if(!previous){restoration=history.scrollRestoration;history.scrollRestoration="manual";}
+        if(!replace&&options.baseUrl&&url()===options.url)history.replaceState(clean(),"",options.baseUrl);
+        const nextState={...clean(),[key]:next.token};
+        if(replace)history.replaceState(nextState,"",options.url||url());
+        else history.pushState(nextState,"",options.url||url());
     }
-    function leave(id, baseUrl) {
+    function leave(id,baseUrl){
         if(active?.id!==id)return;
         const record=active;active=null;
-        if(pending||history.state?.[key]!==record.token)return;
-        if(baseUrl)history.replaceState(state(),"",baseUrl);
-        pending=true;history.back();
+        const destination=baseUrl||url();
+        // Explicit close is synchronous. Reuse the dismissed history slot on
+        // the next overlay instead of starting a racing history.back traversal.
+        idle={token:record.token,url:destination,base:record.base};
+        history.replaceState({...clean(),[idleKey]:idle.token},"",destination);
+        restore();
     }
     window.addEventListener("popstate",()=>{
-        if(pending){
-            pending=false;
-            if(restoration)history.scrollRestoration=restoration;
-            if(active)push(active);
-            return;
-        }
         if(active&&history.state?.[key]!==active.token){
-            const record=active;active=null;
-            if(restoration)history.scrollRestoration=restoration;
-            record.close();
-        }else if(!active&&history.state?.[key])history.replaceState(clean(),"",url());
+            const record=active;active=null;idle=null;restore();record.close();return;
+        }
+        if(!active&&history.state?.[key])history.replaceState(clean(),"",url());
+        // If a user backs out of an already dismissed same-URL slot, consume
+        // only that duplicate; normal fragment or cross-document Back is untouched.
+        if(!active&&idle&&history.state?.[idleKey]!==idle.token){
+            const duplicate=url()===idle.url&&idle.url===idle.base;
+            idle=null;if(duplicate)history.back();
+        }
     });
-    if(history.state?.[key])history.replaceState(clean(),"",url());
+    if(history.state?.[key]||history.state?.[idleKey])history.replaceState(clean(),"",url());
     return Object.freeze({enter,leave});
-})();
+})()
 
 
 /* =========================================================

@@ -58,6 +58,27 @@ async function ready(p){
    }
   }finally{await p.evaluate(()=>{localStorage.removeItem('romano_restaurant');ROMANO_I18N.setLanguage('fa',false);});await p.reload();await ready(p);}
  });
+ await check('Compact header and hero expose a real, moderated local rating in four languages',async()=>{
+  const rating=p.locator('#hero-rating');
+  for(const lang of ['fa','ar','en','tr']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   await p.waitForFunction(()=>!document.querySelector('#hero-rating').hidden);
+   assert.equal(await p.locator('.menu-icon-actions #menu-search-toggle').count(),1);
+   assert.equal(await p.locator('.header-container #menu-search-toggle').count(),0);
+   assert.equal(await p.locator('.hero-button-icon').count(),0);
+   assert.equal(await rating.locator('.hero-stars span').count(),5);
+   assert.equal(await rating.locator('.is-filled').count(),0);
+   assert.equal(await rating.locator('#hero-satisfaction').textContent(),'—');
+   const geometry=await p.evaluate(()=>{const c=document.querySelector('.hero-content').getBoundingClientRect(),b=document.querySelector('.hero-button').getBoundingClientRect(),h=document.querySelector('.hero-section').getBoundingClientRect();return {content:c.bottom,button:b.top,end:b.bottom,hero:h.bottom};});
+   assert.ok(geometry.button>=geometry.content-1&&geometry.end<=geometry.hero+1);
+  }
+  await p.evaluate(()=>{const model=RomanoDemoReview;const review=model.submit(localStorage,'romano',4,'Sample review','qa-hero-rating');model.moderate(localStorage,'romano',review,'approved');window.dispatchEvent(new StorageEvent('storage',{key:model.key('romano')}));});
+  assert.equal(await rating.locator('.is-filled').count(),4);
+  assert.equal(await rating.locator('#hero-satisfaction').textContent(),await p.evaluate(()=>new Intl.NumberFormat(ROMANO_I18N.language,{style:'percent'}).format(.8)));
+  await rating.click();await p.locator('#ramen-contact-dialog').waitFor({state:'visible'});await p.keyboard.press('Escape');
+  await p.evaluate(()=>{localStorage.removeItem(RomanoDemoReview.key('romano'));window.dispatchEvent(new StorageEvent('storage',{key:RomanoDemoReview.key('romano')}));ROMANO_I18N.setLanguage('fa',false);});
+  assert.equal(await rating.locator('.is-filled').count(),0);
+ });
  await check('Customer image sources reject unsupported protocols and URL credentials',async()=>{
   const result=await p.evaluate(()=>({
    rejected:['javascript:alert(1)','data:image/svg+xml,<svg/>','file:///etc/passwd','https://user:password@example.test/a.png','blob:'+location.origin+'/sample'].map(getSafeImageSource),
@@ -296,7 +317,7 @@ async function ready(p){
     const original=location.href;
     const url=new URL(original);
     for(const [key,value] of Object.entries({restaurant:'sample',demoBranch:'sample-branch',demoTable:'A1',qr:'sample-private-token',payment:'ok',order:'sample-order',ref:'sample-ref',extra:'sample-extra'}))url.searchParams.set(key,value);
-    history.replaceState(null,'',url.href);
+    history.replaceState(history.state,'',url.href);
     Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.__qaShare=data}});
     window.__qaShare=null;
     return original;
@@ -311,7 +332,7 @@ async function ready(p){
     assert.equal(url.searchParams.get('demoBranch'),'sample-branch');
     assert.match(url.hash,/^#product-/);
    }finally{
-    await p.evaluate(original=>{history.replaceState(null,'',original);delete navigator.share;delete window.__qaShare;},original);
+    await p.evaluate(original=>{history.replaceState(history.state,'',original);delete navigator.share;delete window.__qaShare;},original);
     await p.keyboard.press('Escape');
    }
   }

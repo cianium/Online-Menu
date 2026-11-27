@@ -275,6 +275,27 @@
     lastRemoved={id,quantity:1};zeroItems.delete(id);
     render();announce(h("removed"));
   }
+  const ratingWords={
+    fa:["رضایت مشتریان","هنوز امتیاز تأییدشده‌ای ثبت نشده","بر اساس ۱ نظر نمونه تأییدشده در این مرورگر","امتیاز مشتریان در دسترس نیست"],
+    en:["Customer satisfaction","No approved ratings yet","Based on 1 approved sample review in this browser","Customer ratings unavailable"],
+    tr:["Müşteri memnuniyeti","Henüz onaylı puan yok","Bu tarayıcıdaki 1 onaylı örnek yoruma göre","Müşteri puanları mevcut değil"],
+    ar:["رضا العملاء","لا توجد تقييمات معتمدة بعد","استنادًا إلى تقييم تجريبي معتمد واحد في هذا المتصفح","تقييمات العملاء غير متاحة"]
+  };
+  function renderHeroRating(){
+    const node=document.querySelector("#hero-rating");if(!node)return;
+    const words=ratingWords[lang()]||ratingWords.fa;
+    let score=null;
+    if(isDemo())try{const r=window.RomanoDemoReview.read(localStorage,tenant());if(r?.status==="approved")score=r.rating;}catch{/* no fabricated rating */}
+    node.hidden=false;
+    node.disabled=!isDemo();
+    node.querySelectorAll(".hero-stars > span").forEach((star,index)=>{const filled=score!==null&&index<score;star.textContent=filled?"★":"☆";star.classList.toggle("is-filled",filled);});
+    const percent=score===null?"—":new Intl.NumberFormat(lang(),{style:"percent",maximumFractionDigits:0}).format(score/5);
+    node.querySelector("#hero-satisfaction").textContent=percent;
+    node.querySelector("#hero-rating-label").textContent=words[0];
+    const detail=score!==null?words[2]:isDemo()?words[1]:words[3];
+    node.querySelector("#hero-rating-detail").textContent=detail;
+    node.setAttribute("aria-label",[words[0],percent,detail,h("review")].join(" · "));
+  }
   function initializeContactPanel() {
     const trigger = document.querySelector('[data-ramen-nav="contact"]');
     if (!trigger || typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) return;
@@ -329,7 +350,7 @@
           const button=element('button',labels.save,'feedback-save');button.type='button';button.disabled=!field.querySelector('input:checked');
           const status=element('p',null,'ramen-contact-note');status.setAttribute('role','status');
           field.addEventListener('change',()=>{button.disabled=false;status.textContent='';});
-          button.addEventListener('click',()=>{const selected=Number(field.querySelector('input:checked')?.value);if(!Number.isInteger(selected)||selected<1||selected>5||menuDataMode!=="demo")return;try{const id=globalThis.crypto.randomUUID();review.submit(localStorage,tenant(),selected,comment.value,id);status.textContent=labels.saved;}catch{status.textContent=labels.storageError;}});
+          button.addEventListener('click',()=>{const selected=Number(field.querySelector('input:checked')?.value);if(!Number.isInteger(selected)||selected<1||selected>5||menuDataMode!=="demo")return;try{const id=globalThis.crypto.randomUUID();review.submit(localStorage,tenant(),selected,comment.value,id);renderHeroRating();status.textContent=labels.saved;}catch{status.textContent=labels.storageError;}});
           content.append(field,commentLabel,button,status);
         }
       }
@@ -369,6 +390,7 @@
       dialog.replaceChildren(header,content);
       dialog.showModal();window.RamenOverlayHistory.enter('contact',close);document.body.classList.add('ramen-contact-open');if(panel==='contact'){trigger.setAttribute('aria-controls',dialog.id);trigger.setAttribute('aria-expanded','true');}dismiss.focus();
     };
+    document.querySelector("#hero-rating")?.addEventListener("click",event=>openPanel("feedback",event.currentTarget));
     trigger.addEventListener('click',event=>{event.preventDefault();openPanel();});
     trigger.addEventListener('keydown',event=>{if(event.key===' '){event.preventDefault();openPanel();}});
     document.addEventListener('romano:open-customer-panel',event=>{
@@ -891,7 +913,7 @@
   }
 
   function init() {
-    buildShell(); initializeCustomerNavigation(); render(); enhanceProducts();
+    buildShell(); initializeCustomerNavigation(); render(); enhanceProducts();renderHeroRating();
     if (!standalone) {
       openQrSession(); paymentReturn();
       if (activeOrder?.id && !["completed", "rejected", "cancelled"].includes(activeOrder.status)) startPolling();
@@ -902,9 +924,11 @@
     document.addEventListener("visibilitychange", () => { if (!document.hidden && pollTimer) pollOrder(); });
     document.addEventListener("romano:catalog-rendered", enhanceProducts);
     document.addEventListener("romano:product-opened", enhanceProducts);
-    window.addEventListener("romano:data-updated", () => { reconcileCart(); enhanceProducts(); render(); });
+    window.addEventListener("romano:data-updated", () => { reconcileCart(); enhanceProducts(); render();renderHeroRating(); });
     document.addEventListener("romano:demo-membership-changed",render);
+    document.addEventListener("romano:language-changed",renderHeroRating);
     window.addEventListener("storage", event => {
+      if(event.key===null||event.key===window.RomanoDemoReview.key(tenant()))renderHeroRating();
       const service=document.querySelector(".hp-services[data-request-key]");
       if(service && (event.key===null||event.key===service.dataset.requestKey))service.dispatchEvent(new Event("hp-request-updated"));
       if(event.key===window.RomanoDemoMembers?.settingsKey){render();return;}
