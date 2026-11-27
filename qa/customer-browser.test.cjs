@@ -42,6 +42,7 @@ async function ready(p){
     assert.equal(await p.locator('.footer-address').getAttribute('dir'),'auto');
     const trigger=p.locator('[data-ramen-nav="contact"]');await trigger.focus();await trigger.press('Space');
     const dialog=p.locator('#ramen-contact-dialog');await dialog.waitFor({state:'visible'});
+    await dialog.locator('[data-connect-contact]').click();
     assert.equal(await dialog.locator('.ramen-contact-item > span[dir="auto"]').textContent(),expected,lang+' contact address');
     await p.keyboard.press('Escape');await p.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open);
     await p.locator('#menu-toggle').click();
@@ -118,6 +119,9 @@ async function ready(p){
    assert.equal(await trigger.getAttribute('aria-expanded'),'true');
    assert.equal(await trigger.getAttribute('aria-controls'),'ramen-contact-dialog');
    assert.ok((await dialog.locator('h2').innerText()).trim());
+   assert.equal(await dialog.evaluate(d=>d.classList.contains('connect-dialog')),true);
+   assert.equal(await dialog.locator('#connect-message-input').isEnabled(),true);
+   await dialog.locator('[data-connect-contact]').click();
    assert.equal(await dialog.locator('.hp-service-action').count(),4);
    assert.equal(await dialog.locator('.hp-service-action:disabled').count(),4,'no table context must not simulate requests');
    assert.equal(await dialog.locator('a[href^="tel:"]').count(),0,'sample phone must not initiate a call');
@@ -181,6 +185,14 @@ async function ready(p){
    await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
    await p.locator('#menu-toggle').click();await nav.locator('#navigation-service-toggle').click();await nav.locator('[data-nav-panel="chat"]').click();
    await dialog.waitFor({state:'visible'});assert.ok((await dialog.locator('.ramen-contact-note').last().innerText()).trim());
+   assert.equal(await dialog.evaluate(d=>d.classList.contains('connect-dialog')),true);
+   await dialog.locator('#connect-message-input').fill('<b>Demo chat</b>');
+   await dialog.locator('.connect-send').click();
+   assert.equal(await dialog.locator('.connect-bubble').last().textContent(),'<b>Demo chat</b>');
+   assert.equal(await dialog.locator('.connect-bubble b').count(),0);
+   await dialog.locator('.connect-language').selectOption(lang==='en'?'fa':'en');
+   assert.equal(await dialog.locator('.connect-bubble').last().textContent(),'<b>Demo chat</b>');
+   await dialog.locator('.connect-language').selectOption(lang);
    await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
   }
   await p.evaluate(()=>{localStorage.removeItem('online_menu_demo_rating:romano');localStorage.removeItem('online_menu_demo_review_v2:romano');ROMANO_I18N.setLanguage('fa',false);});

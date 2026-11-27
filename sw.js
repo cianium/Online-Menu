@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r23-navigation-services`;
+const CACHE_NAME = `${menuCachePrefix}r24-connect-customer`;
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -13,6 +13,7 @@ const CORE_ASSETS = [
   "./css/interaction-system.css",
   "./css/catalog-browse.css",
   "./css/customer-polish.css",
+  "./css/connect.css",
   "./js/data.js",
   "./js/demo-branches.js",
   "./js/public-api.js",
@@ -21,6 +22,8 @@ const CORE_ASSETS = [
   "./js/app.js",
   "./js/menu-experience.js",
   "./js/commerce.js",
+  "./js/connect-core.js",
+  "./js/connect-customer.js",
   "./js/demo-review.js",
   "./js/demo-members.js",
   "./js/customer-entry.js",

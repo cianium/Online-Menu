@@ -1,0 +1,49 @@
+/* RAMEN Connect: scoped dark/gold customer dialog. */
+.ramen-contact-dialog.connect-dialog[open]{display:flex;flex-direction:column;width:min(640px,calc(100% - 32px));height:min(760px,calc(100dvh - 32px));max-height:none;max-width:none;overflow:hidden;padding:0;border-radius:24px;background:#090807;color:#f2ece3}
+.connect-dialog .ramen-contact-head{padding:12px 18px;margin:0;border-bottom:1px solid #ffffff20;flex:none;background:#171410}
+.connect-dialog .ramen-contact-head h2{font-size:clamp(17px,3.6vw,21px)}
+.connect-dialog .connect-content{display:flex;flex:1;min-height:0;min-width:0;flex-direction:column;gap:0}
+.connect-top{flex:none;padding:12px 18px 8px;background:#11100e;border-bottom:1px solid #ffffff20}
+.connect-summary,.connect-identity,.connect-toolbar,.connect-compose-footer,.connect-meta{display:flex;align-items:center;gap:8px}
+.connect-summary,.connect-toolbar,.connect-compose-footer{justify-content:space-between}
+.connect-summary{flex-wrap:wrap}
+.connect-identity{min-width:0;flex:1}
+.connect-avatar{display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:13px;background:#c9a46a20;border:1px solid #c9a46a55;color:#e2c28d;font-size:19px;font-weight:800}
+.connect-identity-text{display:grid;min-width:0;gap:2px}
+.connect-identity-text strong,.connect-context{overflow-wrap:anywhere}
+.connect-context{font-size:12px;color:#c4b8a7;line-height:1.45}
+.connect-badge{padding:5px 9px;border-radius:999px;border:1px solid #c9a46a55;background:#c9a46a14;color:#e2c28d;font-size:11px;line-height:1.4;max-width:100%;overflow-wrap:anywhere}
+.connect-toolbar{margin-block:8px 6px}
+.connect-secondary,.connect-language,.connect-chip,.connect-reset{min-height:44px;border:1px solid #ffffff30;border-radius:12px;background:#ffffff06;color:#f2ece3;font:inherit;font-size:12px;line-height:1.4;padding:8px 12px;cursor:pointer}
+.connect-language{max-width:112px;background:#171410}
+.connect-notice{font-size:12px;line-height:1.55;color:#c4b8a7;margin:0}
+.connect-timeline{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:14px;padding:16px 18px}
+.connect-empty{margin:auto;max-width:300px;text-align:center;padding:8px;color:#c4b8a7}
+.connect-symbol{display:grid;place-items:center;margin:0 auto 10px;width:54px;height:54px;border-radius:18px;background:#c9a46a15;color:#e2c28d;font-size:25px}
+.connect-empty h3{font-size:19px;color:#f2ece3;margin:0 0 6px;line-height:1.45}
+.connect-empty p{font-size:13px;line-height:1.55;margin:0}
+.connect-message{align-self:flex-end;max-width:min(88%,480px);min-width:0}
+.connect-bubble{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;padding:10px 14px;background:#d6ae70;color:#21180d;border-radius:16px;border-end-end-radius:5px;line-height:1.65;font-size:14px}
+.connect-meta{flex-wrap:wrap;gap:6px;font-size:10px;color:#bfb3a4;margin-block-start:5px}
+.connect-bottom{flex:none;padding:8px 18px calc(10px + env(safe-area-inset-bottom));border-top:1px solid #ffffff20;background:#11100e}
+.connect-quick-label{font-size:11px;color:#c4b8a7;display:block;margin-block-end:4px}
+.connect-chips{display:flex;gap:6px;overflow-x:auto;overscroll-behavior-inline:contain;padding-block-end:3px}
+.connect-chip{flex:none;white-space:normal;max-width:230px;color:#e2c28d;border-color:#c9a46a45}
+.connect-status{margin:4px 0;color:#e2c28d;font-size:11px;line-height:1.4}
+.connect-status:empty{display:none}
+.connect-compose{display:grid;gap:6px;margin-block-start:4px}
+.connect-input{width:100%;min-width:0;min-height:54px;max-height:100px;resize:vertical;border:1px solid #ffffff30;background:#1b1814;color:#f2ece3;border-radius:12px;padding:9px 12px;font:inherit;font-size:16px;line-height:1.4}
+.connect-input::placeholder{color:#ada193}
+.connect-count{font-size:11px;color:#c4b8a7}
+.connect-send{min-height:44px;border:0;border-radius:12px;background:#d6ae70;color:#21180d;font:inherit;font-size:13px;font-weight:750;padding:8px 15px;cursor:pointer}
+.connect-reset{margin-block-start:4px;background:transparent;border:0;color:#c4b8a7;padding:2px 6px;text-decoration:underline;text-underline-offset:3px}
+.connect-reset[hidden]{display:none}
+.connect-dialog :is(button,select,textarea):disabled{opacity:.55;cursor:not-allowed}
+.connect-dialog :is(button,select,textarea,[tabindex]):focus-visible{outline:2px solid #e2c28d;outline-offset:2px}
+@media(max-width:720px){
+ .ramen-contact-dialog.connect-dialog[open]{inset:0;margin:0;width:100%;height:100vh;height:100dvh;border:0;border-radius:0}
+ .connect-dialog .ramen-contact-head{padding-block-start:calc(8px + env(safe-area-inset-top))}
+ .connect-dialog .ramen-contact-head,.connect-top,.connect-timeline,.connect-bottom{padding-inline:12px}
+}
+@media(max-height:540px){.connect-top{padding-block:5px}.connect-dialog .ramen-contact-head{padding-block-end:5px}.connect-symbol{display:none}.connect-bottom{padding-block-start:4px}.connect-notice{max-height:3.1em;overflow:auto}.connect-timeline{padding-block:6px}}
+@media(prefers-reduced-motion:reduce){.ramen-contact-dialog.connect-dialog[open]{animation:none!important;scroll-behavior:auto}}

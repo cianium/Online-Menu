@@ -301,12 +301,14 @@ const readyCustomer = async page => {
       await customer.locator('[data-ramen-nav="contact"]').click();
       const guestPanel=customer.locator('#ramen-contact-dialog');
       await guestPanel.waitFor({state:'visible'});
+      await guestPanel.locator('[data-connect-contact]').click();
       const service=guestPanel.locator('.hp-service-action').first();
       assert.equal(await service.isEnabled(),true);
       await service.click();
       await customer.waitForFunction(()=>document.querySelector('.hp-service-action').getAttribute('aria-pressed')==='true');
       await guestPanel.locator('.ramen-contact-close').click();
       await customer.locator('[data-ramen-nav="contact"]').click();
+      await guestPanel.locator('[data-connect-contact]').click();
       assert.equal(await service.getAttribute('aria-pressed'),'true');
       await service.click();
       await customer.waitForFunction(()=>document.querySelector('.hp-service-action').getAttribute('aria-pressed')==='false');
