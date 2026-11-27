@@ -5,6 +5,9 @@ let pw;try{pw=require('playwright')}catch(e){if(!process.env.CODEX_PRIMARY_RUNTI
 const base=process.env.ADMIN_TEST_URL||'http://127.0.0.1:8765';
 const out=path.resolve(process.env.BROWSER_EVIDENCE_DIR||path.join(__dirname,'../docs/qa'));fs.mkdirSync(out,{recursive:true});
 const results=[],errors=[];let browser;
+// getBoundingClientRect can report 43.999996 for a 44 CSS-pixel control.
+// Only tolerate floating-point noise, not actual subpixel target shrinkage.
+const atLeastCssPixels=(value,minimum)=>Number.isFinite(value)&&value>=minimum-0.0001;
 async function check(name,fn){await fn();results.push(name);console.log('PASS',name)}
 async function ready(p){
  await p.waitForFunction(()=>typeof menuDataMode!=='undefined'&&menuDataMode!=='loading'&&Boolean(document.querySelector('.main-navigation')?.__romanoFocus));
@@ -335,7 +338,7 @@ async function ready(p){
    assert.equal(await rail.evaluate(node=>getComputedStyle(node).scrollSnapType.includes('inline')),true,lang+' category rail snap');
    const buttons=rail.locator('button');
    assert.ok(await buttons.count()>1);
-   assert.ok(await buttons.first().evaluate(node=>node.getBoundingClientRect().height>=44),lang+' category filter touch target');
+   assert.ok(atLeastCssPixels(await buttons.first().evaluate(node=>node.getBoundingClientRect().height),44),lang+' category filter touch target');
   }
  });
  await check('Compact full-bleed product card matches the premium reference and remains accessible',async()=>{
@@ -553,7 +556,7 @@ async function ready(p){
     await p.waitForFunction(()=>document.querySelector('#menu').style.getPropertyValue('--browse-bar-height'));
     assert.equal(await p.locator('#menu-search-panel').isVisible(),false);
     assert.equal(await p.locator('#menu-filter-panel').isVisible(),false);
-    for(const trigger of [searchToggle,filterToggle]){const r=await trigger.boundingBox();assert.ok(r&&r.width>=44&&r.height>=44,JSON.stringify({lang,width,id:await trigger.getAttribute("id"),rect:r}));assert.ok(await trigger.getAttribute('aria-label'));}
+    for(const trigger of [searchToggle,filterToggle]){const r=await trigger.boundingBox();assert.ok(r&&atLeastCssPixels(r.width,44)&&atLeastCssPixels(r.height,44),JSON.stringify({lang,width,id:await trigger.getAttribute("id"),rect:r}));assert.ok(await trigger.getAttribute('aria-label'));}
     await p.evaluate(()=>window.scrollBy({top:260,behavior:'instant'}));
     const pinned=await p.evaluate(()=>{const header=document.querySelector('.site-header'),h=header.getBoundingClientRect(),bar=header.querySelector('.menu-browser').getBoundingClientRect();return{gap:bar.bottom-h.bottom,height:bar.height}});
     assert.ok(Math.abs(pinned.gap)<=2,JSON.stringify({lang,width,pinned}));assert.ok(pinned.height<180);
@@ -742,7 +745,7 @@ async function ready(p){
   assert.equal(await headerCart.isVisible(),true);
   const cartBox=await headerCart.boundingBox();
   const menuBox=await p.locator('#menu-toggle').boundingBox();
-  assert.ok(cartBox && cartBox.width>=40 && cartBox.height>=40 && cartBox.x>=0 && cartBox.x+cartBox.width<=1440,JSON.stringify({cartBox,menuBox}));
+  assert.ok(cartBox && atLeastCssPixels(cartBox.width,40) && atLeastCssPixels(cartBox.height,40) && cartBox.x>=0 && cartBox.x+cartBox.width<=1440,JSON.stringify({cartBox,menuBox}));
   assert.ok(menuBox && (cartBox.x+cartBox.width<=menuBox.x-4 || menuBox.x+menuBox.width<=cartBox.x-4),JSON.stringify({cartBox,menuBox}));
   await p.setViewportSize({width:390,height:900});
   assert.equal(await p.locator('#ramen-bottom-cart').isVisible(),true);
@@ -760,7 +763,7 @@ async function ready(p){
    assert.equal(await cta.evaluate(node=>getComputedStyle(node).direction),expected[lang].dir,lang+' CTA direction');
    assert.match(await footer.evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expected[lang].font),lang+' footer font');
    assert.match(await cta.evaluate(node=>getComputedStyle(node).fontFamily),new RegExp(expected[lang].font),lang+' CTA font');
-   assert.ok((await cta.boundingBox()).height>=40,lang+' CTA touch target');
+   assert.ok(atLeastCssPixels((await cta.boundingBox())?.height,40),lang+' CTA touch target');
    assert.ok((await cta.textContent()).trim().length>0,lang+' CTA label');
    const toggle=nav.locator('#navigation-service-toggle'),options=nav.locator('#navigation-service-options');
    assert.equal(await nav.locator('#navigation-rating .hero-stars span').count(),5);
