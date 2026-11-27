@@ -597,7 +597,11 @@ html[dir] .hero-title {align-items:flex-start;inline-size:100%;}
 #site-header .brand-logo {flex-basis:34px;inline-size:34px;block-size:34px;border-radius:9px;}
 #site-header .brand-name {font-size:clamp(14px,2.2vw,19px);}
 #site-header :is(#romano-language-toggle,#menu-search-toggle,.ramen-header-cart,.menu-toggle,#menu-filter-toggle) {position:relative;display:grid;place-items:center;inline-size:44px;min-inline-size:44px;block-size:44px;min-block-size:44px;padding:0;margin:0;border:1px solid #d6ae7045;border-radius:12px;background:#211b15;color:#f2d39d;}
-#site-header .menu-toggle {display:flex;flex-direction:column;justify-content:center;}
+#site-header #menu-toggle {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;}
+#site-header #menu-toggle > span {position:static;display:block;flex:0 0 2px;inline-size:18px;block-size:2px;margin:0;padding:0;border-radius:2px;background:currentColor;transform:none;opacity:1;}
+#site-header #menu-toggle.is-active > span:nth-child(1) {transform:translateY(6px) rotate(45deg);}
+#site-header #menu-toggle.is-active > span:nth-child(2) {opacity:0;}
+#site-header #menu-toggle.is-active > span:nth-child(3) {transform:translateY(-6px) rotate(-45deg);}
 #site-header #romano-language-label {display:inline;direction:ltr;font:700 13px/1 Inter,sans-serif;letter-spacing:.03em;}
 #site-header #menu-search-toggle svg {inline-size:20px;block-size:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;}
 #site-header #menu-search-toggle.has-value::after {content:"";position:absolute;inset-block-start:5px;inset-inline-end:5px;inline-size:7px;block-size:7px;border-radius:50%;background:#e9c789;}
