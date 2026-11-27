@@ -12,7 +12,7 @@ export function normalizePhone(raw) {
 export function normalizeName(raw) {
   if(typeof raw!=='string')return null;
   const value=raw.trim().normalize('NFC');
-  return value.length>=2&&value.length<=80&&!/[\p{Cc}\p{Cf}]/u.test(value)?value:null;
+  return value.length>=2&&value.length<=80&&!/[\p{Cc}\p{Cf}]/u.test(value.replace(/[\u200c\u200d]/g,''))?value:null;
 }
 export function otpDigest(secret, challenge, phone, code) {
   return createHmac('sha256',secret).update(JSON.stringify([challenge,phone,code])).digest('hex');

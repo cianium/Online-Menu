@@ -47,3 +47,34 @@ jobs:
           deno check --frozen --lock=deno.lock --config supabase/functions/romano-admin/deno.json supabase/functions/romano-admin/index.ts
           deno check --frozen --lock=deno.lock --config supabase/functions/romano-order/deno.json supabase/functions/romano-order/index.ts
           deno check --frozen --lock=deno.lock --config supabase/functions/romano-payment/deno.json supabase/functions/romano-payment/index.ts
+
+  phone-auth-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: qa-password
+          POSTGRES_DB: phone_auth_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d phone_auth_qa"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:qa-password@127.0.0.1:5432/phone_auth_qa
+      PHONE_AUTH_TEST_DATABASE: isolated-ci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm --prefix backend ci
+      - run: npm run backend:migrate
+      - run: node --test backend/qa/phone-auth-http.test.mjs

@@ -492,7 +492,7 @@ await check('Order filter group accessible name is localized in all four languag
   let writes=0,failSave=false,delaySave=0,uploads=0,branchPosts=0;
   await context.route('**/api/v1/**',async route=>{
     const u=new URL(route.request().url());let data;
-    if(u.pathname.endsWith('/auth/me'))data={user:{id:'u'}};
+    if(u.pathname.endsWith('/auth/me'))data={user:{id:'u'},membership:{restaurant_id:'test',role:'manager'}};
     else if(u.pathname.endsWith('/auth/csrf'))data={csrfToken:'test'};
     else if(u.pathname.endsWith('/admin/data'))data=remote;
     else if(u.pathname.endsWith('/admin/branches')){

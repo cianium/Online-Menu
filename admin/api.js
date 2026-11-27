@@ -67,7 +67,7 @@
     detect,
     csrf,
     me: () => request("/auth/me"),
-    phoneAuthStatus: async () => { try { return (await request("/auth/phone/status"))?.enabled === true; } catch (error) { if(error.status===404)return false; throw error; } },
+    phoneAuthStatus: async () => { try { return (await request("/auth/phone/status"))?.enabled === true; } catch (error) { if([401,403,404].includes(error.status))return false; throw error; } },
     login: async (email, password) => {
       await csrf();
       const data = await request("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });

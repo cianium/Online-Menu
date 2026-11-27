@@ -16,3 +16,5 @@ Apply local migration in isolated staging first. Set PHONE_AUTH_SECRET to a high
 
 ## Shared connected UI
 When the local capability is enabled, an unauthenticated /admin/ request redirects to the same customer-side full-screen entry (login=1). A public QR entry and the customer profile can open the same component. Existing number goes to OTP; new number goes to name and an optional staff invitation field. Only verified response role selects dashboard vs restaurant. Form copy is available in four locales. No credentials are placed in URLs or browser storage. Demo retains its existing explicitly fictional entry until a dedicated simulation of the new flow is built and tested. No SMS, live service or database migration is performed by static Pages.
+
+The CI phone-auth-contract job runs the new Fastify migration and actual HTTP route/cookie/authorization tests against a disposable PostgreSQL 17 instance with an in-process mock SMS adapter. This does not validate delivery to a real handset or hosted Supabase Auth.

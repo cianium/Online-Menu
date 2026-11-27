@@ -206,7 +206,10 @@ function sendError(error, request, reply) {
     status = error.statusCode; code = 'REQUEST_ERROR'; message = error.message;
   }
 
-  if (status >= 500) request.log.error(error); else request.log.info({ code, status }, 'request rejected');
+  if (status >= 500) {
+    if (/\/auth\/phone\//.test(request.url)) request.log.error({code,status},'phone authentication failed');
+    else request.log.error(error);
+  } else request.log.info({ code, status }, 'request rejected');
   const details = isValidation ? error.issues?.map(issue => ({ path: issue.path, message: issue.message })) : undefined;
   reply.code(status).send({ ...fail(code, message, request.id), ...(details ? { details } : {}) });
 }
