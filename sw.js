@@ -34,8 +34,25 @@ const CORE_ASSETS = [
   "./assets/images/hero/hero.jpg"
 ];
 
+function cacheable(response) {
+  const policy = response.headers.get("Cache-Control") || "";
+  return response.status === 200 && response.type === "basic" && !response.redirected &&
+    !/(?:^|,)\s*(?:no-store|private|no-cache)(?:\s*[,=]|\s*$)/i.test(policy) &&
+    response.headers.get("Vary") !== "*";
+}
+
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_ASSETS)).then(() => self.skipWaiting()));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const scope = self.registration.scope;
+    await Promise.all(CORE_ASSETS.map(async asset => {
+      const url = new URL(asset, scope).href;
+      const response = await fetch(url, {credentials:"omit", redirect:"error", cache:"reload"});
+      if (!response.ok) throw new Error("Public asset unavailable");
+      if (cacheable(response)) await cache.put(url, response);
+    }));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", event => {
@@ -51,6 +68,7 @@ self.addEventListener("fetch", event => {
   // Cache only public, query-free paths belonging to this installation.
   // Do not intercept private routes, unknown navigation URLs, or token-bearing requests.
   if (url.origin !== scope.origin || !url.pathname.startsWith(scope.pathname) ||
+      url.pathname.includes("/admin/") || url.pathname.endsWith("/admin") || url.pathname.includes("/api/") ||
       url.search || request.cache === "no-store" || request.headers?.has("Authorization") ||
       request.headers?.has("Range")) return;
   const relative = url.pathname.slice(scope.pathname.length);
@@ -64,10 +82,7 @@ self.addEventListener("fetch", event => {
   const match = key => caches.open(CACHE_NAME).then(cache => cache.match(key)).catch(() => undefined);
   const store = response => {
     // Honor explicit response privacy policy and do not persist redirects or partial responses.
-    const policy = response.headers.get("Cache-Control") || "";
-    if (response.status !== 200 || response.type !== "basic" || response.redirected ||
-        /(?:^|,)\s*(?:no-store|private|no-cache)(?:\s*[,=]|\s*$)/i.test(policy) ||
-        response.headers.get("Vary") === "*") return;
+    if (!cacheable(response)) return;
     const copy = response.clone();
     event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(request, copy)).catch(() => {}));
   };

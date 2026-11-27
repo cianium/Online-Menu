@@ -89,3 +89,15 @@ test('worker caches only public complete responses; bundled media cache hits avo
   cached={marker:'bundled-image'};const before=networkCalls;
   assert.equal(await request('/assets/logo.png','image'),cached);assert.equal(networkCalls,before);
 });
+
+
+test('Precache requests omit credentials, reject redirects and honor response cache policy',async()=>{
+  const listeners={},puts=[],calls=[];let skipped=false,pending;
+  runWorker({self:{location:{origin},addEventListener:(type,fn)=>listeners[type]=fn,skipWaiting:async()=>{skipped=true;}},
+    caches:{open:async()=>({put:async url=>puts.push(url)})},
+    fetch:async(url,options)=>{calls.push({url,options});return {ok:true,status:200,type:'basic',redirected:false,headers:new Headers({'Cache-Control':url.endsWith('/index.html')?'private':'public'})};}
+  });
+  listeners.install({waitUntil:p=>pending=p});await pending;
+  assert.ok(skipped);assert.ok(calls.length>20);assert.ok(puts.includes(origin+'/js/app.js'));assert.ok(!puts.includes(origin+'/index.html'));
+  for(const {url,options} of calls){assert.ok(url.startsWith(origin+'/'));assert.equal(options.credentials,'omit');assert.equal(options.redirect,'error');}
+});
