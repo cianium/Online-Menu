@@ -94,7 +94,7 @@ The showcase job captures the current standalone menu and admin workspace in Chr
 
 [Open customer entry](https://cianium.github.io/Online-Menu/?qr=demo) · [Open the demo admin workspace](https://cianium.github.io/Online-Menu/admin/) · [Published source identity](https://cianium.github.io/Online-Menu/VERSION.json)
 
-`pages-demo` contains the public standalone snapshot. `main` is the canonical source branch. Match a published build to its source with `VERSION.json`. The published R23 snapshot predates the single-restaurant R24 candidate. See [R24 scope](docs/R24_SINGLE_RESTAURANT.md) and [live Connect limitations](docs/R24_LIVE_CONNECT.md). The candidate is not an approved release. The public site is for sample data only, not a private staff login, real payment service or shared customer database. Customer entry uses a fictional name and phone number. Demo admin credentials are `demo-admin` / `Demo-Only-2026`; these public values are not real authentication.
+`pages-demo` contains the public standalone snapshot. `main` is the canonical source branch. Match a published build to its source with `VERSION.json`. The published R23 snapshot predates the single-restaurant R24/R25 candidate. See [R24 scope](docs/R24_SINGLE_RESTAURANT.md) and [live Connect limitations](docs/R24_LIVE_CONNECT.md). The candidate is not an approved release. The public site is for sample data only, not a private staff login, real payment service or shared customer database. Customer entry uses a fictional name and phone number. Demo admin credentials are `demo-admin` / `Demo-Only-2026`; these public values are not real authentication.
 
 The standalone release gates cover Node tests, PostgreSQL contracts, Edge Function type checks, Chromium/Firefox/WebKit flows, four-language responsive views and automated accessibility scans. They do not certify optional connected backend services, real payments, native Safari or field Core Web Vitals. Historical showcase images retain their own revision provenance.
 
@@ -129,7 +129,7 @@ The included Node.js preview server binds only to loopback and serves the public
 > [!NOTE]
 > The standalone demo is for evaluation, not a production admin login or a shared database. Use sample data only. Changes remain in the current browser/origin; real table sessions, order fulfillment and payments require the connected services. Fonts and sample imagery are bundled locally, so the core demo does not depend on third-party assets.
 
-In the R24 standalone candidate, the admin creates uniquely coded tables and their QR links within a single restaurant. Multi-location management is disabled; historical location records are preserved for compatibility but excluded from new primary-restaurant backups. Full restore requires an empty browser profile and other tabs closed; backups can contain personal information and must remain private. These browser-local operations are not server-side tenant isolation or cross-device QR ordering.
+In the R25 standalone candidate, the admin creates uniquely coded tables and their QR links within a single restaurant. Multi-location management is disabled; historical location records are preserved for compatibility but excluded from new primary-restaurant backups. Full restore requires an empty browser profile and other tabs closed; backups can contain personal information and must remain private. These browser-local operations are not server-side tenant isolation or cross-device QR ordering.
 
 ### Export a private demo for a future VPS
 
