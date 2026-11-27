@@ -17,6 +17,30 @@ async function ready(p){
  const p=await ctx.newPage();await p.goto(base);await ready(p);
  const cards=p.locator('#menu .product-card');
  await check('Static demo boots with 21 products',async()=>{assert.equal(await cards.count(),21);assert.equal(await p.evaluate(()=>menuDataMode),'demo')});
+ await check('Customer image sources reject unsupported protocols and URL credentials',async()=>{
+  const result=await p.evaluate(()=>({
+   rejected:['javascript:alert(1)','data:image/svg+xml,<svg/>','file:///etc/passwd','https://user:password@example.test/a.png','blob:'+location.origin+'/sample'].map(getSafeImageSource),
+   local:getSafeImageSource('assets/images/hero/hero.jpg'),
+   data:getSafeImageSource('data:image/png;base64,AA==')
+  }));
+  assert.deepEqual(result.rejected,['','','','','']);
+  assert.ok(result.local.endsWith('/assets/images/hero/hero.jpg'));
+  assert.equal(result.data,'data:image/png;base64,AA==');
+ });
+ await check('Customer navigation honors the motion preference for every locale',async()=>{
+  try{
+   for(const lang of ['fa','ar','en','tr']){
+    await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+    for(const preference of ['reduce','no-preference']){
+     await p.emulateMedia({reducedMotion:preference});
+     assert.equal(await p.evaluate(()=>customerScrollBehavior()),preference==='reduce'?'auto':'smooth');
+    }
+   }
+  }finally{
+   await p.emulateMedia({reducedMotion:'no-preference'});
+   await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));
+  }
+ });
  await check('Bottom navigation keeps the requested physical order and opens an independent contact dialog',async()=>{
   const expected=['cart','menu','home','featured','contact'];
   for(const lang of ['fa','ar','en','tr']){
@@ -125,7 +149,7 @@ async function ready(p){
   await firstEntry.locator('input[name="name"]').fill('Sample Customer');
   await firstEntry.locator('input[name="phone"]').fill('+12025550140');
   await firstEntry.locator('button[type="submit"]').click();
-  await firstEntry.waitForFunction(()=>!document.querySelector('#customer-entry')?.open);
+  await first.waitForFunction(()=>!document.querySelector('#customer-entry')?.open);
   const memberId=await first.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey));assert.ok(memberId);
   const second=await memberContext.newPage();
   await second.goto(base+'/?qr=demo');await ready(second);
@@ -223,6 +247,61 @@ async function ready(p){
    assert.equal(await p.locator('.product-modal').getAttribute('aria-hidden'),'true');
   }
  });
+ await check('Product share excludes table and payment context in all four languages',async()=>{
+  for(const lang of ['fa','ar','en','tr']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   await cards.first().locator('.product-card-button').click();
+   const original=await p.evaluate(()=>{
+    const original=location.href;
+    const url=new URL(original);
+    for(const [key,value] of Object.entries({restaurant:'sample',demoBranch:'sample-branch',demoTable:'A1',qr:'sample-private-token',payment:'ok',order:'sample-order',ref:'sample-ref',extra:'sample-extra'}))url.searchParams.set(key,value);
+    history.replaceState(null,'',url.href);
+    Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.__qaShare=data}});
+    window.__qaShare=null;
+    return original;
+   });
+   try{
+    await p.locator('[data-rv4-share]').click();
+    await p.waitForFunction(()=>Boolean(window.__qaShare));
+    const share=await p.evaluate(()=>window.__qaShare);
+    const url=new URL(share.url);
+    assert.deepEqual([...url.searchParams.keys()],['restaurant','demoBranch']);
+    assert.equal(url.searchParams.get('restaurant'),'sample');
+    assert.equal(url.searchParams.get('demoBranch'),'sample-branch');
+    assert.match(url.hash,/^#product-/);
+   }finally{
+    await p.evaluate(original=>{history.replaceState(null,'',original);delete navigator.share;delete window.__qaShare;},original);
+    await p.keyboard.press('Escape');
+   }
+  }
+ });
+ await check('Copy product link falls back safely and gives localized feedback',async()=>{
+  const failure={fa:'کپی نشد؛ دوباره تلاش کنید',ar:'تعذر النسخ؛ حاول مجددًا',en:'Copy failed; try again',tr:'Kopyalanamadı; tekrar deneyin'};
+  for(const lang of ['fa','ar','en','tr']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   await cards.first().locator('.product-card-button').click();
+   await p.evaluate(()=>{
+    Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{throw Error('denied')}}});
+    document.execCommand=()=>{window.__qaCopied=document.activeElement.value;return true;};
+   });
+   try{
+    const copy=p.locator('[data-rv4-copy]');
+    await copy.click();
+    await p.waitForFunction(()=>Boolean(window.__qaCopied));
+    assert.match(await p.evaluate(()=>window.__qaCopied),/#product-/);
+    await p.waitForFunction(()=>document.querySelector('[data-rv4-copy]').textContent===ROMANO_I18N.ui('copied'));
+    assert.equal(await copy.evaluate(n=>document.activeElement===n),true);
+    assert.equal(await p.locator('#product-modal textarea[readonly]').count(),0);
+    await p.evaluate(()=>{document.execCommand=()=>{throw Error('unavailable')};});
+    await copy.click();
+    await p.waitForFunction(message=>document.querySelector('[data-rv4-copy]').textContent===message,failure[lang]);
+    assert.equal(await p.locator('#product-modal textarea[readonly]').count(),0);
+   }finally{
+    await p.evaluate(()=>{delete navigator.clipboard;delete document.execCommand;delete window.__qaCopied;});
+    await p.keyboard.press('Escape');
+   }
+  }
+ });
  await check('Cart supports add, quantity and sample registration at checkout',async()=>{
   const cartButton=p.locator('#ramen-bottom-cart');
   await cartButton.click();
@@ -250,6 +329,11 @@ async function ready(p){
   });
   await p.locator('.commerce-quantity button[data-cart-change="1"]').click();assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
   assert.equal(await p.evaluate(()=>document.activeElement.dataset.cartChange),'1');
+  const note=p.locator('[data-hp-note]').first();
+  await note.fill('Sample note');await note.focus();
+  await note.evaluate(input=>input.setSelectionRange(2,6));
+  await p.evaluate(()=>document.dispatchEvent(new CustomEvent('romano:demo-membership-changed')));
+  assert.deepEqual(await note.evaluate(input=>({focused:document.activeElement===input,value:input.value,start:input.selectionStart,end:input.selectionEnd})),{focused:true,value:'Sample note',start:2,end:6});
   assert.equal(await p.locator('.site-wrapper').evaluate(n=>n.inert),true);
   assert.equal(await p.locator('#commerce-options').isVisible(),true);
   const summary=await p.locator('#commerce-submit').boundingBox();assert.ok(summary && summary.y+summary.height<=844);
@@ -294,6 +378,17 @@ async function ready(p){
   const prices=await p.evaluate(()=>[...document.querySelectorAll('#menu .product-card')].map(c=>getProductById(c.dataset.productId).price));assert.deepEqual(prices,[...prices].sort((a,b)=>a-b));
   await openSearch();await p.locator('#rv4-menu-search').fill('no-product-xyz');assert.equal(await cards.count(),0);assert.equal(await p.locator('#menu-empty').count(),1);
   await resetFilters();assert.equal(await cards.count(),21);
+  await openSearch();
+  await p.locator('#rv4-menu-search').evaluate(input=>{
+   input.value='pizza';input.dispatchEvent(new InputEvent('input',{bubbles:true,isComposing:true}));
+  });
+  assert.equal(await cards.count(),21);
+  await p.locator('#rv4-menu-search').evaluate(input=>input.dispatchEvent(new CompositionEvent('compositionend',{bubbles:true,data:'pizza'})));
+  assert.equal(await cards.count(),3);
+  await cards.first().evaluate(card=>card.dataset.qaIdentity='preserved');
+  await p.locator('#rv4-menu-search').fill(' pizza ');
+  assert.equal(await cards.first().getAttribute('data-qa-identity'),'preserved');
+  await resetFilters();
   await p.locator('[data-browse-category]').first().click();assert.equal(await cards.count(),3);await resetFilters();
  });
  await check('Favorites persist, filter and clear',async()=>{
@@ -305,7 +400,7 @@ async function ready(p){
  await check('Compact catalog toolbar, disclosures and card layout remain accessible in four languages',async()=>{
   for(const lang of ['fa','ar','en','tr']){
    await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
-   for(const width of [320,390,768,1440]){
+   for(const width of [320,390,768,1440,1920]){
     await p.setViewportSize({width,height:844});
     await p.evaluate(()=>document.querySelector('#menu').scrollIntoView({block:'start',behavior:'instant'}));
     await p.waitForFunction(()=>document.querySelector('#menu').style.getPropertyValue('--browse-bar-height'));

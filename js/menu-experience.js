@@ -18,12 +18,30 @@
     function normalize(value) {
         return String(value || "").toLocaleLowerCase(window.ROMANO_I18N.language).normalize("NFKD").replace(/\p{M}/gu, "").replace(/[يى]/g,"ی").replace(/ك/g,"ک").replace(/ı/g,"i").replace(/[\u200c\u0640]/g," ");
     }
+    let cachedQuery = null, cachedLocale = null, terms = [];
+    let searchIndex = new WeakMap();
+    function queryTerms() {
+        const locale = window.ROMANO_I18N.language;
+        if (cachedQuery !== query || cachedLocale !== locale) {
+            cachedQuery = query;
+            cachedLocale = locale;
+            terms = normalize(query).trim().split(/\s+/).filter(Boolean);
+        }
+        return terms;
+    }
     function matches(product) {
         if (category !== "all" && product.category !== category) return false;
         if (onlyFavorites && !selected.has(product.id)) return false;
-        const localized = window.ROMANO_I18N.localizeProduct(product);
-        const text = normalize([localized.name,localized.description,localized.categoryName,product.name,product.description].join(" "));
-        return normalize(query).trim().split(/\s+/).every(word => text.includes(word));
+        const words = queryTerms();
+        if (!words.length) return true;
+        const locale = window.ROMANO_I18N.language;
+        let entry = searchIndex.get(product);
+        if (!entry || entry.locale !== locale) {
+            const localized = window.ROMANO_I18N.localizeProduct(product);
+            entry = { locale, text: normalize([localized.name,localized.description,localized.categoryName,product.name,product.description].join(" ")) };
+            searchIndex.set(product, entry);
+        }
+        return words.every(word => entry.text.includes(word));
     }
     function sort(items) {
         if (order === "menu") return items;
@@ -179,7 +197,15 @@
         for(const id of ['search','filter']) byId(`menu-${id}-toggle`).addEventListener('click',()=>setPanel(openPanel===id?null:id,openPanel===id));
         header.addEventListener('keydown',event=>{if(event.key==='Escape'&&openPanel){event.preventDefault();event.stopPropagation();setPanel(null,true);}});
         document.addEventListener('click',event=>{if(openPanel&&!header.contains(event.target))setPanel(null,header.contains(document.activeElement));});
-        controls.querySelector('#rv4-menu-search').addEventListener('input',event=>{query=event.target.value;redraw();});
+        const searchInput=controls.querySelector('#rv4-menu-search');
+        const updateQuery=()=>{
+            const previous=queryTerms().join(' ');
+            query=searchInput.value;
+            if(previous===queryTerms().join(' '))refreshLabels();
+            else redraw();
+        };
+        searchInput.addEventListener('input',event=>{if(!event.isComposing)updateQuery();});
+        searchInput.addEventListener('compositionend',updateQuery);
         controls.querySelector('#rv4-menu-search').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();setPanel(null,true);section.scrollIntoView({behavior:'auto',block:'start'});}});
         controls.querySelector('#menu-sort').addEventListener('change',event=>{order=event.target.value;redraw();});
         controls.querySelector('#menu-favorites-toggle').addEventListener('click',()=>{onlyFavorites=!onlyFavorites;redraw();});
@@ -203,7 +229,7 @@
         });
         document.addEventListener('romano:catalog-rendered',()=>{syncHearts();updateStatus();});
         document.addEventListener('romano:language-changed',refreshLabels);
-        window.addEventListener('romano:data-updated',()=>{refreshLabels();renderMenuCategories();});
+        window.addEventListener('romano:data-updated',()=>{searchIndex=new WeakMap();refreshLabels();renderMenuCategories();});
         window.addEventListener('storage',event=>{if(event.key===key()||event.key===null){readFavorites();redraw();}});
         document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.closest('input,textarea,select,[contenteditable]')&&!DOM.body.classList.contains('modal-open')&&!DOM.body.classList.contains('commerce-open')&&!document.querySelector('dialog[open]')){event.preventDefault();section.scrollIntoView({behavior:'auto',block:'start'});setPanel('search');}});
         refreshLabels();
