@@ -768,7 +768,7 @@ async function ready(p){
    assert.equal(await options.locator('button').count(),3);
    await p.keyboard.press('Escape');assert.equal(await options.isVisible(),false);assert.equal(await nav.getAttribute('aria-hidden'),'false');
    await toggle.click();await p.evaluate(()=>history.back());await options.waitFor({state:'hidden'});assert.equal(await nav.getAttribute('aria-hidden'),'false');
-   await toggle.click();await options.locator('[data-nav-panel="waiter"]').click();const waiter=p.locator('#ramen-contact-dialog');await waiter.waitFor({state:'visible'});assert.equal(await waiter.locator('.hp-service-action').count(),1);await p.keyboard.press('Escape');await waiter.waitFor({state:'hidden'});await p.locator('#menu-toggle').click();
+   await toggle.click();await options.locator('[data-nav-panel="waiter"]').click();const waiter=p.locator('#ramen-contact-dialog');await waiter.waitFor({state:'visible'});await waiter.locator('[data-panel-state="ready"]').waitFor({state:'visible'});await waiter.locator('.hp-service-action').first().waitFor({state:'visible'});assert.equal(await waiter.locator('.hp-service-action').count(),1);await p.keyboard.press('Escape');await waiter.waitFor({state:'hidden'});await p.locator('#menu-toggle').click();
    await p.locator('#navigation-close').click();
    await p.waitForFunction(()=>document.querySelector('#main-navigation')?.getAttribute('aria-hidden')==='true');
   }
