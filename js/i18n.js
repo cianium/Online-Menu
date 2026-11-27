@@ -1,5 +1,5 @@
 /* =========================================================
-   ROMANO DIGITAL MENU — Full UI localization layer
+   RAMEN DIGITAL MENU — Full UI localization layer
    Languages: Persian, English, Turkish, Arabic
    Scope: presentation only. Menu/admin data remains untouched.
 ========================================================= */
@@ -13,9 +13,9 @@
         "پروفایل": {fa:"پروفایل",en:"Profile",tr:"Profil",ar:"الملف الشخصي"},
         "چت": {fa:"چت",en:"Chat",tr:"Sohbet",ar:"محادثة"},
         "ثبت امتیاز و رضایت": {fa:"ثبت امتیاز و رضایت",en:"Rating & feedback",tr:"Puan ve geri bildirim",ar:"التقييم والملاحظات"},
-        "ROMANO | منوی دیجیتال": { fa: "ROMANO | منوی دیجیتال", en: "ROMANO | Digital Menu", tr: "ROMANO | Dijital Menü", ar: "رومانو | القائمة الرقمية" },
-        "منوی دیجیتال رستوران با ROMANO": { fa: "منوی دیجیتال رستوران با ROMANO", en: "Digital restaurant menus powered by ROMANO", tr: "ROMANO ile dijital restoran menüleri", ar: "قوائم المطاعم الرقمية بواسطة رومانو" },
-        "رمانو": { fa: "رمانو", en: "ROMANO", tr: "ROMANO", ar: "رومانو" },
+        "RAMEN | منوی دیجیتال": { fa: "RAMEN | منوی دیجیتال", en: "RAMEN | Digital Menu", tr: "RAMEN | Dijital Menü", ar: "رامن | القائمة الرقمية" },
+        "منوی دیجیتال رستوران با RAMEN": { fa: "منوی دیجیتال رستوران با RAMEN", en: "Digital restaurant menus powered by RAMEN", tr: "RAMEN ile dijital restoran menüleri", ar: "قوائم المطاعم الرقمية بواسطة رامن" },
+        "رامن": { fa: "رامن", en: "RAMEN", tr: "RAMEN", ar: "رامن" },
         "رستوران و کافه": { fa: "رستوران و کافه", en: "Restaurant & Cafe", tr: "Restoran & Kafe", ar: "مطعم ومقهى" },
         "کافه و رستوران": { fa: "کافه و رستوران", en: "Cafe & Restaurant", tr: "Kafe & Restoran", ar: "مقهى ومطعم" },
         "مسیرهای سریع": { fa: "مسیرهای سریع", en: "Quick Links", tr: "Hızlı Bağlantılar", ar: "روابط سريعة" },
@@ -51,8 +51,8 @@
         "مشاهده جزئیات": { fa: "مشاهده جزئیات", en: "View Details", tr: "Detayları Gör", ar: "عرض التفاصيل" },
         "رفتن به منو": { fa: "رفتن به منو", en: "Skip to menu", tr: "Menüye geç", ar: "الانتقال إلى القائمة" },
         "منوی اصلی": { fa: "منوی اصلی", en: "Main Menu", tr: "Ana Menü", ar: "القائمة الرئيسية" },
-        "منوی دیجیتال ROMANO": { fa: "منوی دیجیتال ROMANO", en: "ROMANO · DIGITAL MENU", tr: "ROMANO · DİJİTAL MENÜ", ar: "رومانو · القائمة الرقمية" },
-        "قدرت‌گرفته از ROMANO": { fa: "قدرت‌گرفته از ROMANO", en: "Powered by ROMANO", tr: "ROMANO ile desteklenmektedir", ar: "مدعوم بواسطة رومانو" },
+        "منوی دیجیتال RAMEN": { fa: "منوی دیجیتال RAMEN", en: "RAMEN · DIGITAL MENU", tr: "RAMEN · DİJİTAL MENÜ", ar: "رامن · القائمة الرقمية" },
+        "قدرت‌گرفته از RAMEN": { fa: "قدرت‌گرفته از RAMEN", en: "Powered by RAMEN", tr: "RAMEN ile desteklenmektedir", ar: "مدعوم بواسطة رامن" },
         "ساخته‌شده توسط کیان خیاط.": { fa: "ساخته‌شده توسط کیان خیاط.", en: "Made by Kian Khayat.", tr: "Kian Khayat tarafından yapıldı.", ar: "من تصميم وتطوير كيان خياط." },
         "صفحه اصلی رستوران": { fa: "صفحه اصلی رستوران", en: "Restaurant home", tr: "Restoran ana sayfası", ar: "الصفحة الرئيسية للمطعم" },
         "باز کردن منوی اصلی": { fa: "باز کردن منوی اصلی", en: "Open main menu", tr: "Ana menüyü aç", ar: "فتح القائمة الرئيسية" },
@@ -60,7 +60,7 @@
         "بستن منوی اصلی": { fa: "بستن منوی اصلی", en: "Close main menu", tr: "Ana menüyü kapat", ar: "إغلاق القائمة الرئيسية" },
         "ارزش‌های رستوران": { fa: "ارزش‌های رستوران", en: "Restaurant values", tr: "Restoran değerleri", ar: "قيم المطعم" },
         "اینستاگرام رستوران": { fa: "اینستاگرام رستوران", en: "Restaurant Instagram", tr: "Restoran Instagram hesabı", ar: "إنستغرام المطعم" },
-        "لگو رمانو": { fa: "لگو رمانو", en: "ROMANO logo", tr: "ROMANO logosu", ar: "شعار رومانو" },
+        "لگو رامن": { fa: "لگو رامن", en: "RAMEN logo", tr: "RAMEN logosu", ar: "شعار رامن" },
         "بازگشت به بالای صفحه": { fa: "بازگشت به بالای صفحه", en: "Back to top", tr: "Yukarı dön", ar: "العودة إلى الأعلى" },
         "اشتراک‌گذاری": { fa: "اشتراک‌گذاری", en: "Share", tr: "Paylaş", ar: "مشاركة" },
         "کپی لینک": { fa: "کپی لینک", en: "Copy link", tr: "Bağlantıyı kopyala", ar: "نسخ الرابط" },
@@ -80,7 +80,7 @@
     };
 
     const products = {
-        "classic-burger": { name: { fa: "برگر کلاسیک", en: "Classic Burger", tr: "Klasik Burger", ar: "برغر كلاسيكي" }, description: { fa: "گوشت گریل‌شده، پنیر چدار، کاهو، گوجه و سس مخصوص ROMANO.", en: "Grilled beef, cheddar cheese, lettuce, tomato and ROMANO signature sauce.", tr: "Izgara dana eti, cheddar peyniri, marul, domates ve ROMANO özel sosu.", ar: "لحم بقري مشوي، جبنة شيدر، خس، طماطم وصلصة رومانو الخاصة." }, badge: { fa: "پرفروش", en: "Best Seller", tr: "Çok Satan", ar: "الأكثر مبيعًا" } },
+        "classic-burger": { name: { fa: "برگر کلاسیک", en: "Classic Burger", tr: "Klasik Burger", ar: "برغر كلاسيكي" }, description: { fa: "گوشت گریل‌شده، پنیر چدار، کاهو، گوجه و سس مخصوص RAMEN.", en: "Grilled beef, cheddar cheese, lettuce, tomato and RAMEN signature sauce.", tr: "Izgara dana eti, cheddar peyniri, marul, domates ve RAMEN özel sosu.", ar: "لحم بقري مشوي، جبنة شيدر، خس، طماطم وصلصة رامن الخاصة." }, badge: { fa: "پرفروش", en: "Best Seller", tr: "Çok Satan", ar: "الأكثر مبيعًا" } },
         "double-burger": { name: { fa: "دابل برگر", en: "Double Burger", tr: "Double Burger", ar: "دبل برغر" }, description: { fa: "دو لایه گوشت گریل‌شده، پنیر چدار، پیاز کاراملی و سس مخصوص.", en: "Two layers of grilled beef, cheddar cheese, caramelized onion and signature sauce.", tr: "İki kat ızgara dana eti, cheddar peyniri, karamelize soğan ve özel sos.", ar: "طبقتان من اللحم البقري المشوي، جبنة شيدر، بصل مكرمل وصلصة خاصة." }, badge: { fa: "ویژه", en: "Special", tr: "Özel", ar: "مميز" } },
         "smoky-burger": { name: { fa: "برگر دودی", en: "Smoky Burger", tr: "Smoky Burger", ar: "برغر مدخن" }, description: { fa: "برگر گوشت گریل‌شده با پنیر، بیکن، پیاز و سس دودی.", en: "Grilled beef burger with cheese, bacon, onion and smoky sauce.", tr: "Peynir, bacon, soğan ve füme soslu ızgara dana burger.", ar: "برغر لحم بقري مشوي مع الجبن، لحم مقدد، بصل وصلصة مدخنة." } },
         "pepperoni-pizza": { name: { fa: "پیتزا پپرونی", en: "Pepperoni Pizza", tr: "Pepperoni Pizza", ar: "بيتزا بيبروني" }, description: { fa: "پیتزای کلاسیک با پپرونی، موزارلا و سس گوجه مخصوص.", en: "Classic pizza with pepperoni, mozzarella and signature tomato sauce.", tr: "Pepperoni, mozzarella ve özel domates soslu klasik pizza.", ar: "بيتزا كلاسيكية مع البيبروني والموزاريلا وصلصة الطماطم الخاصة." }, badge: { fa: "پرفروش", en: "Best Seller", tr: "Çok Satan", ar: "الأكثر مبيعًا" } },
@@ -88,7 +88,7 @@
         "chicken-pizza": { name: { fa: "پیتزا مرغ", en: "Chicken Pizza", tr: "Tavuklu Pizza", ar: "بيتزا الدجاج" }, description: { fa: "مرغ گریل‌شده، قارچ، موزارلا و سس مخصوص.", en: "Grilled chicken, mushrooms, mozzarella and signature sauce.", tr: "Izgara tavuk, mantar, mozzarella ve özel sos.", ar: "دجاج مشوي، فطر، موزاريلا وصلصة خاصة." }, badge: { fa: "ویژه", en: "Special", tr: "Özel", ar: "مميز" } },
         "chicken-sandwich": { name: { fa: "ساندویچ مرغ", en: "Chicken Sandwich", tr: "Tavuklu Sandviç", ar: "ساندويتش الدجاج" }, description: { fa: "مرغ گریل‌شده، سبزیجات تازه و سس مخصوص در نان تازه.", en: "Grilled chicken, fresh vegetables and signature sauce in fresh bread.", tr: "Taze ekmekte ızgara tavuk, taze sebzeler ve özel sos.", ar: "دجاج مشوي، خضروات طازجة وصلصة خاصة داخل خبز طازج." }, badge: { fa: "پرفروش", en: "Best Seller", tr: "Çok Satan", ar: "الأكثر مبيعًا" } },
         "steak-sandwich": { name: { fa: "ساندویچ استیک", en: "Steak Sandwich", tr: "Steak Sandviç", ar: "ساندويتش ستيك" }, description: { fa: "استیک گریل‌شده، پیاز کاراملی و سس مخصوص در نان تازه.", en: "Grilled steak, caramelized onion and signature sauce in fresh bread.", tr: "Taze ekmekte ızgara biftek, karamelize soğan ve özel sos.", ar: "ستيك مشوي، بصل مكرمل وصلصة خاصة داخل خبز طازج." }, badge: { fa: "ویژه", en: "Special", tr: "Özel", ar: "مميز" } },
-        "vegetable-sandwich": { name: { fa: "ساندویچ سبزیجات", en: "Vegetable Sandwich", tr: "Sebzeli Sandviç", ar: "ساندويتش الخضار" }, description: { fa: "سبزیجات تازه، پنیر و سس مخصوص در نان تازه.", en: "Fresh vegetables, cheese and ROMANO signature sauce in fresh bread.", tr: "Taze sebzeler, peynir ve ROMANO özel sosundan oluşan sandviç.", ar: "خضروات طازجة، جبن وصلصة رومانو الخاصة داخل خبز طازج." } },
+        "vegetable-sandwich": { name: { fa: "ساندویچ سبزیجات", en: "Vegetable Sandwich", tr: "Sebzeli Sandviç", ar: "ساندويتش الخضار" }, description: { fa: "سبزیجات تازه، پنیر و سس مخصوص در نان تازه.", en: "Fresh vegetables, cheese and RAMEN signature sauce in fresh bread.", tr: "Taze sebzeler, peynir ve RAMEN özel sosundan oluşan sandviç.", ar: "خضروات طازجة، جبن وصلصة رامن الخاصة داخل خبز طازج." } },
         "caesar-salad": { name: { fa: "سالاد سزار", en: "Caesar Salad", tr: "Sezar Salata", ar: "سلطة سيزر" }, description: { fa: "کاهوی تازه، مرغ گریل‌شده، پارمزان، کروتان و سس سزار.", en: "Fresh lettuce, grilled chicken, parmesan, croutons and Caesar dressing.", tr: "Taze marul, ızgara tavuk, parmesan, kruton ve Sezar sosu.", ar: "خس طازج، دجاج مشوي، بارميزان، خبز محمص وصلصة سيزر." }, badge: { fa: "پرفروش", en: "Best Seller", tr: "Çok Satan", ar: "الأكثر مبيعًا" } },
         "garden-salad": { name: { fa: "سالاد باغ", en: "Garden Salad", tr: "Bahçe Salatası", ar: "سلطة الحديقة" }, description: { fa: "ترکیبی تازه از سبزیجات فصل با سس مخصوص.", en: "A fresh mix of seasonal vegetables with signature dressing.", tr: "Özel sosla servis edilen taze mevsim sebzeleri karışımı.", ar: "مزيج طازج من الخضروات الموسمية مع صلصة خاصة." } },
         "chicken-salad": { name: { fa: "سالاد مرغ", en: "Chicken Salad", tr: "Tavuklu Salata", ar: "سلطة الدجاج" }, description: { fa: "مرغ گریل‌شده، سبزیجات تازه، پنیر و سس مخصوص.", en: "Grilled chicken, fresh vegetables, cheese and signature dressing.", tr: "Izgara tavuk, taze sebzeler, peynir ve özel sos.", ar: "دجاج مشوي، خضروات طازجة، جبن وصلصة خاصة." }, badge: { fa: "ویژه", en: "Special", tr: "Özel", ar: "مميز" } },
@@ -248,20 +248,27 @@
         return Array.isArray(window.products) ? window.products.find(item => String(item?.id) === String(id)) : null;
     }
 
+    // Customer presentation only: retain shared legacy storage, API IDs and admin seed data.
+    function displayBrand(value) {
+        if (typeof value !== "string") return value;
+        const brand = current === "fa" || current === "ar" ? "رامن" : "RAMEN";
+        return value.replace(/\bromano\b/gi, brand).replace(/رومانو|رمانو/g, brand);
+    }
+
     function localizeRestaurant(config) {
         if (!config) return config;
         const fields = {};
         const own = entityTranslation(config, current) || {};
         ["name", "tagline", "description", "address"].forEach(key => {
-            if (own[key]) { fields[key] = own[key]; return; }
+            if (own[key]) { fields[key] = displayBrand(own[key]); return; }
             const value = config[key] ?? "";
             const seed = restaurant[key]?.fa ?? "";
             // Known demo brand, not arbitrary tenant names.
-            if (key === "name" && ["رامن", "رامين", "RAMEN"].includes(String(value).trim())) {
+            if (key === "name" && /^(?:ramen|romano|رامن|رامين|رمانو|رومانو)$/i.test(String(value).trim())) {
                 fields[key] = ({fa:"رامن",ar:"رامن",en:"RAMEN",tr:"RAMEN"})[current];
                 return;
             }
-            fields[key] = seedValue(value, seed, restaurant[key]?.[current]);
+            fields[key] = displayBrand(seedValue(value, seed, restaurant[key]?.[current]));
         });
         return { ...config, ...fields };
     }
@@ -269,14 +276,20 @@
     function localizeCategory(category) {
         if (!category) return category;
         const own = entityTranslation(category, current);
-        if (own?.name) return { ...category, name: own.name };
-        if (current === "fa") return category;
+        if (own?.name) return { ...category, name: displayBrand(own.name) };
+        if (current === "fa") return { ...category, name: displayBrand(category.name) };
         const seed = findSeedCategory(category.id);
         const seedName = seed?.name ?? category.name;
-        return { ...category, name: seedValue(category.name, seedName, categoryText[category.id]?.[current]) };
+        return { ...category, name: displayBrand(seedValue(category.name, seedName, categoryText[category.id]?.[current])) };
     }
 
     function localizeProduct(product) {
+        const localized = localizeProductText(product);
+        if (!localized) return localized;
+        return { ...localized, ...Object.fromEntries(["name","description","categoryName","badge"].map(key=>[key,displayBrand(localized[key])])) };
+    }
+
+    function localizeProductText(product) {
         if (!product) return product;
         const own = entityTranslation(product, current) || {};
         const ownCategory = entityTranslation({ translations: product.categoryTranslations }, current);
@@ -593,7 +606,7 @@
         applyStatic();
         translateElementContents();
         updateButton();
-        document.title = t("ROMANO | منوی دیجیتال", document.title);
+        document.title = t("RAMEN | منوی دیجیتال", document.title);
         const metaDescription = document.querySelector('meta[name="description"]');
         if (metaDescription) metaDescription.setAttribute("content", pick(restaurant.description));
         document.dispatchEvent(new CustomEvent("romano:language-changed", { detail: { lang: current } }));
@@ -622,6 +635,7 @@
         localizeCategory,
         localizeProduct,
         localizeRestaurant,
+        displayBrand,
         ui,
         restaurant,
         setLanguage,

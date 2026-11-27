@@ -162,3 +162,15 @@ test('Commerce enhances freshly rendered cards synchronously and preserves focus
  assert.doesNotMatch(js,/setTimeout\(enhanceProducts/);
  assert.match(js,/restoreDetailsFocus && !details\.closest\("\[inert\]"\)/);
 });
+
+test('RAMEN customer presentation maps legacy brand text without changing persisted data',async()=>{
+ const {runInNewContext}=await import('node:vm');
+ for(const lang of ['fa','en','tr','ar']){
+  const window={};runInNewContext(read('js/i18n.js'),{window,document:{addEventListener(){}},localStorage:{getItem:()=>lang}});
+  const api=window.ROMANO_I18N, name=['fa','ar'].includes(lang)?'رامن':'RAMEN';
+  const original={name:'رمانو',address:'ROMANO Cafe',translations:{en:{name:'Romano'}}};
+  assert.equal(api.localizeRestaurant(original).name,name);assert.equal(api.localizeRestaurant(original).address,name+' Cafe');assert.equal(original.name,'رمانو');
+  assert.equal(api.localizeRestaurant({name:'Test Kitchen'}).name,'Test Kitchen');
+  assert.equal(api.localizeProduct({id:'custom',name:'ROMANO dish',description:'سس رومانو'}).name,name+' dish');
+ }
+});
