@@ -130,12 +130,9 @@ function getSafeImageSource(value) {
     if (/^data:image\/(?:jpeg|jpg|png|webp);base64,/i.test(raw)) return raw;
     try {
         const url = new URL(raw, window.location.href);
-        if (["https:", "http:"].includes(url.protocol)) return url.href;
-        if (url.protocol === "file:") return raw;
-        if (url.origin === window.location.origin && !/[\"'<>]/.test(raw)) return url.href;
-    } catch (_) {
-        if (/^(?:\.?\/?)[^\"'<>]+$/.test(raw)) return raw;
-    }
+        if (["https:", "http:"].includes(url.protocol) && !url.username && !url.password) return url.href;
+        if (url.protocol === "file:" && window.location.protocol === "file:" && !url.host) return url.href;
+    } catch (_) { /* Invalid URLs are not image sources. */ }
     return "";
 }
 
@@ -1112,7 +1109,18 @@ function renderRatingStars(rating) {
 /**
  * Wrap horizontal product rows with prev/next controls.
  */
+const horizontalScrollUpdates = new WeakMap();
+let horizontalResizeBound = false;
+function customerScrollBehavior() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+}
 function enhanceHorizontalScrollers() {
+    if (!horizontalResizeBound) {
+        horizontalResizeBound = true;
+        window.addEventListener("resize", () => {
+            document.querySelectorAll(".products-grid-horizontal").forEach(node => horizontalScrollUpdates.get(node)?.());
+        }, { passive: true });
+    }
 
     const scrollers =
         document.querySelectorAll(
@@ -1123,14 +1131,12 @@ function enhanceHorizontalScrollers() {
     scrollers.forEach(
         scroller => {
 
-            if (
-                scroller.closest(
-                    ".products-scroll-shell"
-                )
-            ) {
-
+            const existing = scroller.closest(".products-scroll-shell");
+            if (existing) {
+                existing.querySelector(".products-scroll-btn--prev")?.setAttribute("aria-label", window.ROMANO_I18N.ui("previous"));
+                existing.querySelector(".products-scroll-btn--next")?.setAttribute("aria-label", window.ROMANO_I18N.ui("next"));
+                horizontalScrollUpdates.get(scroller)?.();
                 return;
-
             }
 
 
@@ -1212,9 +1218,8 @@ function enhanceHorizontalScrollers() {
                     const maxScroll = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
                     const direction = getComputedStyle(scroller).direction;
                     const raw = scroller.scrollLeft;
-                    const normalized = direction === "rtl"
-                        ? (raw < 0 ? Math.abs(raw) : Math.max(0, maxScroll - raw))
-                        : Math.max(0, raw);
+                    // Modern engines use zero at inline-start and negative offsets in RTL.
+                    const normalized = Math.min(maxScroll, Math.max(0, direction === "rtl" ? -raw : raw));
 
                     prev.hidden = maxScroll < 8 || normalized < 8;
                     next.hidden = maxScroll < 8 || normalized > maxScroll - 8;
@@ -1242,8 +1247,7 @@ function enhanceHorizontalScrollers() {
                                         ? -1
                                         : 1
                                 ),
-                            behavior:
-                                "smooth"
+                            behavior: customerScrollBehavior()
                         }
                     );
 
@@ -1276,15 +1280,8 @@ function enhanceHorizontalScrollers() {
             );
 
 
-            window.addEventListener(
-                "resize",
-                updateButtons
-            );
-
-
-            requestAnimationFrame(
-                updateButtons
-            );
+            horizontalScrollUpdates.set(scroller, updateButtons);
+            requestAnimationFrame(updateButtons);
 
         }
     );
@@ -1707,7 +1704,7 @@ function scrollToCategory(categoryId) {
 
 
     section.scrollIntoView({
-        behavior: "smooth",
+        behavior: customerScrollBehavior(),
         block: "start"
     });
 
@@ -1831,7 +1828,7 @@ function initializeMenu() {
                 document
                     .querySelector("#menu")
                     ?.scrollIntoView({
-                        behavior: "smooth",
+                        behavior: customerScrollBehavior(),
                         block: "start"
                     });
             }
@@ -2164,7 +2161,7 @@ function initializeHeroMenuButton() {
 
 
             menuSection.scrollIntoView({
-                behavior: "smooth",
+                behavior: customerScrollBehavior(),
                 block: "start"
             });
 
