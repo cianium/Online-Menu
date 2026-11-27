@@ -819,6 +819,11 @@
                         <label><span>نام شعبه فعال</span><input name="sampleRename" maxlength="80" required></label>
                         <button type="submit" class="secondary-button">ذخیره نام شعبه</button>
                     </form>
+                    <form class="gateway-settings-form" id="sample-branch-lifecycle" hidden>
+                        <label><span>مدیریت وضعیت شعبه</span><select id="sample-branch-target" data-admin-user-text="true"></select></label>
+                        <p>غیرفعال‌سازی، ورود و سفارش جدید را متوقف می‌کند؛ اطلاعات قبلی حذف نمی‌شوند.</p>
+                        <button type="submit" class="secondary-button" id="sample-branch-active-toggle">غیرفعال‌کردن</button>
+                    </form>
                     <form class="gateway-settings-form" id="sample-table-form" data-action="table">
                         <label><span>کد میز (لاتین)</span><input name="sampleTableCode" dir="ltr" maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_\-]*" required></label>
                         <label><span>نام میز</span><input name="sampleTableName" maxlength="80" required></label>
