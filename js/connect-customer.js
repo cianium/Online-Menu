@@ -191,7 +191,7 @@ const customerChat=function customerChat(core,copy,engine,root){
     const eligible=(mode==="demo"&&typeof branchId==="string"||liveMode&&Boolean(proof))&&typeof root.crypto?.randomUUID==="function";
     const transport=liveMode?liveClient:engine;
     const scope=liveMode?"public:"+String(proof||"missing"):branchId+":"+String(options.tableCode||"")+":"+String(options.profileId||"guest");
-    if(!eligible){if(draftScope!==null)clear();}
+    if(!eligible){draft="";pending=null;}
     if(draftScope!==scope){draft="";pending=null;draftScope=scope;}
     const current=()=>run===generation&&host.isConnected&&host.closest("dialog")?.open;
     let session=null,enabled=false,loaded=false,refreshing=false,lastVersion=-1,ended=false;

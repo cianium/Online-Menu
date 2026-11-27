@@ -55,7 +55,18 @@ const copy={
     "orderMissing": "جزئیات سفارش در دسترس نیست",
     "quantity": "تعداد",
     "services": "مدیریت خدمات این میز",
-    "requests": "درخواست‌های فعال میز"
+    "requests": "درخواست‌های فعال میز",
+    "liveMode": "صندوق ارتباط آنلاین",
+    "liveNotice": "اتصال از طریق سرور؛ این بخش به داده‌های آزمایشی دسترسی ندارد.",
+    "connected": "متصل به سرور",
+    "disconnected": "اتصال به سرور برقرار نیست؛ تلاش مجدد.",
+    "assignMe": "تخصیص به من",
+    "assigned": "تخصیص یافته",
+    "liveStaff": "کارکنان",
+    "sendOnline": "ارسال پاسخ",
+    "serverSaved": "در سرور ثبت شد",
+    "rateLimited": "تعداد پیام‌ها زیاد است؛ کمی بعد تلاش کنید.",
+    "liveLimited": "حداکثر ۵۰ مکالمه اخیر نمایش داده می‌شود."
   },
   "en": {
     "title": "Conversation inbox",
@@ -111,7 +122,18 @@ const copy={
     "orderMissing": "Order details unavailable",
     "quantity": "Quantity",
     "services": "Manage table services",
-    "requests": "Active table requests"
+    "requests": "Active table requests",
+    "liveMode": "Online inbox",
+    "liveNotice": "Server connection; this inbox does not access demo data.",
+    "connected": "Connected to server",
+    "disconnected": "Server connection unavailable; retrying.",
+    "assignMe": "Assign to me",
+    "assigned": "Assigned",
+    "liveStaff": "Staff",
+    "sendOnline": "Send reply",
+    "serverSaved": "Saved on server",
+    "rateLimited": "Too many messages. Try again shortly.",
+    "liveLimited": "Shows up to 50 recent conversations."
   },
   "tr": {
     "title": "Sohbet gelen kutusu",
@@ -167,7 +189,18 @@ const copy={
     "orderMissing": "Sipariş ayrıntıları kullanılamıyor",
     "quantity": "Adet",
     "services": "Masa hizmetlerini yönet",
-    "requests": "Aktif masa istekleri"
+    "requests": "Aktif masa istekleri",
+    "liveMode": "Çevrimiçi gelen kutusu",
+    "liveNotice": "Sunucu bağlantısı; bu gelen kutusu demo verilerine erişmez.",
+    "connected": "Sunucuya bağlandı",
+    "disconnected": "Sunucu bağlantısı yok; yeniden deneniyor.",
+    "assignMe": "Bana ata",
+    "assigned": "Atandı",
+    "liveStaff": "Personel",
+    "sendOnline": "Yanıt gönder",
+    "serverSaved": "Sunucuya kaydedildi",
+    "rateLimited": "Çok fazla mesaj. Biraz sonra deneyin.",
+    "liveLimited": "En fazla 50 son sohbet gösterilir."
   },
   "ar": {
     "title": "صندوق المحادثات",
@@ -223,7 +256,18 @@ const copy={
     "orderMissing": "تفاصيل الطلب غير متاحة",
     "quantity": "الكمية",
     "services": "إدارة خدمات الطاولة",
-    "requests": "طلبات الطاولة النشطة"
+    "requests": "طلبات الطاولة النشطة",
+    "liveMode": "صندوق المحادثات عبر الإنترنت",
+    "liveNotice": "اتصال بالخادم؛ لا يصل هذا الصندوق إلى بيانات العرض التجريبي.",
+    "connected": "متصل بالخادم",
+    "disconnected": "اتصال الخادم غير متاح؛ جارٍ إعادة المحاولة.",
+    "assignMe": "تعيين لي",
+    "assigned": "تم التعيين",
+    "liveStaff": "الموظفون",
+    "sendOnline": "إرسال الرد",
+    "serverSaved": "حُفظ على الخادم",
+    "rateLimited": "رسائل كثيرة. حاول مجددًا بعد قليل.",
+    "liveLimited": "يعرض حتى ٥٠ محادثة حديثة."
   }
 };
 const model=(function inboxModel(){
@@ -255,10 +299,12 @@ const start=function startInbox(root,copy,model){
   const lang=()=>root.ROMANO_ADMIN_I18N?.language||"fa",w=()=>copy[lang()]||copy.fa;
   function identity(){
     try{
-      if(typeof adminInitialized==="undefined"||!adminInitialized||!adminDemoMode||!demoAdminSignedIn()||root.RomanoAPI.enabled||doc.querySelector(".admin-app").inert)return null;
+      if(typeof adminInitialized==="undefined"||!adminInitialized||doc.querySelector(".admin-app").inert)return null;
+      if(!adminDemoMode&&root.RomanoAPI.enabled&&root.RomanoConnectLive)return {mode:"live",branchId:"live"};
+      if(!adminDemoMode||!demoAdminSignedIn()||root.RomanoAPI.enabled)return null;
       const branch=root.RomanoDemoBranches;
       if(branch)branch.context();
-      return {id:"demo-manager",role:"manager",restaurantId:"romano",branchId:"primary"};
+      return {mode:"demo",id:"demo-manager",role:"manager",restaurantId:"romano",branchId:"primary"};
     }catch{return null;}
   }
   const isPage=()=>page.classList.contains("is-active");
@@ -266,18 +312,26 @@ const start=function startInbox(root,copy,model){
   const button=(text,cls,fn)=>{const n=el("button",text,cls);n.type="button";n.addEventListener("click",fn);return n;};
   const format=n=>new Intl.NumberFormat(lang()).format(n);
   const date=n=>new Intl.DateTimeFormat(lang(),{dateStyle:"short",timeStyle:"short"}).format(n);
-  const staffName=id=>id===model.roster[0]?w().me:id===model.roster[1]?w().agent1:id===model.roster[2]?w().agent2:w().unassigned;
+  const staffName=id=>actor?.mode==="live"?(id?w().assigned:w().unassigned):id===model.roster[0]?w().me:id===model.roster[1]?w().agent1:id===model.roster[2]?w().agent2:w().unassigned;
+  let liveReady=false,liveNext=0,liveDelay=5000;
+  function liveError(error){const e=new Error(error?.code||error?.message||"CONNECT_NETWORK");e.status=error?.status;return e;}
+  const liveTransport={
+    async list(){try{return root.RomanoConnectLive.inbox(await root.RomanoAPI.connectList());}catch(e){throw liveError(e);}},
+    async readStaff(_actor,id){try{const value=root.RomanoConnectLive.snapshot(await root.RomanoAPI.connectRead(id));if(!value.conversation||value.conversation.id!==id)throw Error("CONNECT_INVALID_RESPONSE");return value;}catch(e){throw liveError(e);}},
+    async command(_actor,id,command){try{const value=root.RomanoConnectLive.snapshot(await root.RomanoAPI.connectCommand(id,command));if(!value.conversation||value.conversation.id!==id)throw Error("CONNECT_INVALID_RESPONSE");return value;}catch(e){throw liveError(e);}}
+  };
+  const transport=a=>a.mode==="live"?liveTransport:engine;
   let actor=null,rows=[],seen=Object.create(null),selection=null,query="",filter="all",draft="",pending=null,detail=null,ui=null,generation=0,refreshing=false,busy=false;
   function seenKey(a){return "romano_connect_seen_v1:"+a.branchId;}
   function loadSeen(a){
-    const out=Object.create(null);
+    const out=Object.create(null);if(a.mode==="live")return out;
     try{const raw=JSON.parse(root.sessionStorage.getItem(seenKey(a))||"{}");if(raw&&typeof raw==="object"&&!Array.isArray(raw))for(const [k,v] of Object.entries(raw).slice(0,100))if(/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(k)&&Number.isSafeInteger(v)&&v>=0&&v<=1000)out[k]=v;}catch{}
     return out;
   }
   function mark(c,messages){
     if(doc.visibilityState==="hidden")return;
     const count=messages.filter(m=>m.senderKind==="guest").length;
-    if(count>(seen[c.id]||0)){seen[c.id]=count;try{root.sessionStorage.setItem(seenKey(actor),JSON.stringify(seen));}catch{}}
+    if(count>(seen[c.id]||0)){seen[c.id]=count;if(actor.mode!=="live")try{root.sessionStorage.setItem(seenKey(actor),JSON.stringify(seen));}catch{}}
   }
   function updateBadge(){
     const total=actor?rows.reduce((sum,r)=>sum+model.unread(r,seen[r.id]),0):0;
@@ -285,7 +339,7 @@ const start=function startInbox(root,copy,model){
     badge.setAttribute("aria-label",w().unread+": "+format(total));
   }
   function clear(){
-    generation++;actor=null;rows=[];seen=Object.create(null);selection=null;detail=null;draft="";pending=null;query="";filter="all";ui=null;
+    generation++;actor=null;liveReady=false;liveNext=0;liveDelay=5000;rows=[];seen=Object.create(null);selection=null;detail=null;draft="";pending=null;query="";filter="all";ui=null;
     host.replaceChildren(el("h1",w().title));host.firstChild.id="connect-inbox-title";updateBadge();
   }
   function syncIdentity(){
@@ -300,12 +354,12 @@ const start=function startInbox(root,copy,model){
   function build(){
     if(!actor){showNotice();return;}
     const t=w(),heading=el("div",null,"page-heading"),h=el("h1",t.title);h.id="connect-inbox-title";
-    heading.append(el("span",t.mode,"page-eyebrow"),h,el("p",t.notice,"connect-inbox-notice"));
+    const online=actor.mode==="live";heading.append(el("span",online?t.liveMode:t.mode,"page-eyebrow"),h,el("p",online?t.liveNotice:t.notice,"connect-inbox-notice"));if(online)heading.append(el("p",t.liveLimited,"connect-inbox-notice"));
     const toolbar=el("div",null,"connect-inbox-toolbar"),search=el("input"),statusFilter=el("select");
     search.type="search";search.placeholder=t.search;search.setAttribute("aria-label",t.search);search.value=query;search.maxLength=200;
     statusFilter.setAttribute("aria-label",t.filter);
     for(const key of ["all","unread","new","in_progress","resolved","closed","expired"]){const o=el("option",t[key]);o.value=key;statusFilter.append(o);}statusFilter.value=filter;
-    const refreshButton=button(t.refresh,"secondary-button",()=>refresh());
+    const refreshButton=button(t.refresh,"secondary-button",()=>refresh(true));
     toolbar.append(search,statusFilter,refreshButton);
     const metrics=el("div",null,"connect-inbox-metrics"),statusLine=el("p",t.loading,"connect-inbox-status");statusLine.setAttribute("role","status");
     const grid=el("div",null,"connect-inbox-grid"),list=el("div",null,"connect-inbox-list"),detailPane=el("div",null,"connect-inbox-detail");
@@ -340,7 +394,8 @@ const start=function startInbox(root,copy,model){
     if(!ui)return;const t=w(),pane=ui.detailPane;
     ui.grid.classList.toggle("has-selection",Boolean(selection));
     if(!detail){pane.replaceChildren(el("p",selection?t.loading:t.select,"connect-inbox-empty"));return;}
-    const c=detail.conversation,permissions=model.permissions(c,Date.now()),version=c.id+":"+c.version+":"+model.status(c,Date.now());
+    const c=detail.conversation,online=actor?.mode==="live",permissions=model.permissions(c,Date.now()),version=c.id+":"+c.version+":"+model.status(c,Date.now())+":"+(online?liveReady:"demo");
+    if(online&&!liveReady)for(const key of Object.keys(permissions))permissions[key]=false;
     if(!force&&ui.renderedVersion===version)return;ui.renderedVersion=version;
     const oldLog=pane.querySelector(".connect-inbox-log"),bottom=!oldLog||oldLog.scrollHeight-oldLog.scrollTop-oldLog.clientHeight<80,oldScroll=oldLog?.scrollTop||0;
     const active=doc.activeElement?.id;
@@ -350,13 +405,13 @@ const start=function startInbox(root,copy,model){
     top.append(title,el("span",t[model.status(c,Date.now())],"connect-inbox-pill"));header.append(back,top,el("p",t.assignment+": "+staffName(c.assigneeId)));
     const context=el("div",null,"connect-inbox-context");
     const table=el("p",c.tableId?t.table+" · "+c.tableId:t.noTable);table.dir="auto";context.append(table);
-    if(c.orderId){
+    if(!online&&c.orderId){
       const label=el("p",t.order+" · "+c.orderId);label.dir="auto";context.append(label);
       let order=null;try{order=model.orderSummary(c,root.RomanoDemoMembers.read(root.localStorage));}catch{}
       if(order){const items=el("ul");for(const item of order.items){const li=el("li",item.name+" × "+format(item.quantity));li.dir="auto";items.append(li);}context.append(items);}
       else context.append(el("p",t.orderMissing));
-    }else context.append(el("p",t.noOrder));
-    if(c.tableId){
+    }else if(!online)context.append(el("p",t.noOrder));
+    if(!online&&c.tableId){
       const link=button(t.services,"secondary-button",()=>{if(identity()&&typeof navigateTo==="function")navigateTo("orders");});
       const serviceCount=el("p",null,"connect-inbox-service-count");
       serviceCount.dataset.tableCode=c.tableId;
@@ -367,18 +422,18 @@ const start=function startInbox(root,copy,model){
     const actions=el("div",null,"connect-inbox-actions"),select=el("select");
     select.id="connect-inbox-assignee";select.setAttribute("aria-label",t.assignment);
     for(const id of model.roster){const o=el("option",staffName(id));o.value=id;select.append(o);}select.value=model.roster.includes(c.assigneeId)?c.assigneeId:model.roster[0];
-    const assign=button(t.assign,"secondary-button",()=>mutate({type:"assign",assigneeId:select.value}));assign.dataset.connectAction="assign";select.disabled=assign.disabled=!permissions.assign||busy;
-    actions.append(select,assign);
+    const assign=button(online?t.assignMe:t.assign,"secondary-button",()=>mutate({type:"assign",assigneeId:online?"self":select.value}));assign.dataset.connectAction="assign";select.disabled=assign.disabled=!permissions.assign||busy;
+    if(!online)actions.append(select);actions.append(assign);
     for(const [type,label] of [["resolve","resolve"],["reopen","reopen"],["close","close"]]){const b=button(t[label],"secondary-button",()=>{if(type==="close"&&!root.confirm(t.confirm))return;mutate({type});});b.dataset.connectAction=type;b.disabled=!permissions[type]||busy;actions.append(b);}
     header.append(actions);
     const log=el("div",null,"connect-inbox-log");log.setAttribute("role","log");log.setAttribute("aria-label",t.log);log.tabIndex=0;
     for(const m of detail.messages){
       const row=el("article",null,"connect-inbox-message");row.classList.toggle("is-staff",m.senderKind==="staff");
-      const body=el("p",m.text);body.dir="auto";body.lang=m.language;const meta=el("small",(m.senderKind==="staff"?t.staff:t.guest)+" · "+date(m.createdAt));row.append(body,meta);log.append(row);
+      const body=el("p",m.text);body.dir="auto";body.lang=m.language;const meta=el("small",(m.senderKind==="staff"?(online?t.liveStaff:t.staff):t.guest)+" · "+date(m.createdAt));row.append(body,meta);log.append(row);
     }
     const footer=el("div",null,"connect-inbox-compose"),quick=el("div",null,"connect-inbox-quick");quick.setAttribute("role","group");quick.setAttribute("aria-label",t.quick);
     const form=el("form"),input=el("textarea");input.id="connect-inbox-reply";input.rows=2;input.maxLength=4000;input.dir="auto";input.setAttribute("aria-label",t.reply);input.placeholder=t.reply;input.value=draft;
-    const send=el("button",t.send,"primary-button");send.type="submit";send.dataset.connectAction="send";
+    const send=el("button",online?t.sendOnline:t.send,"primary-button");send.type="submit";send.dataset.connectAction="send";
     const counter=el("span",null,"connect-inbox-counter");counter.dir="ltr";
     function update(){const n=Array.from(input.value.trim()).length;counter.textContent=format(n)+" / 2000";send.disabled=busy||!permissions.reply||n===0||n>2000;input.disabled=busy||!permissions.reply;}
     for(const k of ["q1","q2","q3"]){const b=button(t[k],"secondary-button",()=>{const next=(input.value.trim()?input.value.trim()+"\n":"")+t[k];if(Array.from(next).length>2000){ui.statusLine.textContent=t.invalid;return;}input.value=draft=next;pending=null;update();input.focus();});b.disabled=busy||!permissions.reply;quick.append(b);}
@@ -396,43 +451,54 @@ const start=function startInbox(root,copy,model){
   }
   async function refresh(force=false){
     const a=syncIdentity();if(!a){if(isPage()&&!ui)showNotice();return;}
+    const online=a.mode==="live";
+    if(online&&!isPage())return;
     if(isPage()&&!ui)build();
-    if(refreshing||busy)return;
+    if(refreshing||busy||(online&&!force&&Date.now()<liveNext))return;
     refreshing=true;const run=generation,id=selection;
     try{
-      const next=await engine.list(a);
+      const next=await transport(a).list(a);
       if(run!==generation||busy||!identity()||actor!==a)return;
       rows=next;
       if(isPage()&&ui&&id&&selection===id){
         if(!rows.some(r=>r.id===id)){selection=null;detail=null;draft="";pending=null;}
-        else{const nextDetail=await engine.readStaff(a,id);if(run!==generation||busy||!identity()||actor!==a||selection!==id)return;detail=nextDetail;mark(detail.conversation,detail.messages);}
+        else{const nextDetail=await transport(a).readStaff(a,id);if(run!==generation||busy||!identity()||actor!==a||selection!==id)return;detail=nextDetail;mark(detail.conversation,detail.messages);}
       }
-      if(isPage()&&ui){if(ui.statusLine.textContent===w().loading||force)ui.statusLine.textContent="";renderList();renderDetail(force);}
+      if(online){liveReady=true;liveDelay=5000;liveNext=Date.now()+liveDelay;}
+      if(isPage()&&ui){if(online)ui.statusLine.textContent=w().connected;else if(ui.statusLine.textContent===w().loading||force)ui.statusLine.textContent="";renderList();renderDetail(force);}
       updateBadge();
-    }catch(error){if(run===generation&&ui&&isPage()){ui.statusLine.textContent=w().error;if(error.message==="CONNECT_NOT_FOUND"){selection=null;detail=null;renderDetail(true);}}}
+    }catch(error){if(run===generation&&ui&&isPage()){
+      if(online){liveReady=false;liveDelay=Math.min(30000,liveDelay*2);liveNext=Date.now()+liveDelay;if([401,403,404,503].includes(error.status)||error.message==="CONNECT_INVALID_RESPONSE"){rows=[];selection=null;detail=null;draft="";pending=null;}
+        ui.statusLine.textContent=error.message==="CONNECT_UNAVAILABLE"?w().unavailable:w().disconnected;renderList();renderDetail(true);
+      }else{ui.statusLine.textContent=w().error;if(error.message==="CONNECT_NOT_FOUND"){selection=null;detail=null;renderDetail(true);}}
+    }}
     finally{refreshing=false;if(run!==generation&&isPage()&&identity())root.setTimeout(()=>refresh(),0);}
   }
   async function mutate(command){
     const a=syncIdentity();if(!a||!detail||busy||!isPage())return;
     const c=detail.conversation;
-    if(command.type==="assign"&&!model.roster.includes(command.assigneeId))return;
+    if(a.mode==="live"&&!liveReady)return;
+    if(command.type==="assign"&&(a.mode==="live"?command.assigneeId!=="self":!model.roster.includes(command.assigneeId)))return;
     if(!model.permissions(c,Date.now())[command.type==="send"?"reply":command.type])return;
     const run=++generation;busy=true;renderDetail(true);
     try{
-      const next=await engine.command(a,c.id,{...command,expectedVersion:c.version});
+      const next=await transport(a).command(a,c.id,{...command,expectedVersion:c.version});
       if(run!==generation||!identity()||actor!==a||!isPage())return;
-      detail=next;if(command.type==="send"){draft="";pending=null;}ui.statusLine.textContent=w().saved;
+      detail=next;if(command.type==="send"){draft="";pending=null;}ui.statusLine.textContent=a.mode==="live"?w().serverSaved:w().saved;
     }catch(error){
-      if(run===generation&&ui&&isPage()){ui.statusLine.textContent=error.message==="CONNECT_STALE"?w().stale:error.message==="CONNECT_INVALID_MESSAGE"?w().invalid:w().error;}
-    }finally{busy=false;if(run===generation&&ui&&isPage()){renderDetail(true);await refresh();}root.setTimeout(()=>refresh(),0);}
+      if(run===generation&&ui&&isPage()){
+        if(a.mode==="live"&&[401,403,404,503].includes(error.status)){liveReady=false;rows=[];selection=null;detail=null;draft="";pending=null;renderList();}
+        ui.statusLine.textContent=error.message==="CONNECT_STALE"?w().stale:error.message==="CONNECT_INVALID_MESSAGE"?w().invalid:error.message==="CONNECT_RATE_LIMIT"?w().rateLimited:w().error;
+      }
+    }finally{busy=false;if(run===generation&&ui&&isPage()){renderDetail(true);await refresh(true);}root.setTimeout(()=>refresh(),0);}
   }
   function navigate(){
     generation++;
-    if(!isPage()){selection=null;detail=null;draft="";pending=null;ui=null;host.replaceChildren(el("h1",w().title));host.firstChild.id="connect-inbox-title";return;}
-    if(syncIdentity()){build();refresh();}else showNotice();
+    if(!isPage()){if(actor?.mode==="live"){rows=[];liveReady=false;updateBadge();}selection=null;detail=null;draft="";pending=null;ui=null;host.replaceChildren(el("h1",w().title));host.firstChild.id="connect-inbox-title";return;}
+    if(syncIdentity()){build();refresh(true);}else showNotice();
   }
   function refreshServiceCount(){
-    const count=host.querySelector(".connect-inbox-service-count");if(!count||!isPage()||!identity())return;
+    const count=host.querySelector(".connect-inbox-service-count");if(!count||!isPage()||identity()?.mode!=="demo")return;
     try{const values=root.RomanoDemoMembers.requests(root.localStorage,count.dataset.tableCode);count.textContent=w().requests+": "+format(Object.values(values).filter(s=>s==="pending"||s==="accepted").length);}catch{count.textContent=w().error;}
   }
   root.addEventListener("storage",e=>{if(e.key===null||e.key?.startsWith(root.RomanoDemoMembers?.requestPrefix||"\u0000"))refreshServiceCount();});
@@ -440,7 +506,8 @@ const start=function startInbox(root,copy,model){
   doc.addEventListener("romano:admin-page-changed",navigate);
   doc.addEventListener("romano:language-changed",()=>{if(isPage()){if(syncIdentity()){build();refresh();}else showNotice();}updateBadge();});
   doc.addEventListener("romano:demo-membership-changed",()=>refresh());
-  doc.addEventListener("visibilitychange",()=>{if(!doc.hidden)refresh();});
+  doc.addEventListener("visibilitychange",()=>{if(!doc.hidden)refresh(true);});
+  root.addEventListener("online",()=>{if(isPage())refresh(true);});
   engine.subscribe(()=>refresh());
   root.setInterval(()=>{if(!doc.hidden)refresh();},2500);
   // Clear immediately when the demo access gate closes, rather than leaving the transcript in the DOM.

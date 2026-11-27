@@ -79,6 +79,9 @@
     adminData: () => request("/admin/data"),
     saveSnapshot: snapshot => request("/admin/snapshot", { method: "PUT", body: JSON.stringify(snapshot) }),
     orders: () => request("/admin/orders"),
+    connectList: () => request("/admin/connect",{cache:"no-store",signal:AbortSignal.timeout(10000)}),
+    connectRead: id => request(`/admin/connect/${encodeURIComponent(id)}`,{cache:"no-store",signal:AbortSignal.timeout(10000)}),
+    connectCommand: (id,command) => request(`/admin/connect/${encodeURIComponent(id)}`,{method:"POST",cache:"no-store",signal:AbortSignal.timeout(10000),body:JSON.stringify(command)}),
     transitionOrder: (orderId, version, status, reason = null) => request(`/admin/orders/${encodeURIComponent(orderId)}/transition`, {
       method: "POST", body: JSON.stringify({ version, status, reason })
     }),
