@@ -230,6 +230,7 @@ async function ready(p){
   const add=cards.first().locator('.commerce-card-add');assert.equal(await add.isVisible(),true);await add.click();
   assert.equal(await p.locator('#commerce-checkout').isVisible(),true);
   assert.equal(await p.locator('#r17-cart-feedback').getAttribute('data-state'),'added');
+  await p.locator('#r17-cart-feedback').waitFor({state:'visible',timeout:1000});
   assert.ok(await p.locator('#r17-cart-feedback').isVisible());
   assert.ok((await p.locator('#r17-cart-feedback .r17-feedback-product').textContent()).trim());
   assert.equal(await p.locator('#r17-cart-feedback .r17-feedback-count').textContent(),await p.evaluate(()=>new Intl.NumberFormat(document.documentElement.lang).format(1)));
