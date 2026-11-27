@@ -40,7 +40,7 @@
   select.value=lang();select.addEventListener('change',()=>window.ROMANO_I18N.setLanguage(select.value,false));top.append(select);
   const title=text('h1','title');title.id='customer-entry-title';
   const form=el('form'),nameLabel=el('label'),phoneLabel=el('label');
-  const name=el('input');name.name='name';name.autocomplete='off';name.required=true;name.maxLength=80;
+  const name=el('input');name.name='name';name.dir='auto';name.autocomplete='off';name.required=true;name.maxLength=80;
   const phone=el('input');phone.name='phone';phone.type='tel';phone.inputMode='tel';phone.autocomplete='off';phone.dir='ltr';phone.required=true;phone.maxLength=32;
   name.setAttribute('aria-describedby','customer-entry-notice');phone.setAttribute('aria-describedby','customer-entry-notice');
   nameLabel.append(text('span','name'),name);phoneLabel.append(text('span','phone'),phone);
@@ -81,7 +81,7 @@
   if(!demo())return false;
   const member=current();
   if(!member){const button=text('button','join','feedback-save');button.type='button';button.addEventListener('click',()=>{closePanel();open();});host.append(text('p','notice','ramen-contact-note'),button);return true;}
-  host.append(el('strong',member.name));
+  const memberName=el('strong',member.name);memberName.dir='auto';host.append(memberName);
   const points=model.pointsFor(member);
   if(points)host.append(el('p',({fa:'امتیاز نمونه',en:'Sample points',tr:'Örnek puan',ar:'نقاط تجريبية'}[lang()]||'')+': '+new Intl.NumberFormat(lang()).format(points)));
   host.append(text('h3','history'));
@@ -89,8 +89,8 @@
   for(const order of member.orders){
    const card=el('article',undefined,'ramen-contact-item');
    card.append(el('small',new Date(order.createdAt).toLocaleDateString(lang())));
-   for(const item of order.items){card.append(el('span',window.ROMANO_I18N.displayBrand(item.name)+' × '+item.quantity));if(item.note)card.append(el('span',item.note,'hp-history-notes'));}
-   if(order.notes)card.append(el('span',order.notes,'hp-history-notes'));
+   for(const item of order.items){const itemName=el('span',window.ROMANO_I18N.displayBrand(item.name)+' × '+item.quantity);itemName.dir='auto';card.append(itemName);if(item.note){const note=el('span',item.note,'hp-history-notes');note.dir='auto';card.append(note);}}
+   if(order.notes){const note=el('span',order.notes,'hp-history-notes');note.dir='auto';card.append(note);}
    card.append(el('strong',order.currency&&window.OnlineMenuMoney?window.OnlineMenuMoney.formatCatalog(order.total,{currency:order.currency,language:lang()}):typeof formatPrice==='function'?formatPrice(order.total):String(order.total)));host.append(card);
   }
   const logout=text('button','logout','feedback-save');logout.type='button';logout.addEventListener('click',()=>{try{model.signOut(sessionStorage);}catch{}closePanel();announce();});host.append(logout);return true;

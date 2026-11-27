@@ -4,6 +4,7 @@
   function render(deps) {
     const {panel,content,element,demo,mode,labels,words,chat,profileId,lang,h,x,panelText,guestContext,contextLabel,config,tenant,renderHeroRating,close,openPanel,origin,dialog,isDemo}=deps;
     const requestKinds=["waiter","bill","water","napkin"];
+    const panelActive=()=>dialog.open&&content.isConnected;
   function guestServices(content, element, demo, kinds=requestKinds, compact=false) {
     const section=element("section",null,"hp-services");
     section.classList.toggle("connect-service-compact",compact);
@@ -37,12 +38,12 @@
         detail.textContent=state==="pending"?h("request")+" · "+h("cancel"):state==="accepted"?x(6):state==="completed"?x(7):"";
       }
       button.addEventListener("click",async()=>{
-        if(!section.isConnected||!isDemo()||guestContext().code!==context.code||!enabled||inFlight)return;
+        if(!panelActive()||!section.isConnected||!isDemo()||guestContext().code!==context.code||!enabled||inFlight||button.disabled)return;
         const before=displayed?.state,expectedId=displayed?.id??null,next=before==="pending"?undefined:"pending";
         inFlight=true;button.disabled=true;
         try {
           await model.mutateRequest(context.code,()=>{
-            if(!section.isConnected||!isDemo()||guestContext().code!==context.code)throw Error("HP_TABLE");
+            if(!panelActive()||!section.isConnected||!isDemo()||guestContext().code!==context.code)throw Error("HP_TABLE");
             return model.setRequest(localStorage,context.code,kind,next,before,expectedId);
           });
           live.textContent=h(kind)+" — "+h(next?"request":"cancel")+" · "+h("local");
@@ -79,11 +80,11 @@
             label.append(input,element('span',String(n)));field.append(label);
           }
           const commentLabel=element("label",null,"feedback-comment");
-          commentLabel.append(element("span",labels.comment));const comment=element("textarea");comment.maxLength=500;comment.rows=3;comment.value=existing?.comment||"";commentLabel.append(comment);
+          commentLabel.append(element("span",labels.comment));const comment=element("textarea");comment.maxLength=500;comment.rows=3;comment.dir='auto';comment.value=existing?.comment||"";commentLabel.append(comment);
           const button=element('button',labels.save,'feedback-save');button.type='button';button.disabled=!field.querySelector('input:checked');
           const status=element('p',null,'ramen-contact-note');status.setAttribute('role','status');
           field.addEventListener('change',()=>{button.disabled=false;status.textContent='';});
-          button.addEventListener('click',()=>{const selected=Number(field.querySelector('input:checked')?.value);if(!Number.isInteger(selected)||selected<1||selected>5||!isDemo()||!content.isConnected)return;try{const id=globalThis.crypto.randomUUID();review.submit(localStorage,tenant(),selected,comment.value,id);renderHeroRating();status.textContent=labels.saved;}catch{status.textContent=labels.storageError;}});
+          button.addEventListener('click',()=>{const selected=Number(field.querySelector('input:checked')?.value);if(!Number.isInteger(selected)||selected<1||selected>5||!isDemo()||!content.isConnected||!dialog.open)return;try{const id=globalThis.crypto.randomUUID();review.submit(localStorage,tenant(),selected,comment.value,id);renderHeroRating();status.textContent=labels.saved;}catch{status.textContent=labels.storageError;}});
           content.append(field,commentLabel,button,status);
         }
       }
@@ -117,8 +118,8 @@
           copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(address);result.textContent=h('copied');}catch{result.textContent=h('copyFailed');}});
           actions.append(copy,result);
         }
-        const feedback=element('button',h('review'));feedback.type='button';
-        feedback.addEventListener('click',()=>{const previous=origin;dialog.addEventListener('close',()=>openPanel('feedback',previous),{once:true});close();});
+        const feedback=element('button',h('review'));feedback.type='button';feedback.dataset.contactFeedback='';
+        feedback.addEventListener('click',()=>{if(panelActive())openPanel('feedback',origin,true);});
         actions.append(feedback);content.append(actions);
       }
       }

@@ -225,8 +225,9 @@ const customerChat=function customerChat(core,copy,engine,root){
     const form=node("form",null,"connect-compose"),input=node("textarea",null,"connect-input");
     input.id="connect-message-input";input.rows=2;input.maxLength=core.maxText*2;input.dir="auto";input.setAttribute("aria-label",w.input);input.placeholder=w.placeholder;input.value=eligible?draft:"";
     const foot=node("div",null,"connect-compose-footer"),count=node("span",null,"connect-count"),send=node("button",w.send,"connect-send");send.type="submit";count.dir="ltr";
-    const valid=()=>enabled&&!busy&&Boolean(input.value.trim())&&Array.from(input.value.trim()).length<=core.maxText;
-    function update(){count.textContent=Array.from(input.value).length+" / "+core.maxText;input.disabled=!enabled||busy;send.disabled=!valid();for(const c of chips.children)c.disabled=!enabled||busy;reset.disabled=busy;retry.disabled=busy;selector.disabled=busy;contact.disabled=busy;}
+    const messageLength=()=>Array.from(input.value.trim()).length;
+    const valid=()=>enabled&&!busy&&messageLength()>0&&messageLength()<=core.maxText;
+    function update(){count.textContent=messageLength()+" / "+core.maxText;input.disabled=!enabled||busy;send.disabled=!valid();for(const c of chips.children)c.disabled=!enabled||busy;reset.disabled=busy;retry.disabled=busy;selector.disabled=busy;contact.disabled=busy;}
     function display(data){
       const v=data.conversation?.version??0;
       if(v<lastVersion)return;
@@ -263,7 +264,7 @@ const customerChat=function customerChat(core,copy,engine,root){
       catch(error){if(current()&&!busy)showError(error);return false;}
       finally{refreshing=false;}
     }
-    for(const key of ["question","orderQuestion"]){const chip=btn(w[key],"connect-chip",()=>{if(!enabled||busy)return;const next=(input.value.trim()?input.value.trim()+"\n":"")+w[key];if(Array.from(next).length>core.maxText){status.textContent=w.invalid;return;}input.value=next;draft=next;pending=null;update();input.focus();});chips.append(chip);}
+    for(const key of ["question","orderQuestion"]){const chip=btn(w[key],"connect-chip",()=>{if(!enabled||busy)return;const next=(input.value.trim()?input.value.trim()+"\n":"")+w[key];if(Array.from(next.trim()).length>core.maxText){status.textContent=w.invalid;return;}input.value=next;draft=next;pending=null;update();input.focus();});chips.append(chip);}
     input.addEventListener("input",()=>{draft=input.value;pending=null;update();});
     form.addEventListener("submit",async event=>{
       event.preventDefault();if(!valid()||!session)return;

@@ -358,7 +358,8 @@
       dialog.replaceChildren(header,content);
       if(!wasOpen){dialog.showModal();window.RamenOverlayHistory.enter('contact',close);document.body.classList.add('ramen-contact-open');}
       if(origin===trigger){trigger.setAttribute('aria-controls',dialog.id);trigger.setAttribute('aria-expanded','true');}
-      if(restoreLanguage)content.querySelector('.connect-language')?.focus();else dismiss.focus();
+      const focusTarget=restoreLanguage?content.querySelector('.connect-language')||dismiss:dismiss;
+      focusTarget.focus({preventScroll:true});
     };
     document.querySelector("#hero-rating")?.addEventListener("click",event=>openPanel("feedback",event.currentTarget));
     trigger.addEventListener('click',event=>{event.preventDefault();openPanel();});
@@ -368,11 +369,19 @@
       if(panel==='cart')openDrawer();
       else if(['contact','chat','profile','feedback','waiter'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
     });
-    dialog.addEventListener('close',()=>{panelRevision++;window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');window.RomanoCustomerChat?.suspend();if(origin?.isConnected)origin.focus();origin=null;activePanel=null;});
+    dialog.addEventListener('close',()=>{panelRevision++;window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');window.RomanoCustomerChat?.suspend();if(origin?.isConnected&&!origin.closest('[inert]'))origin.focus({preventScroll:true});origin=null;activePanel=null;});
     document.addEventListener('romano:language-changed',()=>{if(dialog.open&&activePanel==='chat'){const restore=document.activeElement?.classList.contains('connect-language');openPanel('chat',origin,true,restore);}else close();updateLabel();});
     document.addEventListener('romano:connect-session-changed',()=>{window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
     document.addEventListener('romano:demo-membership-changed',()=>{const next=profileId();if(next===connectProfile)return;connectProfile=next;connectAssets.forgetGuest();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
-    window.addEventListener('romano:data-updated',()=>{if(typeof menuDataMode!=='undefined'&&menuDataMode!=='demo')window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
+    let lastPanelMode=typeof menuDataMode==='undefined'?'loading':menuDataMode;
+    window.addEventListener('romano:data-updated',()=>{
+      const mode=typeof menuDataMode==='undefined'?'loading':menuDataMode;
+      if(mode!==lastPanelMode){
+        lastPanelMode=mode;
+        window.RomanoCustomerChat?.clear();
+        if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);
+      }
+    });
     updateLabel();
   }
 
