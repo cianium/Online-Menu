@@ -9,7 +9,7 @@
 
   async function csrf() {
     if (!backendAvailable) throw new Error("API is not available in this deployment.");
-    const r = await fetch(`${API_PREFIX}/auth/csrf`, { credentials: "include", headers: { Accept: "application/json" } });
+    const r = await fetch(`${API_PREFIX}/auth/csrf`, { credentials: "include", cache: "no-store", redirect: "error", signal: AbortSignal.timeout(10000), headers: { Accept: "application/json" } });
     const body = await r.json();
     if (!r.ok || !body?.data?.csrfToken) throw new Error(body?.error?.message || "Unable to initialize security token.");
     csrfToken = body.data.csrfToken;
@@ -24,9 +24,9 @@
     headers.set("Accept", "application/json");
     if (options.body !== undefined && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
     if (method !== "GET" && csrfToken) headers.set("X-CSRF-Token", csrfToken);
-    let response = await fetch(`${API_PREFIX}${path}`, { ...options, headers, credentials: "include" });
+    let response = await fetch(`${API_PREFIX}${path}`, { ...options, headers, credentials: "include", cache: "no-store", redirect: "error", signal: options.signal || AbortSignal.timeout(30000) });
     let body = await response.json().catch(() => null);
-    if (response.status === 403 && body?.error?.code === "CSRF_INVALID" && !options.__retried) {
+    if (method !== "GET" && response.status === 403 && body?.error?.code === "CSRF_INVALID" && !options.__retried) {
       csrfToken = null;
       return request(path, { ...options, __retried: true });
     }
@@ -48,7 +48,7 @@
   async function detect() {
     if (standalone) window.RomanoDemoBranches?.context();
     if (!canUseBackend) return { available: false, session: null };
-    const response = await fetch(`${API_PREFIX}/auth/me`, { credentials: "include", cache: "no-store", headers: { Accept: "application/json" }, signal: AbortSignal.timeout(8000) });
+    const response = await fetch(`${API_PREFIX}/auth/me`, { credentials: "include", cache: "no-store", redirect: "error", headers: { Accept: "application/json" }, signal: AbortSignal.timeout(8000) });
     const isJson = (response.headers.get("content-type") || "").includes("application/json");
     if (response.status === 404) {
       backendAvailable = false;
@@ -75,7 +75,7 @@
       return data;
     },
     logout: async () => { try { return await request("/auth/logout", { method: "POST", body: JSON.stringify({}) }); } finally { csrfToken = null; } },
-    uploadImage: dataUrl => request("/admin/media", { method: "POST", body: JSON.stringify({ dataUrl }) }),
+    uploadImage: dataUrl => request("/admin/media", { method: "POST", signal: AbortSignal.timeout(60000), body: JSON.stringify({ dataUrl }) }),
     adminData: () => request("/admin/data"),
     saveSnapshot: snapshot => request("/admin/snapshot", { method: "PUT", body: JSON.stringify(snapshot) }),
     orders: () => request("/admin/orders"),

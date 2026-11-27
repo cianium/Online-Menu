@@ -12,7 +12,7 @@
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);
     try {
-      const response = await fetch(`/api/v1/public/restaurants/${encodeURIComponent(slug)}/menu?lang=${encodeURIComponent(lang)}`, { signal: controller.signal, credentials: "same-origin", headers: { Accept: "application/json" } });
+      const response = await fetch(`/api/v1/public/restaurants/${encodeURIComponent(slug)}/menu?lang=${encodeURIComponent(lang)}`, { signal: controller.signal, credentials: "same-origin", cache: "no-store", redirect: "error", headers: { Accept: "application/json" } });
       const json = (response.headers.get("content-type") || "").includes("application/json");
       // Only the unqualified demo route may fall back to bundled sample data.
       // An explicit restaurant slug must fail closed when that restaurant is missing.
