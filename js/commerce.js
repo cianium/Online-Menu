@@ -165,8 +165,11 @@
   let couponCode="",appliedCoupon="";
   const extra={fa:["تخفیف نمونه","کد تخفیف","اعمال","کد نامعتبر یا بدون تخفیف","امتیاز نمونه","یادداشت محصول / حساسیت غذایی","پذیرفته شد","انجام شد","ساعات کاری","مسیریابی","واتس‌اپ","حذف تخفیف"],en:["Sample discount","Promo code","Apply","Invalid code or no discount","Sample points","Item note / food allergy","Accepted","Completed","Opening hours","Directions","WhatsApp","Remove discount"],tr:["Örnek indirim","İndirim kodu","Uygula","Geçersiz kod veya indirim yok","Örnek puan","Ürün notu / gıda alerjisi","Kabul edildi","Tamamlandı","Çalışma saatleri","Yol tarifi","WhatsApp","İndirimi kaldır"],ar:["خصم تجريبي","رمز الخصم","تطبيق","رمز غير صالح أو لا يوجد خصم","نقاط تجريبية","ملاحظة المنتج / حساسية غذائية","تم القبول","مكتمل","ساعات العمل","الاتجاهات","واتساب","إزالة الخصم"]};
   const x=i=>(extra[lang()]||extra.fa)[i];
+  const bundleText=()=>({fa:"پیشنهاد ترکیبی",en:"Bundle offer",tr:"Kombinasyon teklifi",ar:"عرض المجموعة"}[lang()]||"Bundle offer");
+  const subtotalText=()=>({fa:"جمع محصولات",en:"Subtotal",tr:"Ara toplam",ar:"المجموع الفرعي"}[lang()]||"Subtotal");
   const config=()=>{try{return isDemo()?window.RomanoDemoMembers.settings(localStorage):null;}catch{return null;}};
-  function discount(){const cfg=config();return cfg&&appliedCoupon&&cfg.coupon===appliedCoupon?window.RomanoDemoMembers.discountFor(total(),cfg.percent,restaurantConfig.currency):0;}
+  function eligible(cfg){return cfg&&window.RomanoDemoMembers.eligibleBundle(cfg.bundle,visibleCartEntries().map(([productId,quantity])=>({productId,quantity})));}
+  function discount(){const cfg=config();return cfg&&appliedCoupon&&cfg.coupon===appliedCoupon&&eligible(cfg)?window.RomanoDemoMembers.discountFor(total(),cfg.percent,restaurantConfig.currency):0;}
   const requestKinds = ["waiter","bill","water","napkin"];
   function guestContext() {
     if (isDemo()) {
@@ -234,7 +237,8 @@
     const candidates=[];
     if(selected.length && typeof menuProducts!=="undefined" && Array.isArray(menuProducts)){
       const suggestedGroups=new Set(groups);
-      for(const id of config()?.suggestions||[]){const item=product(id);if(item&&!cart[id]){candidates.push(item);suggestedGroups.add(item.category);}}
+      const cfg=config();
+      for(const id of [...new Set([...(cfg?.bundle||[]),...(cfg?.suggestions||[])])]){const item=product(id);if(item&&!cart[id]&&candidates.length<3){candidates.push(item);suggestedGroups.add(item.category);}}
       for(const item of menuProducts){
         if(candidates.length>=3)break;
         if(item.active===false || !product(item.id) || cart[item.id] || candidates.some(p=>p.id===item.id) || suggestedGroups.has(item.category))continue;
@@ -394,7 +398,7 @@
         <section class="hp-suggestions" id="hp-suggestions" hidden></section>
         <div class="commerce-options" id="commerce-options">
           <label class="commerce-note"><span>${safe(t("note"))}</span><textarea id="commerce-notes" maxlength="1000" rows="2" placeholder="${safe(t("noteHint"))}">${safe(orderNotes)}</textarea><span id="hp-note-local" hidden>${safe(h("noteLocal"))}</span></label>
-          <div id="hp-offer" hidden><label for="hp-code">${safe(x(1))}</label><div class="hp-code-row"><input id="hp-code" maxlength="24" value="${safe(couponCode)}" dir="ltr" autocomplete="off"><button type="button" id="hp-apply">${safe(x(2))}</button></div><p id="hp-coupon-status" role="status"></p></div>
+          <div id="hp-offer" hidden><label for="hp-code">${safe(x(1))}</label><div class="hp-code-row"><input id="hp-code" maxlength="24" value="${safe(couponCode)}" dir="ltr" autocomplete="off"><button type="button" id="hp-apply">${safe(x(2))}</button></div><p id="hp-bundle" class="hp-context" hidden></p><p id="hp-coupon-status" role="status"></p></div>
           <p id="hp-points" class="hp-context" hidden></p>
           <fieldset class="commerce-pay-method"><legend>${safe(panelText().methods)}</legend>
             <label><input type="radio" name="commerce-payment" value="later" checked> <span>${safe(t("later"))}</span></label>
@@ -402,7 +406,7 @@
           </fieldset>
         </div></div>
         <div class="commerce-checkout" id="commerce-checkout">
-          <div class="hp-summary">${safe(h("summary"))}</div><div class="commerce-total-row" id="hp-discount" hidden><span>${safe(x(0))}</span><strong id="hp-discount-value"></strong></div><div class="commerce-total-row"><span>${safe(t("total"))}</span><strong id="commerce-total"></strong></div>
+          <div class="hp-summary">${safe(h("summary"))}</div><div class="commerce-total-row" id="hp-subtotal" hidden><span>${safe(subtotalText())}</span><strong id="hp-subtotal-value"></strong></div><div class="commerce-total-row" id="hp-discount" hidden><span>${safe(x(0))}</span><strong id="hp-discount-value"></strong></div><div class="commerce-total-row"><span>${safe(t("total"))}</span><strong id="commerce-total"></strong></div>
           <p class="commerce-message" id="commerce-message" role="alert"></p>
           <button class="commerce-submit" id="commerce-submit" type="button">${safe(t("checkout"))}</button>
         </div>
@@ -418,7 +422,7 @@
       if(submitting)return;
       const cfg=config(),code=couponCode.trim().toUpperCase();
       if(appliedCoupon){appliedCoupon="";couponCode="";document.querySelector("#hp-code").value="";render();return;}
-      if(!cfg?.coupon||code!==cfg.coupon||!window.RomanoDemoMembers.discountFor(total(),cfg.percent,restaurantConfig.currency)){document.querySelector("#hp-coupon-status").textContent=x(3);return;}
+      if(!cfg?.coupon||code!==cfg.coupon||!eligible(cfg)||!window.RomanoDemoMembers.discountFor(total(),cfg.percent,restaurantConfig.currency)){document.querySelector("#hp-coupon-status").textContent=x(3);return;}
       appliedCoupon=code;render();
     });
     document.querySelector("#commerce-notes").addEventListener("input",event=>{orderNotes=event.target.value;});
@@ -561,6 +565,11 @@
     document.querySelector("#hp-apply").disabled=submitting;
     document.querySelector("#hp-apply").textContent=x(appliedCoupon?11:2);
     document.querySelector("#hp-coupon-status").textContent=savings?cfg.percent+"% · "+appliedCoupon:"";
+    const bundle=document.querySelector("#hp-bundle"),bundleItems=(cfg?.bundle||[]).map(id=>product(id));
+    bundle.hidden=!bundleItems.length||bundleItems.some(item=>!item);
+    bundle.textContent=bundle.hidden?"":bundleText()+": "+bundleItems.map(item=>localized(item).name).join(" + ");
+    document.querySelector("#hp-subtotal").hidden=!savings;
+    document.querySelector("#hp-subtotal-value").textContent=savings?money(total()):"";
     document.querySelector("#hp-discount").hidden=!savings;
     document.querySelector("#hp-discount-value").textContent=savings?money(savings):"";
     const points=document.querySelector("#hp-points");
@@ -739,7 +748,7 @@
         const members=window.RomanoDemoMembers;
         const order=await members.mutate(()=>{
           cart=normalizeCart(read(cartKey(),cart));
-          const items=visibleCartEntries().map(([id,quantity])=>({name:localized(product(id)).name,quantity,price:product(id).price,note:(itemNotes.get(id)||"").trim()}));
+          const items=visibleCartEntries().map(([id,quantity])=>({productId:id,name:localized(product(id)).name,quantity,price:product(id).price,note:(itemNotes.get(id)||"").trim()}));
           if(!items.length)return null;
           const saved=members.addOrder(localStorage,sessionStorage,items,total()-discount(),restaurantConfig.currency,orderNotes.trim(),appliedCoupon);
           cart=normalizeCart({});save(cartKey(),cart);lastRemoved=null;orderNotes="";itemNotes.clear();appliedCoupon=couponCode="";document.querySelector("#hp-code").value="";document.querySelector("#commerce-notes").value="";

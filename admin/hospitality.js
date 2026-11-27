@@ -22,13 +22,16 @@ function renderSettings(){
  const suggestions=node("select");suggestions.name="suggestions";suggestions.multiple=true;suggestions.size=4;
  for(const item of state.products.filter(p=>p.active!==false)){const option=node("option",typeof item.name==="string"?item.name:item.id);option.value=item.id;option.selected=cfg.suggestions.includes(item.id);suggestions.append(option);}
  add(t(2),suggestions);
+ const bundle=node("select");bundle.name="bundle";bundle.multiple=true;bundle.size=4;
+ for(const item of state.products.filter(p=>p.active!==false)){const option=node("option",typeof item.name==="string"?item.name:item.id);option.value=item.id;option.selected=cfg.bundle.includes(item.id);bundle.append(option);}
+ add(({fa:"محصولات لازم برای تخفیف ترکیبی (صفر یا دقیقاً ۲)",en:"Required bundle products (none or exactly two)",tr:"Kampanya için gerekli ürünler (yok veya tam iki)",ar:"المنتجات المطلوبة للعرض (لا شيء أو منتجان)"}[window.ROMANO_ADMIN_I18N?.language]||"Bundle products"),bundle);
  function input(name,label,value,type="text",limit=120){const field=node("input");field.name=name;field.type=type;field.value=value;if(type==="number"){field.min="0";field.max=String(limit);field.step="1";field.required=true;}else field.maxLength=limit;add(label,field);}
  input("coupon",t(3),cfg.coupon,"text",24);input("percent",t(4),cfg.percent,"number",50);input("points",t(5),cfg.points,"number",1000);
  for(const l of languages)input("hours_"+l,t(6)+" · "+l.toUpperCase(),cfg.hours[l]);
  input("map",t(7),cfg.map,"url",500);input("whatsapp",t(8),cfg.whatsapp,"url",500);
  const save=node("button",t(9),"primary-button");save.type="submit";form.append(fields,save,status);settings.append(form);
  form.addEventListener("submit",async ev=>{ev.preventDefault();if(!local())return;save.disabled=true;
- try{const data=form.elements;const next={suggestions:[...suggestions.selectedOptions].map(o=>o.value),coupon:data.coupon.value.trim().toUpperCase(),percent:Number(data.percent.value),points:Number(data.points.value),hours:Object.fromEntries(languages.map(l=>[l,data["hours_"+l].value])),map:data.map.value.trim(),whatsapp:data.whatsapp.value.trim()};
+ try{const data=form.elements;const next={suggestions:[...suggestions.selectedOptions].map(o=>o.value),bundle:[...bundle.selectedOptions].map(o=>o.value),coupon:data.coupon.value.trim().toUpperCase(),percent:Number(data.percent.value),points:Number(data.points.value),hours:Object.fromEntries(languages.map(l=>[l,data["hours_"+l].value])),map:data.map.value.trim(),whatsapp:data.whatsapp.value.trim()};
  await model.mutate(()=>{if(!local()||localStorage.getItem(model.settingsKey)!==baseline)throw Error("STALE");model.saveSettings(localStorage,next);baseline=localStorage.getItem(model.settingsKey);});status.textContent=t(10);
  }catch{status.textContent=t(11);}finally{save.disabled=false;}});
 }

@@ -127,3 +127,14 @@ test('Demo hospitality coupon and points are validated, recorded and scoped to n
  assert.throws(()=>model.saveSettings(db,{...config,map:'javascript:alert(1)'}));
  assert.equal(model.active(db,session).orders.length,1);
 });
+
+test('Bundle coupons require both distinct products and preserve eligibility in the order',()=>{
+ const db=storage(),session=storage();model.register(db,session,'Sample','+12025550136');
+ const cfg={...model.settings(db),bundle:['a','b'],coupon:'BUNDLE10',percent:10};model.saveSettings(db,cfg);
+ const a={productId:'a',name:'A',quantity:1,price:100},b={productId:'b',name:'B',quantity:1,price:100};
+ assert.throws(()=>model.addOrder(db,session,[a],90,'IRT','','BUNDLE10'),/HP_COUPON/);
+ const saved=model.addOrder(db,session,[a,b],180,'IRT','','BUNDLE10');
+ assert.deepEqual(saved.offer.bundle,['a','b']);assert.equal(saved.offer.discount,20);
+ assert.throws(()=>model.saveSettings(db,{...cfg,bundle:['a','a']}));
+ assert.equal(model.active(db,session).orders.length,1);
+});
