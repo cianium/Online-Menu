@@ -125,7 +125,7 @@ async function ready(p){
   await firstEntry.locator('input[name="name"]').fill('Sample Customer');
   await firstEntry.locator('input[name="phone"]').fill('+12025550140');
   await firstEntry.locator('button[type="submit"]').click();
-  await firstEntry.waitForFunction(()=>!document.querySelector('#customer-entry')?.open);
+  await first.waitForFunction(()=>!document.querySelector('#customer-entry')?.open);
   const memberId=await first.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey));assert.ok(memberId);
   const second=await memberContext.newPage();
   await second.goto(base+'/?qr=demo');await ready(second);
@@ -223,6 +223,34 @@ async function ready(p){
    assert.equal(await p.locator('.product-modal').getAttribute('aria-hidden'),'true');
   }
  });
+ await check('Product share excludes table and payment context in all four languages',async()=>{
+  for(const lang of ['fa','ar','en','tr']){
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+   await cards.first().locator('.product-card-button').click();
+   const original=await p.evaluate(()=>{
+    const original=location.href;
+    const url=new URL(original);
+    for(const [key,value] of Object.entries({restaurant:'sample',demoBranch:'sample-branch',demoTable:'A1',qr:'sample-private-token',payment:'ok',order:'sample-order',ref:'sample-ref',extra:'sample-extra'}))url.searchParams.set(key,value);
+    history.replaceState(null,'',url.href);
+    Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.__qaShare=data}});
+    window.__qaShare=null;
+    return original;
+   });
+   try{
+    await p.locator('[data-rv4-share]').click();
+    await p.waitForFunction(()=>Boolean(window.__qaShare));
+    const share=await p.evaluate(()=>window.__qaShare);
+    const url=new URL(share.url);
+    assert.deepEqual([...url.searchParams.keys()],['restaurant','demoBranch']);
+    assert.equal(url.searchParams.get('restaurant'),'sample');
+    assert.equal(url.searchParams.get('demoBranch'),'sample-branch');
+    assert.match(url.hash,/^#product-/);
+   }finally{
+    await p.evaluate(original=>{history.replaceState(null,'',original);delete navigator.share;delete window.__qaShare;},original);
+    await p.keyboard.press('Escape');
+   }
+  }
+ });
  await check('Cart supports add, quantity and sample registration at checkout',async()=>{
   const cartButton=p.locator('#ramen-bottom-cart');
   await cartButton.click();
@@ -250,6 +278,11 @@ async function ready(p){
   });
   await p.locator('.commerce-quantity button[data-cart-change="1"]').click();assert.equal(await p.locator('.commerce-quantity b').textContent(),'2');
   assert.equal(await p.evaluate(()=>document.activeElement.dataset.cartChange),'1');
+  const note=p.locator('[data-hp-note]').first();
+  await note.fill('Sample note');await note.focus();
+  await note.evaluate(input=>input.setSelectionRange(2,6));
+  await p.evaluate(()=>document.dispatchEvent(new CustomEvent('romano:demo-membership-changed')));
+  assert.deepEqual(await note.evaluate(input=>({focused:document.activeElement===input,value:input.value,start:input.selectionStart,end:input.selectionEnd})),{focused:true,value:'Sample note',start:2,end:6});
   assert.equal(await p.locator('.site-wrapper').evaluate(n=>n.inert),true);
   assert.equal(await p.locator('#commerce-options').isVisible(),true);
   const summary=await p.locator('#commerce-submit').boundingBox();assert.ok(summary && summary.y+summary.height<=844);
@@ -294,6 +327,17 @@ async function ready(p){
   const prices=await p.evaluate(()=>[...document.querySelectorAll('#menu .product-card')].map(c=>getProductById(c.dataset.productId).price));assert.deepEqual(prices,[...prices].sort((a,b)=>a-b));
   await openSearch();await p.locator('#rv4-menu-search').fill('no-product-xyz');assert.equal(await cards.count(),0);assert.equal(await p.locator('#menu-empty').count(),1);
   await resetFilters();assert.equal(await cards.count(),21);
+  await openSearch();
+  await p.locator('#rv4-menu-search').evaluate(input=>{
+   input.value='pizza';input.dispatchEvent(new InputEvent('input',{bubbles:true,isComposing:true}));
+  });
+  assert.equal(await cards.count(),21);
+  await p.locator('#rv4-menu-search').evaluate(input=>input.dispatchEvent(new CompositionEvent('compositionend',{bubbles:true,data:'pizza'})));
+  assert.equal(await cards.count(),3);
+  await cards.first().evaluate(card=>card.dataset.qaIdentity='preserved');
+  await p.locator('#rv4-menu-search').fill(' pizza ');
+  assert.equal(await cards.first().getAttribute('data-qa-identity'),'preserved');
+  await resetFilters();
   await p.locator('[data-browse-category]').first().click();assert.equal(await cards.count(),3);await resetFilters();
  });
  await check('Favorites persist, filter and clear',async()=>{
