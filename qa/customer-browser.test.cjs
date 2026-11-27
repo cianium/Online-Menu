@@ -46,7 +46,11 @@ async function ready(p){
     await p.keyboard.press('Escape');await p.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open);
     await p.locator('#menu-toggle').click();
     const nav=p.locator('.navigation-footer-meta > span');
-    assert.equal((await nav.innerText()).trim(),{fa:'منوی دیجیتال RAMEN',en:'RAMEN · DIGITAL MENU',tr:'RAMEN · DİJİTAL MENÜ',ar:'رامن · القائمة الرقمية'}[lang]);
+    const navLabel={fa:'منوی دیجیتال RAMEN',en:'RAMEN · DIGITAL MENU',tr:'RAMEN · DİJİTAL MENÜ',ar:'رامن · القائمة الرقمية'}[lang];
+    await p.waitForFunction(()=>document.querySelector('#main-navigation').getAttribute('aria-hidden')==='false');
+    await nav.waitFor({state:'visible'});
+    await p.waitForFunction(label=>document.querySelector('.navigation-footer-meta > span')?.innerText.trim()===label,navLabel);
+    assert.equal((await nav.textContent()).trim(),navLabel);
     await p.locator('#navigation-close').click();
     await p.waitForFunction(()=>document.querySelector('#main-navigation').getAttribute('aria-hidden')==='true');
     assert.equal(await p.locator('.commerce-drawer small').textContent(),'RAMEN');
