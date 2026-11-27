@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r25-security-cache`;
+const CACHE_NAME = `${menuCachePrefix}r26-dedicated-menu`;
 const CORE_ASSETS = [
   "./",
   "./index.html",

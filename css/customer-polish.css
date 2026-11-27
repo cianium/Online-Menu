@@ -702,15 +702,11 @@ html[dir] .hero-section{grid-template-rows:minmax(min-content,1fr) auto;align-it
 html[dir] .hero-content{grid-row:1;padding-block-end:14px}
 html[dir] .hero-section>.hero-button{grid-row:2;align-self:end;justify-self:center;margin:12px 0 clamp(14px,3vh,26px);min-height:44px;min-inline-size:min(176px,calc(100% - 36px));padding:9px 24px;border-radius:12px;font-size:14px;font-weight:700;box-shadow:0 5px 22px #08070580}
 .hero-section .hero-scroll-indicator{display:none}
-.hero-rating{display:grid;grid-template-columns:auto auto;align-items:center;justify-content:center;gap:3px 12px;max-width:100%;min-height:44px;margin:4px 0 0;padding:9px 12px;border:1px solid #d6ae7040;border-radius:12px;background:#17130fc9;color:#e8d4b3;text-align:start;font:inherit;cursor:pointer}
+.hero-rating{display:flex;align-items:center;justify-content:center;max-width:100%;min-height:44px;margin:4px 0 0;padding:4px 0;border:0;background:transparent;box-shadow:none;color:#e8d4b3;font:inherit;cursor:pointer}
 .hero-rating[hidden]{display:none}
 .hero-rating:disabled{cursor:default}
 .hero-stars{display:flex;gap:3px;direction:ltr;white-space:nowrap;font-size:21px;line-height:1;color:#d6ae70}
 .hero-stars .is-filled{color:#f2ca82}
-.hero-rating-copy{display:grid;gap:2px;min-width:0}
-.hero-rating-copy strong{font-size:18px;line-height:1.1;color:#f0d19e}
-.hero-rating-label{font-size:11px;line-height:1.3}
-.hero-rating-detail{grid-column:1/-1;text-align:center;font-size:10px;line-height:1.5;color:#d4c7b5;overflow-wrap:anywhere}
 .hero-rating:focus-visible{outline:2px solid #ebc98e;outline-offset:3px}
 @media(max-width:360px){#site-header .header-container{width:calc(100% - 12px);gap:2px}#site-header .brand-logo{inline-size:30px;block-size:30px;flex-basis:30px}#site-header .brand-name{font-size:14px}.hero-stars{font-size:19px}}
 @media(max-height:500px){html[dir] .hero-section{min-height:300px}html[dir] .hero-content{padding-block-start:18px}}
@@ -723,3 +719,16 @@ html[dir] .hero-section>.hero-button{grid-row:2;align-self:end;justify-self:cent
 #navigation-service-options[hidden]{display:none}
 #navigation-service-options button{text-align:start}
 @media(prefers-reduced-motion:no-preference){#navigation-service-options:not([hidden]){animation:customer-enter .16s ease-out}}
+
+/* R26 — separate catalog route, equal header touch targets and star-only ratings. */
+#main-content > :is(#home,#categories,#featured,#menu)[hidden]{display:none!important}
+#main-content > #menu:not([hidden]){min-block-size:calc(100dvh - var(--r17-header-height,106px) - var(--customer-nav-reserve,0px));}
+#site-header .menu-browser{padding-block:4px 5px}
+#site-header .r17-browse-row{align-items:center;gap:4px}
+#site-header .browse-category-rail{align-items:center;min-block-size:44px;padding-block:0}
+#site-header .browse-category-rail button{position:relative;isolation:isolate;box-sizing:border-box;flex-shrink:0;block-size:44px;min-block-size:44px;max-block-size:44px;padding:4px 10px;border:0;background:transparent;box-shadow:none;gap:5px}
+#site-header .browse-category-rail button::before{content:"";position:absolute;inset:4px 0;border:1px solid #d6ae7035;border-radius:10px;background:#211b15;z-index:-1;pointer-events:none}
+#site-header .browse-category-rail button[aria-pressed="true"]::before{border-color:#d6ae70;background:#49351f}
+#site-header .browse-category-rail button:focus-visible{outline:2px solid #ebc98e;outline-offset:-2px}
+.hero-rating .hero-stars{gap:6px;font-size:clamp(21px,5.6vw,26px)}
+.navigation-rating{min-height:0;padding-block:4px}

@@ -1730,30 +1730,11 @@ function closeProductModal() {
 ========================================================= */
 
 function scrollToCategory(categoryId) {
-
-    window.RomanoMenuExperience?.selectCategory(categoryId, true);
-
-    const section =
-        document.querySelector(
-            `#category-${CSS.escape(categoryId)}`
-        );
-
-
-    if (!section) {
-
-        return;
-
-    }
-
-
     closeNavigation();
-
-
-    section.scrollIntoView({
-        behavior: customerScrollBehavior(),
-        block: "start"
-    });
-
+    navigateCustomerView("menu",{focus:false,scroll:false});
+    window.RomanoMenuExperience?.selectCategory(categoryId, true);
+    document.getElementById("menu")?.focus({preventScroll:true});
+    document.getElementById("category-"+categoryId)?.scrollIntoView({block:"start",behavior:customerScrollBehavior()});
 }
 
 
@@ -1800,9 +1781,7 @@ function initializeMenu() {
             if (link.dataset.categoryLink === "true") {
                 event.preventDefault();
                 const id = link.getAttribute("href").slice("#category-".length);
-                closeNavigation();
-                window.RomanoMenuExperience?.selectCategory(id, true);
-                document.getElementById(`category-${id}`)?.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+                scrollToCategory(id);
                 return;
             }
             closeNavigation();
@@ -2181,48 +2160,73 @@ function handleImageError(image) {
    18. HERO MENU BUTTON
 ========================================================= */
 
-function initializeHeroMenuButton() {
-
-    const heroMenuButton =
-        document.querySelector(
-            ".hero-button"
-        );
-
-
-    if (!heroMenuButton) {
-
-        return;
-
+// Static-safe hash routing: keep cart, language and guest session in one document.
+let customerView = null;
+function renderCustomerView(view) {
+    const menu = document.getElementById("menu");
+    if (!menu) return false;
+    const changed = customerView !== view;
+    customerView = view;
+    menu.hidden = view !== "menu";
+    for (const id of ["home","categories","featured"]) {
+        document.getElementById(id).hidden = view === "menu";
     }
-
-
-    heroMenuButton.addEventListener(
-        "click",
-        event => {
-
-            event.preventDefault();
-
-
-            const menuSection = document.querySelector("#menu");
-
-
-            if (!menuSection) {
-
-                return;
-
-            }
-
-
-            menuSection.scrollIntoView({
-                behavior: customerScrollBehavior(),
-                block: "start"
-            });
-
-        }
-    );
-
+    if (changed) window.dispatchEvent(new CustomEvent("romano:customer-view-changed",{detail:{view}}));
+    return changed;
 }
 
+function navigateCustomerView(target, {focus=true,scroll=true} = {}) {
+    if (!["home","featured","menu"].includes(target)) return;
+    if (target!=="menu") window.RomanoMenuExperience?.closePanel();
+    const hash = "#" + target;
+    const view = target === "menu" ? "menu" : "home";
+    if (location.hash !== hash) {
+        const state = history.state && typeof history.state === "object" ? {...history.state} : {};
+        delete state.__ramenCustomerOverlay;
+        delete state.__ramenCustomerIdle;
+        history.pushState(state,"",location.pathname+location.search+hash);
+    }
+    renderCustomerView(view);
+    const section = document.getElementById(target);
+    if (focus) section?.focus({preventScroll:true});
+    if (scroll) {
+        if (target === "home") window.scrollTo({top:0,behavior:"instant"});
+        else section?.scrollIntoView({block:"start",behavior:"instant"});
+    }
+}
+
+function initializeHeroMenuButton() {
+    const syncRoute = () => {
+        const hash = location.hash;
+        // Direct product links open over the catalog; existing overlays retain their source view.
+        if (hash.startsWith("#product-") && customerView !== null) return;
+        const menu = hash === "#menu" || hash.startsWith("#category-") || hash.startsWith("#product-");
+        const changed = renderCustomerView(menu ? "menu" : "home");
+        if (hash.startsWith("#category-")) {
+            let id;
+            try { id = decodeURIComponent(hash.slice("#category-".length)); } catch { return; }
+            if (window.RomanoMenuExperience?.selectCategory(id,true)) {
+                document.getElementById("category-"+id)?.scrollIntoView({block:"start",behavior:"instant"});
+            }
+        } else if (changed && !hash.startsWith("#product-")) {
+            if (menu) document.getElementById("menu")?.scrollIntoView({block:"start",behavior:"instant"});
+            else if (hash === "#featured" || hash === "#contact" || hash === "#story") document.getElementById(hash.slice(1))?.scrollIntoView({block:"start",behavior:"instant"});
+            else window.scrollTo({top:0,behavior:"instant"});
+        }
+    };
+    syncRoute();
+    window.addEventListener("popstate",syncRoute);
+    window.addEventListener("hashchange",syncRoute);
+    document.addEventListener("click",event=>{
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        const link=event.target.closest('a[href="#menu"],a[href="#home"],a[href="#featured"]');
+        if (!link || link.target === "_blank" || link.hasAttribute("download")) return;
+        event.preventDefault();
+        const target=link.getAttribute("href").slice(1);
+        if (target==="menu" && customerView!=="menu") window.RomanoMenuExperience?.selectCategory("all",true);
+        navigateCustomerView(target);
+    });
+}
 
 /* =========================================================
    19. ACTIVE CATEGORY OBSERVER
