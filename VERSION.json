@@ -1,9 +1,8 @@
 {
   "schema": 1,
-  "milestone": "R16",
-  "sourceCommit": "126aac27102d133fcd5e4ccfba928b88ff3efad9",
-  "sourceTree": "06fa2b6356341b53226b1795a102236a3a09955d",
-  "verifiedCandidate": "cd162fc222f6487a3dc44b011303aa74e14b5bd9",
+  "milestone": "R17",
+  "sourceCommit": "e95befaa771185f54b1439fd64e38cd372076c6b",
+  "sourceTree": "b2324173d333280bbf33c65d3e68295831c38afe",
   "mode": "standalone-sample-only",
   "publicFiles": 97
 }
