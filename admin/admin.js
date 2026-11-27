@@ -13,13 +13,13 @@
 const STORAGE_KEYS = {
 
     restaurant:
-        "romano_restaurant",
+        globalThis.RomanoDemoBranches?.scope("romano_restaurant") ?? "romano_restaurant",
 
     categories:
-        "romano_categories",
+        globalThis.RomanoDemoBranches?.scope("romano_categories") ?? "romano_categories",
 
     products:
-        "romano_products"
+        globalThis.RomanoDemoBranches?.scope("romano_products") ?? "romano_products"
 
 };
 
@@ -386,6 +386,7 @@ function readCatalogRevision(storage = localStorage) {
 async function commitLocalCatalog(entries) {
     const commit = () => {
         try {
+            globalThis.RomanoDemoBranches?.context();
             if (localCatalogRevision === null || readCatalogRevision() !== localCatalogRevision) {
                 const error = new Error("Local catalog changed in another tab");
                 error.code = "LOCAL_CATALOG_CONFLICT";

@@ -1,14 +1,16 @@
 /* Browser-local sample membership only. Never used as server authentication. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.RomanoDemoMembers=api;})(globalThis,()=>{
   "use strict";
-  const key='online_menu_demo_members_v1:romano',activeKey='online_menu_demo_member_active_v1:romano';
-  const previousKey='online_menu_demo_member_previous_v1:romano';
-  const phone=value=>String(value??'').trim().replace(/[۰-۹٠-٩]/g,ch=>String(ch.charCodeAt(0)-(ch>='۰'?1776:1632))).replace(/[\s().-]/g,'');
+  const branch = globalThis.RomanoDemoBranches;
+  const scope = key => branch ? branch.scope(key) : key;
+  const key=scope('online_menu_demo_members_v1:romano'),activeKey=scope('online_menu_demo_member_active_v1:romano');
+  const name=value=>String(value??'').normalize('NFKC').trim().replace(/\s+/g,' ');
+  const phone=value=>String(value??'').trim().replace(/[۰-۹٠-٩]/g,ch=>String(ch.charCodeAt(0)-(ch>='۰'?1776:1632))).replace(/[\s().-]/g,'').replace(/^00(?=[1-9][0-9]{6,14}$)/,'+');
   const validPhone=p=>typeof p==='string'&&/^\+?[0-9]{7,15}$/.test(p);
   const validItem=i=>i&&typeof i.name==='string'&&i.name.length<=150&&Number.isSafeInteger(i.quantity)&&i.quantity>=1&&i.quantity<=99&&Number.isFinite(i.price)&&i.price>0;
   const catalogCurrency=value=>{const code=String(value||'IRT').trim().toUpperCase();return /^[A-Z]{3}$/.test(code)&&code!=='IRR'?code:'IRT';};
   const validDate=d=>typeof d==='string'&&Number.isFinite(Date.parse(d));
-  const validOrder=o=>o&&typeof o.id==='string'&&(o.currency===undefined||(typeof o.currency==='string'&&o.currency===catalogCurrency(o.currency)))&&validDate(o.createdAt)&&Array.isArray(o.items)&&o.items.length>0&&o.items.length<=100&&o.items.every(validItem)&&Number.isFinite(o.total)&&o.total>0&&Math.abs(o.items.reduce((sum,i)=>sum+i.price*i.quantity,0)-o.total)<0.000001;
+  const validOrder=o=>o&&(o.tableName===undefined||(typeof o.tableName==='string'&&o.tableName.length<=80))&&typeof o.id==='string'&&(o.currency===undefined||(typeof o.currency==='string'&&o.currency===catalogCurrency(o.currency)))&&validDate(o.createdAt)&&Array.isArray(o.items)&&o.items.length>0&&o.items.length<=100&&o.items.every(validItem)&&Number.isFinite(o.total)&&o.total>0&&Math.abs(o.items.reduce((sum,i)=>sum+i.price*i.quantity,0)-o.total)<0.000001;
   const uuid=()=>globalThis.crypto.randomUUID();
   const lockKey=key+':mutation-lock';
   const delay=ms=>new Promise(resolve=>globalThis.setTimeout(resolve,ms));
@@ -48,45 +50,51 @@
     const raw=storage.getItem(key);
     if(raw===null)return [];
     const rows=JSON.parse(raw);
-    if(!Array.isArray(rows)||rows.length>100||rows.some(r=>!r||typeof r.id!=='string'||typeof r.name!=='string'||!r.name.trim()||r.name.length>80||!validPhone(r.phone)||!validDate(r.createdAt)||!Array.isArray(r.orders)||r.orders.length>100||!r.orders.every(validOrder))||new Set(rows.map(r=>r.id)).size!==rows.length||new Set(rows.map(r=>r.phone)).size!==rows.length)throw Error('INVALID_STORAGE');
+    if(!Array.isArray(rows)||rows.length>100||rows.some(r=>!r||typeof r.id!=='string'||typeof r.name!=='string'||!r.name.trim()||r.name.length>80||!validPhone(r.phone)||!validDate(r.createdAt)||!Array.isArray(r.orders)||r.orders.length>100||!r.orders.every(validOrder))||new Set(rows.map(r=>r.id)).size!==rows.length||new Set(rows.map(r=>phone(r.phone))).size!==rows.length)throw Error('INVALID_STORAGE');
     return rows;
   }
   function active(storage,session){
     const id=session.getItem(activeKey);return id?read(storage).find(r=>r.id===id)||null:null;
   }
   function register(storage,session,nameValue,phoneValue){
-    const name=String(nameValue??'').trim(),p=phone(phoneValue);
-    if(!name||name.length>80||!validPhone(p))throw Error('INVALID_INPUT');
+    branch?.context();
+    const memberName=name(nameValue),p=phone(phoneValue);
+    if(!memberName||memberName.length>80||!validPhone(p))throw Error('INVALID_INPUT');
     const rows=read(storage),current=rows.find(r=>r.id===session.getItem(activeKey));
-    if(current&&current.phone===p)return current;
-    const existing=rows.find(r=>r.phone===p);
+    const existing=rows.find(r=>phone(r.phone)===p);
     if(existing){
-      // Resume only the last signed-out sample profile bound to this tab.
-      if(current||session.getItem(previousKey)!==existing.id||existing.name!==name)throw Error('EXISTING_PROFILE');
+      // A matching phone never bypasses the sample name check, even in the active tab.
+      if(name(existing.name)!==memberName)throw Error('EXISTING_PROFILE');
+      if(current?.id===existing.id)return existing;
+      if(current)throw Error('ACTIVE_PROFILE');
       session.setItem(activeKey,existing.id);
       return existing;
     }
+    if(current)throw Error('ACTIVE_PROFILE');
     if(rows.length>=100)throw Error('LIMIT');
-    const member={id:uuid(),name,phone:p,createdAt:new Date().toISOString(),orders:[]};
+    const member={id:uuid(),name:memberName,phone:p,createdAt:new Date().toISOString(),orders:[]};
     const old=storage.getItem(key);
     try{storage.setItem(key,JSON.stringify([...rows,member]));session.setItem(activeKey,member.id);}
     catch(e){try{if(old===null)storage.removeItem(key);else storage.setItem(key,old);}catch{}throw e;}
     return member;
   }
   function addOrder(storage,session,items,total,currency){
+    branch?.context();
     const rows=read(storage),current=rows.find(r=>r.id===session.getItem(activeKey));
     if(!current)throw Error('NO_PROFILE');
     if(!Array.isArray(items)||!items.length||items.length>100||!Number.isFinite(total)||total<=0||items.some(i=>!i||typeof i.name!=='string'||!Number.isSafeInteger(i.quantity)||i.quantity<1||i.quantity>99||!Number.isFinite(i.price)||i.price<=0))throw Error('INVALID_ORDER');
     if(current.orders.length>=100)throw Error('LIMIT');
     const order={id:uuid(),createdAt:new Date().toISOString(),currency:catalogCurrency(currency),items:items.map(i=>({name:i.name.slice(0,150),quantity:i.quantity,price:i.price})),total};
+    if (branch?.table) {
+      const table = branch.context().tables.find(t => t.code === branch.table);
+      order.tableName = table.name;
+    }
     if(!validOrder(order))throw Error('INVALID_ORDER');
     storage.setItem(key,JSON.stringify(rows.map(r=>r.id===current.id?{...r,orders:[order,...r.orders]}:r)));
     return order;
   }
   function signOut(session){
-    const id=session.getItem(activeKey);
     session.removeItem(activeKey);
-    if(id)session.setItem(previousKey,id);
   }
   return Object.freeze({key,activeKey,read,active,mutate,register,addOrder,signOut,phone});
 });

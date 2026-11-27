@@ -4,6 +4,7 @@
   const enabled = !standalone && ["http:", "https:"].includes(location.protocol);
   const explicitRestaurant = Boolean(document.body.dataset.restaurantSlug) || new URLSearchParams(location.search).has("restaurant");
   async function load(slug, lang) {
+    if (standalone) window.RomanoDemoBranches?.context();
     if (!enabled) {
       if (explicitRestaurant) { const error = new Error("Menu API unavailable"); error.status = 404; throw error; }
       return null;

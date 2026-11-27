@@ -45,3 +45,11 @@
 .sample-order-ticket ul{margin:0;padding-inline-start:1.25rem;color:#d8d0c7;font-size:14px}
 .sample-order-ticket .order-ticket-footer strong{font-size:16px}
 @media(max-width:700px){.orders-toolbar{width:100%}.orders-toolbar button{flex:1 1 165px}}
+
+#demo-branches[hidden],#demo-branches [hidden]{display:none}
+#demo-branches .sample-branch-field:not([hidden]){display:grid;gap:6px;margin-block-start:16px}
+#demo-branches select{min-height:44px;width:100%;min-width:0}
+#demo-branches .gateway-settings-form{align-items:end}
+#demo-branches form:not(#sample-table-form) button{grid-column:auto}
+
+#branch-management.has-sample-branches > :not(#sample-qr-preview){display:none}

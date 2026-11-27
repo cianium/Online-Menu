@@ -3,10 +3,10 @@
  "use strict";
  const model=window.RomanoDemoMembers;
  const words={
- fa:{eyebrow:'باشگاه مشتریان رومانو',title:'به رومانو خوش آمدید',intro:'با نام و شماره تلفن، پروفایل آزمایشی بسازید یا در همین تب دوباره وارد شوید.',name:'نام',phone:'شماره تلفن',continue:'ورود / ثبت‌نام',notice:'فقط اطلاعات ساختگی وارد کنید. عضویت و سفارش نمونه در همین مرورگر است؛ احراز هویت واقعی نیست.',error:'نام و شماره نمونه معتبر وارد کنید یا ذخیره مرورگر را بررسی کنید.',existing:'این شماره نمونه قبلاً ثبت شده است. برای ورود مجدد، همان نام و شماره را در تب اولیه وارد کنید.',history:'تاریخچه سفارش‌های نمونه',empty:'هنوز سفارش نمونه‌ای ندارید.',logout:'خروج از پروفایل نمونه',join:'عضویت آزمایشی',order:'ثبت سفارش نمونه',saved:'سفارش نمونه ذخیره شد؛ برای رستوران ارسال نشد.',orderError:'ذخیره سفارش نمونه ممکن نشد.',language:'زبان',guest:'مشاهده منو بدون عضویت'},
- en:{eyebrow:'ROMANO customer club',title:'Welcome to ROMANO',intro:'Create a sample profile or sign in again in this tab using your name and phone number.',name:'Name',phone:'Phone number',continue:'Sign in / Register',notice:'Use fictional details only. Membership and sample orders stay in this browser; this is not real authentication.',error:'Enter a valid sample name and phone or check browser storage.',existing:'This sample number is already registered. To sign in again, use the same name and phone in the original tab.',history:'Sample order history',empty:'No sample orders yet.',logout:'Sign out of sample profile',join:'Join the demo club',order:'Save sample order',saved:'Sample order saved; nothing was sent to the restaurant.',orderError:'Could not save the sample order.',language:'Language',guest:'Browse without joining'},
- tr:{eyebrow:'ROMANO müşteri kulübü',title:'ROMANO’ya hoş geldiniz',intro:'Adınız ve telefon numaranızla örnek profil oluşturun veya bu sekmede tekrar giriş yapın.',name:'Ad',phone:'Telefon numarası',continue:'Giriş / Kayıt',notice:'Yalnızca kurgusal bilgi kullanın. Üyelik ve örnek siparişler bu tarayıcıda kalır; gerçek kimlik doğrulaması değildir.',error:'Geçerli örnek ad ve telefon girin veya tarayıcı depolamasını kontrol edin.',existing:'Bu örnek numara kayıtlı. Tekrar giriş için ilk sekmede aynı adı ve telefon numarasını kullanın.',history:'Örnek sipariş geçmişi',empty:'Henüz örnek sipariş yok.',logout:'Örnek profilden çık',join:'Demo kulübüne katıl',order:'Örnek siparişi kaydet',saved:'Örnek sipariş kaydedildi; restorana gönderilmedi.',orderError:'Örnek sipariş kaydedilemedi.',language:'Dil',guest:'Üye olmadan menüye bak'},
- ar:{eyebrow:'نادي عملاء رومانو',title:'مرحبًا بك في رومانو',intro:'أنشئ ملفًا تجريبيًا أو سجّل الدخول مجددًا في علامة التبويب هذه باستخدام اسمك ورقم هاتفك.',name:'الاسم',phone:'رقم الهاتف',continue:'دخول / تسجيل',notice:'استخدم بيانات وهمية فقط. العضوية والطلبات التجريبية تبقى في هذا المتصفح؛ ليست مصادقة حقيقية.',error:'أدخل اسمًا ورقمًا تجريبيين صالحين أو تحقق من تخزين المتصفح.',existing:'هذا الرقم التجريبي مسجل. لتسجيل الدخول مجددًا، استخدم الاسم والرقم نفسيهما في علامة التبويب الأصلية.',history:'سجل الطلبات التجريبية',empty:'لا توجد طلبات تجريبية بعد.',logout:'الخروج من الملف التجريبي',join:'الانضمام للنادي التجريبي',order:'حفظ طلب تجريبي',saved:'حُفظ الطلب التجريبي ولم يُرسل للمطعم.',orderError:'تعذر حفظ الطلب التجريبي.',language:'اللغة',guest:'تصفح القائمة دون عضوية'}
+ fa:{eyebrow:'باشگاه مشتریان',title:'ورود به رومانو',intro:'نام و شماره تلفن نمونه را وارد کنید.',name:'نام',phone:'شماره تلفن',continue:'ادامه',notice:'نسخه نمایشی؛ فقط اطلاعات ساختگی وارد کنید. داده‌ها در همین مرورگر ذخیره می‌شوند.',error:'نام و شماره نمونه معتبر وارد کنید یا ذخیره مرورگر را بررسی کنید.',active:'برای تغییر پروفایل، ابتدا از پروفایل فعلی خارج شوید.',existing:'این شماره با نام دیگری ثبت شده است. نام قبلی را دقیق وارد کنید.',history:'تاریخچه سفارش‌های نمونه',empty:'هنوز سفارش نمونه‌ای ندارید.',logout:'خروج از پروفایل نمونه',join:'عضویت آزمایشی',order:'ثبت سفارش نمونه',saved:'سفارش نمونه ذخیره شد؛ برای رستوران ارسال نشد.',orderError:'ذخیره سفارش نمونه ممکن نشد.',language:'زبان',guest:'فعلاً فقط منو را ببینید'},
+ en:{eyebrow:'Customer club',title:'Enter ROMANO',intro:'Enter a fictional name and phone number.',name:'Name',phone:'Phone number',continue:'Continue',notice:'Demo only. Use fictional details; data stays in this browser.',error:'Enter a valid sample name and phone or check browser storage.',active:'Sign out of the current sample profile before switching.',existing:'This number is registered under a different name. Enter the previous name exactly.',history:'Sample order history',empty:'No sample orders yet.',logout:'Sign out of sample profile',join:'Join the demo club',order:'Save sample order',saved:'Sample order saved; nothing was sent to the restaurant.',orderError:'Could not save the sample order.',language:'Language',guest:'Browse the menu for now'},
+ tr:{eyebrow:'Müşteri kulübü',title:'ROMANO’ya giriş',intro:'Kurgusal bir ad ve telefon numarası girin.',name:'Ad',phone:'Telefon numarası',continue:'Devam et',notice:'Yalnızca demo. Kurgusal bilgi kullanın; veriler bu tarayıcıda kalır.',error:'Geçerli örnek ad ve telefon girin veya tarayıcı depolamasını kontrol edin.',active:'Profil değiştirmek için önce mevcut örnek profilden çıkın.',existing:'Bu numara farklı bir adla kayıtlı. Önceki adı tam olarak girin.',history:'Örnek sipariş geçmişi',empty:'Henüz örnek sipariş yok.',logout:'Örnek profilden çık',join:'Demo kulübüne katıl',order:'Örnek siparişi kaydet',saved:'Örnek sipariş kaydedildi; restorana gönderilmedi.',orderError:'Örnek sipariş kaydedilemedi.',language:'Dil',guest:'Şimdilik menüye göz at'},
+ ar:{eyebrow:'نادي العملاء',title:'الدخول إلى رومانو',intro:'أدخل اسمًا ورقم هاتف وهميين.',name:'الاسم',phone:'رقم الهاتف',continue:'متابعة',notice:'نسخة تجريبية فقط. استخدم بيانات وهمية؛ تبقى البيانات في هذا المتصفح.',error:'أدخل اسمًا ورقمًا تجريبيين صالحين أو تحقق من تخزين المتصفح.',active:'سجّل الخروج من الملف التجريبي الحالي قبل التبديل.',existing:'هذا الرقم مسجل باسم مختلف. أدخل الاسم السابق كما هو.',history:'سجل الطلبات التجريبية',empty:'لا توجد طلبات تجريبية بعد.',logout:'الخروج من الملف التجريبي',join:'الانضمام للنادي التجريبي',order:'حفظ طلب تجريبي',saved:'حُفظ الطلب التجريبي ولم يُرسل للمطعم.',orderError:'تعذر حفظ الطلب التجريبي.',language:'اللغة',guest:'تصفح القائمة الآن'}
  };
  const lang=()=>window.ROMANO_I18N?.language||'fa';
  const t=k=>words[lang()]?.[k]||words.fa[k];
@@ -32,7 +32,7 @@
   }
   const panel=el('section',undefined,'customer-entry-panel'),top=el('div',undefined,'customer-entry-top');
   const brand=el('div',undefined,'customer-entry-brand'),logo=el('img');
-  logo.src='assets/images/logo/logo.png';logo.alt='';logo.width=48;logo.height=48;
+  logo.src='assets/images/logo/brand-mark-144.webp';logo.alt='';logo.width=48;logo.height=48;
   const brandCopy=el('div');brandCopy.append(el('strong','ROMANO'),text('span','eyebrow','customer-entry-eyebrow'));brand.append(logo,brandCopy);top.append(brand);
   const select=el('select');select.setAttribute('aria-label',t('language'));
   for(const [code,label] of Object.entries({fa:'فارسی',en:'English',tr:'Türkçe',ar:'العربية'})){const o=el('option',label);o.value=code;select.append(o);}
@@ -41,6 +41,7 @@
   const form=el('form'),nameLabel=el('label'),phoneLabel=el('label');
   const name=el('input');name.name='name';name.autocomplete='off';name.required=true;name.maxLength=80;
   const phone=el('input');phone.name='phone';phone.type='tel';phone.inputMode='tel';phone.autocomplete='off';phone.dir='ltr';phone.required=true;phone.maxLength=32;
+  name.setAttribute('aria-describedby','customer-entry-notice');phone.setAttribute('aria-describedby','customer-entry-notice');
   nameLabel.append(text('span','name'),name);phoneLabel.append(text('span','phone'),phone);
   const submit=text('button','continue','customer-entry-submit');submit.type='submit';
   const error=el('p','', 'customer-entry-error');error.setAttribute('role','alert');
@@ -51,14 +52,26 @@
    if(!demo()||pending)return;
    const nameValue=name.value,phoneValue=phone.value;
    pending=submit.disabled=guest.disabled=true;
+   delete error.dataset.memberText;
    error.textContent='';
    try{
     await model.mutate(()=>model.register(localStorage,sessionStorage,nameValue,phoneValue));
     entered=true;removeMarker();close();announce();
-   }catch(err){error.textContent=t(err.message==='EXISTING_PROFILE'?'existing':'error');}
+   }catch(err){
+    const message=err.message==='EXISTING_PROFILE'?'existing':err.message==='ACTIVE_PROFILE'?'active':'error';
+    error.dataset.memberText=message;
+    error.textContent=t(message);
+   }
    finally{pending=submit.disabled=guest.disabled=false;}
   });
-  panel.append(top,title,text('p','intro'),form,text('p','notice','customer-entry-notice'),guest);
+  const notice=text('p','notice','customer-entry-notice');notice.id='customer-entry-notice';
+  panel.append(top,title);
+  const branch=window.RomanoDemoBranches?.context();
+  if(branch){
+    const table=branch.tables.find(row=>row.code===window.RomanoDemoBranches.table);
+    panel.append(el('p',table ? branch.name+' · '+table.name : branch.name));
+  }
+  panel.append(text('p','intro'),form,notice,guest);
   dialog.replaceChildren(panel);dialog.showModal();name.focus();return true;
  }
  function renderProfile(host,closePanel){

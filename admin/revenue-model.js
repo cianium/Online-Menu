@@ -8,11 +8,11 @@
   const validCurrency=c=>typeof c==='string'&&/^[A-Z]{3}$/.test(c)&&c!=='IRR';
   function orders(members){
     const result=[],ids=new Set();
-    for(const member of members)for(const order of member.orders){
+    for(const [memberIndex,member] of members.entries())for(const order of member.orders){
       if(ids.has(order.id))throw Error('DUPLICATE_ORDER');
       ids.add(order.id);
       if(!Number.isFinite(order.total)||order.total<=0||order.total>Number.MAX_SAFE_INTEGER/SCALE||!Number.isFinite(Date.parse(order.createdAt)))throw Error('INVALID_ORDER');
-      result.push(order);
+      result.push({...order,memberIndex});
     }
     return result;
   }
@@ -30,6 +30,7 @@
         lookup.get(group).end=date;
       }
     }
+    const customers=new Set(),quantities=new Map();
     let total=0,count=0,previousTotal=0,previousCount=0,legacyCount=0,otherCurrencyCount=0;
     for(const o of rows){
       const date=new Date(o.createdAt),n=ordinal(date);
@@ -39,13 +40,18 @@
       const amount=Math.round(o.total*SCALE);
       if(n<start){previousTotal+=amount;previousCount++;continue;}
       const b=days===1?buckets[date.getHours()]:lookup.get(days===365?dayKey(date).slice(0,7):dayKey(date));
+      if(Number.isInteger(o.memberIndex))customers.add(o.memberIndex);
+      for(const item of o.items||[]){
+        quantities.set(item.name,(quantities.get(item.name)||0)+item.quantity);
+      }
       b.total+=amount;b.count++;total+=amount;count++;
     }
     if(!Number.isSafeInteger(total)||!Number.isSafeInteger(previousTotal))throw Error('TOTAL_LIMIT');
     total/=SCALE;
     previousTotal/=SCALE;
     for(const bucket of buckets)bucket.total/=SCALE;
-    return {currency,days,start:key(start),end:key(end),previousStart:key(previousStart),previousEnd:key(start-1),total,count,average:count?total/count:0,previousTotal,previousCount,change:previousTotal?(total-previousTotal)/previousTotal*100:null,legacyCount,otherCurrencyCount,buckets};
+    const topItems=[...quantities].sort((a,b)=>b[1]-a[1]||(a[0]<b[0]?-1:a[0]>b[0]?1:0)).slice(0,5);
+    return {customers:customers.size,topItems,currency,days,start:key(start),end:key(end),previousStart:key(previousStart),previousEnd:key(start-1),total,count,average:count?total/count:0,previousTotal,previousCount,change:previousTotal?(total-previousTotal)/previousTotal*100:null,legacyCount,otherCurrencyCount,buckets};
   }
   function csv(r){
     const lines=['start_date,end_date,local_hour,currency,sample_order_total,sample_order_count,average_order_amount'];
