@@ -79,6 +79,7 @@ begin
  or char_length(v_body) not between 1 and 2000
  or translate(v_body,E'\t\n\r','') ~ '[[:cntrl:]]' then raise exception 'CONNECT_INVALID_MESSAGE' using errcode='22023'; end if;
  select * into c from public.romano_connect_conversations where id=p_id for update;
+ v_now:=clock_timestamp();
  if not found then raise exception 'CONNECT_NOT_FOUND' using errcode='42501'; end if;
  if c.expires_at<=v_now then raise exception 'CONNECT_EXPIRED' using errcode='55000'; end if;
  select * into prior from public.romano_connect_messages where conversation_id=p_id and client_id=p_client_id;
@@ -113,6 +114,7 @@ begin
  if p_token_hash is null or p_token_hash !~ '^[a-f0-9]{64}$' or p_op is null or p_op not in ('get','send') then raise exception 'CONNECT_INVALID_REQUEST' using errcode='22023'; end if;
  -- Token is unique per QR issuance, unlike the table session. Lock it to serialize first send and revocation.
  select * into tok from public.table_session_tokens where token_hash=p_token_hash for update;
+ v_now:=clock_timestamp();
  if not found or tok.revoked_at is not null or tok.expires_at<=v_now then raise exception 'CONNECT_EXPIRED' using errcode='42501'; end if;
  select least(tok.expires_at,s.expires_at) into v_exp from public.table_sessions s
  join public.restaurant_tables t on t.id=s.table_id and t.restaurant_id=s.restaurant_id and t.branch_id=s.branch_id
@@ -151,15 +153,18 @@ begin
     jsonb_build_object('lastMessage',(select public.romano_connect_message_json(m,true) from public.romano_connect_messages m
      where m.conversation_id=conv.id order by m.sequence desc limit 1)) payload
     from public.romano_connect_conversations conv join public.table_session_tokens t on t.id=conv.guest_token_id
+    join public.branches b on b.id=t.branch_id and b.restaurant_id=t.restaurant_id and b.active
     where t.restaurant_id=p_restaurant and conv.expires_at>v_now-interval '24 hours'
     order by conv.updated_at desc,conv.id limit 50
   ) q),'[]'::jsonb);
  end if;
  if p_op is null or p_op not in ('get','send','assign','resolve','reopen','close') then raise exception 'CONNECT_INVALID_REQUEST' using errcode='22023'; end if;
  select c0.* into c from public.romano_connect_conversations c0 join public.table_session_tokens tok on tok.id=c0.guest_token_id
+ join public.branches b on b.id=tok.branch_id and b.restaurant_id=tok.restaurant_id and b.active
  where c0.id=p_conversation and tok.restaurant_id=p_restaurant and c0.expires_at>v_now-interval '24 hours' for update of c0;
  if not found then raise exception 'CONNECT_NOT_FOUND' using errcode='42501'; end if;
  if p_op='get' then return public.romano_connect_snapshot(c.id,true); end if;
+ v_now:=clock_timestamp();
  select exists(select 1 from public.table_session_tokens tok
  join public.table_sessions s on s.id=tok.table_session_id and s.restaurant_id=tok.restaurant_id and s.branch_id=tok.branch_id
  join public.restaurant_tables t on t.id=s.table_id and t.restaurant_id=s.restaurant_id and t.branch_id=s.branch_id

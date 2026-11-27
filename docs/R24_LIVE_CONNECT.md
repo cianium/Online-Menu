@@ -6,3 +6,6 @@ Initial transport is authenticated polling, not WebSocket push. Never advertise 
 
 ## R24.9 client integration
 Customer uses a tab-local binding from QR issuance, not the stored display table object. The live guest adapter validates responses, never writes transcripts to localStorage, checks the binding before and after each request, and uses same-origin no-store requests. Polling is visibility-aware with 5–30 second backoff. Authentication loss clears the visible transcript. The online inbox uses the existing authenticated admin API, self-assignment, and no demo service or order data. Its polling runs only on the inbox page and uses 5–30 second backoff. Unread counts are in-memory for the live page only; server read receipts, push notifications and verified presence are not implemented. Demo remains local. No web socket or realtime channel is opened. Integration is a gated candidate pending SQL and deployed API verification.
+
+## Verification
+Eight focused live-client/guard scenarios passed with a simulated network, storage and timer environment. This does not prove database, browser or Edge Function behavior. PostgreSQL, Deno, Supabase CLI and deployed API checks are still mandatory before enabling the flag. No automated translation, AI provider, server read receipts, or historical analytics are claimed.
