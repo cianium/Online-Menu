@@ -49,3 +49,16 @@
 @media(prefers-reduced-motion:reduce){.ramen-contact-dialog.connect-dialog[open]{animation:none!important;scroll-behavior:auto}}
 
 .connect-message.is-staff{align-self:flex-start}.connect-message.is-staff .connect-bubble{background:#211d18;color:#f2ece3;border:1px solid #ffffff25;border-end-end-radius:16px;border-end-start-radius:5px}
+
+/* Reuse the same service controls in the contact dialog and chat. */
+.connect-dialog .connect-service-compact{display:grid;gap:4px;padding:0;border:0;background:transparent;margin:0 0 5px;min-width:0}
+.connect-dialog .connect-service-compact h3{font-size:12px;margin:0}
+.connect-dialog .connect-service-compact .hp-service-notice,.connect-dialog .connect-service-compact .hp-service-live{font-size:11px;line-height:1.4;margin:0;max-height:2.8em;overflow:auto}
+.connect-dialog .connect-service-compact .hp-service-live:empty{display:none}
+.connect-dialog .connect-service-compact .hp-service-grid{display:flex;gap:6px;overflow-x:auto;overscroll-behavior-inline:contain;padding:2px 0 5px}
+.connect-dialog .connect-service-compact .hp-service-action{flex:0 0 auto;min-width:84px;max-width:160px;min-height:44px;padding:6px 9px;display:flex;align-items:center;flex-direction:column;gap:3px;font-size:11px;text-align:center}
+.connect-dialog .connect-service-compact .hp-service-icon{width:17px;height:17px}
+.connect-dialog .connect-service-compact .hp-service-detail{font-size:10px;line-height:1.3}
+.connect-order-local{font-size:11px;line-height:1.4;color:#c4b8a7;margin:5px 0 0}
+.connect-order-local[hidden]{display:none}
+@media(max-height:650px){.connect-dialog .connect-service-compact .hp-service-icon{display:none}.connect-dialog .connect-service-compact .hp-service-action{min-height:44px}.connect-dialog .connect-service-compact .hp-service-notice{max-height:1.4em}.connect-dialog .connect-bottom{max-height:62dvh;overflow:auto}}

@@ -187,18 +187,19 @@
     const context=guestContext();
     return context.table ? t("table")+" "+context.table : h("unknown");
   }
-  function guestServices(content, element, demo, kinds=requestKinds) {
+  function guestServices(content, element, demo, kinds=requestKinds, compact=false) {
     const section=element("section",null,"hp-services");
-    section.append(element("h3",h("quick")),element("p",contextLabel(),"hp-context"));
+    section.classList.toggle("connect-service-compact",compact);
+    section.append(element("h3",h("quick")));if(!compact)section.append(element("p",contextLabel(),"hp-context"));
     const context=guestContext();
-    const enabled=demo && Boolean(context.code);
+    const enabled=demo && Boolean(context.code) && Boolean(navigator.locks?.request);
     const model=window.RomanoDemoMembers;
     const key= model.requestPrefix+context.code;
-    const status=element("p",enabled?h("local"):demo?h("selectTable")+" "+h("local"):h("unconnected"),"hp-service-notice");
+    const status=element("p",enabled?h("local"):demo&&!context.code?h("selectTable")+" "+h("local"):demo?panelText().storageError:h("unconnected"),"hp-service-notice");
     const grid=element("div",null,"hp-service-grid");
     const live=element("p",null,"hp-service-live");live.setAttribute("role","status");
     function readRequests() {
-      try{return enabled?model.requests(localStorage,context.code):{};}catch{live.textContent=panelText().storageError;return {};}
+      try{return enabled?model.requestDetails(localStorage,context.code):{};}catch{live.textContent=panelText().storageError;return null;}
     }
     const icons={waiter:"M3 17h18M5 17a7 7 0 0 1 14 0M12 7V5m-2 0h4M2 20h20",bill:"M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6m-6 4h6",water:"M12 3c-2 4-6 8-6 12a6 6 0 0 0 12 0c0-4-4-8-6-12Z",napkin:"M4 4h16v16H4zM4 20 20 4M12 12h8v8"};
     for(const kind of kinds) {
@@ -207,23 +208,28 @@
       const stroke=document.createElementNS("http://www.w3.org/2000/svg","path");stroke.setAttribute("d",icons[kind]);icon.append(stroke);
       const label=element("strong",h(kind));const detail=element("span",null,"hp-service-detail");
       button.append(icon,label,detail);
+      let displayed=null,inFlight=false;
       function refresh() {
-        const state=readRequests()[kind];
+        const values=readRequests();displayed=values?.[kind]??null;
+        const state=displayed?.state;
         const active=state==="pending"||state==="accepted";
-        button.disabled=!enabled||state==="accepted";
+        button.disabled=!enabled||!values||inFlight||state==="accepted";
         button.setAttribute("aria-pressed",String(active));
         button.setAttribute("aria-label",h(kind)+(state==="pending"?" — "+h("cancel"):state==="accepted"?" — "+x(6):state==="completed"?" — "+x(7):""));
-        detail.textContent=state==="pending"?h("cancel"):state==="accepted"?x(6):state==="completed"?x(7):"";
+        detail.textContent=state==="pending"?h("request")+" · "+h("cancel"):state==="accepted"?x(6):state==="completed"?x(7):"";
       }
       button.addEventListener("click",async()=>{
-        if(!isDemo() || guestContext().code!==context.code || !enabled)return;
-        button.disabled=true;
+        if(!section.isConnected||!isDemo()||guestContext().code!==context.code||!enabled||inFlight)return;
+        const before=displayed?.state,expectedId=displayed?.id??null,next=before==="pending"?undefined:"pending";
+        inFlight=true;button.disabled=true;
         try {
-          const before=readRequests()[kind], next=before==="pending"?undefined:"pending";
-          await model.mutate(()=>model.setRequest(localStorage,context.code,kind,next,before));
+          await model.mutateRequest(context.code,()=>{
+            if(!section.isConnected||!isDemo()||guestContext().code!==context.code)throw Error("HP_TABLE");
+            return model.setRequest(localStorage,context.code,kind,next,before,expectedId);
+          });
           live.textContent=h(kind)+" — "+h(next?"request":"cancel")+" · "+h("local");
         }catch{live.textContent=panelText().storageError;}
-        finally{refresh();}
+        finally{inFlight=false;section.dispatchEvent(new Event("hp-request-updated"));}
       });
       section.addEventListener("hp-request-updated",refresh);
       refresh();grid.append(button);
@@ -344,7 +350,7 @@
       if(panel==='chat'&&chat){
         let branchId=null;
         if(demo){try{window.RomanoDemoBranches?.context();branchId='primary';}catch{/* invalid demo branch */}}
-        chat.render(content,{language:lang(),mode,branchId,tableCode:guestContext().code,profileId:profileId(),context:contextLabel(),brand:document.querySelector('[data-restaurant-brand]')?.textContent.trim(),onContact:()=>openPanel('contact',origin,true),onLanguage:value=>window.ROMANO_I18N.setLanguage(value,false)});
+        chat.render(content,{language:lang(),mode,branchId,tableCode:guestContext().code,profileId:profileId(),context:contextLabel(),brand:document.querySelector('[data-restaurant-brand]')?.textContent.trim(),onServices:host=>guestServices(host,element,demo,requestKinds,true),onContact:()=>openPanel('contact',origin,true),onLanguage:value=>window.ROMANO_I18N.setLanguage(value,false)});
       }else{
       if(panel==='waiter')guestServices(content,element,demo,['waiter']);
       if(panel==='contact'){

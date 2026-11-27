@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r24-table-context`;
+const CACHE_NAME = `${menuCachePrefix}r24-table-services`;
 const CORE_ASSETS = [
   "./",
   "./index.html",

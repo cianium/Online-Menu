@@ -30,7 +30,9 @@ const copy={
     "invalid": "پیام باید بین ۱ تا ۲۰۰۰ نویسه باشد.",
     "staff": "کارکنان آزمایشی",
     "loading": "در حال بارگذاری…",
-    "retry": "تلاش مجدد"
+    "retry": "تلاش مجدد",
+    "orderQuestion": "وضعیت سفارش من چگونه است؟",
+    "orderLocal": "سفارش مرتبط در همین مرورگر ثبت شده است؛ وضعیت آماده‌سازی آنلاین نیست."
   },
   "en": {
     "title": "Chat with the restaurant",
@@ -61,7 +63,9 @@ const copy={
     "invalid": "Enter a message of 1 to 2,000 characters.",
     "staff": "Demo staff",
     "loading": "Loading…",
-    "retry": "Retry"
+    "retry": "Retry",
+    "orderQuestion": "What is the status of my order?",
+    "orderLocal": "Linked order saved locally; live preparation status is unavailable."
   },
   "tr": {
     "title": "Restoranla sohbet",
@@ -92,7 +96,9 @@ const copy={
     "invalid": "1 ile 2.000 karakter arasında mesaj yazın.",
     "staff": "Demo personeli",
     "loading": "Yükleniyor…",
-    "retry": "Tekrar dene"
+    "retry": "Tekrar dene",
+    "orderQuestion": "Siparişimin durumu nedir?",
+    "orderLocal": "Bağlı sipariş yerel olarak kaydedildi; canlı hazırlık durumu kullanılamıyor."
   },
   "ar": {
     "title": "محادثة المطعم",
@@ -123,7 +129,9 @@ const copy={
     "invalid": "أدخل رسالة من ١ إلى ٢٠٠٠ حرف.",
     "staff": "موظف تجريبي",
     "loading": "جارٍ التحميل…",
-    "retry": "إعادة المحاولة"
+    "retry": "إعادة المحاولة",
+    "orderQuestion": "ما حالة طلبي؟",
+    "orderLocal": "حُفظ الطلب المرتبط محليًا؛ حالة التحضير المباشرة غير متاحة."
   }
 };
 const customerChat=function customerChat(core,copy,engine,root){
@@ -137,7 +145,7 @@ const customerChat=function customerChat(core,copy,engine,root){
   function clear(){suspend();draft="";draftScope=null;pending=null;try{engine.forget();}catch{/* never fall back to memory */}}
   function render(host,options){
     suspend();const run=generation;
-    const {language,mode,branchId,context,brand,onContact,onLanguage}=options,w=words(language);
+    const {language,mode,branchId,context,brand,onContact,onLanguage,onServices}=options,w=words(language);
     const eligible=mode==="demo"&&typeof branchId==="string"&&typeof root.crypto?.randomUUID==="function";
     const scope=branchId+":"+String(options.tableCode||"")+":"+String(options.profileId||"guest");
     if(!eligible){if(draftScope!==null)clear();}
@@ -155,7 +163,8 @@ const customerChat=function customerChat(core,copy,engine,root){
     const selector=node("select",null,"connect-language");selector.setAttribute("aria-label",w.language);
     for(const [value,label] of [["fa","فارسی"],["ar","العربية"],["en","English"],["tr","Türkçe"]]){const o=node("option",label);o.value=value;selector.append(o);}
     selector.value=language;selector.addEventListener("change",()=>onLanguage(selector.value));toolbar.append(contact,selector);
-    head.append(summary,toolbar,node("p",eligible?w.notice:w.fallback,"ramen-contact-note connect-notice"));
+    const orderStatus=node("p",null,"connect-order-local");orderStatus.hidden=true;
+    head.append(summary,toolbar,node("p",eligible?w.notice:w.fallback,"ramen-contact-note connect-notice"),orderStatus);
     const timeline=node("div",null,"connect-timeline");timeline.setAttribute("role","log");timeline.setAttribute("aria-label",w.log);timeline.setAttribute("aria-live","polite");timeline.tabIndex=0;
     const empty=node("div",null,"connect-empty"),symbol=node("span","···","connect-symbol");symbol.setAttribute("aria-hidden","true");empty.append(symbol,node("h3",w.hello),node("p",eligible?w.hint:w.fallback));timeline.append(empty);
     function bubble(m){
@@ -180,6 +189,7 @@ const customerChat=function customerChat(core,copy,engine,root){
         timeline.replaceChildren(...(data.messages.length?data.messages.map(bubble):[empty]));lastVersion=v;
         if(atBottom)timeline.scrollTop=timeline.scrollHeight;
       }
+      orderStatus.hidden=!data.conversation?.orderId;orderStatus.textContent=orderStatus.hidden?"":w.orderLocal;
       ended=Boolean(data.conversation&&["closed","resolved"].includes(data.conversation.status));
       enabled=!ended;loaded=true;retry.hidden=true;if(ended)status.textContent=w.ended;update();
     }
@@ -194,7 +204,7 @@ const customerChat=function customerChat(core,copy,engine,root){
       catch(error){if(current()&&!busy)showError(error);}
       finally{refreshing=false;}
     }
-    for(const key of ["waiter","bill","water","question"]){const chip=btn(w[key],"connect-chip",()=>{if(!enabled||busy)return;const next=(input.value.trim()?input.value.trim()+"\n":"")+w[key];if(Array.from(next).length>core.maxText){status.textContent=w.invalid;return;}input.value=next;draft=next;pending=null;update();input.focus();});chips.append(chip);}
+    for(const key of ["question","orderQuestion"]){const chip=btn(w[key],"connect-chip",()=>{if(!enabled||busy)return;const next=(input.value.trim()?input.value.trim()+"\n":"")+w[key];if(Array.from(next).length>core.maxText){status.textContent=w.invalid;return;}input.value=next;draft=next;pending=null;update();input.focus();});chips.append(chip);}
     input.addEventListener("input",()=>{draft=input.value;pending=null;update();});
     form.addEventListener("submit",async event=>{
       event.preventDefault();if(!valid()||!session)return;
@@ -210,7 +220,7 @@ const customerChat=function customerChat(core,copy,engine,root){
     foot.append(count,send);form.append(input,foot);
     const retry=btn(w.retry,"connect-secondary",()=>refresh());retry.hidden=true;
     const reset=btn(w.newChat,"connect-reset",()=>{if(!eligible||busy)return;if((draft||timeline.querySelector(".connect-message"))&&!root.confirm(w.confirm))return;try{engine.newConversation();}catch(error){showError(error);return;}draft="";pending=null;render(host,options);});
-    reset.hidden=!eligible;bottom.append(quick,status,form,retry,reset);host.append(head,timeline,bottom);update();
+    reset.hidden=!eligible;if(typeof onServices==="function")onServices(bottom);bottom.append(quick,status,form,retry,reset);host.append(head,timeline,bottom);update();
     if(eligible){
       const off=engine.subscribe(()=>refresh()),timer=root.setInterval(()=>{if(current()&&doc.visibilityState!=="hidden")refresh();},2000);
       activeRefresh=refresh;dispose=()=>{off();root.clearInterval(timer);if(activeRefresh===refresh)activeRefresh=null;};
