@@ -50,7 +50,10 @@ returns jsonb language sql stable security invoker set search_path='' as $$
  'createdAt',floor(extract(epoch from c.created_at)*1000)::bigint,
  'updatedAt',floor(extract(epoch from c.updated_at)*1000)::bigint,
  'expiresAt',floor(extract(epoch from least(c.expires_at,tok.expires_at,s.expires_at))*1000)::bigint,
- 'orderId',null,'guestMessageCount',c.guest_message_count)
+ 'orderId',null,'guestMessageCount',c.guest_message_count,
+ 'firstResponseMs',case when p_staff then (select greatest(0,floor(extract(epoch from (staff.created_at-guest.created_at))*1000)::bigint)
+ from public.romano_connect_messages guest join public.romano_connect_messages staff on staff.conversation_id=guest.conversation_id and staff.sequence>guest.sequence and staff.sender_kind='staff'
+ where guest.conversation_id=c.id and guest.sender_kind='guest' order by guest.sequence,staff.sequence limit 1) else null end)
  from public.romano_connect_conversations c
  join public.table_session_tokens tok on tok.id=c.guest_token_id
  join public.table_sessions s on s.id=tok.table_session_id and s.restaurant_id=tok.restaurant_id and s.branch_id=tok.branch_id

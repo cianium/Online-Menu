@@ -214,7 +214,8 @@ const customerChat=function customerChat(core,copy,engine,root){
       const row=node("article",null,"connect-message"),body=node("p",m.text,"connect-bubble"),meta=node("div",null,"connect-meta");
       row.classList.toggle("is-staff",!m.own);body.dir="auto";body.lang=m.language;
       const time=node("time",new Intl.DateTimeFormat(language,{hour:"2-digit",minute:"2-digit"}).format(m.createdAt));time.dateTime=new Date(m.createdAt).toISOString();
-      meta.append(node("span",m.own?w.you:liveMode?w.liveStaff:w.staff),time,node("span",liveMode?w.serverSaved:w.saved));row.append(body,meta);return row;
+      const languageName=({fa:"فارسی",en:"English",tr:"Türkçe",ar:"العربية"})[m.language]||"";
+      meta.append(node("span",m.own?w.you:liveMode?w.liveStaff:w.staff),time,node("span",languageName),node("span",liveMode?w.serverSaved:w.saved));row.append(body,meta);return row;
     }
     const bottom=node("div",null,"connect-bottom"),quick=node("div",null,"connect-quick"),chips=node("div",null,"connect-chips");
     quick.setAttribute("role","group");quick.setAttribute("aria-label",w.quick);quick.append(node("span",w.quick,"connect-quick-label"),chips);

@@ -26,7 +26,7 @@ const createLiveClient=function liveFactory(root,mode){
       !languages.includes(c.language)||!statuses.includes(c.status)||!integer(c.version,1,2147483647)||!integer(c.guestMessageCount,0,200)||
       !time(c.createdAt)||!time(c.updatedAt)||!time(c.expiresAt)||c.updatedAt<c.createdAt||
       ![null,"assigned"].includes(c.assigneeId)||c.orderId!==null)fail("CONNECT_INVALID_RESPONSE");
-    return {id:c.id,tableId:c.tableId,language:c.language,status:c.status,version:c.version,guestMessageCount:c.guestMessageCount,createdAt:c.createdAt,updatedAt:c.updatedAt,expiresAt:c.expiresAt,assigneeId:c.assigneeId,orderId:null};
+    return {id:c.id,tableId:c.tableId,language:c.language,status:c.status,version:c.version,guestMessageCount:c.guestMessageCount,createdAt:c.createdAt,updatedAt:c.updatedAt,expiresAt:c.expiresAt,assigneeId:c.assigneeId,orderId:null,firstResponseMs:integer(c.firstResponseMs,0,Number.MAX_SAFE_INTEGER)?c.firstResponseMs:null};
   }
   function message(m){
     if(!object(m)||!integer(m.sequence,1,200)||typeof m.clientId!=="string"||!uuid.test(m.clientId)||!["staff","guest"].includes(m.senderKind)||!languages.includes(m.language)||

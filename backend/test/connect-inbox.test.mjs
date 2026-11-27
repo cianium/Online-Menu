@@ -40,3 +40,10 @@ test('Order summary matches exact order, table and visit without leaking member 
  assert.equal(model.orderSummary(c,[member,member]),null);
  assert.equal(model.select([{...row,tableId:'T1',orderId:'o1'}],'T1','all',{},100).length,1);
 });
+
+test('Reply language follows latest guest message and response metrics exclude missing samples',()=>{
+ assert.equal(model.replyLanguage([{senderKind:'guest',language:'fa'},{senderKind:'guest',language:'tr'},{senderKind:'staff',language:'en'}],'en'),'tr');
+ assert.equal(model.replyLanguage([],'ar'),'ar');
+ assert.deepEqual(model.responseMetrics([{firstResponseMs:1000},{firstResponseMs:3000},{firstResponseMs:null},{firstResponseMs:-5}]),{samples:2,mean:2000});
+ assert.deepEqual(model.responseMetrics([]),{samples:0,mean:null});
+});

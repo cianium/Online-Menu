@@ -66,7 +66,14 @@ const copy={
     "sendOnline": "ارسال پاسخ",
     "serverSaved": "در سرور ثبت شد",
     "rateLimited": "تعداد پیام‌ها زیاد است؛ کمی بعد تلاش کنید.",
-    "liveLimited": "حداکثر ۵۰ مکالمه اخیر نمایش داده می‌شود."
+    "liveLimited": "حداکثر ۵۰ مکالمه اخیر نمایش داده می‌شود.",
+    "replyLanguage": "زبان پاسخ",
+    "original": "زبان اصلی پیام",
+    "firstResponse": "میانگین اولین پاسخ",
+    "responseSamples": "مکالمات دارای پاسخ",
+    "seconds": "ثانیه",
+    "unknown": "—",
+    "retained": "شاخص‌ها فقط بر اساس مکالمات فعلی محاسبه می‌شوند."
   },
   "en": {
     "title": "Conversation inbox",
@@ -133,7 +140,14 @@ const copy={
     "sendOnline": "Send reply",
     "serverSaved": "Saved on server",
     "rateLimited": "Too many messages. Try again shortly.",
-    "liveLimited": "Shows up to 50 recent conversations."
+    "liveLimited": "Shows up to 50 recent conversations.",
+    "replyLanguage": "Reply language",
+    "original": "Original message language",
+    "firstResponse": "Mean first response",
+    "responseSamples": "Conversations with a response",
+    "seconds": "s",
+    "unknown": "—",
+    "retained": "Metrics cover the currently listed conversations only."
   },
   "tr": {
     "title": "Sohbet gelen kutusu",
@@ -200,7 +214,14 @@ const copy={
     "sendOnline": "Yanıt gönder",
     "serverSaved": "Sunucuya kaydedildi",
     "rateLimited": "Çok fazla mesaj. Biraz sonra deneyin.",
-    "liveLimited": "En fazla 50 son sohbet gösterilir."
+    "liveLimited": "En fazla 50 son sohbet gösterilir.",
+    "replyLanguage": "Yanıt dili",
+    "original": "Orijinal mesaj dili",
+    "firstResponse": "Ortalama ilk yanıt süresi",
+    "responseSamples": "Yanıtlanan sohbetler",
+    "seconds": "sn",
+    "unknown": "—",
+    "retained": "Metrikler yalnızca listelenen sohbetleri kapsar."
   },
   "ar": {
     "title": "صندوق المحادثات",
@@ -267,7 +288,14 @@ const copy={
     "sendOnline": "إرسال الرد",
     "serverSaved": "حُفظ على الخادم",
     "rateLimited": "رسائل كثيرة. حاول مجددًا بعد قليل.",
-    "liveLimited": "يعرض حتى ٥٠ محادثة حديثة."
+    "liveLimited": "يعرض حتى ٥٠ محادثة حديثة.",
+    "replyLanguage": "لغة الرد",
+    "original": "لغة الرسالة الأصلية",
+    "firstResponse": "متوسط زمن الرد الأول",
+    "responseSamples": "محادثات تم الرد عليها",
+    "seconds": "ث",
+    "unknown": "—",
+    "retained": "تغطي المؤشرات المحادثات المعروضة حاليًا فقط."
   }
 };
 const model=(function inboxModel(){
@@ -290,7 +318,16 @@ const model=(function inboxModel(){
     const o=matches[0];
     return {id:o.id,items:o.items.map(i=>({name:i.name,quantity:i.quantity}))};
   }
-  return Object.freeze({roster,status,unread,select,permissions,orderSummary});
+  const languageNames=Object.freeze({fa:"فارسی",en:"English",tr:"Türkçe",ar:"العربية"});
+  function replyLanguage(messages,fallback="fa"){
+    const latest=[...messages].reverse().find(m=>m.senderKind==="guest"&&Object.hasOwn(languageNames,m.language));
+    return latest?.language||(Object.hasOwn(languageNames,fallback)?fallback:"fa");
+  }
+  function responseMetrics(rows){
+    const values=rows.map(r=>r.firstResponseMs).filter(n=>Number.isSafeInteger(n)&&n>=0);
+    return {samples:values.length,mean:values.length?values.reduce((a,b)=>a+b,0)/values.length:null};
+  }
+  return Object.freeze({roster,status,unread,select,permissions,orderSummary,languageNames,replyLanguage,responseMetrics});
 })();
 const start=function startInbox(root,copy,model){
   "use strict";
@@ -321,7 +358,7 @@ const start=function startInbox(root,copy,model){
     async command(_actor,id,command){try{const value=root.RomanoConnectLive.snapshot(await root.RomanoAPI.connectCommand(id,command));if(!value.conversation||value.conversation.id!==id)throw Error("CONNECT_INVALID_RESPONSE");return value;}catch(e){throw liveError(e);}}
   };
   const transport=a=>a.mode==="live"?liveTransport:engine;
-  let actor=null,rows=[],seen=Object.create(null),selection=null,query="",filter="all",draft="",pending=null,detail=null,ui=null,generation=0,refreshing=false,busy=false;
+  let actor=null,rows=[],seen=Object.create(null),selection=null,query="",filter="all",draft="",pending=null,detail=null,ui=null,generation=0,refreshing=false,busy=false,replyLang=null;
   function seenKey(a){return "romano_connect_seen_v1:"+a.branchId;}
   function loadSeen(a){
     const out=Object.create(null);if(a.mode==="live")return out;
@@ -339,7 +376,7 @@ const start=function startInbox(root,copy,model){
     badge.setAttribute("aria-label",w().unread+": "+format(total));
   }
   function clear(){
-    generation++;actor=null;liveReady=false;liveNext=0;liveDelay=5000;rows=[];seen=Object.create(null);selection=null;detail=null;draft="";pending=null;query="";filter="all";ui=null;
+    generation++;actor=null;liveReady=false;liveNext=0;liveDelay=5000;rows=[];seen=Object.create(null);selection=null;detail=null;draft="";pending=null;replyLang=null;query="";filter="all";ui=null;
     host.replaceChildren(el("h1",w().title));host.firstChild.id="connect-inbox-title";updateBadge();
   }
   function syncIdentity(){
@@ -374,7 +411,11 @@ const start=function startInbox(root,copy,model){
     if(!ui)return;
     const t=w(),now=Date.now(),shown=model.select(rows,query,filter,seen,now);
     const totals=[["all",rows.length],["new",rows.filter(r=>model.status(r,now)==="new").length],["in_progress",rows.filter(r=>model.status(r,now)==="in_progress").length],["unread",rows.reduce((n,r)=>n+model.unread(r,seen[r.id]),0)]];
+    const stats=model.responseMetrics(rows);
     ui.metrics.replaceChildren(...totals.map(([k,n])=>{const d=el("div",null,"connect-inbox-metric");d.append(el("span",t[k]),el("strong",format(n)));return d;}));
+    const response=el("div",null,"connect-inbox-metric");
+    response.append(el("span",t.firstResponse),el("strong",stats.mean===null?t.unknown:format(Math.round(stats.mean/1000))+" "+t.seconds),el("small",t.responseSamples+": "+format(stats.samples)));
+    response.title=t.retained;ui.metrics.append(response);
     const focused=doc.activeElement?.dataset?.conversationId;
     const nodes=shown.map(r=>{
       const n=button(null,"connect-inbox-row",()=>open(r.id));
@@ -429,23 +470,28 @@ const start=function startInbox(root,copy,model){
     const log=el("div",null,"connect-inbox-log");log.setAttribute("role","log");log.setAttribute("aria-label",t.log);log.tabIndex=0;
     for(const m of detail.messages){
       const row=el("article",null,"connect-inbox-message");row.classList.toggle("is-staff",m.senderKind==="staff");
-      const body=el("p",m.text);body.dir="auto";body.lang=m.language;const meta=el("small",(m.senderKind==="staff"?(online?t.liveStaff:t.staff):t.guest)+" · "+date(m.createdAt));row.append(body,meta);log.append(row);
+      const body=el("p",m.text);body.dir="auto";body.lang=m.language;const meta=el("small",(m.senderKind==="staff"?(online?t.liveStaff:t.staff):t.guest)+" · "+date(m.createdAt)+" · "+(model.languageNames[m.language]||""));row.append(body,meta);log.append(row);
     }
+    if(!replyLang)replyLang=model.replyLanguage(detail.messages,c.language);
     const footer=el("div",null,"connect-inbox-compose"),quick=el("div",null,"connect-inbox-quick");quick.setAttribute("role","group");quick.setAttribute("aria-label",t.quick);
+    const languageLabel=el("label",t.replyLanguage,"connect-inbox-reply-language"),languageSelect=el("select");languageSelect.id="connect-inbox-reply-language";
+    for(const [value,label] of Object.entries(model.languageNames)){const option=el("option",label);option.value=value;languageSelect.append(option);}
+    languageSelect.value=replyLang;languageSelect.disabled=busy||!permissions.reply;languageLabel.append(languageSelect);
     const form=el("form"),input=el("textarea");input.id="connect-inbox-reply";input.rows=2;input.maxLength=4000;input.dir="auto";input.setAttribute("aria-label",t.reply);input.placeholder=t.reply;input.value=draft;
     const send=el("button",online?t.sendOnline:t.send,"primary-button");send.type="submit";send.dataset.connectAction="send";
     const counter=el("span",null,"connect-inbox-counter");counter.dir="ltr";
     function update(){const n=Array.from(input.value.trim()).length;counter.textContent=format(n)+" / 2000";send.disabled=busy||!permissions.reply||n===0||n>2000;input.disabled=busy||!permissions.reply;}
-    for(const k of ["q1","q2","q3"]){const b=button(t[k],"secondary-button",()=>{const next=(input.value.trim()?input.value.trim()+"\n":"")+t[k];if(Array.from(next).length>2000){ui.statusLine.textContent=t.invalid;return;}input.value=draft=next;pending=null;update();input.focus();});b.disabled=busy||!permissions.reply;quick.append(b);}
+    for(const k of ["q1","q2","q3"]){const b=button(copy[replyLang][k],"secondary-button",()=>{const next=(input.value.trim()?input.value.trim()+"\n":"")+copy[replyLang][k];if(Array.from(next).length>2000){ui.statusLine.textContent=t.invalid;return;}input.value=draft=next;pending=null;update();input.focus();});b.disabled=busy||!permissions.reply;quick.append(b);}
+    languageSelect.addEventListener("change",()=>{replyLang=languageSelect.value;pending=null;renderDetail(true);doc.getElementById("connect-inbox-reply-language")?.focus({preventScroll:true});});
     input.addEventListener("input",()=>{draft=input.value;pending=null;update();});
-    form.addEventListener("submit",event=>{event.preventDefault();if(send.disabled)return;const attempt=pending&&pending.text===draft?pending:{clientId:root.crypto.randomUUID(),text:draft,language:lang()};pending=attempt;mutate({type:"send",...attempt});});
-    const formFoot=el("div",null,"connect-inbox-row-top");formFoot.append(counter,send);form.append(input,formFoot);footer.append(quick,form);if(!permissions.reply)footer.append(el("p",t.inactive,"connect-inbox-notice"));
+    form.addEventListener("submit",event=>{event.preventDefault();if(send.disabled)return;const attempt=pending&&pending.text===draft?pending:{clientId:root.crypto.randomUUID(),text:draft,language:replyLang};pending=attempt;mutate({type:"send",...attempt});});
+    const formFoot=el("div",null,"connect-inbox-row-top");formFoot.append(counter,send);form.append(input,formFoot);footer.append(languageLabel,quick,form);if(!permissions.reply)footer.append(el("p",t.inactive,"connect-inbox-notice"));
     pane.replaceChildren(header,log,footer);update();log.scrollTop=bottom?log.scrollHeight:oldScroll;
     if(active==="connect-inbox-reply"&&!input.disabled)input.focus({preventScroll:true});else if(active==="connect-inbox-assignee"&&!select.disabled)select.focus({preventScroll:true});
   }
   async function open(id){
     if(busy||!syncIdentity()||!isPage())return;
-    if(selection!==id){selection=id;detail=null;draft="";pending=null;generation++;ui.renderedVersion=null;renderList();renderDetail(true);}
+    if(selection!==id){selection=id;detail=null;draft="";pending=null;replyLang=null;generation++;ui.renderedVersion=null;renderList();renderDetail(true);}
     await refresh(true);
     if(selection===id&&isPage())doc.getElementById("connect-inbox-conversation-title")?.focus({preventScroll:true});
   }
@@ -461,7 +507,7 @@ const start=function startInbox(root,copy,model){
       if(run!==generation||busy||!identity()||actor!==a)return;
       rows=next;
       if(isPage()&&ui&&id&&selection===id){
-        if(!rows.some(r=>r.id===id)){selection=null;detail=null;draft="";pending=null;}
+        if(!rows.some(r=>r.id===id)){selection=null;detail=null;draft="";pending=null;replyLang=null;}
         else{const nextDetail=await transport(a).readStaff(a,id);if(run!==generation||busy||!identity()||actor!==a||selection!==id)return;detail=nextDetail;mark(detail.conversation,detail.messages);}
       }
       if(online){liveReady=true;liveDelay=5000;liveNext=Date.now()+liveDelay;}
@@ -494,7 +540,7 @@ const start=function startInbox(root,copy,model){
   }
   function navigate(){
     generation++;
-    if(!isPage()){if(actor?.mode==="live"){rows=[];liveReady=false;updateBadge();}selection=null;detail=null;draft="";pending=null;ui=null;host.replaceChildren(el("h1",w().title));host.firstChild.id="connect-inbox-title";return;}
+    if(!isPage()){if(actor?.mode==="live"){rows=[];liveReady=false;updateBadge();}selection=null;detail=null;draft="";pending=null;replyLang=null;ui=null;host.replaceChildren(el("h1",w().title));host.firstChild.id="connect-inbox-title";return;}
     if(syncIdentity()){build();refresh(true);}else showNotice();
   }
   function refreshServiceCount(){

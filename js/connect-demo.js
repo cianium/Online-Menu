@@ -120,7 +120,7 @@ const createDemoEngine=function createDemoEngine(core,platform){
   async function list(a){
     staff(a);const now=platform.now();
     const rows=(await platform.db.all()).map(validate).filter(c=>c.branchId===a.branchId&&c.expiresAt+RETENTION>now);
-    return rows.sort((x,y)=>y.updatedAt-x.updatedAt).map(c=>{const {conversation,messages}=project(c,a,now);return {...conversation,lastMessage:messages.at(-1)||null,guestMessageCount:messages.filter(m=>m.senderKind==="guest").length};});
+    return rows.sort((x,y)=>y.updatedAt-x.updatedAt).map(c=>{const {conversation,messages}=project(c,a,now);const firstGuest=messages.find(m=>m.senderKind==="guest"),firstStaff=messages.find(m=>m.senderKind==="staff"&&firstGuest&&m.sequence>firstGuest.sequence);return {...conversation,lastMessage:messages.at(-1)||null,guestMessageCount:messages.filter(m=>m.senderKind==="guest").length,firstResponseMs:firstStaff?Math.max(0,firstStaff.createdAt-firstGuest.createdAt):null};});
   }
   async function readStaff(a,conversationId){
     staff(a);if(!id(conversationId))fail("CONNECT_INVALID_ID");const c=await platform.db.get(conversationId);if(!c)fail("CONNECT_NOT_FOUND");validate(c);

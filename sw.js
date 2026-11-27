@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r24-live-transport`;
+const CACHE_NAME = `${menuCachePrefix}r24-live-language`;
 const CORE_ASSETS = [
   "./",
   "./index.html",

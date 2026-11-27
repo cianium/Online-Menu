@@ -1,0 +1,4 @@
+# R24.10 / R24.12 — Original language and scoped metrics
+Staff can choose the reply language independently of the admin interface. The first default is the latest guest message language; manually typed text is preserved and the chosen language is metadata, not automatic translation. Canned replies are localized drafts, never auto-sent. Both sides label message language. No AI, external translation provider, or generated text is claimed.
+The inbox shows mean first-response time calculated from the first guest message and first subsequent staff reply, plus the number of conversations represented. The demo uses its retained conversations; the online candidate uses the bounded recent inbox. Unanswered rows and missing measurements are excluded. This is not historical SLA analytics.
+Automatic translation, AI, live notifications/read receipts, retention policy, full production QA and deployment remain open. No merge/deploy.
