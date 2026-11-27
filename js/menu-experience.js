@@ -150,7 +150,8 @@
           <div id="menu-search-panel" class="browse-panel" hidden><div class="menu-search-field">${icon('search')}<label class="sr-only" for="rv4-menu-search"></label><input id="rv4-menu-search" type="search" autocomplete="off" aria-controls="menu-categories"></div></div>
           <div id="menu-filter-panel" class="browse-panel" hidden><h3 id="menu-filter-title"></h3><div class="menu-tools"><label for="menu-sort" id="menu-sort-label" class="sr-only"></label><select id="menu-sort"></select><button id="menu-favorites-toggle" type="button" aria-pressed="false"></button><button id="menu-reset" type="button"></button></div></div>`;
         const header = document.querySelector('#site-header');
-        header.append(controls);
+        const host = document.querySelector('#r17-browse-host');
+        (host || header).append(controls);
         // Keep the data-mode disclosure compact and adjacent to the browse controls.
         const status=document.createElement('div');status.id='menu-data-status';status.className='menu-data-status';status.setAttribute('role','status');status.innerHTML='<span></span><button type="button"></button>';controls.append(status);
         section.setAttribute('aria-labelledby','browse-title');

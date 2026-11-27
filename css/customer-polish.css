@@ -579,3 +579,14 @@ body:is(.modal-open,.commerce-open,.ramen-contact-open) .rv4-back-top {visibilit
 .product-modal .modal-content {align-content:safe center;}
 @media(min-width:900px){#site-header .menu-browser{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:0 12px;}#site-header .menu-browser-heading{grid-column:2;grid-row:1;gap:12px;}#site-header .browse-category-rail{grid-column:1;grid-row:1;min-width:0;}#site-header :is(.browse-panel,.browse-query,.menu-data-status){grid-column:1/-1;}}
 @media(max-width:720px){.product-modal .modal-content{align-content:start;}}
+
+/* Reserve the header's browsing row before deferred JavaScript paints the catalog. */
+#site-header .r17-browse-host {min-height:112px;min-inline-size:0;}
+#site-header .menu-browser {min-height:112px;}
+@media(min-width:900px){#site-header .r17-browse-host,#site-header .menu-browser{min-height:66px;}}
+@media(max-width:899px){#site-header .menu-browser-heading{min-height:44px;}#site-header .browse-category-rail{min-height:52px;}}
+/* A full-width grid track prevents intrinsic Arabic text width from sizing the hero. */
+.hero-section {grid-template-columns:minmax(0,1fr);justify-content:stretch;}
+html[dir] .hero-content {justify-self:center;}
+html[dir] .hero-title {align-items:flex-start;inline-size:100%;}
+.hero-button>span:first-child {white-space:nowrap;}

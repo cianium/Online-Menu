@@ -383,6 +383,8 @@ async function ready(p){
    assert.equal(brandParts.length,2);
    assert.notEqual(brandParts[0].display,'none','Brand mark remains visible at '+lang+'/'+width);
    assert.ok(await p.locator('#romano-language-toggle .language-toggle-icon').isVisible(),'Missing language icon '+lang+'/'+width);
+   const hero=await p.locator('.hero-content').boundingBox();
+   assert.ok(hero&&hero.width>=Math.min(width-48,700),'Hero track collapsed '+lang+'/'+width+': '+JSON.stringify(hero));
    if(lang==='fa'||lang==='ar')assert.ok(brandParts[0].left>brandParts[1].left,'RTL brand logo must follow wordmark '+lang+'/'+width);
    else assert.ok(brandParts[0].left<brandParts[1].left,'LTR brand logo must precede wordmark '+lang+'/'+width);
    const wordmark=await p.locator('.brand-name').evaluate(node=>{const range=document.createRange();range.selectNodeContents(node);return {text:node.textContent.trim(),textWidth:range.getBoundingClientRect().width,clientWidth:node.clientWidth};});
