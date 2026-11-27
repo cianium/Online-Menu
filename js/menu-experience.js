@@ -55,7 +55,6 @@
         const input = document.querySelector('#rv4-menu-search');
         input.placeholder = t('searchMenu');
         document.querySelector('[for=rv4-menu-search]').textContent = t('searchSr');
-        document.querySelector('#menu-browser-eyebrow').textContent = t('menuEyebrow');
         document.querySelector('#browse-title').textContent = t('menuIntro');
         document.querySelector('#browse-hint').textContent = t('menuHint');
         document.querySelector('#menu-sort-label').textContent = t('sortLabel');
@@ -72,7 +71,7 @@
         if (category !== "all" && !available.some(c=>c.id===category)) category="all";
         const rail = document.querySelector('#rv4-category-rail');
         rail.setAttribute('aria-label', t('categories'));
-        const nextMarkup = `<button type="button" data-browse-category="all" aria-pressed="false"><span class="browse-rail-all" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></span><span class="browse-rail-label">${esc(t('allCategories'))}</span></button>` + available.map(c=>{
+        const nextMarkup = available.map(c=>{
             const name=window.ROMANO_I18N.localizeCategory(c).name;
             const photo=c.image ? `<img src="${escapeAttribute(c.image)}" alt="${escapeAttribute(name)}" loading="lazy" decoding="async">` : esc(getImageFallbackLabel(name));
             return `<button type="button" data-browse-category="${esc(c.id)}" aria-pressed="false"><span class="browse-rail-photo" aria-hidden="true">${photo}</span><span class="browse-rail-label">${esc(name)}</span><span class="browse-rail-count">${numeral(getProductsByCategory(c.id).length)}</span></button>`;
@@ -86,10 +85,10 @@
         }
         rail.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.browseCategory===category)));
         byId('menu-search-toggle').setAttribute('aria-label',t('searchSr'));
-        byId('menu-filter-toggle').setAttribute('aria-label',t(onlyFavorites||order!=='menu'?'browseFiltersActive':'browseFilters'));
+        byId('menu-filter-toggle').setAttribute('aria-label',t(onlyFavorites||order!=='menu'||category!=='all'?'browseFiltersActive':'browseFilters'));
         byId('menu-filter-title').textContent=t('browseFilters');
         byId('menu-search-toggle').classList.toggle('has-value',Boolean(query.trim()));
-        byId('menu-filter-toggle').classList.toggle('has-value',onlyFavorites||order!=='menu');
+        byId('menu-filter-toggle').classList.toggle('has-value',onlyFavorites||order!=='menu'||category!=='all');
         byId('menu-search-active').textContent=query.trim()?t('browseSearchActive',query.trim()):'';
         byId('menu-search-active').hidden=!query.trim();
         syncHearts();
@@ -99,7 +98,7 @@
         if (!initialized) return;
         const count = menuProducts.filter(p=>isAvailableProduct(p)&&matches(p)).length;
         document.querySelector('#menu-result-count').textContent = t('resultCount', numeral(count));
-        const messageKey = {loading:'menuLoading',demo:'menuDemo',offline:'menuOffline',unavailable:'menuUnavailable'}[menuDataMode];
+        const messageKey = {loading:'menuLoading',offline:'menuOffline',unavailable:'menuUnavailable'}[menuDataMode];
         const status = document.querySelector('#menu-data-status');
         status.hidden = !messageKey;
         status.querySelector('span').textContent = messageKey ? t(messageKey) : '';
@@ -144,35 +143,48 @@
         const section = document.querySelector('#menu');
         const controls = document.createElement('div');
         controls.className='menu-browser';
-        controls.innerHTML = `<div class="menu-browser-heading"><div class="menu-browser-title"><span class="section-eyebrow" id="menu-browser-eyebrow"></span><h2 id="browse-title" class="sr-only"></h2><span id="menu-result-count" role="status" aria-live="polite"></span><p id="browse-hint" class="sr-only"></p></div><div class="menu-icon-actions"><button type="button" id="menu-search-toggle" aria-expanded="false" aria-controls="menu-search-panel">${icon('search')}</button><button type="button" id="menu-filter-toggle" aria-expanded="false" aria-controls="menu-filter-panel">${icon('filter')}</button></div></div>
-          <div id="rv4-category-rail" class="browse-category-rail" role="group"></div>
+        controls.innerHTML = `<div class="r17-browse-row"><div class="menu-icon-actions"><button type="button" id="menu-filter-toggle" aria-expanded="false" aria-controls="menu-filter-panel">${icon('filter')}</button></div><div id="rv4-category-rail" class="browse-category-rail" role="group"></div></div>
           <div id="menu-search-active" class="browse-query" hidden></div>
           <div id="menu-search-panel" class="browse-panel" hidden><div class="menu-search-field">${icon('search')}<label class="sr-only" for="rv4-menu-search"></label><input id="rv4-menu-search" type="search" autocomplete="off" aria-controls="menu-categories"></div></div>
           <div id="menu-filter-panel" class="browse-panel" hidden><h3 id="menu-filter-title"></h3><div class="menu-tools"><label for="menu-sort" id="menu-sort-label" class="sr-only"></label><select id="menu-sort"></select><button id="menu-favorites-toggle" type="button" aria-pressed="false"></button><button id="menu-reset" type="button"></button></div></div>`;
         const header = document.querySelector('#site-header');
         const host = document.querySelector('#r17-browse-host');
         (host || header).append(controls);
+        const search = document.createElement('button');
+        search.type = 'button';
+        search.id = 'menu-search-toggle';
+        search.setAttribute('aria-expanded','false');
+        search.setAttribute('aria-controls','menu-search-panel');
+        search.innerHTML = icon('search');
+        header.querySelector('#romano-language-toggle').after(search);
+        const accessibleHeading = document.createElement('div');
+        accessibleHeading.className = 'sr-only';
+        accessibleHeading.innerHTML = '<h2 id="browse-title"></h2><span id="menu-result-count" role="status" aria-live="polite"></span><p id="browse-hint"></p>';
+        section.prepend(accessibleHeading);
         // Keep the data-mode disclosure compact and adjacent to the browse controls.
-        const status=document.createElement('div');status.id='menu-data-status';status.className='menu-data-status';status.setAttribute('role','status');status.innerHTML='<span></span><button type="button"></button>';controls.append(status);
+        const status=document.createElement('div');status.id='menu-data-status';status.className='menu-data-status';status.setAttribute('role','status');status.innerHTML='<span></span><button type="button"></button>';section.prepend(status);
         section.setAttribute('aria-labelledby','browse-title');
         const live=document.createElement('div');live.id='menu-announcement';live.setAttribute('role','status');live.setAttribute('aria-live','polite');document.body.appendChild(live);
         const measure=()=>{
             const height = Math.ceil(header.getBoundingClientRect().height);
             document.documentElement.style.setProperty('--r17-header-height', height + 'px');
+            const nav = document.querySelector('.ramen-bottom-nav');
+            const reserve = nav && getComputedStyle(nav).display !== 'none' ? Math.ceil(nav.getBoundingClientRect().height + (parseFloat(getComputedStyle(nav).bottom) || 0)) : 0;
+            document.documentElement.style.setProperty('--customer-nav-reserve', reserve + 'px');
             section.style.setProperty('--browse-header-offset', height + 'px');
             section.style.setProperty('--browse-bar-height', '0px');
         };
         if('ResizeObserver' in window){const observer=new ResizeObserver(measure);observer.observe(controls);const header=document.querySelector('.site-header');if(header)observer.observe(header);}
         window.addEventListener('resize',measure,{passive:true});measure();
         for(const id of ['search','filter']) byId(`menu-${id}-toggle`).addEventListener('click',()=>setPanel(openPanel===id?null:id,openPanel===id));
-        controls.addEventListener('keydown',event=>{if(event.key==='Escape'&&openPanel){event.preventDefault();event.stopPropagation();setPanel(null,true);}});
-        document.addEventListener('click',event=>{if(openPanel&&!controls.contains(event.target))setPanel(null,controls.contains(document.activeElement));});
+        header.addEventListener('keydown',event=>{if(event.key==='Escape'&&openPanel){event.preventDefault();event.stopPropagation();setPanel(null,true);}});
+        document.addEventListener('click',event=>{if(openPanel&&!header.contains(event.target))setPanel(null,header.contains(document.activeElement));});
         controls.querySelector('#rv4-menu-search').addEventListener('input',event=>{query=event.target.value;redraw();});
         controls.querySelector('#rv4-menu-search').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();setPanel(null,true);section.scrollIntoView({behavior:'auto',block:'start'});}});
         controls.querySelector('#menu-sort').addEventListener('change',event=>{order=event.target.value;redraw();});
         controls.querySelector('#menu-favorites-toggle').addEventListener('click',()=>{onlyFavorites=!onlyFavorites;redraw();});
         controls.querySelector('#menu-reset').addEventListener('click',()=>{query='';category='all';onlyFavorites=false;order='menu';controls.querySelector('input').value='';redraw();setPanel(null,true);});
-        controls.querySelector('#rv4-category-rail').addEventListener('click',event=>{const button=event.target.closest('[data-browse-category]');if(!button)return;setPanel(null);selectCategory(button.dataset.browseCategory);button.focus({preventScroll:true});section.scrollIntoView({behavior:'auto',block:'start'});});
+        controls.querySelector('#rv4-category-rail').addEventListener('click',event=>{const button=event.target.closest('[data-browse-category]');if(!button)return;setPanel(null);selectCategory(category===button.dataset.browseCategory?'all':button.dataset.browseCategory);button.focus({preventScroll:true});section.scrollIntoView({behavior:'auto',block:'start'});});
         status.querySelector('button').addEventListener('click',()=>location.reload());
         document.addEventListener('click',event=>{
             const button=event.target.closest('[data-favorite-product]');if(!button)return;
