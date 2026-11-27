@@ -91,6 +91,7 @@ check(!/fastifyStatic,\s*\{\s*root\s*,/.test(serverSource), "Backend must never 
 check(!/trustProxy:\s*true/.test(serverSource), "trustProxy must be configurable, not hard-coded to true.");
 check(!/contentSecurityPolicy:\s*false/.test(serverSource), "Content-Security-Policy must not be disabled.");
 const vercel = JSON.parse(read("vercel.json"));
+check(vercel.git?.deploymentEnabled === false, "Legacy Vercel configuration must not auto-deploy any branch.");
 const deployedHeaders = new Map((vercel.headers?.flatMap(rule => rule.headers || []) || []).map(header => [header.key.toLowerCase(), header.value]));
 for (const header of ["content-security-policy", "permissions-policy", "referrer-policy", "strict-transport-security", "x-content-type-options", "x-frame-options"]) {
   check(deployedHeaders.has(header), `Vercel security header is missing: ${header}.`);
