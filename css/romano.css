@@ -242,13 +242,6 @@ html[lang="ar"] .hero-eyebrow {
   gap: 10px;
   color: var(--romano-gold-light);
 }
-.hero-eyebrow::before {
-  content: "";
-  width: 34px;
-  height: 1px;
-  background: currentColor;
-  opacity: 0.6;
-}
 .hero-title {
   max-width: 700px;
   margin-top: 18px;
