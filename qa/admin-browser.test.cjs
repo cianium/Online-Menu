@@ -62,7 +62,13 @@ async function check(name, action) { await action(); results.push(name); console
       await page.locator('#connect-inbox-assignee').selectOption('demo-agent-1');
       await page.locator('[data-connect-action="assign"]').click();
       await page.waitForFunction(()=>document.querySelector('.connect-inbox-detail-head p')?.textContent.includes('Demo agent 1'));
-      await page.locator('#connect-inbox-reply').fill('QA local reply');
+      const reply=page.locator('#connect-inbox-reply');
+      await reply.fill('QA local reply');
+      await reply.evaluate(n=>n.setSelectionRange(3,5));
+      await guest.evaluate(async s=>{await RomanoConnectDemo.send(s,crypto.randomUUID(),'QA follow-up','en');},session);
+      await page.waitForFunction(()=>Array.from(document.querySelectorAll('.connect-inbox-message p')).some(n=>n.textContent==='QA follow-up'));
+      assert.equal(await reply.inputValue(),'QA local reply');
+      assert.deepEqual(await reply.evaluate(n=>[n.selectionStart,n.selectionEnd]),[3,5]);
       await page.locator('[data-connect-action="send"]').click();
       await page.waitForFunction(()=>Array.from(document.querySelectorAll('.connect-inbox-message p')).some(n=>n.textContent==='QA local reply'));
       await guest.waitForFunction(async s=>(await RomanoConnectDemo.get(s)).messages.some(m=>m.text==='QA local reply'&&!m.own),session);
@@ -73,6 +79,7 @@ async function check(name, action) { await action(); results.push(name); console
       await page.setViewportSize({width:390,height:844});
       await page.locator('.connect-inbox-back').click();
       assert.equal(await row.isVisible(),true);
+      assert.equal(await row.evaluate(n=>document.activeElement===n),true);
       await page.locator('.connect-inbox-toolbar input').fill('no matching conversation');
       assert.equal(await row.count(),0);
       await page.locator('.connect-inbox-toolbar input').fill('');
@@ -281,6 +288,22 @@ await check('Order filter group accessible name is localized in all four languag
       assert.ok((await page.locator('#ops-tables').innerText()).trim());
     }
   });
+  await check('Guest service settings retain unsaved values and localize labels without rebasing storage',async()=>{
+    await page.evaluate(()=>{ROMANO_ADMIN_I18N.setLanguage('en');navigateTo('settings');});
+    const panel=page.locator('#hp-admin-settings'),coupon=panel.locator('[name=coupon]');
+    await panel.waitFor({state:'visible'});
+    const initial=await page.evaluate(()=>localStorage.getItem(RomanoDemoMembers.settingsKey));
+    await coupon.fill('QA-DRAFT');
+    await panel.locator('[name=hours_fa]').fill('۱۲ تا ۲۲');
+    for(const lang of ['fa','ar','tr','en']){
+      await page.evaluate(l=>ROMANO_ADMIN_I18N.setLanguage(l),lang);
+      assert.equal(await coupon.inputValue(),'QA-DRAFT');
+      assert.equal(await panel.locator('[name=hours_fa]').inputValue(),'۱۲ تا ۲۲');
+      assert.equal(await page.evaluate(()=>localStorage.getItem(RomanoDemoMembers.settingsKey)),initial);
+    }
+    await page.evaluate(()=>{navigateTo('dashboard');navigateTo('settings');});
+    assert.notEqual(await coupon.inputValue(),'QA-DRAFT');
+  });
   await check('Grouped settings validate contact and discard unsaved input without writing',async()=>{
     await page.evaluate(()=>{ROMANO_ADMIN_I18N.setLanguage('en');navigateTo('settings');});
     const form=page.locator('#restaurant-settings-form');const previous=await form.locator('[name=phone]').inputValue();
@@ -413,6 +436,12 @@ await check('Order filter group accessible name is localized in all four languag
     await page.waitForFunction(()=>!document.querySelector('#product-modal').classList.contains('is-open'));
   });
   await check('Bulk status change persists and scopes selection to visible products', async () => {
+    await page.locator('[data-select-product]').check();
+    await page.locator('[data-bulk=inactive]').click();
+    await page.locator('dialog[open] [value=cancel]').click();
+    assert.equal(await page.locator('[data-select-product]').isChecked(),true);
+    await page.locator('[data-bulk=clear]').click();
+    assert.equal(await page.locator('#select-visible').evaluate(n=>document.activeElement===n),true);
     await page.locator('[data-select-product]').check();
     await page.locator('[data-bulk=inactive]').click();
     await page.locator('dialog[open] [value=confirm]').click();

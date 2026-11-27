@@ -12,28 +12,34 @@ const languages=["fa","en","tr","ar"];
 const t=i=>(copy[window.ROMANO_ADMIN_I18N?.language]||copy.fa)[i];
 const node=(tag,value,cls)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;if(cls)n.className=cls;n.dataset.adminUserText="true";return n;};
 const local=()=>typeof adminInitialized!=="undefined"&&adminInitialized&&adminDemoMode&&demoAdminSignedIn()&&!window.RomanoAPI.enabled&&!document.querySelector(".admin-app").inert;
+let relabelSettings=null;
 function renderSettings(){
- settings.hidden=!local();settings.replaceChildren();if(settings.hidden)return;
- settings.append(node("h2",t(0)),node("p",t(1)));
- const status=node("p","");status.setAttribute("role","status");
+ relabelSettings=null;settings.hidden=!local();settings.replaceChildren();if(settings.hidden)return;
+ const bindings=[];
+ const localized=(tag,read,cls)=>{const n=node(tag,read(),cls);bindings.push(()=>{n.textContent=read();});return n;};
+ settings.append(localized("h2",()=>t(0)),localized("p",()=>t(1)));
+ let statusCode=null;
+ const status=localized("p",()=>statusCode===null?"":t(statusCode));status.setAttribute("role","status");
+ const showStatus=code=>{statusCode=code;status.textContent=t(code);};
  let cfg,baseline;try{baseline=localStorage.getItem(model.settingsKey);cfg=model.settings(localStorage);}catch{settings.append(node("p",t(11)));return;}
  const form=node("form",undefined,"settings-form");const fields=node("div",undefined,"form-grid");
- const add=(label,input)=>{const wrap=node("label",undefined,"form-field");wrap.append(node("span",label),input);fields.append(wrap);};
+ const add=(label,input)=>{const wrap=node("label",undefined,"form-field");wrap.append(localized("span",label),input);fields.append(wrap);};
  const suggestions=node("select");suggestions.name="suggestions";suggestions.multiple=true;suggestions.size=4;
  for(const item of state.products.filter(p=>p.active!==false)){const option=node("option",typeof item.name==="string"?item.name:item.id);option.value=item.id;option.selected=cfg.suggestions.includes(item.id);suggestions.append(option);}
- add(t(2),suggestions);
+ add(()=>t(2),suggestions);
  const bundle=node("select");bundle.name="bundle";bundle.multiple=true;bundle.size=4;
  for(const item of state.products.filter(p=>p.active!==false)){const option=node("option",typeof item.name==="string"?item.name:item.id);option.value=item.id;option.selected=cfg.bundle.includes(item.id);bundle.append(option);}
- add(({fa:"محصولات لازم برای تخفیف ترکیبی (صفر یا دقیقاً ۲)",en:"Required bundle products (none or exactly two)",tr:"Kampanya için gerekli ürünler (yok veya tam iki)",ar:"المنتجات المطلوبة للعرض (لا شيء أو منتجان)"}[window.ROMANO_ADMIN_I18N?.language]||"Bundle products"),bundle);
+ add(()=>({fa:"محصولات لازم برای تخفیف ترکیبی (صفر یا دقیقاً ۲)",en:"Required bundle products (none or exactly two)",tr:"Kampanya için gerekli ürünler (yok veya tam iki)",ar:"المنتجات المطلوبة للعرض (لا شيء أو منتجان)"}[window.ROMANO_ADMIN_I18N?.language]||"Bundle products"),bundle);
  function input(name,label,value,type="text",limit=120){const field=node("input");field.name=name;field.type=type;field.value=value;if(type==="number"){field.min="0";field.max=String(limit);field.step="1";field.required=true;}else field.maxLength=limit;add(label,field);}
- input("coupon",t(3),cfg.coupon,"text",24);input("percent",t(4),cfg.percent,"number",50);input("points",t(5),cfg.points,"number",1000);
- for(const l of languages)input("hours_"+l,t(6)+" · "+l.toUpperCase(),cfg.hours[l]);
- input("map",t(7),cfg.map,"url",500);input("whatsapp",t(8),cfg.whatsapp,"url",500);
- const save=node("button",t(9),"primary-button");save.type="submit";form.append(fields,save,status);settings.append(form);
- form.addEventListener("submit",async ev=>{ev.preventDefault();if(!local())return;save.disabled=true;
+ input("coupon",()=>t(3),cfg.coupon,"text",24);input("percent",()=>t(4),cfg.percent,"number",50);input("points",()=>t(5),cfg.points,"number",1000);
+ for(const l of languages)input("hours_"+l,()=>t(6)+" · "+l.toUpperCase(),cfg.hours[l]);
+ input("map",()=>t(7),cfg.map,"url",500);input("whatsapp",()=>t(8),cfg.whatsapp,"url",500);
+ const save=localized("button",()=>t(9),"primary-button");save.type="submit";form.append(fields,save,status);settings.append(form);
+ relabelSettings=()=>{for(const apply of bindings)apply();};
+ form.addEventListener("submit",async ev=>{ev.preventDefault();if(!local()||!form.isConnected||save.disabled)return;save.disabled=true;showStatus(null);
  try{const data=form.elements;const next={suggestions:[...suggestions.selectedOptions].map(o=>o.value),bundle:[...bundle.selectedOptions].map(o=>o.value),coupon:data.coupon.value.trim().toUpperCase(),percent:Number(data.percent.value),points:Number(data.points.value),hours:Object.fromEntries(languages.map(l=>[l,data["hours_"+l].value])),map:data.map.value.trim(),whatsapp:data.whatsapp.value.trim()};
- await model.mutate(()=>{if(!local()||localStorage.getItem(model.settingsKey)!==baseline)throw Error("STALE");model.saveSettings(localStorage,next);baseline=localStorage.getItem(model.settingsKey);});status.textContent=t(10);
- }catch{status.textContent=t(11);}finally{save.disabled=false;}});
+ await model.mutate(()=>{if(!local()||!form.isConnected||localStorage.getItem(model.settingsKey)!==baseline)throw Error("STALE");model.saveSettings(localStorage,next);baseline=localStorage.getItem(model.settingsKey);});showStatus(10);
+ }catch{showStatus(11);}finally{save.disabled=false;}});
 }
 const serviceCopy={
  fa:{high:"بالا",normal:"عادی",low:"کم",priority:"اولویت",average:"میانگین زمان پذیرش",samples:"نمونه‌های زمان‌دار",seconds:"ثانیه",unknown:"نامشخص",filter:"فیلتر وضعیت",all:"همه",created:"زمان ثبت",response:"زمان پذیرش",stale:"درخواست تغییر کرده است. فهرست به‌روز شد.",blocked:"ذخیره‌سازی هم‌زمان در این مرورگر پشتیبانی نمی‌شود."},
@@ -90,7 +96,7 @@ function renderRequests(message=""){
  }catch{notice.textContent=t(11);}
 }
 document.addEventListener("romano:admin-page-changed",ev=>{if(ev.detail?.page==="settings")renderSettings();if(ev.detail?.page==="orders")renderRequests();});
-document.addEventListener("romano:language-changed",()=>{renderSettings();renderRequests();});
+document.addEventListener("romano:language-changed",()=>{if(local()&&relabelSettings)relabelSettings();else renderSettings();renderRequests();});
 window.addEventListener("storage",ev=>{if(ev.key===null||ev.key?.startsWith(model.requestPrefix))renderRequests();});
 document.getElementById("orders-refresh")?.addEventListener("click",()=>renderRequests());
 window.addEventListener("storage",ev=>{if(ev.key===null||ev.key===branch?.registry)renderRequests();});

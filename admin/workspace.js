@@ -3,6 +3,8 @@
 (() => {
     const selected = new Set();
     let visibleIds = [];
+    let bulkConfirmPending = false;
+    const canBulkEdit = () => adminInitialized && !saveInProgress && state.currentPage === "products" && !document.querySelector(".admin-app").inert && (window.RomanoAPI?.enabled || (adminDemoMode && demoAdminSignedIn()));
     const t = value => window.ROMANO_ADMIN_I18N.translate(value);
     const h = value => escapeHTML(value);
     const number = value => new Intl.NumberFormat(document.documentElement.lang).format(value);
@@ -82,10 +84,17 @@
         });
         document.querySelector("#product-bulk-toolbar").addEventListener("click", async event => {
             const action = event.target.closest("[data-bulk]")?.dataset.bulk;
-            if (!action || saveInProgress) return;
-            if (action === "clear") { selected.clear(); updateSelection(); return; }
+            if (!action || bulkConfirmPending || !canBulkEdit()) return;
+            if (action === "clear") { selected.clear(); updateSelection(); document.querySelector("#select-visible")?.focus(); return; }
+            if (!["active","inactive"].includes(action)) return;
             const ids = new Set(selected);
-            if (!ids.size || !(await window.RomanoConfirm("وضعیت محصولات انتخاب‌شده تغییر کند؟"))) return;
+            if (!ids.size) return;
+            const snapshot = state.products;
+            bulkConfirmPending = true;
+            let confirmed;
+            try { confirmed = await window.RomanoConfirm("وضعیت محصولات انتخاب‌شده تغییر کند؟"); }
+            finally { bulkConfirmPending = false; }
+            if (!confirmed || !canBulkEdit() || state.products !== snapshot || selected.size !== ids.size || [...ids].some(id => !selected.has(id) || !visibleIds.includes(id))) return;
             const previous = state.products;
             state.products = state.products.map(p => ids.has(p.id) ? { ...p, active: action === "active", updatedAt: new Date().toISOString() } : p);
             if (!(await saveProducts())) { state.products = previous; return; }

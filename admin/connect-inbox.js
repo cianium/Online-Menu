@@ -440,8 +440,10 @@ const start=function startInbox(root,copy,model){
     if(!force&&ui.renderedVersion===version)return;ui.renderedVersion=version;
     const oldLog=pane.querySelector(".connect-inbox-log"),bottom=!oldLog||oldLog.scrollHeight-oldLog.scrollTop-oldLog.clientHeight<80,oldScroll=oldLog?.scrollTop||0;
     const active=doc.activeElement?.id;
+    const oldInput=pane.querySelector("#connect-inbox-reply");
+    const caret=active==="connect-inbox-reply"&&oldInput?[oldInput.selectionStart,oldInput.selectionEnd,oldInput.selectionDirection]:null;
     const header=el("div",null,"connect-inbox-detail-head"),top=el("div",null,"connect-inbox-row-top");
-    const back=button(t.back,"secondary-button connect-inbox-back",()=>{selection=null;detail=null;draft="";pending=null;ui.renderedVersion=null;renderList();renderDetail(true);ui.list.querySelector("button")?.focus();});
+    const back=button(t.back,"secondary-button connect-inbox-back",()=>{if(busy)return;const previous=selection;selection=null;detail=null;draft="";pending=null;replyLang=null;generation++;ui.renderedVersion=null;renderList();renderDetail(true);const row=[...ui.list.querySelectorAll("[data-conversation-id]")].find(n=>n.dataset.conversationId===previous);(row||ui.list.querySelector("button")||ui.search).focus({preventScroll:true});});back.disabled=busy;
     const title=el("h2",t.guest+" · "+c.id.slice(-8));title.tabIndex=-1;title.id="connect-inbox-conversation-title";
     top.append(title,el("span",t[model.status(c,Date.now())],"connect-inbox-pill"));header.append(back,top,el("p",t.assignment+": "+staffName(c.assigneeId)));
     const context=el("div",null,"connect-inbox-context");
@@ -487,7 +489,7 @@ const start=function startInbox(root,copy,model){
     form.addEventListener("submit",event=>{event.preventDefault();if(send.disabled)return;const attempt=pending&&pending.text===draft?pending:{clientId:root.crypto.randomUUID(),text:draft,language:replyLang};pending=attempt;mutate({type:"send",...attempt});});
     const formFoot=el("div",null,"connect-inbox-row-top");formFoot.append(counter,send);form.append(input,formFoot);footer.append(languageLabel,quick,form);if(!permissions.reply)footer.append(el("p",t.inactive,"connect-inbox-notice"));
     pane.replaceChildren(header,log,footer);update();log.scrollTop=bottom?log.scrollHeight:oldScroll;
-    if(active==="connect-inbox-reply"&&!input.disabled)input.focus({preventScroll:true});else if(active==="connect-inbox-assignee"&&!select.disabled)select.focus({preventScroll:true});
+    if(active==="connect-inbox-reply"&&!input.disabled){input.focus({preventScroll:true});if(caret)input.setSelectionRange(...caret);}else if(active==="connect-inbox-assignee"&&!select.disabled)select.focus({preventScroll:true});
   }
   async function open(id){
     if(busy||!syncIdentity()||!isPage())return;
