@@ -7,10 +7,67 @@
   const name=value=>String(value??'').normalize('NFKC').trim().replace(/\s+/g,' ');
   const phone=value=>String(value??'').trim().replace(/[۰-۹٠-٩]/g,ch=>String(ch.charCodeAt(0)-(ch>='۰'?1776:1632))).replace(/[\s().-]/g,'').replace(/^00(?=[1-9][0-9]{6,14}$)/,'+');
   const validPhone=p=>typeof p==='string'&&/^\+?[0-9]{7,15}$/.test(p);
-  const validItem=i=>i&&typeof i.name==='string'&&i.name.length<=150&&Number.isSafeInteger(i.quantity)&&i.quantity>=1&&i.quantity<=99&&Number.isFinite(i.price)&&i.price>0;
+  const validItem=i=>i&&typeof i.name==='string'&&i.name.length<=150&&Number.isSafeInteger(i.quantity)&&i.quantity>=1&&i.quantity<=99&&Number.isFinite(i.price)&&i.price>0&&(i.note===undefined||(typeof i.note==="string"&&i.note.length<=200));
   const catalogCurrency=value=>{const code=String(value||'IRT').trim().toUpperCase();return /^[A-Z]{3}$/.test(code)&&code!=='IRR'?code:'IRT';};
   const validDate=d=>typeof d==='string'&&Number.isFinite(Date.parse(d));
-  const validOrder=o=>o&&(o.notes===undefined||(typeof o.notes==="string"&&o.notes.length<=1000))&&(o.tableName===undefined||(typeof o.tableName==='string'&&o.tableName.length<=80))&&typeof o.id==='string'&&(o.currency===undefined||(typeof o.currency==='string'&&o.currency===catalogCurrency(o.currency)))&&validDate(o.createdAt)&&Array.isArray(o.items)&&o.items.length>0&&o.items.length<=100&&o.items.every(validItem)&&Number.isFinite(o.total)&&o.total>0&&Math.abs(o.items.reduce((sum,i)=>sum+i.price*i.quantity,0)-o.total)<0.000001;
+  const validOrder=o=>o&&(o.notes===undefined||(typeof o.notes==="string"&&o.notes.length<=1000))&&(o.tableName===undefined||(typeof o.tableName==='string'&&o.tableName.length<=80))&&typeof o.id==='string'&&(o.currency===undefined||(typeof o.currency==='string'&&o.currency===catalogCurrency(o.currency)))&&validDate(o.createdAt)&&Array.isArray(o.items)&&o.items.length>0&&o.items.length<=100&&o.items.every(validItem)&&Number.isFinite(o.total)&&o.total>0&&validAmounts(o)&&(o.points===undefined||(Number.isInteger(o.points)&&o.points>=0&&o.points<=1000));
+  const settingsKey=scope("online_menu_hospitality_v1:romano");
+  const requestPrefix=scope("online_menu_guest_requests_v1:romano")+":";
+  const kinds=Object.freeze(["waiter","bill","water","napkin"]);
+  const states=Object.freeze(["pending","accepted","completed"]);
+  const langs=["fa","en","tr","ar"];
+  const defaults=()=>({suggestions:[],coupon:"",percent:0,points:0,hours:{fa:"",en:"",tr:"",ar:""},map:"",whatsapp:""});
+  function validatedLink(value,kind){
+    if(value==="")return "";
+    if(typeof value!=="string"||value.length>500)throw Error("HP_SETTINGS");
+    const url=new URL(value);
+    if(url.protocol!=="https:"||url.username||url.password||url.port)throw Error("HP_SETTINGS");
+    const ok=kind==="whatsapp"?url.hostname==="wa.me"&&/^\/[1-9][0-9]{6,14}\/?$/.test(url.pathname):
+      (url.hostname==="maps.app.goo.gl"&&url.pathname.length>1)||(url.hostname==="www.google.com"&&url.pathname.startsWith("/maps"))||(url.hostname==="www.openstreetmap.org"&&url.pathname.length>1);
+    if(!ok)throw Error("HP_SETTINGS");return url.href;
+  }
+  function validateSettings(value){
+    if(!value||typeof value!=="object"||Array.isArray(value))throw Error("HP_SETTINGS");
+    const {suggestions,coupon,percent,points,hours,map,whatsapp}=value;
+    if(!Array.isArray(suggestions)||suggestions.length>3||new Set(suggestions).size!==suggestions.length||suggestions.some(id=>typeof id!=="string"||!id||id.length>150)||
+      typeof coupon!=="string"||!/^([A-Z0-9_-]{3,24})?$/.test(coupon)||!Number.isInteger(percent)||percent<0||percent>50||Boolean(coupon)!==Boolean(percent)||
+      !Number.isInteger(points)||points<0||points>1000||!hours||langs.some(l=>typeof hours[l]!=="string"||hours[l].length>120))throw Error("HP_SETTINGS");
+    return {suggestions:[...suggestions],coupon,percent,points,hours:Object.fromEntries(langs.map(l=>[l,hours[l].trim()])),map:validatedLink(map,"map"),whatsapp:validatedLink(whatsapp,"whatsapp")};
+  }
+  function settings(storage){const raw=storage.getItem(settingsKey);return raw===null?defaults():validateSettings(JSON.parse(raw));}
+  function saveSettings(storage,value){branch?.context();const clean=validateSettings(value);storage.setItem(settingsKey,JSON.stringify(clean));return clean;}
+  function discountFor(subtotal,percent,currency){
+    if(!Number.isFinite(subtotal)||subtotal<=0||!Number.isInteger(percent)||percent<0||percent>50)return 0;
+    const code=catalogCurrency(currency);
+    const digits=code==="IRT"?0:new Intl.NumberFormat("en",{style:"currency",currency:code}).resolvedOptions().maximumFractionDigits;
+    const scale=10**digits;return Math.floor(subtotal*percent/100*scale+1e-8)/scale;
+  }
+  function validAmounts(order){
+    const subtotal=order.items.reduce((sum,i)=>sum+i.price*i.quantity,0);
+    if(order.offer===undefined)return Math.abs(subtotal-order.total)<1e-6;
+    const offer=order.offer;
+    return offer&&typeof offer.code==="string"&&/^[A-Z0-9_-]{3,24}$/.test(offer.code)&&Number.isInteger(offer.percent)&&offer.percent>=1&&offer.percent<=50&&
+      Number.isFinite(offer.discount)&&offer.discount>0&&Math.abs(offer.discount-discountFor(subtotal,offer.percent,order.currency))<1e-6&&Math.abs(subtotal-offer.discount-order.total)<1e-6;
+  }
+  function pointsFor(member){return (member?.orders||[]).reduce((sum,o)=>sum+(o.points||0),0);}
+  function requestKey(table){if(typeof table!=="string"||! /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/.test(table))throw Error("HP_TABLE");return requestPrefix+table;}
+  function requests(storage,table){
+    const value=JSON.parse(storage.getItem(requestKey(table))??"{}");
+    if(!value||typeof value!=="object"||Array.isArray(value))throw Error("HP_REQUEST");
+    const result={};for(const kind of kinds){const state=value[kind];if(state===true)result[kind]="pending";else if(states.includes(state))result[kind]=state;else if(state!==undefined)throw Error("HP_REQUEST");}
+    return result;
+  }
+  function setRequest(storage,table,kind,next,expected){
+    if(!kinds.includes(kind)||!branch)throw Error("HP_REQUEST");
+    const directory=branch.context()||branch.read().find(r=>r.id===branch.id);
+    if(!directory||directory.active===false||!directory.tables.some(t=>t.code===table))throw Error("HP_TABLE");
+    const current=requests(storage,table);
+    if(current[kind]!==expected)throw Error("HP_STALE");
+    const allowed=next==="pending"?(expected===undefined||expected==="completed"):next===undefined?expected==="pending":next==="accepted"?expected==="pending":next==="completed"?(expected==="pending"||expected==="accepted"):false;
+    if(!allowed)throw Error("HP_REQUEST");
+    if(next===undefined)delete current[kind];else current[kind]=next;
+    storage.setItem(requestKey(table),JSON.stringify(current));return current;
+  }
   const uuid=()=>globalThis.crypto.randomUUID();
   const lockKey=key+':mutation-lock';
   const delay=ms=>new Promise(resolve=>globalThis.setTimeout(resolve,ms));
@@ -78,13 +135,21 @@
     catch(e){try{if(old===null)storage.removeItem(key);else storage.setItem(key,old);}catch{}throw e;}
     return member;
   }
-  function addOrder(storage,session,items,total,currency,notes=""){
+  function addOrder(storage,session,items,total,currency,notes="",coupon=""){
     branch?.context();
     const rows=read(storage),current=rows.find(r=>r.id===session.getItem(activeKey));
     if(!current)throw Error('NO_PROFILE');
     if(!Array.isArray(items)||!items.length||items.length>100||!Number.isFinite(total)||total<=0||items.some(i=>!i||typeof i.name!=='string'||!Number.isSafeInteger(i.quantity)||i.quantity<1||i.quantity>99||!Number.isFinite(i.price)||i.price<=0))throw Error('INVALID_ORDER');
     if(current.orders.length>=100)throw Error('LIMIT');
-    const order={id:uuid(),createdAt:new Date().toISOString(),currency:catalogCurrency(currency),items:items.map(i=>({name:i.name.slice(0,150),quantity:i.quantity,price:i.price})),total};
+    const order={id:uuid(),createdAt:new Date().toISOString(),currency:catalogCurrency(currency),items:items.map(i=>({name:i.name.slice(0,150),quantity:i.quantity,price:i.price,...(i.note?{note:i.note}:{})})),total};
+    const config=settings(storage);
+    if(coupon){
+      if(coupon!==config.coupon)throw Error("HP_COUPON");
+      const subtotal=items.reduce((sum,i)=>sum+i.price*i.quantity,0),discount=discountFor(subtotal,config.percent,order.currency);
+      if(!discount)throw Error("HP_COUPON");
+      order.offer={code:coupon,percent:config.percent,discount};
+    }
+    if(config.points)order.points=config.points;
     if (branch?.table) {
       const table = branch.context().tables.find(t => t.code === branch.table);
       order.tableName = table.name;
@@ -98,5 +163,5 @@
   function signOut(session){
     session.removeItem(activeKey);
   }
-  return Object.freeze({key,activeKey,read,active,mutate,register,addOrder,signOut,phone});
+  return Object.freeze({key,activeKey,read,active,mutate,register,addOrder,signOut,phone,settingsKey,requestPrefix,settings,saveSettings,validateSettings,discountFor,pointsFor,kinds,requests,setRequest});
 });

@@ -114,3 +114,16 @@ test('Optional sample order notes persist safely and reject invalid input withou
  assert.throws(()=>model.addOrder(db,session,items,5,'IRT',{}),/INVALID_ORDER/);
  assert.equal(model.active(db,session).orders.length,2);
 });
+
+test('Demo hospitality coupon and points are validated, recorded and scoped to new orders',()=>{
+ const db=storage(),session=storage();model.register(db,session,'Sample','+12025550135');
+ const config={...model.settings(db),coupon:'DEMO10',percent:10,points:25};model.saveSettings(db,config);
+ const items=[{name:'Dish',quantity:2,price:100,note:'No onions'}];
+ assert.equal(model.discountFor(200,10,'IRT'),20);
+ assert.throws(()=>model.addOrder(db,session,items,200,'IRT','','DEMO10'),/INVALID_ORDER/);
+ const order=model.addOrder(db,session,items,180,'IRT','Sample','DEMO10');
+ assert.equal(order.offer.discount,20);assert.equal(order.points,25);assert.equal(order.items[0].note,'No onions');assert.equal(model.pointsFor(model.active(db,session)),25);
+ assert.throws(()=>model.addOrder(db,session,items,180,'IRT','','WRONG'),/HP_COUPON/);
+ assert.throws(()=>model.saveSettings(db,{...config,map:'javascript:alert(1)'}));
+ assert.equal(model.active(db,session).orders.length,1);
+});

@@ -160,6 +160,12 @@
   const h = key => hospitality[lang()]?.[key] || hospitality.fa[key];
   let lastRemoved = null;
   let orderNotes = "";
+  const itemNotes=new Map();
+  let couponCode="",appliedCoupon="";
+  const extra={fa:["تخفیف نمونه","کد تخفیف","اعمال","کد نامعتبر یا بدون تخفیف","امتیاز نمونه","یادداشت محصول / حساسیت غذایی","پذیرفته شد","انجام شد","ساعات کاری","مسیریابی","واتس‌اپ","حذف تخفیف"],en:["Sample discount","Promo code","Apply","Invalid code or no discount","Sample points","Item note / food allergy","Accepted","Completed","Opening hours","Directions","WhatsApp","Remove discount"],tr:["Örnek indirim","İndirim kodu","Uygula","Geçersiz kod veya indirim yok","Örnek puan","Ürün notu / gıda alerjisi","Kabul edildi","Tamamlandı","Çalışma saatleri","Yol tarifi","WhatsApp","İndirimi kaldır"],ar:["خصم تجريبي","رمز الخصم","تطبيق","رمز غير صالح أو لا يوجد خصم","نقاط تجريبية","ملاحظة المنتج / حساسية غذائية","تم القبول","مكتمل","ساعات العمل","الاتجاهات","واتساب","إزالة الخصم"]};
+  const x=i=>(extra[lang()]||extra.fa)[i];
+  const config=()=>{try{return isDemo()?window.RomanoDemoMembers.settings(localStorage):null;}catch{return null;}};
+  function discount(){const cfg=config();return cfg&&appliedCoupon&&cfg.coupon===appliedCoupon?window.RomanoDemoMembers.discountFor(total(),cfg.percent,restaurantConfig.currency):0;}
   const requestKinds = ["waiter","bill","water","napkin"];
   function guestContext() {
     if (isDemo()) {
@@ -180,13 +186,13 @@
     section.append(element("h3",h("quick")),element("p",contextLabel(),"hp-context"));
     const context=guestContext();
     const enabled=demo && Boolean(context.code);
-    const key="online_menu_guest_requests_v1:"+tenant()+":"+context.code;
+    const model=window.RomanoDemoMembers;
+    const key= model.requestPrefix+context.code;
     const status=element("p",enabled?h("local"):demo?h("selectTable")+" "+h("local"):h("unconnected"),"hp-service-notice");
     const grid=element("div",null,"hp-service-grid");
     const live=element("p",null,"hp-service-live");live.setAttribute("role","status");
     function readRequests() {
-      const value=read(key,{});
-      return Object.fromEntries(requestKinds.filter(kind=>value?.[kind]===true).map(kind=>[kind,true]));
+      try{return enabled?model.requests(localStorage,context.code):{};}catch{live.textContent=panelText().storageError;return {};}
     }
     const icons={waiter:"M3 17h18M5 17a7 7 0 0 1 14 0M12 7V5m-2 0h4M2 20h20",bill:"M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6m-6 4h6",water:"M12 3c-2 4-6 8-6 12a6 6 0 0 0 12 0c0-4-4-8-6-12Z",napkin:"M4 4h16v16H4zM4 20 20 4M12 12h8v8"};
     for(const kind of requestKinds) {
@@ -196,22 +202,27 @@
       const label=element("strong",h(kind));const detail=element("span",null,"hp-service-detail");
       button.append(icon,label,detail);
       function refresh() {
-        const active=enabled && readRequests()[kind]===true;
+        const state=readRequests()[kind];
+        const active=state==="pending"||state==="accepted";
+        button.disabled=!enabled||state==="accepted";
         button.setAttribute("aria-pressed",String(active));
-        button.setAttribute("aria-label",h(kind)+(active?" — "+h("cancel"):""));
-        detail.textContent=active?h("cancel"):"";
+        button.setAttribute("aria-label",h(kind)+(state==="pending"?" — "+h("cancel"):state==="accepted"?" — "+x(6):state==="completed"?" — "+x(7):""));
+        detail.textContent=state==="pending"?h("cancel"):state==="accepted"?x(6):state==="completed"?x(7):"";
       }
-      button.addEventListener("click",()=>{
+      button.addEventListener("click",async()=>{
         if(!isDemo() || guestContext().code!==context.code || !enabled)return;
+        button.disabled=true;
         try {
-          const next=readRequests(), active=!next[kind];
-          if(active)next[kind]=true;else delete next[kind];
-          localStorage.setItem(key,JSON.stringify(next));refresh();
-          live.textContent=h(kind)+" — "+h(active?"request":"cancel")+" · "+h("local");
+          const before=readRequests()[kind], next=before==="pending"?undefined:"pending";
+          await model.mutate(()=>model.setRequest(localStorage,context.code,kind,next,before));
+          live.textContent=h(kind)+" — "+h(next?"request":"cancel")+" · "+h("local");
         }catch{live.textContent=panelText().storageError;}
+        finally{refresh();}
       });
+      section.addEventListener("hp-request-updated",refresh);
       refresh();grid.append(button);
     }
+    section.dataset.requestKey=key;
     section.append(status,grid,live);content.append(section);
   }
   function renderSuggestions() {
@@ -222,8 +233,10 @@
     const candidates=[];
     if(selected.length && typeof menuProducts!=="undefined" && Array.isArray(menuProducts)){
       const suggestedGroups=new Set(groups);
+      for(const id of config()?.suggestions||[]){const item=product(id);if(item&&!cart[id]){candidates.push(item);suggestedGroups.add(item.category);}}
       for(const item of menuProducts){
-        if(item.active===false || !product(item.id) || cart[item.id] || suggestedGroups.has(item.category))continue;
+        if(candidates.length>=3)break;
+        if(item.active===false || !product(item.id) || cart[item.id] || candidates.some(p=>p.id===item.id) || suggestedGroups.has(item.category))continue;
         candidates.push(item);suggestedGroups.add(item.category);
         if(candidates.length===3)break;
       }
@@ -247,7 +260,7 @@
   }
   function removeCartItem(id) {
     if(submitting || !cart[id])return;
-    lastRemoved={id,quantity:cart[id]};
+    lastRemoved={id,quantity:cart[id],note:itemNotes.get(id)};itemNotes.delete(id);
     delete cart[id];save(cartKey(),cart);render();announce(h("removed"));
   }
   function initializeContactPanel() {
@@ -325,6 +338,10 @@
       if((panel==='contact'||panel==='chat') && social && /^https?:\/\//i.test(social) && (mode==='public' || mode==='offline')){const url=getSafeExternalUrl(social);if(url)appendInfo(words.social,words.social,url);}
       if(panel==='contact'){
         if(!content.querySelector('.ramen-contact-item'))content.append(element('p',words.missing,'ramen-contact-note'));
+        const cfg=config();
+        if(cfg?.hours[lang()])appendInfo(x(8),cfg.hours[lang()],null);
+        if(cfg?.map)appendInfo(x(9),x(9),cfg.map);
+        if(cfg?.whatsapp)appendInfo(x(10),x(10),cfg.whatsapp);
         if(demo)content.append(element('p',words.demo,'ramen-contact-note'));
         const actions=element('div',null,'hp-contact-actions');
         if(address && navigator.clipboard?.writeText && (demo||mode==='public'||mode==='offline')){
@@ -376,13 +393,15 @@
         <section class="hp-suggestions" id="hp-suggestions" hidden></section>
         <div class="commerce-options" id="commerce-options">
           <label class="commerce-note"><span>${safe(t("note"))}</span><textarea id="commerce-notes" maxlength="1000" rows="2" placeholder="${safe(t("noteHint"))}">${safe(orderNotes)}</textarea><span id="hp-note-local" hidden>${safe(h("noteLocal"))}</span></label>
+          <div id="hp-offer" hidden><label for="hp-code">${safe(x(1))}</label><div class="hp-code-row"><input id="hp-code" maxlength="24" value="${safe(couponCode)}" dir="ltr" autocomplete="off"><button type="button" id="hp-apply">${safe(x(2))}</button></div><p id="hp-coupon-status" role="status"></p></div>
+          <p id="hp-points" class="hp-context" hidden></p>
           <fieldset class="commerce-pay-method"><legend>${safe(panelText().methods)}</legend>
             <label><input type="radio" name="commerce-payment" value="later" checked> <span>${safe(t("later"))}</span></label>
             <label hidden><input type="radio" name="commerce-payment" value="online" disabled> <span>${safe(t("online"))}</span></label>
           </fieldset>
         </div></div>
         <div class="commerce-checkout" id="commerce-checkout">
-          <div class="hp-summary">${safe(h("summary"))}</div><div class="commerce-total-row"><span>${safe(t("total"))}</span><strong id="commerce-total"></strong></div>
+          <div class="hp-summary">${safe(h("summary"))}</div><div class="commerce-total-row" id="hp-discount" hidden><span>${safe(x(0))}</span><strong id="hp-discount-value"></strong></div><div class="commerce-total-row"><span>${safe(t("total"))}</span><strong id="commerce-total"></strong></div>
           <p class="commerce-message" id="commerce-message" role="alert"></p>
           <button class="commerce-submit" id="commerce-submit" type="button">${safe(t("checkout"))}</button>
         </div>
@@ -393,10 +412,18 @@
     document.querySelectorAll("[data-commerce-close]").forEach((button) => button.addEventListener("click", closeDrawer));
     document.querySelector("#commerce-submit").addEventListener("click", submitOrder);
     document.querySelector("#hp-continue").addEventListener("click",closeDrawer);
+    document.querySelector("#hp-code").addEventListener("input",event=>{couponCode=event.target.value;});
+    document.querySelector("#hp-apply").addEventListener("click",()=>{
+      if(submitting)return;
+      const cfg=config(),code=couponCode.trim().toUpperCase();
+      if(appliedCoupon){appliedCoupon="";couponCode="";document.querySelector("#hp-code").value="";render();return;}
+      if(!cfg?.coupon||code!==cfg.coupon||!window.RomanoDemoMembers.discountFor(total(),cfg.percent,restaurantConfig.currency)){document.querySelector("#hp-coupon-status").textContent=x(3);return;}
+      appliedCoupon=code;render();
+    });
     document.querySelector("#commerce-notes").addEventListener("input",event=>{orderNotes=event.target.value;});
     document.querySelector("#hp-undo-button").addEventListener("click",()=>{
       if(!lastRemoved||submitting)return;
-      const {id,quantity}=lastRemoved;lastRemoved=null;
+      const {id,quantity,note}=lastRemoved;lastRemoved=null;if(note)itemNotes.set(id,note);
       if(product(id)?.active!==false && product(id)){cart[id]=Math.min(99,(cart[id]||0)+quantity);save(cartKey(),cart);}
       render();document.querySelector("#commerce-items button:not([disabled])")?.focus({preventScroll:true});
     });
@@ -525,7 +552,18 @@
     bar.querySelector(".commerce-cart-count").textContent = String(amount);
     bar.querySelector(".commerce-cart-label").textContent = activeOrder && amount === 0 ? t("view") : t("cart");
     bar.querySelector(".commerce-cart-total").textContent = amount ? money(total()) : `#${activeOrder?.orderNumber || ""}`;
-    document.querySelector("#commerce-total").textContent = money(total());
+    const cfg=config(), savings=discount();
+    if(!savings)appliedCoupon="";
+    document.querySelector("#commerce-total").textContent = money(total()-savings);
+    document.querySelector("#hp-offer").hidden=!cfg?.coupon;
+    document.querySelector("#hp-code").disabled=submitting||Boolean(appliedCoupon);
+    document.querySelector("#hp-apply").disabled=submitting;
+    document.querySelector("#hp-apply").textContent=x(appliedCoupon?11:2);
+    document.querySelector("#hp-coupon-status").textContent=savings?cfg.percent+"% · "+appliedCoupon:"";
+    document.querySelector("#hp-discount").hidden=!savings;
+    document.querySelector("#hp-discount-value").textContent=savings?money(savings):"";
+    const points=document.querySelector("#hp-points");
+    points.hidden=!cfg?.points;points.textContent=cfg?.points?x(4)+": +"+new Intl.NumberFormat(lang()).format(cfg.points):"";
     document.querySelector("#commerce-title").textContent=t("cart")+(amount?" · "+new Intl.NumberFormat(lang()).format(amount):"");
     document.querySelector("#hp-cart-context").textContent=contextLabel();
     document.querySelector("#hp-undo").hidden=!lastRemoved || !product(lastRemoved.id);
@@ -545,6 +583,7 @@
         <div class="hp-item-copy"><h3>${safe(view.name)}</h3><span class="hp-unit">${safe(h("unit"))}: ${safe(money(item.price))}</span><strong class="hp-line-total">${safe(money(item.price * quantity))}</strong>
           <div class="commerce-quantity" aria-label="${safe(view.name)}"><button type="button" data-cart-change="-1" data-product-id="${safe(id)}" aria-label="${safe(panelText().less)}: ${safe(view.name)}" ${submitting?"disabled":""}>−</button><b>${quantity}</b><button type="button" data-cart-change="1" data-product-id="${safe(id)}" aria-label="${safe(panelText().more)}: ${safe(view.name)}" ${submitting||quantity>=99?"disabled":""}>+</button></div>
         </div>
+        ${isDemo()?'<label class="hp-item-note"><span>'+safe(x(5))+'</span><input maxlength="200" data-hp-note="'+safe(id)+'" value="'+safe(itemNotes.get(id)||"")+'" '+(submitting?'disabled':'')+'></label>':""}
         <button class="commerce-remove" type="button" data-cart-remove data-product-id="${safe(id)}" aria-label="${safe(t("remove"))}: ${safe(view.name)}" ${submitting?"disabled":""}>${safe(t("remove"))}</button>
       </article>`;
     }).join("");
@@ -553,6 +592,7 @@
     const checkout = document.querySelector("#commerce-checkout");
     if (checkout) checkout.hidden = amount === 0;
     document.querySelector("#commerce-options").hidden = amount === 0;
+    host.querySelectorAll("[data-hp-note]").forEach(input=>input.addEventListener("input",()=>itemNotes.set(input.dataset.hpNote,input.value)));
     host.querySelectorAll("[data-cart-change]").forEach((button) => button.addEventListener("click", () => change(button.dataset.productId, Number(button.dataset.cartChange))));
     host.querySelectorAll("[data-cart-remove]").forEach((button) => button.addEventListener("click", () => removeCartItem(button.dataset.productId)));
     if(previousControl && document.querySelector('#commerce-drawer.is-open')) {
@@ -698,10 +738,10 @@
         const members=window.RomanoDemoMembers;
         const order=await members.mutate(()=>{
           cart=normalizeCart(read(cartKey(),cart));
-          const items=visibleCartEntries().map(([id,quantity])=>({name:localized(product(id)).name,quantity,price:product(id).price}));
+          const items=visibleCartEntries().map(([id,quantity])=>({name:localized(product(id)).name,quantity,price:product(id).price,note:(itemNotes.get(id)||"").trim()}));
           if(!items.length)return null;
-          const saved=members.addOrder(localStorage,sessionStorage,items,total(),restaurantConfig.currency,orderNotes.trim());
-          cart=normalizeCart({});save(cartKey(),cart);lastRemoved=null;orderNotes="";document.querySelector("#commerce-notes").value="";
+          const saved=members.addOrder(localStorage,sessionStorage,items,total()-discount(),restaurantConfig.currency,orderNotes.trim(),appliedCoupon);
+          cart=normalizeCart({});save(cartKey(),cart);lastRemoved=null;orderNotes="";itemNotes.clear();appliedCoupon=couponCode="";document.querySelector("#hp-code").value="";document.querySelector("#commerce-notes").value="";
           return saved;
         });
         if(order){
@@ -833,6 +873,9 @@
     window.addEventListener("romano:data-updated", () => { reconcileCart(); enhanceProducts(); render(); });
     document.addEventListener("romano:demo-membership-changed",render);
     window.addEventListener("storage", event => {
+      const service=document.querySelector(".hp-services[data-request-key]");
+      if(service && (event.key===null||event.key===service.dataset.requestKey))service.dispatchEvent(new Event("hp-request-updated"));
+      if(event.key===window.RomanoDemoMembers?.settingsKey){render();return;}
       if (event.key !== null && event.key !== cartKey()) return;
       cart = normalizeCart(read(cartKey(), {}));
       reconcileCart(); render();

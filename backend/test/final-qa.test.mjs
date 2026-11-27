@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {gzipSync} from 'node:zlib';
 const read=p=>fs.readFileSync(new URL('../../'+p,import.meta.url),'utf8');
 
 test('Payment redirects allow only existing HTTPS gateway origins and exact StartPay paths',()=>{
@@ -57,7 +58,8 @@ test('Public asset budgets prevent major regressions in the initial UI',()=>{
  const html=read('index.html');
  const resources=[...html.matchAll(/(?:src|href)="((?:js|css)\/[^"]+\.(?:js|css))"/g)].map(m=>m[1]);
  assert.ok(resources.length>10);
- assert.ok([...new Set(resources)].reduce((sum,p)=>sum+size(p),0)<=400*1024,'Uncompressed customer JS/CSS budget');
+ assert.ok([...new Set(resources)].reduce((sum,p)=>sum+size(p),0)<=450*1024,'Uncompressed customer JS/CSS budget (R18 scoped feature allowance)');
+ assert.ok([...new Set(resources)].reduce((sum,p)=>sum+gzipSync(read(p)).length,0)<=115*1024,'Compressed customer JS/CSS budget');
  assert.match(read('js/app.js'),/loading="lazy"/);
 });
 
