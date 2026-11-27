@@ -341,7 +341,7 @@
       const phone=document.querySelector('[data-restaurant-phone]')?.textContent.trim();
       const social=document.querySelector('[data-restaurant-instagram]')?.getAttribute('href');
       if((panel==='contact'||panel==='chat') && (demo || mode==='public' || mode==='offline') && phone)appendInfo(words.phone,phone,!demo && /^\+?[\d\s().-]{5,25}$/.test(phone)?'tel:'+phone.replace(/[^+\d]/g,''):null,'ltr');
-      if(panel==='contact' && (demo || mode==='public' || mode==='offline') && address)appendInfo(words.address,address,null);
+      if(panel==='contact' && (demo || mode==='public' || mode==='offline') && address)appendInfo(words.address,address,null,'auto');
       if((panel==='contact'||panel==='chat') && social && /^https?:\/\//i.test(social) && (mode==='public' || mode==='offline')){const url=getSafeExternalUrl(social);if(url)appendInfo(words.social,words.social,url);}
       if(panel==='contact'){
         if(!content.querySelector('.ramen-contact-item'))content.append(element('p',words.missing,'ramen-contact-note'));

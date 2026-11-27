@@ -30,6 +30,30 @@ async function ready(p){
   }
   await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));
  });
+ await check('Saved RAMEN address, contact dialog, navigation footer and cart brand stay localized',async()=>{
+  const legacy='اصفهان، میدان انقلاب، بر گذر چهارباغ عباسی، بعد از مادی نیاصرم، کافه رستوران رامن';
+  await p.evaluate(address=>localStorage.setItem('romano_restaurant',JSON.stringify({...restaurantConfig,name:'رامن',address})),legacy);
+  try{
+   await p.reload();await ready(p);
+   for(const lang of ['en','tr','ar','fa']){
+    await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+    const expected=await p.evaluate(()=>ROMANO_I18N.displayBrand(ROMANO_I18N.restaurant.address[ROMANO_I18N.language]));
+    assert.equal((await p.locator('.footer-address').innerText()).trim(),expected,lang+' footer address');
+    assert.equal(await p.locator('.footer-address').getAttribute('dir'),'auto');
+    const trigger=p.locator('[data-ramen-nav="contact"]');await trigger.focus();await trigger.press('Space');
+    const dialog=p.locator('#ramen-contact-dialog');await dialog.waitFor({state:'visible'});
+    assert.equal(await dialog.locator('.ramen-contact-item > span[dir="auto"]').textContent(),expected,lang+' contact address');
+    await p.keyboard.press('Escape');await p.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open);
+    await p.locator('#menu-toggle').click();
+    const nav=p.locator('.navigation-footer-meta > span');
+    assert.equal((await nav.innerText()).trim(),{fa:'منوی دیجیتال RAMEN',en:'RAMEN · DIGITAL MENU',tr:'RAMEN · DİJİTAL MENÜ',ar:'رامن · القائمة الرقمية'}[lang]);
+    await p.locator('#navigation-close').click();
+    await p.waitForFunction(()=>document.querySelector('#main-navigation').getAttribute('aria-hidden')==='true');
+    assert.equal(await p.locator('.commerce-drawer small').textContent(),'RAMEN');
+    assert.doesNotMatch(await p.locator('.footer-bottom span').textContent(),/romano|رومانو|رمانو/i);
+   }
+  }finally{await p.evaluate(()=>{localStorage.removeItem('romano_restaurant');ROMANO_I18N.setLanguage('fa',false);});await p.reload();await ready(p);}
+ });
  await check('Customer image sources reject unsupported protocols and URL credentials',async()=>{
   const result=await p.evaluate(()=>({
    rejected:['javascript:alert(1)','data:image/svg+xml,<svg/>','file:///etc/passwd','https://user:password@example.test/a.png','blob:'+location.origin+'/sample'].map(getSafeImageSource),

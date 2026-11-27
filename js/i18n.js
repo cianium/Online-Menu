@@ -255,13 +255,26 @@
         return value.replace(/\bromano\b/gi, brand).replace(/رومانو|رمانو/g, brand);
     }
 
+    // Match only the known sample address, including previously saved RAMEN variants.
+    // Custom branch addresses and their explicit translations are not replaced with sample data.
+    function addressKey(value) {
+        return typeof value === "string" ? value.normalize("NFKC").toLowerCase()
+            .replace(/\b(?:romano|ramen)\b|رومانو|رمانو|رامين|رامین|رامن/g, "brand")
+            .replace(/[يى]/g,"ی").replace(/ك/g,"ک").replace(/[\s\u200c\u200f\u200e،,]+/g," ").trim() : "";
+    }
+    const sampleAddressKeys = new Set(Object.values(restaurant.address).map(addressKey));
+
     function localizeRestaurant(config) {
         if (!config) return config;
         const fields = {};
         const own = entityTranslation(config, current) || {};
         ["name", "tagline", "description", "address"].forEach(key => {
+            const value = own[key] || config[key] || "";
+            if (key === "address" && value && sampleAddressKeys.has(addressKey(value))) {
+                fields[key] = displayBrand(restaurant.address[current]);
+                return;
+            }
             if (own[key]) { fields[key] = displayBrand(own[key]); return; }
-            const value = config[key] ?? "";
             const seed = restaurant[key]?.fa ?? "";
             // Known demo brand, not arbitrary tenant names.
             if (key === "name" && /^(?:ramen|romano|رامن|رامين|رمانو|رومانو)$/i.test(String(value).trim())) {
