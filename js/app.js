@@ -2515,12 +2515,22 @@ window.addEventListener("storage", event => {
         if (link) link.textContent = window.ROMANO_I18N?.ui?.("skipToMenu") || "رفتن به منو";
     }
 
+    // Coalesce scroll/resize work to one update per paint; keep initial state synchronous.
+    function frameUpdate(update) {
+        let pending = false;
+        return () => {
+            if (pending) return;
+            pending = true;
+            requestAnimationFrame(() => { pending = false; update(); });
+        };
+    }
+
     function initHeaderEffects() {
         const header = document.querySelector(".site-header");
         if (!header) return;
         const update = () => header.classList.toggle("is-scrolled", window.scrollY > 18);
         update();
-        window.addEventListener("scroll", update, { passive: true });
+        window.addEventListener("scroll", frameUpdate(update), { passive: true });
     }
 
     function initReadingProgress() {
@@ -2536,8 +2546,9 @@ window.addEventListener("storage", event => {
             bar.style.transform = `scaleX(${progress})`;
         };
         update();
-        window.addEventListener("scroll", update, { passive: true });
-        window.addEventListener("resize", update, { passive: true });
+        const schedule = frameUpdate(update);
+        window.addEventListener("scroll", schedule, { passive: true });
+        window.addEventListener("resize", schedule, { passive: true });
     }
 
     function getProducts() {
@@ -2574,7 +2585,7 @@ window.addEventListener("storage", event => {
             else if (direction < 0 && anchor - y >= 12) show(true);
             previous = y;
         };
-        window.addEventListener("scroll", update, { passive: true });
+        window.addEventListener("scroll", frameUpdate(update), { passive: true });
         button.addEventListener("click", () => window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
     }
 
@@ -2622,7 +2633,18 @@ window.addEventListener("storage", event => {
             const product = window.RomanoActiveProduct;
             return product && product.id ? product : null;
         };
-        const productUrl = product => { const url = new URL(location.href); url.hash = `product-${encodeURIComponent(product.id)}`; return url.href; };
+        const productUrl = product => {
+            const url = new URL(location.href);
+            // A product link is public; never forward table/session or payment callback data.
+            const context = new URLSearchParams();
+            for (const key of ["restaurant", "demoBranch"]) {
+                const value = url.searchParams.get(key);
+                if (value) context.set(key, value);
+            }
+            url.search = context.toString();
+            url.hash = `product-${encodeURIComponent(product.id)}`;
+            return url.href;
+        };
 
         // The core modal is the single source of truth. Do not cache the
         // selected product here: direct card clicks can bypass this wrapper.
