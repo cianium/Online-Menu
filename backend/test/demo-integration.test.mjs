@@ -55,15 +55,17 @@ test('Inactive branch guard rejects catalog writes without swallowing the error'
 function cartContext(mode='demo') {
   const source=read('js/commerce.js'),localStorage=storage();
   const ctx=vm.createContext({localStorage,menuDataMode:mode,menu:[{id:'a',price:10},{id:'b',price:20},{id:'zero',price:0}],saved:[],getProductById:id=>ctx.menu.find(p=>p.id===id&&p.active!==false)});
-  vm.runInContext('let cart;function cartKey(){return "cart"}function save(k,v){saved.push(JSON.stringify(v));}'+source.slice(source.indexOf('  function normalizeCart('),source.indexOf('  function localized('))+source.slice(source.indexOf('  function count()'),source.indexOf('  function announce(')),ctx);
+  vm.runInContext('let cart;const itemNotes=new Map();function cartKey(){return "cart"}function save(k,v){saved.push(JSON.stringify(v));}'+source.slice(source.indexOf('  function normalizeCart('),source.indexOf('  function localized('))+source.slice(source.indexOf('  function count()'),source.indexOf('  function announce(')),ctx);
   return ctx;
 }
 test('Cart validates saved quantities, removes unavailable products and updates totals',()=>{
   const ctx=cartContext();
   vm.runInContext('cart=normalizeCart(JSON.parse(\'{"a":2,"b":200,"missing":1,"zero":1,"bad":-1,"str":"2","__proto__":1}\'));reconcileCart()',ctx);
   assert.equal(vm.runInContext('JSON.stringify(cart)',ctx),'{"a":2,"b":99}');
+  vm.runInContext('itemNotes.set("a","No onions");itemNotes.set("b","Extra sauce")',ctx);
   ctx.menu[0].active=false;ctx.menu[1].price=30;
   vm.runInContext('reconcileCart()',ctx);
+  assert.equal(vm.runInContext('itemNotes.has("a")',ctx),false);assert.equal(vm.runInContext('itemNotes.get("b")',ctx),'Extra sauce');
   assert.equal(vm.runInContext('count()',ctx),99);assert.equal(vm.runInContext('total()',ctx),2970);
 });
 test('Unavailable and offline catalog do not erase saved cart',()=>{
