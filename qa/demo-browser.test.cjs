@@ -320,6 +320,35 @@ const readyCustomer = async page => {
       assert.equal(await branches.locator('#sample-branch-select option').count(),1);
       await customer.goto(link);await readyCustomer(customer);
       assert.equal(await customer.evaluate(()=>menuDataMode),'unavailable');
+      // Exercise the actual download and import controls in an independent browser profile.
+      const downloadPromise=admin.waitForEvent('download');
+      await admin.locator('[data-sample-export]').click();
+      const download=await downloadPromise;
+      const bytes=await require('node:fs/promises').readFile(await download.path());
+      const payload=JSON.parse(bytes.toString('utf8'));
+      assert.equal(payload.directory.find(row=>row.id===branchId)?.active,false);
+      assert.equal(JSON.parse(payload.records.find(row=>row.id===branchId).data.members)[0].orders.length,1);
+      const isolated=await browser.newContext({viewport:{width:1440,height:900},serviceWorkers:'block',reducedMotion:'reduce'});
+      try {
+        isolated.on('page',page=>page.on('pageerror',error=>errors.push(String(error))));
+        await isolated.route('**/*',route=>{
+          const url=new URL(route.request().url());
+          if(url.origin!==base.origin){externalRequests.push(url.origin);return route.abort('blockedbyclient');}
+          if(url.pathname.startsWith('/api/'))apiRequests.push(url.pathname);
+          return route.continue();
+        });
+        const restored=await isolated.newPage();
+        await restored.goto(new URL('admin/',base).href);await loginDemoAdmin(restored);
+        await restored.evaluate(()=>navigateTo('settings'));
+        assert.equal(await restored.evaluate(()=>RomanoDemoBackup.occupied(localStorage)),false);
+        await restored.locator('[data-sample-import]').setInputFiles({name:'branches.json',mimeType:'application/json',buffer:bytes});
+        await restored.locator('.rv4-confirm-dialog[open] [value=confirm]').click();
+        await restored.waitForFunction(id=>window.RomanoDemoBranches?.read().some(row=>row.id===id&&row.active===false),branchId);
+        await loginDemoAdmin(restored);
+        assert.equal(await restored.evaluate(id=>JSON.parse(localStorage.getItem('online_menu_demo_members_v1:romano:branch:'+id))[0].orders.length,branchId),1);
+        assert.equal(await restored.evaluate(()=>RomanoDemoMembers.read(localStorage).length),3);
+      } finally {await isolated.close();}
+      console.log('PASS: private all-branch backup downloads and restores archived order history in a fresh profile');
       await toggle.click();
       await admin.waitForFunction(id=>RomanoDemoBranches.read().find(row=>row.id===id)?.active===true,branchId);
       await branches.locator('#sample-branch-select').selectOption(branchId);
