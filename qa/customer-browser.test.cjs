@@ -229,7 +229,7 @@ async function ready(p){
   await p.locator('[data-commerce-close]').last().click();
   const add=cards.first().locator('.commerce-card-add');assert.equal(await add.isVisible(),true);await add.click();
   assert.equal(await p.locator('#commerce-checkout').isVisible(),true);
-  assert.equal(await cartButton.isVisible(),true);assert.equal(await p.locator('.ramen-bottom-cart-count').textContent(),await p.evaluate(()=>new Intl.NumberFormat(document.documentElement.lang).format(1)));
+  assert.equal(await cartButton.isVisible(),true);assert.equal(await p.locator('#r17-cart-feedback').evaluate(n=>n.classList.contains('is-visible')),true);assert.ok(await p.locator('#r17-cart-feedback strong').textContent());assert.equal(await p.locator('.ramen-bottom-cart-count').textContent(),await p.evaluate(()=>new Intl.NumberFormat(document.documentElement.lang).format(1)));
   await cartButton.click();assert.equal(await p.locator('#commerce-drawer').getAttribute('aria-hidden'),'false');
   await check('Cart drawer traps keyboard focus and restores its opener',async()=>{
    await p.keyboard.press('Shift+Tab');
@@ -301,8 +301,8 @@ async function ready(p){
     assert.equal(await p.locator('#menu-filter-panel').isVisible(),false);
     for(const trigger of [searchToggle,filterToggle]){const r=await trigger.boundingBox();assert.ok(r&&r.width>=44&&r.height>=44,JSON.stringify({lang,width,id:await trigger.getAttribute("id"),rect:r}));assert.ok(await trigger.getAttribute('aria-label'));}
     await p.evaluate(()=>window.scrollBy({top:260,behavior:'instant'}));
-    const pinned=await p.evaluate(()=>{const h=document.querySelector('.site-header').getBoundingClientRect(),bar=document.querySelector('.menu-browser').getBoundingClientRect();return{gap:bar.top-h.bottom,height:bar.height}});
-    assert.ok(Math.abs(pinned.gap)<=2,JSON.stringify({lang,width,pinned}));assert.ok(pinned.height<180);
+    const pinned=await p.evaluate(()=>{const h=document.querySelector('.site-header').getBoundingClientRect(),bar=document.querySelector('.menu-browser').getBoundingClientRect();return{gap:bar.bottom-h.bottom,height:bar.height,inside:document.querySelector('.site-header').contains(document.querySelector('.menu-browser'))}});
+    assert.ok(pinned.inside&&Math.abs(pinned.gap)<=2,JSON.stringify({lang,width,pinned}));assert.ok(pinned.height<180);
     const grid=await cards.first().evaluate(n=>{const rail=n.parentElement,style=getComputedStyle(rail);return {flow:style.gridAutoFlow,overflow:style.overflowX,scroll:rail.scrollWidth,client:rail.clientWidth,card:n.getBoundingClientRect().width};});
     assert.equal(grid.flow,'column');assert.equal(grid.overflow,'auto');assert.ok(grid.card<=grid.client);if(width<=767)assert.ok(grid.scroll>grid.client);
     await openSearch();await p.locator('#rv4-menu-search').fill('xyz$&<test>');
@@ -314,8 +314,10 @@ async function ready(p){
   }
   await p.setViewportSize({width:390,height:844});
  });
- await check('Featured signature and product rail do not duplicate the same dish',async()=>{
-  const ids=await p.evaluate(()=>[document.querySelector('[data-signature-product]')?.dataset.signatureProduct,...Array.from(document.querySelectorAll('#featured-products .product-card'),n=>n.dataset.productId)].filter(Boolean));
+ await check('All featured dishes use the same card template without duplicates',async()=>{
+  const ids=await p.evaluate(()=>Array.from(document.querySelectorAll('#featured-products .product-card'),n=>n.dataset.productId));
+  assert.equal(await p.locator('#signature-dish').count(),0);
+  assert.equal(await p.locator('#featured-products .product-card .product-card-button').count(),ids.length);
   assert.equal(ids.length,new Set(ids).size);assert.equal(ids.length,await p.evaluate(()=>getFeaturedProducts().length));
  });
  await check('Category shortcut restores results even after a conflicting search',async()=>{
@@ -374,8 +376,9 @@ async function ready(p){
    assert.equal(headerDirection,lang==='fa'||lang==='ar'?'rtl':'ltr','Header direction mismatch '+lang+'/'+width);
    const brandParts=await p.locator('.brand-logo, .brand-content').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right,display:getComputedStyle(node).display,width:r.width};}));
    assert.equal(brandParts.length,2);
-   if(width<=360)assert.equal(brandParts[0].display,'none','Compact header intentionally hides logo at '+lang+'/'+width);
-   else if(lang==='fa'||lang==='ar')assert.ok(brandParts[0].left>brandParts[1].left,'RTL brand logo must follow wordmark '+lang+'/'+width);
+   assert.notEqual(brandParts[0].display,'none','Brand mark must remain visible');
+   assert.equal(await p.locator('#romano-language-toggle .language-toggle-icon').isVisible(),true);
+   if(lang==='fa'||lang==='ar')assert.ok(brandParts[0].left>brandParts[1].left,'RTL brand logo must follow wordmark '+lang+'/'+width);
    else assert.ok(brandParts[0].left<brandParts[1].left,'LTR brand logo must precede wordmark '+lang+'/'+width);
    const wordmark=await p.locator('.brand-name').evaluate(node=>{const range=document.createRange();range.selectNodeContents(node);return {text:node.textContent.trim(),textWidth:range.getBoundingClientRect().width,clientWidth:node.clientWidth};});
    assert.ok(wordmark.clientWidth>0&&wordmark.textWidth<=wordmark.clientWidth+1,'Restaurant wordmark is clipped '+lang+'/'+width+': '+JSON.stringify(wordmark));
@@ -456,7 +459,10 @@ async function ready(p){
  });
  await check('Mobile back-to-top control stays clear of bottom navigation',async()=>{
   await p.setViewportSize({width:390,height:900});
-  await p.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));
+  await p.evaluate(()=>window.scrollTo({top:document.body.scrollHeight,behavior:'instant'}));
+  await p.waitForTimeout(100);
+  assert.equal(await p.locator('.rv4-back-top').evaluate(n=>n.classList.contains('is-visible')),false);
+  await p.evaluate(()=>window.scrollBy({top:-140,behavior:'instant'}));
   await p.waitForFunction(()=>document.querySelector('.rv4-back-top')?.classList.contains('is-visible'));
   const topBox=await p.locator('.rv4-back-top').boundingBox();
   const navBox=await p.locator('.ramen-bottom-nav').boundingBox();
