@@ -25,7 +25,7 @@
 .connect-message{align-self:flex-end;max-width:min(88%,480px);min-width:0}
 .connect-bubble{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;padding:10px 14px;background:#d6ae70;color:#21180d;border-radius:16px;border-end-end-radius:5px;line-height:1.65;font-size:14px}
 .connect-meta{flex-wrap:wrap;gap:6px;font-size:10px;color:#bfb3a4;margin-block-start:5px}
-.connect-bottom{flex:none;padding:8px 18px calc(10px + env(safe-area-inset-bottom));border-top:1px solid #ffffff20;background:#11100e}
+.connect-bottom{flex:none;min-height:0;max-height:62dvh;overflow:auto;padding:8px 18px calc(10px + env(safe-area-inset-bottom));border-top:1px solid #ffffff20;background:#11100e}
 .connect-quick-label{font-size:11px;color:#c4b8a7;display:block;margin-block-end:4px}
 .connect-chips{display:flex;gap:6px;overflow-x:auto;overscroll-behavior-inline:contain;padding-block-end:3px}
 .connect-chip{flex:none;white-space:normal;max-width:230px;color:#e2c28d;border-color:#c9a46a45}
@@ -45,7 +45,7 @@
  .connect-dialog .ramen-contact-head{padding-block-start:calc(8px + env(safe-area-inset-top))}
  .connect-dialog .ramen-contact-head,.connect-top,.connect-timeline,.connect-bottom{padding-inline:12px}
 }
-@media(max-height:540px){.connect-top{padding-block:5px}.connect-dialog .ramen-contact-head{padding-block-end:5px}.connect-symbol{display:none}.connect-bottom{padding-block-start:4px}.connect-notice{max-height:3.1em;overflow:auto}.connect-timeline{padding-block:6px}}
+@media(max-height:540px){.connect-top{padding-block:5px}.connect-dialog .ramen-contact-head{padding-block-end:5px}.connect-symbol{display:none}.connect-bottom{padding-block-start:4px}.connect-notice{max-height:none;overflow:visible}.connect-timeline{padding-block:6px}}
 @media(prefers-reduced-motion:reduce){.ramen-contact-dialog.connect-dialog[open]{animation:none!important;scroll-behavior:auto}}
 
 .connect-message.is-staff{align-self:flex-start}.connect-message.is-staff .connect-bubble{background:#211d18;color:#f2ece3;border:1px solid #ffffff25;border-end-end-radius:16px;border-end-start-radius:5px}
@@ -53,7 +53,7 @@
 /* Reuse the same service controls in the contact dialog and chat. */
 .connect-dialog .connect-service-compact{display:grid;gap:4px;padding:0;border:0;background:transparent;margin:0 0 5px;min-width:0}
 .connect-dialog .connect-service-compact h3{font-size:12px;margin:0}
-.connect-dialog .connect-service-compact .hp-service-notice,.connect-dialog .connect-service-compact .hp-service-live{font-size:11px;line-height:1.4;margin:0;max-height:2.8em;overflow:auto}
+.connect-dialog .connect-service-compact .hp-service-notice,.connect-dialog .connect-service-compact .hp-service-live{font-size:11px;line-height:1.4;margin:0;max-height:none;overflow:visible}
 .connect-dialog .connect-service-compact .hp-service-live:empty{display:none}
 .connect-dialog .connect-service-compact .hp-service-grid{display:flex;gap:6px;overflow-x:auto;overscroll-behavior-inline:contain;padding:2px 0 5px}
 .connect-dialog .connect-service-compact .hp-service-action{flex:0 0 auto;min-width:84px;max-width:160px;min-height:44px;padding:6px 9px;display:flex;align-items:center;flex-direction:column;gap:3px;font-size:11px;text-align:center}
@@ -61,4 +61,4 @@
 .connect-dialog .connect-service-compact .hp-service-detail{font-size:10px;line-height:1.3}
 .connect-order-local{font-size:11px;line-height:1.4;color:#c4b8a7;margin:5px 0 0}
 .connect-order-local[hidden]{display:none}
-@media(max-height:650px){.connect-dialog .connect-service-compact .hp-service-icon{display:none}.connect-dialog .connect-service-compact .hp-service-action{min-height:44px}.connect-dialog .connect-service-compact .hp-service-notice{max-height:1.4em}.connect-dialog .connect-bottom{max-height:62dvh;overflow:auto}}
+@media(max-height:650px){.connect-dialog .connect-service-compact .hp-service-icon{display:none}.connect-dialog .connect-service-compact .hp-service-action{min-height:44px}.connect-dialog .connect-service-compact .hp-service-notice{max-height:none}.connect-dialog .connect-bottom{max-height:62dvh;overflow:auto}}

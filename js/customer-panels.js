@@ -14,6 +14,7 @@
     const key= model.requestPrefix+context.code;
     const status=element("p",enabled?h("local"):demo&&!context.code?h("selectTable")+" "+h("local"):demo?panelText().storageError:h("unconnected"),"hp-service-notice");
     const grid=element("div",null,"hp-service-grid");
+    if(compact){grid.tabIndex=0;grid.setAttribute("role","group");grid.setAttribute("aria-label",h("quick"));}
     const live=element("p",null,"hp-service-live");live.setAttribute("role","status");
     function readRequests() {
       try{return enabled?model.requestDetails(localStorage,context.code):{};}catch{live.textContent=panelText().storageError;return null;}

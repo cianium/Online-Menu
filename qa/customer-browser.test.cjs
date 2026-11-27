@@ -121,6 +121,7 @@ async function ready(p){
    assert.ok((await dialog.locator('h2').innerText()).trim());
    await dialog.locator('#connect-message-input').waitFor({state:'visible'});
    assert.equal(await dialog.evaluate(d=>d.classList.contains('connect-dialog')),true);
+   for(const selector of ['.connect-timeline','.connect-chips','.connect-bottom','.connect-service-compact .hp-service-grid'])assert.equal(await dialog.locator(selector).getAttribute('tabindex'),'0');
    await p.waitForFunction(()=>Boolean(document.querySelector('#connect-message-input'))&&!document.querySelector('#connect-message-input').disabled);
    await dialog.locator('[data-connect-contact]').click();
    assert.equal(await dialog.locator('.hp-service-action').count(),4);

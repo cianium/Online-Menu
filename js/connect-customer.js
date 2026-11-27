@@ -218,6 +218,8 @@ const customerChat=function customerChat(core,copy,engine,root){
       meta.append(node("span",m.own?w.you:liveMode?w.liveStaff:w.staff),time,node("span",languageName),node("span",liveMode?w.serverSaved:w.saved));row.append(body,meta);return row;
     }
     const bottom=node("div",null,"connect-bottom"),quick=node("div",null,"connect-quick"),chips=node("div",null,"connect-chips");
+    bottom.tabIndex=0;bottom.setAttribute("role","region");bottom.setAttribute("aria-label",w.input);
+    chips.tabIndex=0;chips.setAttribute("role","group");chips.setAttribute("aria-label",w.quick);
     quick.setAttribute("role","group");quick.setAttribute("aria-label",w.quick);quick.append(node("span",w.quick,"connect-quick-label"),chips);
     const status=node("p",eligible?(liveMode?w.connecting:w.loading):liveMode?w.scanAgain:"","connect-status");status.setAttribute("role","status");
     const form=node("form",null,"connect-compose"),input=node("textarea",null,"connect-input");
