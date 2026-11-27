@@ -169,6 +169,9 @@ async function measure(browser,surface) {
           await scan(customer,'customer',lang,width,height);
           await scan(admin,'admin-dashboard',lang,width,height);
         }
+        await customer.evaluate(()=>navigateCustomerView("menu",{focus:false}));
+        for(const [width,height] of [[390,844],[1440,900]])await scan(customer,'customer-menu',lang,width,height);
+        await customer.evaluate(()=>navigateCustomerView("home",{focus:false}));
         await customer.setViewportSize({width:390,height:844});
         const contact=customer.locator('[data-ramen-nav="contact"]');
         assert.equal(await contact.getAttribute('role'),'button');
@@ -195,7 +198,7 @@ async function measure(browser,surface) {
         await admin.locator('.connect-inbox-toolbar').waitFor({state:'visible'});
         for(const [width,height] of [[390,844],[1440,900]])await scan(admin,'admin-connect',lang,width,height);
       }
-      await customer.evaluate(()=>ROMANO_I18N.setLanguage('en',false));
+      await customer.evaluate(()=>{ROMANO_I18N.setLanguage('en',false);navigateCustomerView("menu",{focus:false});});
       for(const width of [390,1440]){
         await customer.setViewportSize({width,height:844});
         await customer.locator('#menu .menu-category-products').first().scrollIntoViewIfNeeded();

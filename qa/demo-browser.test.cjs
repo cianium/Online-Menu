@@ -34,6 +34,12 @@ const readyCustomer = async page => {
     assert.equal(await customer.evaluate(() => menuDataMode), 'demo');
     const cards = customer.locator('#menu .product-card');
     assert.equal(await cards.count(), 21);
+    assert.equal(await customer.locator('#menu').isVisible(),false);
+    await customer.locator('.hero-button').click();
+    await customer.locator('#menu').waitFor({state:'visible'});
+    assert.equal(await customer.locator('#home').isVisible(),false);
+    await customer.evaluate(()=>navigateCustomerView("home"));
+    assert.equal(await customer.locator('#menu').isVisible(),false);
     await admin.goto(new URL('admin/',base).href);
     await loginDemoAdmin(admin);
     assert.equal(await admin.locator('#admin-mode-banner').isVisible(), true);
