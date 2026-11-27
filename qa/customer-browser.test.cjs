@@ -17,6 +17,30 @@ async function ready(p){
  const p=await ctx.newPage();await p.goto(base);await ready(p);
  const cards=p.locator('#menu .product-card');
  await check('Static demo boots with 21 products',async()=>{assert.equal(await cards.count(),21);assert.equal(await p.evaluate(()=>menuDataMode),'demo')});
+ await check('Customer image sources reject unsupported protocols and URL credentials',async()=>{
+  const result=await p.evaluate(()=>({
+   rejected:['javascript:alert(1)','data:image/svg+xml,<svg/>','file:///etc/passwd','https://user:password@example.test/a.png','blob:'+location.origin+'/sample'].map(getSafeImageSource),
+   local:getSafeImageSource('assets/images/hero/hero.jpg'),
+   data:getSafeImageSource('data:image/png;base64,AA==')
+  }));
+  assert.deepEqual(result.rejected,['','','','','']);
+  assert.ok(result.local.endsWith('/assets/images/hero/hero.jpg'));
+  assert.equal(result.data,'data:image/png;base64,AA==');
+ });
+ await check('Customer navigation honors the motion preference for every locale',async()=>{
+  try{
+   for(const lang of ['fa','ar','en','tr']){
+    await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+    for(const preference of ['reduce','no-preference']){
+     await p.emulateMedia({reducedMotion:preference});
+     assert.equal(await p.evaluate(()=>customerScrollBehavior()),preference==='reduce'?'auto':'smooth');
+    }
+   }
+  }finally{
+   await p.emulateMedia({reducedMotion:'no-preference'});
+   await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));
+  }
+ });
  await check('Bottom navigation keeps the requested physical order and opens an independent contact dialog',async()=>{
   const expected=['cart','menu','home','featured','contact'];
   for(const lang of ['fa','ar','en','tr']){
@@ -349,7 +373,7 @@ async function ready(p){
  await check('Compact catalog toolbar, disclosures and card layout remain accessible in four languages',async()=>{
   for(const lang of ['fa','ar','en','tr']){
    await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
-   for(const width of [320,390,768,1440]){
+   for(const width of [320,390,768,1440,1920]){
     await p.setViewportSize({width,height:844});
     await p.evaluate(()=>document.querySelector('#menu').scrollIntoView({block:'start',behavior:'instant'}));
     await p.waitForFunction(()=>document.querySelector('#menu').style.getPropertyValue('--browse-bar-height'));
