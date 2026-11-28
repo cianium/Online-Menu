@@ -1,3 +1,14 @@
+.hp-service-notice,.hp-service-live{margin:8px 0;color:#c4b8a7;font-size:12px;line-height:1.6}
+.hp-services{padding-block:6px}
+.hp-service-live:empty{display:none}
+.hp-service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.hp-service-action{display:grid;justify-items:start;gap:5px;min-height:88px;padding:12px;border:1px solid #d6ae7030;border-radius:14px;color:#f7f0e7;background:#ffffff05;font:inherit;text-align:start;cursor:pointer;overflow-wrap:anywhere}
+.hp-service-action strong{font-size:13px}
+.hp-service-icon{color:#ebc98e;font-size:22px;line-height:1}
+.hp-service-action[aria-pressed="true"]{border-color:#d6ae70;background:#d6ae7018}
+.hp-service-detail{color:#ebc98e;font-size:11px}
+.hp-service-action:disabled{color:#b7ad9f;cursor:not-allowed;background:#ffffff03}
+.hp-service-icon{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 /* RAMEN Connect: scoped dark/gold customer dialog. */
 .ramen-contact-dialog.connect-dialog[open]{display:flex;flex-direction:column;width:min(640px,calc(100% - 32px));height:min(760px,calc(100dvh - 32px));max-height:none;max-width:none;overflow:hidden;padding:0;border-radius:24px;background:#090807;color:#f2ece3}
 .connect-dialog .ramen-contact-head{padding:12px 18px;margin:0;border-bottom:1px solid #ffffff20;flex:none;background:#171410}
@@ -62,3 +73,42 @@
 .connect-order-local{font-size:11px;line-height:1.4;color:#c4b8a7;margin:5px 0 0}
 .connect-order-local[hidden]{display:none}
 @media(max-height:650px){.connect-dialog .connect-service-compact .hp-service-icon{display:none}.connect-dialog .connect-service-compact .hp-service-action{min-height:44px}.connect-dialog .connect-service-compact .hp-service-notice{max-height:none}.connect-dialog .connect-bottom{max-height:62dvh;overflow:auto}}
+
+/* R27 — messaging-first layout with one compact composer and a floating dial action. */
+.connect-content{position:relative}.connect-top{padding-block:9px}.connect-badge{font-size:10px}.connect-notice{font-size:11px;margin-block-start:5px}
+.connect-timeline{background:radial-gradient(ellipse at 50% 0,#d6ae7008,transparent 65%);padding-block-end:68px}
+.connect-call{position:absolute;inset-inline-end:16px;inset-block-start:calc(100% - 200px);z-index:2;width:44px;height:44px;display:grid;place-items:center;border-radius:50%;border:1px solid #d6ae7060;background:#292117;color:#f2d29a;box-shadow:0 5px 18px #0006;text-decoration:none}
+.connect-call svg,.connect-send svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+.connect-call:disabled{opacity:.5;cursor:not-allowed}.connect-bottom{position:relative;max-height:45dvh;padding-block-start:7px}
+.connect-compose{display:flex;align-items:flex-end;gap:8px;border:1px solid #ffffff28;background:#211d18;border-radius:28px;padding:4px;margin-block-start:8px}
+.connect-input{flex:1;border:0;background:transparent;resize:none;min-height:44px;max-height:100px;border-radius:24px;padding:10px 12px}
+.connect-send{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;padding:0;border-radius:50%}
+.connect-compose-footer{justify-content:flex-end;min-height:0}.connect-count{font-size:10px}
+.connect-quick-label{font-size:11px}.connect-chips{align-items:flex-start;gap:6px;scrollbar-width:thin}.connect-chip{border-radius:999px;min-height:44px;max-width:240px;white-space:nowrap}
+.connect-dialog .connect-service-compact{display:contents}.connect-dialog .connect-service-compact .hp-service-grid{display:contents}
+.connect-dialog .connect-service-compact .hp-service-action{display:flex;flex-direction:row;align-items:center;gap:4px;max-width:none;border-radius:999px;padding:7px 10px}
+.connect-dialog .connect-service-compact .hp-service-notice,.connect-dialog .connect-service-compact .hp-service-live{max-width:180px;flex:0 0 180px;align-self:center}
+.connect-reset{min-height:44px;font-size:11px}.connect-dialog .ramen-contact-head .ramen-contact-close{width:44px;height:44px}
+@media(max-height:520px){.connect-call{inset-block-start:calc(100% - 148px)}.connect-bottom{max-height:56dvh}}
+
+.connect-conversation{position:relative;display:flex;flex:1;min-height:0;min-width:0;flex-direction:column}.connect-call{inset-block-start:auto;inset-block-end:12px;inset-inline-end:16px}.connect-timeline{flex:1}.connect-compose-footer{padding-inline:8px}
+
+.r27-profile-page[open]{inset:0;margin:auto;width:min(680px,100%);height:min(840px,100dvh);max-height:none;display:flex;flex-direction:column;overflow:hidden}
+.r27-profile-page .ramen-contact-content{overflow:auto;flex:1;min-height:0;display:grid;align-content:start;gap:12px}
+.r27-profile-identity{display:flex;gap:14px;align-items:center;padding:18px;border:1px solid #d6ae7040;border-radius:18px;background:linear-gradient(135deg,#292117,#15120f)}
+.r27-profile-avatar{display:grid;place-items:center;flex:0 0 52px;height:52px;border-radius:50%;background:#d6ae7025;color:#f1d5a0;font-size:24px;font-weight:700}
+.r27-profile-identity>div{display:grid;gap:4px;min-width:0}.r27-profile-identity strong{font-size:20px;overflow-wrap:anywhere}.r27-profile-identity small{font-size:12px;color:#c9bca9}
+.r27-profile-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.r27-profile-stats>div{display:grid;gap:4px;border:1px solid #ffffff20;border-radius:14px;padding:12px}.r27-profile-stats strong{color:#edcc92;font-size:20px}
+
+@media(max-width:720px){.r27-profile-page[open]{width:100%;height:100dvh;border-radius:0;border:0}}
+
+/* Feedback and account history are loaded only when a customer panel opens. */
+.feedback-rating { display:flex; flex-wrap:wrap; gap:8px; border:0; padding:0; }
+.feedback-rating legend { margin-block-end:8px; }
+.feedback-rating label { display:flex; align-items:center; justify-content:center; gap:6px; min-width:44px; min-height:44px; padding:6px; border:1px solid #ffffff24; border-radius:8px; }
+.feedback-rating input { accent-color:#d6ae70; }
+.feedback-save:disabled { opacity:.5; cursor:not-allowed; }
+.feedback-comment { display:grid; gap:8px; font-size:14px; }
+.feedback-comment textarea { width:100%; min-width:0; resize:vertical; border:1px solid #ffffff30; border-radius:10px; background:#171510; color:inherit; padding:10px; font:inherit; }
+.feedback-comment textarea:focus-visible { outline:2px solid #d6ae70; outline-offset:2px; }
+.hp-history-notes{white-space:pre-wrap;overflow-wrap:anywhere;color:#c4b8a7}

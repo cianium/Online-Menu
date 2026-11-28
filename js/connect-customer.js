@@ -16,7 +16,9 @@ const copy={
     "question": "درباره منو سوال دارم.",
     "input": "متن پیام",
     "placeholder": "پیام خود را بنویسید…",
-    "send": "ثبت پیام آزمایشی",
+    "send": "ارسال پیام",
+    "napkin": "لطفاً دستمال بیاورید.",
+    "phone": "تماس تلفنی",
     "saved": "ذخیره محلی؛ ارسال آنلاین نشده",
     "error": "دسترسی به پیام‌ها ممکن نیست. دوباره تلاش کنید.",
     "ended": "مکالمه پایان یافته است. گفت‌وگوی جدید را شروع کنید.",
@@ -59,7 +61,9 @@ const copy={
     "question": "I have a question about the menu.",
     "input": "Message",
     "placeholder": "Write your message…",
-    "send": "Save demo message",
+    "send": "Send message",
+    "napkin": "Could we have some napkins, please?",
+    "phone": "Call restaurant",
     "saved": "Saved locally · not sent online",
     "error": "Could not access messages. Try again.",
     "ended": "This conversation has ended. Start a new one.",
@@ -102,7 +106,9 @@ const copy={
     "question": "Menü hakkında bir sorum var.",
     "input": "Mesaj",
     "placeholder": "Mesajınızı yazın…",
-    "send": "Demo mesajını kaydet",
+    "send": "Mesaj gönder",
+    "napkin": "Peçete alabilir miyiz?",
+    "phone": "Restoranı ara",
     "saved": "Yerel kayıt · çevrimiçi gönderilmedi",
     "error": "Mesajlara erişilemedi. Tekrar deneyin.",
     "ended": "Sohbet sona erdi. Yeni bir sohbet başlatın.",
@@ -145,7 +151,9 @@ const copy={
     "question": "لدي سؤال عن القائمة.",
     "input": "نص الرسالة",
     "placeholder": "اكتب رسالتك…",
-    "send": "حفظ رسالة تجريبية",
+    "send": "إرسال الرسالة",
+    "napkin": "يرجى إحضار المناديل.",
+    "phone": "الاتصال بالمطعم",
     "saved": "محفوظ محليًا · لم يُرسل عبر الإنترنت",
     "error": "تعذر الوصول إلى الرسائل. حاول مجددًا.",
     "ended": "انتهت المحادثة. ابدأ محادثة جديدة.",
@@ -185,7 +193,7 @@ const customerChat=function customerChat(core,copy,engine,root){
   function clear(){suspend();draft="";draftScope=null;pending=null;try{engine.forget();}catch{/* never fall back to memory */}}
   function render(host,options){
     suspend();const run=generation;
-    const {language,mode,branchId,context,brand,onContact,onLanguage,onServices}=options,w=words(language);
+    const {language,mode,branchId,context,brand,onServices,phoneUrl}=options,w=words(language);
     const liveMode=mode==="public",liveClient=root.RomanoConnectLive;
     const proof=liveMode?liveClient?.binding():null;
     const eligible=(mode==="demo"&&typeof branchId==="string"||liveMode&&Boolean(proof))&&typeof root.crypto?.randomUUID==="function";
@@ -199,15 +207,12 @@ const customerChat=function customerChat(core,copy,engine,root){
     const head=node("div",null,"connect-top"),summary=node("div",null,"connect-summary"),identity=node("div",null,"connect-identity");
     const avatar=node("span","R","connect-avatar");avatar.setAttribute("aria-hidden","true");
     const details=node("div",null,"connect-identity-text"),name=node("strong",brand||"RAMEN");name.dir="auto";
-    details.append(name,node("span",context,"connect-context"));identity.append(avatar,details);
+    details.append(name);if(context)details.append(node("span",context,"connect-context"));identity.append(avatar,details);
     const connection=node("span",liveMode?(eligible?w.connecting:w.offline):eligible?w.demo:w.offline,"connect-badge");connection.setAttribute("role","status");summary.append(identity,connection);
-    const toolbar=node("div",null,"connect-toolbar"),contact=btn(w.contact,"connect-secondary",onContact);
-    contact.dataset.connectContact="";
-    const selector=node("select",null,"connect-language");selector.setAttribute("aria-label",w.language);
-    for(const [value,label] of [["fa","فارسی"],["ar","العربية"],["en","English"],["tr","Türkçe"]]){const o=node("option",label);o.value=value;selector.append(o);}
-    selector.value=language;selector.addEventListener("change",()=>onLanguage(selector.value));toolbar.append(contact,selector);
+    const call=node(phoneUrl?"a":"button",null,"connect-call");if(phoneUrl)call.href=phoneUrl;else{call.type="button";call.disabled=true;}
+    call.setAttribute("aria-label",w.phone);call.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3H4a1 1 0 0 0-1 1c0 9 8 17 17 17a1 1 0 0 0 1-1v-3l-5-2-2 2a13 13 0 0 1-7-7l2-2-2-5Z"/></svg>';
     const orderStatus=node("p",null,"connect-order-local");orderStatus.hidden=true;
-    head.append(summary,toolbar,node("p",liveMode?(eligible?w.liveNotice:w.scanAgain):eligible?w.notice:w.fallback,"ramen-contact-note connect-notice"),orderStatus);
+    head.append(summary,node("p",liveMode?(eligible?w.liveNotice:w.scanAgain):eligible?w.notice:w.fallback,"ramen-contact-note connect-notice"),orderStatus);
     const timeline=node("div",null,"connect-timeline");timeline.setAttribute("role","log");timeline.setAttribute("aria-label",w.log);timeline.setAttribute("aria-live","polite");timeline.tabIndex=0;
     const empty=node("div",null,"connect-empty"),symbol=node("span","···","connect-symbol");symbol.setAttribute("aria-hidden","true");empty.append(symbol,node("h3",w.hello),node("p",liveMode?(eligible?w.liveNotice:w.scanAgain):eligible?w.hint:w.fallback));timeline.append(empty);
     function bubble(m){
@@ -223,11 +228,11 @@ const customerChat=function customerChat(core,copy,engine,root){
     quick.setAttribute("role","group");quick.setAttribute("aria-label",w.quick);quick.append(node("span",w.quick,"connect-quick-label"),chips);
     const status=node("p",eligible?(liveMode?w.connecting:w.loading):liveMode?w.scanAgain:"","connect-status");status.setAttribute("role","status");
     const form=node("form",null,"connect-compose"),input=node("textarea",null,"connect-input");
-    input.id="connect-message-input";input.rows=2;input.maxLength=core.maxText*2;input.dir="auto";input.setAttribute("aria-label",w.input);input.placeholder=w.placeholder;input.value=eligible?draft:"";
-    const foot=node("div",null,"connect-compose-footer"),count=node("span",null,"connect-count"),send=node("button",w.send,"connect-send");send.type="submit";count.dir="ltr";
+    input.id="connect-message-input";input.rows=1;input.maxLength=core.maxText*2;input.dir="auto";input.setAttribute("aria-label",w.input);input.placeholder=w.placeholder;input.value=eligible?draft:"";
+    const foot=node("div",null,"connect-compose-footer"),count=node("span",null,"connect-count"),send=node("button",null,"connect-send");send.type="submit";send.setAttribute("aria-label",w.send);send.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 19 9-19 9 4-9-4-9Z"/><path d="M7 12h15"/></svg>';count.dir="ltr";
     const messageLength=()=>Array.from(input.value.trim()).length;
     const valid=()=>enabled&&!busy&&messageLength()>0&&messageLength()<=core.maxText;
-    function update(){count.textContent=messageLength()+" / "+core.maxText;input.disabled=!enabled||busy;send.disabled=!valid();for(const c of chips.children)c.disabled=!enabled||busy;reset.disabled=busy;retry.disabled=busy;selector.disabled=busy;contact.disabled=busy;}
+    function update(){count.textContent=messageLength()+" / "+core.maxText;input.disabled=!enabled||busy;send.disabled=!valid();for(const c of chips.querySelectorAll("button:not(.hp-service-action)"))c.disabled=!enabled||busy;reset.disabled=busy;retry.disabled=busy;}
     function display(data){
       const v=data.conversation?.version??0;
       if(v<lastVersion)return;
@@ -264,7 +269,7 @@ const customerChat=function customerChat(core,copy,engine,root){
       catch(error){if(current()&&!busy)showError(error);return false;}
       finally{refreshing=false;}
     }
-    for(const key of ["question","orderQuestion"]){const chip=btn(w[key],"connect-chip",()=>{if(!enabled||busy)return;const next=(input.value.trim()?input.value.trim()+"\n":"")+w[key];if(Array.from(next.trim()).length>core.maxText){status.textContent=w.invalid;return;}input.value=next;draft=next;pending=null;update();input.focus();});chips.append(chip);}
+    for(const key of (liveMode?["waiter","bill","water","napkin","question","orderQuestion"]:["question","orderQuestion"])){const chip=btn(w[key],"connect-chip",()=>{if(!enabled||busy)return;const next=(input.value.trim()?input.value.trim()+"\n":"")+w[key];if(Array.from(next.trim()).length>core.maxText){status.textContent=w.invalid;return;}input.value=next;draft=next;pending=null;update();input.focus();});chips.append(chip);}
     input.addEventListener("input",()=>{draft=input.value;pending=null;update();});
     form.addEventListener("submit",async event=>{
       event.preventDefault();if(!valid()||!session)return;
@@ -277,10 +282,10 @@ const customerChat=function customerChat(core,copy,engine,root){
       }catch(error){if(current()){if(error.message==="CONNECT_INVALID_MESSAGE"){status.textContent=w.invalid;pending=null;}else showError(error);}}
       finally{busy=false;if(current())update();else root.setTimeout(()=>{if(activeRefresh)activeRefresh();},0);}
     });
-    foot.append(count,send);form.append(input,foot);
+    foot.append(count);form.append(input,send);
     const retry=btn(w.retry,"connect-secondary",()=>refresh());retry.hidden=true;
     const reset=btn(w.newChat,"connect-reset",()=>{if(!eligible||busy)return;if((draft||timeline.querySelector(".connect-message"))&&!root.confirm(w.confirm))return;try{engine.newConversation();}catch(error){showError(error);return;}draft="";pending=null;render(host,options);});
-    reset.hidden=!eligible||liveMode;if(typeof onServices==="function")onServices(bottom);bottom.append(quick,status,form,retry,reset);host.append(head,timeline,bottom);update();
+    reset.hidden=!eligible||liveMode;if(typeof onServices==="function"&&!liveMode)onServices(chips);bottom.append(quick,status,form,foot,retry,reset);const conversation=node("div",null,"connect-conversation");conversation.append(timeline,call);host.append(head,conversation,bottom);update();
     if(eligible){
       if(liveMode){
         const poll=liveClient.createPoller(refresh,{interval:5000,maxDelay:30000,visible:()=>current()&&doc.visibilityState!=="hidden"});

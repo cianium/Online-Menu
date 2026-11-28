@@ -35,7 +35,8 @@
       pending.set(path, job); return job;
     }
     const loadLive = () => asset("js/connect-live.js", () => Boolean(window.RomanoConnectLive));
-    const loadPanels = () => asset("js/customer-panels.js", () => Boolean(window.RomanoCustomerPanels));
+    const loadPanelStyle=()=>asset("css/connect.css",()=>[...document.styleSheets].some(sheet=>sheet.href===new URL("css/connect.css",base).href),true);
+    const loadPanels = () => Promise.all([loadPanelStyle(),asset("js/customer-panels.js", () => Boolean(window.RomanoCustomerPanels))]);
     async function loadEngine() {
       await asset("js/connect-core.js", () => Boolean(window.RomanoConnectCore));
       await asset("js/connect-demo.js", () => Boolean(window.RomanoConnectDemo));
@@ -127,10 +128,10 @@
   }
 
   const navTranslations={
-    fa:{home:"خانه",menu:"منو",featured:"ویژه‌ها",contact:"ارتباط",cart:"سبد"},
-    en:{home:"Home",menu:"Menu",featured:"Featured",contact:"Contact",cart:"Cart"},
-    tr:{home:"Ana Sayfa",menu:"Menü",featured:"Öne çıkanlar",contact:"İletişim",cart:"Sepet"},
-    ar:{home:"الرئيسية",menu:"القائمة",featured:"المميز",contact:"اتصل بنا",cart:"السلة"}
+    fa:{home:"خانه",menu:"منو",featured:"ویژه‌ها",contact:"چت",cart:"سبد"},
+    en:{home:"Home",menu:"Menu",featured:"Featured",contact:"Chat",cart:"Cart"},
+    tr:{home:"Ana Sayfa",menu:"Menü",featured:"Öne çıkanlar",contact:"Sohbet",cart:"Sepet"},
+    ar:{home:"الرئيسية",menu:"القائمة",featured:"المميز",contact:"محادثة",cart:"السلة"}
   };
   function updateCustomerNavigation() {
     const words=navTranslations[lang()] || navTranslations.fa;
@@ -184,31 +185,31 @@
   }
 
   const contactWords = {
-    fa:{title:"ارتباط با رستوران",close:"بستن",phone:"تماس تلفنی",address:"آدرس",social:"اینستاگرام",missing:"اطلاعات ارتباطی ثبت نشده است.",nav:"ناوبری سریع",demo:"حالت آزمایشی؛ فقط اطلاعات نمونه نمایش داده می‌شود."},
-    en:{title:"Contact the restaurant",close:"Close",phone:"Call",address:"Address",social:"Instagram",missing:"No contact information is configured.",nav:"Quick navigation",demo:"Demo mode; sample information only."},
-    tr:{title:"Restoranla iletişim",close:"Kapat",phone:"Ara",address:"Adres",social:"Instagram",missing:"İletişim bilgileri henüz eklenmedi.",nav:"Hızlı gezinme",demo:"Demo modu; yalnızca örnek bilgiler."},
-    ar:{title:"التواصل مع المطعم",close:"إغلاق",phone:"اتصال",address:"العنوان",social:"إنستغرام",missing:"لم تُضف معلومات التواصل.",nav:"التنقل السريع",demo:"وضع تجريبي؛ بيانات نموذجية فقط."}
+    fa:{title:"ارتباط با رستوران",close:"بستن",phone:"تماس تلفنی",missing:"اطلاعات ارتباطی ثبت نشده است.",nav:"ناوبری سریع",demo:"حالت آزمایشی؛ فقط اطلاعات نمونه نمایش داده می‌شود."},
+    en:{title:"Contact the restaurant",close:"Close",phone:"Call",missing:"No contact information is configured.",nav:"Quick navigation",demo:"Demo mode; sample information only."},
+    tr:{title:"Restoranla iletişim",close:"Kapat",phone:"Ara",missing:"İletişim bilgileri henüz eklenmedi.",nav:"Hızlı gezinme",demo:"Demo modu; yalnızca örnek bilgiler."},
+    ar:{title:"التواصل مع المطعم",close:"إغلاق",phone:"اتصال",missing:"لم تُضف معلومات التواصل.",nav:"التنقل السريع",demo:"وضع تجريبي؛ بيانات نموذجية فقط."}
   };
   const panelWords = {
-    fa:{loadError:"بارگذاری این بخش انجام نشد. دوباره تلاش کنید.",profile:"پروفایل",guest:"شما به عنوان مهمان در حال مرور منو هستید. حساب کاربری فعال نیست.",chat:"چت",chatMissing:"سرویس گفت‌وگوی مستقیم هنوز متصل نیست. از راه‌های ارتباطی موجود استفاده کنید.",feedback:"ثبت امتیاز و رضایت",draft:"امتیاز آزمایشی فقط در این مرورگر؛ برای رستوران ارسال نمی‌شود.",unavailable:"ثبت نظر واقعی هنوز فعال نیست.",save:"ذخیره امتیاز محلی",saved:"امتیاز فقط در این مرورگر ذخیره شد.",storageError:"ذخیره محلی ممکن نیست.",rating:"امتیاز",comment:"نظر اختیاری (حداکثر ۵۰۰ نویسه؛ بدون اطلاعات شخصی)",less:"کاهش تعداد",more:"افزایش تعداد",methods:"روش پرداخت"},
-    en:{loadError:"This section could not load. Please try again.",profile:"Profile",guest:"You are browsing as a guest. Customer accounts are not enabled.",chat:"Chat",chatMissing:"Direct chat is not connected yet. Use the available contact options.",feedback:"Rating & feedback",draft:"Demo rating stays in this browser and is not sent to the restaurant.",unavailable:"Online review submission is not enabled.",save:"Save local rating",saved:"Rating saved in this browser only.",storageError:"Local storage is unavailable.",rating:"Rating",comment:"Optional feedback (500 characters; no personal information)",less:"Decrease quantity",more:"Increase quantity",methods:"Payment method"},
-    tr:{loadError:"Bu bölüm yüklenemedi. Tekrar deneyin.",profile:"Profil",guest:"Misafir olarak menüye göz atıyorsunuz. Müşteri hesabı etkin değil.",chat:"Sohbet",chatMissing:"Doğrudan sohbet bağlı değil. Mevcut iletişim seçeneklerini kullanın.",feedback:"Puan ve geri bildirim",draft:"Deneme puanı yalnızca bu tarayıcıda kalır; restorana gönderilmez.",unavailable:"Çevrimiçi yorum gönderimi etkin değil.",save:"Yerel puanı kaydet",saved:"Puan yalnızca bu tarayıcıya kaydedildi.",storageError:"Yerel depolama kullanılamıyor.",rating:"Puan",comment:"İsteğe bağlı yorum (500 karakter; kişisel bilgi yazmayın)",less:"Miktarı azalt",more:"Miktarı artır",methods:"Ödeme yöntemi"},
-    ar:{loadError:"تعذر تحميل هذا القسم. حاول مجدداً.",profile:"الملف الشخصي",guest:"تتصفح القائمة كضيف. حسابات العملاء غير مفعلة.",chat:"محادثة",chatMissing:"المحادثة المباشرة غير متصلة. استخدم وسائل التواصل المتاحة.",feedback:"التقييم والملاحظات",draft:"التقييم التجريبي يبقى في هذا المتصفح ولا يرسل للمطعم.",unavailable:"إرسال التقييمات عبر الإنترنت غير مفعل.",save:"حفظ التقييم المحلي",saved:"حُفظ التقييم في هذا المتصفح فقط.",storageError:"التخزين المحلي غير متاح.",rating:"التقييم",comment:"تعليق اختياري (500 حرف؛ دون معلومات شخصية)",less:"تقليل الكمية",more:"زيادة الكمية",methods:"طريقة الدفع"}
+    fa:{loadError:"بارگذاری این بخش انجام نشد. دوباره تلاش کنید.",profile:"پروفایل",guest:"شما به عنوان مهمان در حال مرور منو هستید. حساب کاربری فعال نیست.",chat:"چت",feedback:"ثبت امتیاز و رضایت",draft:"امتیاز آزمایشی فقط در این مرورگر؛ برای رستوران ارسال نمی‌شود.",unavailable:"ثبت نظر واقعی هنوز فعال نیست.",save:"ذخیره امتیاز محلی",saved:"امتیاز فقط در این مرورگر ذخیره شد.",storageError:"ذخیره محلی ممکن نیست.",rating:"امتیاز",comment:"نظر اختیاری (حداکثر ۵۰۰ نویسه؛ بدون اطلاعات شخصی)",less:"کاهش تعداد",more:"افزایش تعداد",methods:"روش پرداخت"},
+    en:{loadError:"This section could not load. Please try again.",profile:"Profile",guest:"You are browsing as a guest. Customer accounts are not enabled.",chat:"Chat",feedback:"Rating & feedback",draft:"Demo rating stays in this browser and is not sent to the restaurant.",unavailable:"Online review submission is not enabled.",save:"Save local rating",saved:"Rating saved in this browser only.",storageError:"Local storage is unavailable.",rating:"Rating",comment:"Optional feedback (500 characters; no personal information)",less:"Decrease quantity",more:"Increase quantity",methods:"Payment method"},
+    tr:{loadError:"Bu bölüm yüklenemedi. Tekrar deneyin.",profile:"Profil",guest:"Misafir olarak menüye göz atıyorsunuz. Müşteri hesabı etkin değil.",chat:"Sohbet",feedback:"Puan ve geri bildirim",draft:"Deneme puanı yalnızca bu tarayıcıda kalır; restorana gönderilmez.",unavailable:"Çevrimiçi yorum gönderimi etkin değil.",save:"Yerel puanı kaydet",saved:"Puan yalnızca bu tarayıcıya kaydedildi.",storageError:"Yerel depolama kullanılamıyor.",rating:"Puan",comment:"İsteğe bağlı yorum (500 karakter; kişisel bilgi yazmayın)",less:"Miktarı azalt",more:"Miktarı artır",methods:"Ödeme yöntemi"},
+    ar:{loadError:"تعذر تحميل هذا القسم. حاول مجدداً.",profile:"الملف الشخصي",guest:"تتصفح القائمة كضيف. حسابات العملاء غير مفعلة.",chat:"محادثة",feedback:"التقييم والملاحظات",draft:"التقييم التجريبي يبقى في هذا المتصفح ولا يرسل للمطعم.",unavailable:"إرسال التقييمات عبر الإنترنت غير مفعل.",save:"حفظ التقييم المحلي",saved:"حُفظ التقييم في هذا المتصفح فقط.",storageError:"التخزين المحلي غير متاح.",rating:"التقييم",comment:"تعليق اختياري (500 حرف؛ دون معلومات شخصية)",less:"تقليل الكمية",more:"زيادة الكمية",methods:"طريقة الدفع"}
   };
   const panelText = () => panelWords[lang()] || panelWords.fa;
   // All new customer-facing copy is localized; no demo action reaches restaurant staff.
   const hospitality = {
-    fa:{services:"خدمات مهمان",quick:"خدمات میز",waiter:"فراخوان گارسون",bill:"درخواست صورتحساب",water:"درخواست آب",napkin:"درخواست دستمال",local:"درخواست‌ها فقط در این مرورگر شبیه‌سازی می‌شوند و به پرسنل ارسال نمی‌شوند.",unconnected:"خدمات آنلاین میز هنوز فعال نیست.",selectTable:"برای خدمات میز، QR معتبر میز را باز کنید.",request:"درخواست آزمایشی ثبت شد",cancel:"لغو درخواست",review:"ثبت نظر و امتیاز",copy:"کپی آدرس",copied:"آدرس کپی شد",copyFailed:"کپی ممکن نشد؛ آدرس را دستی انتخاب کنید.",suggest:"سفارش خود را کامل کنید",unit:"قیمت واحد",undo:"بازگرداندن",removed:"محصول حذف شد",continue:"ادامه انتخاب",join:"ورود برای تکمیل سفارش",items:"آیتم",summary:"خلاصه سفارش",branch:"شعبه",unknown:"میز مشخص نشده",noteLocal:"فقط توضیحات ساختگی وارد کنید.",demo:"نسخه آزمایشی؛ سفارش ارسال نمی‌شود."},
-    en:{services:"Guest services",quick:"Table services",waiter:"Call waiter",bill:"Request bill",water:"Request water",napkin:"Request napkins",local:"Requests are simulated in this browser only; nothing is sent to staff.",unconnected:"Online table services are not enabled.",selectTable:"Open a valid table QR to use table services.",request:"Sample request saved",cancel:"Cancel request",review:"Rating & feedback",copy:"Copy address",copied:"Address copied",copyFailed:"Could not copy. Select the address manually.",suggest:"Complete your order",unit:"Unit price",undo:"Undo",removed:"Item removed",continue:"Continue browsing",join:"Sign in to complete order",items:"items",summary:"Order summary",branch:"Branch",unknown:"No table selected",noteLocal:"Use fictional notes only.",demo:"Demo only; orders are not sent."},
-    tr:{services:"Misafir hizmetleri",quick:"Masa hizmetleri",waiter:"Garson çağır",bill:"Hesap iste",water:"Su iste",napkin:"Peçete iste",local:"İstekler yalnızca bu tarayıcıda simüle edilir; personele gönderilmez.",unconnected:"Çevrimiçi masa hizmetleri etkin değil.",selectTable:"Masa hizmetleri için geçerli masa QR kodunu açın.",request:"Örnek istek kaydedildi",cancel:"İsteği iptal et",review:"Puan ve geri bildirim",copy:"Adresi kopyala",copied:"Adres kopyalandı",copyFailed:"Kopyalanamadı. Adresi elle seçin.",suggest:"Siparişinizi tamamlayın",unit:"Birim fiyat",undo:"Geri al",removed:"Ürün kaldırıldı",continue:"Menüye dön",join:"Siparişi tamamlamak için giriş yap",items:"ürün",summary:"Sipariş özeti",branch:"Şube",unknown:"Masa seçilmedi",noteLocal:"Yalnızca kurgusal not yazın.",demo:"Demo; siparişler gönderilmez."},
-    ar:{services:"خدمات الضيوف",quick:"خدمات الطاولة",waiter:"استدعاء النادل",bill:"طلب الفاتورة",water:"طلب الماء",napkin:"طلب المناديل",local:"تُحاكى الطلبات في هذا المتصفح فقط ولا تُرسل للموظفين.",unconnected:"خدمات الطاولة عبر الإنترنت غير مفعلة.",selectTable:"افتح رمز QR صالحًا للطاولة لاستخدام الخدمات.",request:"حُفظ الطلب التجريبي",cancel:"إلغاء الطلب",review:"التقييم والملاحظات",copy:"نسخ العنوان",copied:"تم نسخ العنوان",copyFailed:"تعذر النسخ. حدد العنوان يدويًا.",suggest:"أكمل طلبك",unit:"سعر الوحدة",undo:"تراجع",removed:"تم حذف المنتج",continue:"متابعة التصفح",join:"سجّل الدخول لإكمال الطلب",items:"عناصر",summary:"ملخص الطلب",branch:"الفرع",unknown:"لم تُحدد طاولة",noteLocal:"اكتب ملاحظات وهمية فقط.",demo:"نسخة تجريبية؛ لا تُرسل الطلبات."}
+    fa:{services:"خدمات مهمان",quick:"خدمات میز",waiter:"فراخوان گارسون",bill:"درخواست صورتحساب",water:"درخواست آب",napkin:"درخواست دستمال",local:"درخواست‌ها فقط در این مرورگر شبیه‌سازی می‌شوند و به پرسنل ارسال نمی‌شوند.",unconnected:"خدمات آنلاین میز هنوز فعال نیست.",selectTable:"برای خدمات میز، QR معتبر میز را باز کنید.",request:"درخواست آزمایشی ثبت شد",cancel:"لغو درخواست",review:"ثبت نظر و امتیاز",suggest:"سفارش خود را کامل کنید",unit:"قیمت واحد",undo:"بازگرداندن",removed:"محصول حذف شد",continue:"بازگشت به منو",summary:"خلاصه سفارش",noteLocal:"فقط توضیحات ساختگی وارد کنید.",demo:"نسخه آزمایشی؛ سفارش ارسال نمی‌شود."},
+    en:{services:"Guest services",quick:"Table services",waiter:"Call waiter",bill:"Request bill",water:"Request water",napkin:"Request napkins",local:"Requests are simulated in this browser only; nothing is sent to staff.",unconnected:"Online table services are not enabled.",selectTable:"Open a valid table QR to use table services.",request:"Sample request saved",cancel:"Cancel request",review:"Rating & feedback",suggest:"Complete your order",unit:"Unit price",undo:"Undo",removed:"Item removed",continue:"Back to menu",summary:"Order summary",noteLocal:"Use fictional notes only.",demo:"Demo only; orders are not sent."},
+    tr:{services:"Misafir hizmetleri",quick:"Masa hizmetleri",waiter:"Garson çağır",bill:"Hesap iste",water:"Su iste",napkin:"Peçete iste",local:"İstekler yalnızca bu tarayıcıda simüle edilir; personele gönderilmez.",unconnected:"Çevrimiçi masa hizmetleri etkin değil.",selectTable:"Masa hizmetleri için geçerli masa QR kodunu açın.",request:"Örnek istek kaydedildi",cancel:"İsteği iptal et",review:"Puan ve geri bildirim",suggest:"Siparişinizi tamamlayın",unit:"Birim fiyat",undo:"Geri al",removed:"Ürün kaldırıldı",continue:"Menüye dön",summary:"Sipariş özeti",noteLocal:"Yalnızca kurgusal not yazın.",demo:"Demo; siparişler gönderilmez."},
+    ar:{services:"خدمات الضيوف",quick:"خدمات الطاولة",waiter:"استدعاء النادل",bill:"طلب الفاتورة",water:"طلب الماء",napkin:"طلب المناديل",local:"تُحاكى الطلبات في هذا المتصفح فقط ولا تُرسل للموظفين.",unconnected:"خدمات الطاولة عبر الإنترنت غير مفعلة.",selectTable:"افتح رمز QR صالحًا للطاولة لاستخدام الخدمات.",request:"حُفظ الطلب التجريبي",cancel:"إلغاء الطلب",review:"التقييم والملاحظات",suggest:"أكمل طلبك",unit:"سعر الوحدة",undo:"تراجع",removed:"تم حذف المنتج",continue:"العودة إلى القائمة",summary:"ملخص الطلب",noteLocal:"اكتب ملاحظات وهمية فقط.",demo:"نسخة تجريبية؛ لا تُرسل الطلبات."}
   };
   const h = key => hospitality[lang()]?.[key] || hospitality.fa[key];
   let lastRemoved = null;
   let orderNotes = "";
   const zeroItems=new Set();
   let couponCode="",appliedCoupon="";
-  const extra={fa:["تخفیف نمونه","کد تخفیف","اعمال","کد نامعتبر یا بدون تخفیف","امتیاز نمونه","یادداشت محصول / حساسیت غذایی","پذیرفته شد","انجام شد","ساعات کاری","مسیریابی","واتس‌اپ","حذف تخفیف"],en:["Sample discount","Promo code","Apply","Invalid code or no discount","Sample points","Item note / food allergy","Accepted","Completed","Opening hours","Directions","WhatsApp","Remove discount"],tr:["Örnek indirim","İndirim kodu","Uygula","Geçersiz kod veya indirim yok","Örnek puan","Ürün notu / gıda alerjisi","Kabul edildi","Tamamlandı","Çalışma saatleri","Yol tarifi","WhatsApp","İndirimi kaldır"],ar:["خصم تجريبي","رمز الخصم","تطبيق","رمز غير صالح أو لا يوجد خصم","نقاط تجريبية","ملاحظة المنتج / حساسية غذائية","تم القبول","مكتمل","ساعات العمل","الاتجاهات","واتساب","إزالة الخصم"]};
+  const extra={"fa":["تخفیف نمونه","کد تخفیف","اعمال","کد نامعتبر یا بدون تخفیف","امتیاز نمونه","","پذیرفته شد","انجام شد","","","","حذف تخفیف"],"en":["Sample discount","Promo code","Apply","Invalid code or no discount","Sample points","","Accepted","Completed","","","","Remove discount"],"tr":["Örnek indirim","İndirim kodu","Uygula","Geçersiz kod veya indirim yok","Örnek puan","","Kabul edildi","Tamamlandı","","","","İndirimi kaldır"],"ar":["خصم تجريبي","رمز الخصم","تطبيق","رمز غير صالح أو لا يوجد خصم","نقاط تجريبية","","تم القبول","مكتمل","","","","إزالة الخصم"]};
   const x=i=>(extra[lang()]||extra.fa)[i];
   const bundleText=()=>({fa:"پیشنهاد ترکیبی",en:"Bundle offer",tr:"Kombinasyon teklifi",ar:"عرض المجموعة"}[lang()]||"Bundle offer");
   const subtotalText=()=>({fa:"جمع محصولات",en:"Subtotal",tr:"Ara toplam",ar:"المجموع الفرعي"}[lang()]||"Subtotal");
@@ -225,9 +226,22 @@
     }
     return {table:window.ROMANO_I18N.displayBrand(tableSession?.table?.name || tableSession?.table?.code || ""),code:""};
   }
+  function restaurantDialUrl(){
+    const raw=String(restaurantConfig?.phone||"").trim();
+    if(!/^[+\d\s().-]{5,25}$/.test(raw))return "";
+    const number=raw.replace(/[^+\d]/g,"");
+    // The bundled fictitious number must never launch a call.
+    if(!/^\+?[1-9]\d{6,14}$/.test(number)&&!/^0\d{7,14}$/.test(number))return "";
+    if(isDemo()&&/^(?:\+98|0)31[0]+$/.test(number))return "";
+    return ["demo","public","offline"].includes(menuDataMode)?"tel:"+number:"";
+  }
+  function dialRestaurant(){
+    const url=restaurantDialUrl();if(url)location.href=url;
+    else announce((contactWords[lang()]||contactWords.fa).missing);
+  }
   function contextLabel() {
     const context=guestContext();
-    return context.table ? t("table")+" "+context.table : h("unknown");
+    return context.table ? (/^(?:میز|Table|Masa|طاولة)\b/i.test(context.table)||/^(?:میز|طاولة)\s/.test(context.table)?context.table:t("table")+" "+context.table) : "";
   }
   function renderSuggestions() {
     const host=document.querySelector("#hp-suggestions");if(!host)return;
@@ -295,7 +309,7 @@
     nav.hidden=false;
     nav.setAttribute("aria-label",[words[0],percent,detail].join(" · "));
     document.querySelector("#navigation-service-toggle").setAttribute("aria-label",h("services"));
-    document.querySelector('[data-nav-panel="contact"]').textContent=(contactWords[lang()]||contactWords.fa).phone;
+    const call=document.querySelector('[data-nav-panel="contact"]');call.textContent=(contactWords[lang()]||contactWords.fa).phone;call.disabled=!restaurantDialUrl();
     document.querySelector('[data-nav-panel="waiter"]').textContent=h("waiter");
   }
   function initializeContactPanel() {
@@ -327,25 +341,25 @@
       const header=element('header',null,'ramen-contact-head');
       const labels=panelText();
       const chat=window.RomanoCustomerChat;
-      const heading=element('h2',panel==='chat'&&chat?chat.words(lang()).title:panel==='contact'?h('services'):panel==='waiter'?h('waiter'):labels[panel]||words.title);heading.id='ramen-contact-title';
+      const heading=element('h2',panel==='chat'&&chat?chat.words(lang()).title:panel==='waiter'?h('waiter'):labels[panel]||words.title);heading.id='ramen-contact-title';
       const dismiss=element('button',undefined,'ramen-contact-close');dismiss.type='button';dismiss.setAttribute('aria-label',words.close);dismiss.addEventListener('click',close);
       const closeGlyph=element('span','×');closeGlyph.setAttribute('aria-hidden','true');dismiss.append(closeGlyph);
       header.append(heading,dismiss);
       const content=element('div',null,'ramen-contact-content');
       const mode=typeof menuDataMode !== 'undefined' ? menuDataMode : 'loading';
       const demo=mode==='demo';
-      dialog.classList.toggle('hp-contact',panel==='contact');
+      dialog.classList.toggle('r27-profile-page',panel==='profile');
       dialog.classList.toggle('connect-dialog',panel==='chat'&&Boolean(chat&&window.RomanoCustomerPanels));
       const panels=window.RomanoCustomerPanels;
       if(panels&&(panel!=='chat'||chat)){
         content.dataset.panelState='ready';
-        panels.render({panel,content,element,demo,mode,labels,words,chat,profileId,lang,h,x,panelText,guestContext,contextLabel,config,tenant,renderHeroRating,close,openPanel,origin,dialog,isDemo});
+        panels.render({panel,content,element,demo,mode,labels,words,chat,profileId,lang,h,x,panelText,guestContext,contextLabel,config,tenant,renderHeroRating,close,openPanel,origin,dialog,isDemo,restaurantDialUrl});
       }else{
         content.dataset.panelState='loading';
         const loading=element('p',({fa:'در حال بارگذاری…',en:'Loading…',tr:'Yükleniyor…',ar:'جارٍ التحميل…'})[lang()],'ramen-contact-note');loading.setAttribute('role','status');
         const retry=element('button',t('retry'),'feedback-save');retry.type='button';retry.hidden=true;
         retry.addEventListener('click',()=>openPanel(panel,origin,true));content.append(loading,retry);
-        if(panel==='chat'){const contactButton=element('button',words.phone,'feedback-save');contactButton.type='button';contactButton.addEventListener('click',()=>openPanel('contact',origin,true));content.append(contactButton);}
+        if(panel==='chat'&&restaurantDialUrl()){const contactButton=element('a',words.phone,'feedback-save');contactButton.href=restaurantDialUrl();content.append(contactButton);}
         const load=panel==='chat'?Promise.all([connectAssets.loadPanels(),connectAssets.loadChat()]):connectAssets.loadPanels();
         load.then(()=>{
           if(dialog.open&&activePanel===panel&&revision===panelRevision)openPanel(panel,origin,true);
@@ -356,7 +370,7 @@
       dialog.replaceChildren(header,content);
       if(!wasOpen){dialog.showModal();window.RamenOverlayHistory.enter('contact',close);document.body.classList.add('ramen-contact-open');}
       if(origin===trigger){trigger.setAttribute('aria-controls',dialog.id);trigger.setAttribute('aria-expanded','true');}
-      const focusTarget=restoreLanguage?content.querySelector('.connect-language')||dismiss:dismiss;
+      const focusTarget=dismiss;
       focusTarget.focus({preventScroll:true});
     };
     document.querySelector("#hero-rating")?.addEventListener("click",event=>openPanel("feedback",event.currentTarget));
@@ -365,10 +379,12 @@
     document.addEventListener('romano:open-customer-panel',event=>{
       const panel=event.detail?.panel;
       if(panel==='cart')openDrawer();
-      else if(['contact','chat','profile','feedback','waiter'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
+      else if(panel==='contact')dialRestaurant();
+      else if(panel==='profile'&&isDemo()&&!window.RomanoCustomerEntry?.current()){window.RomanoCustomerEntry.open(false,()=>{if(window.RomanoCustomerEntry.current())openPanel('profile',document.querySelector('#menu-toggle'));});}
+      else if(['chat','profile','feedback','waiter'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
     });
     dialog.addEventListener('close',()=>{panelRevision++;window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');window.RomanoCustomerChat?.suspend();if(origin?.isConnected&&!origin.closest('[inert]'))origin.focus({preventScroll:true});origin=null;activePanel=null;});
-    document.addEventListener('romano:language-changed',()=>{if(dialog.open&&activePanel==='chat'){const restore=document.activeElement?.classList.contains('connect-language');openPanel('chat',origin,true,restore);}else close();updateLabel();});
+    document.addEventListener('romano:language-changed',()=>{if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);else close();updateLabel();});
     document.addEventListener('romano:connect-session-changed',()=>{window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
     document.addEventListener('romano:demo-membership-changed',()=>{const next=profileId();if(next===connectProfile)return;connectProfile=next;connectAssets.forgetGuest();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
     let lastPanelMode=typeof menuDataMode==='undefined'?'loading':menuDataMode;
@@ -424,7 +440,7 @@
     document.querySelector("#commerce-cart-bar").addEventListener("click", openDrawer);
     document.querySelectorAll("[data-commerce-close]").forEach((button) => button.addEventListener("click", closeDrawer));
     document.querySelector("#commerce-submit").addEventListener("click", submitOrder);
-    document.querySelector("#hp-continue").addEventListener("click",closeDrawer);
+    document.querySelector("#hp-continue").addEventListener("click",()=>{closeDrawer();navigateCustomerView("menu");});
     document.querySelector("#hp-code").addEventListener("input",event=>{couponCode=event.target.value;});
     document.querySelector("#hp-apply").addEventListener("click",()=>{
       if(submitting)return;
@@ -589,8 +605,13 @@
     document.querySelector("#hp-discount-value").textContent=savings?money(savings):"";
     const points=document.querySelector("#hp-points");
     points.hidden=!cfg?.points;points.textContent=cfg?.points?x(4)+": +"+new Intl.NumberFormat(lang()).format(cfg.points):"";
-    document.querySelector("#commerce-title").textContent=t("cart")+(amount?" · "+new Intl.NumberFormat(lang()).format(amount):"");
-    document.querySelector("#hp-cart-context").textContent=contextLabel();
+    const member=window.RomanoCustomerEntry?.current()||window.RomanoPhoneAuth?.customer();
+    const memberName=member?.name||member?.displayName;
+    const cartTitles={fa:["سبد خرید شما","سبد خرید "],en:["Your cart","Cart — "],tr:["Sepetiniz","Sepet — "],ar:["سلة مشترياتك","سلة مشتريات "]};
+    const titleWords=cartTitles[lang()]||cartTitles.fa;
+    const title=document.querySelector("#commerce-title");title.replaceChildren(document.createTextNode(memberName?titleWords[1]:titleWords[0]));
+    if(memberName){const name=document.createElement("bdi");name.textContent=memberName;title.append(name);}
+    const context=document.querySelector("#hp-cart-context");context.textContent=contextLabel();context.hidden=!context.textContent;
     document.querySelector("#hp-undo").hidden=!lastRemoved || !product(lastRemoved.id);
     document.querySelector("#hp-undo-button").disabled=submitting;
     document.querySelector("#hp-continue").disabled=submitting;
@@ -610,9 +631,8 @@
       return `<article class="commerce-item${quantity===0?' is-zero':''}" data-cart-row="${safe(id)}">
         <div class="commerce-item-media"><span class="image-fallback" aria-hidden="true">${safe(getImageFallbackLabel(view.name))}</span>${src ? `<img src="${safe(src)}" alt="" width="64" height="64" decoding="async">` : ""}</div>
         <div class="hp-item-copy"><h3>${safe(view.name)}</h3><span class="hp-unit">${safe(h("unit"))}: ${safe(money(item.price))}</span><strong class="hp-line-total">${safe(money(item.price * quantity))}</strong>
-          <div class="commerce-quantity" aria-label="${safe(view.name)}"><button type="button" data-cart-change="-1" data-product-id="${safe(id)}" aria-label="${safe(panelText().less)}: ${safe(view.name)}" ${submitting||quantity===0?"disabled":""}>−</button><b>${quantity}</b><button type="button" data-cart-change="1" data-product-id="${safe(id)}" aria-label="${safe(panelText().more)}: ${safe(view.name)}" ${submitting||quantity>=99?"disabled":""}>+</button></div>
+          <div class="commerce-quantity" aria-label="${safe(view.name)}"><button type="button" ${quantity===0?'data-cart-remove class="cart-trash"':'data-cart-change="-1"'} data-product-id="${safe(id)}" aria-label="${safe(quantity===0?t("remove"):panelText().less)}: ${safe(view.name)}" ${submitting?"disabled":""}>${quantity===0?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7m4-7v7"/></svg>':'−'}</button><b>${quantity}</b><button type="button" data-cart-change="1" data-product-id="${safe(id)}" aria-label="${safe(panelText().more)}: ${safe(view.name)}" ${submitting||quantity>=99?"disabled":""}>+</button></div>
         </div>
-        ${quantity===0?`<button class="commerce-remove" type="button" data-cart-remove data-product-id="${safe(id)}" aria-label="${safe(t("remove"))}: ${safe(view.name)}" ${submitting?"disabled":""}>${safe(t("remove"))}</button>`:""}
       </article>`;
     }).join("");
     host.innerHTML = rows || `<p class="commerce-empty">${safe(t("empty"))}</p>`;
@@ -630,10 +650,10 @@
     }
     const submit = document.querySelector("#commerce-submit");
     submit.disabled = amount === 0 || submitting;
-    const entry=window.RomanoCustomerEntry;
-    submit.textContent = submitting ? t("sending") : isDemo() ? (entry.current()?entry.t("order"):h("join")) : t("checkout");
+    submit.textContent = submitting ? t("sending") : ({fa:"پرداخت",en:"Payment",tr:"Ödeme",ar:"الدفع"}[lang()]||"Payment");
     renderStatus();
     renderSession();
+    renderModalQuantity();
   }
 
   function renderPaymentMethods() {
@@ -710,7 +730,26 @@
       if(actions)actions.before(modalAdd);else modalContent.append(modalAdd);
       modalAdd.addEventListener("click", () => { if (window.RomanoActiveProduct?.id) add(window.RomanoActiveProduct.id); });
     }
-    if (modalAdd) modalAdd.textContent = `+ ${t("add")}`;
+    if(modalAdd)renderModalQuantity();
+  }
+  function renderModalQuantity(){
+    const addButton=document.querySelector(".commerce-modal-add"),id=window.RomanoActiveProduct?.id;
+    if(!addButton)return;
+    addButton.textContent="+ "+t("add");
+    let control=document.querySelector(".modal-cart-quantity");
+    if(!control){
+      control=document.createElement("div");control.className="modal-cart-quantity";control.hidden=true;
+      const minus=document.createElement("button"),value=document.createElement("b"),plus=document.createElement("button");
+      minus.type=plus.type="button";minus.textContent="−";plus.textContent="+";
+      minus.onclick=()=>{const current=window.RomanoActiveProduct?.id;if(current)change(current,-1);};
+      plus.onclick=()=>{const current=window.RomanoActiveProduct?.id;if(current)add(current);};
+      control.append(minus,value,plus);addButton.after(control);
+    }
+    const amount=id?cart[id]||0:0, item=id?product(id):null;
+    addButton.hidden=amount>0;addButton.disabled=!item||submitting;
+    control.hidden=!amount;control.querySelector("b").textContent=new Intl.NumberFormat(lang()).format(amount);
+    const [minus,plus]=control.querySelectorAll("button");minus.setAttribute("aria-label",panelText().less);plus.setAttribute("aria-label",panelText().more);
+    minus.disabled=submitting;plus.disabled=submitting||amount>=99;
   }
 
   async function openQrSession() {
@@ -919,6 +958,7 @@
     document.addEventListener("romano:product-opened", enhanceProducts);
     window.addEventListener("romano:data-updated", () => { reconcileCart(); enhanceProducts(); render();renderHeroRating(); });
     document.addEventListener("romano:demo-membership-changed",render);
+    document.addEventListener("romano:customer-auth-changed",render);
     document.addEventListener("romano:language-changed",renderHeroRating);
     window.addEventListener("storage", event => {
       if(event.key===null||event.key===window.RomanoDemoReview.key(tenant()))renderHeroRating();
