@@ -616,26 +616,10 @@ html[dir] .hero-overlay {background:linear-gradient(180deg,#080705b0 0%,#0807059
 .hp-suggestion button{font-size:12px}
 #commerce-drawer .commerce-note{margin-block:8px 14px}
 #commerce-drawer .commerce-note textarea{border-color:#d6ae7030}
-.hp-contact{max-height:90dvh;padding:20px 18px calc(18px + env(safe-area-inset-bottom));}
-.hp-contact .ramen-contact-head{margin-bottom:12px}
-.hp-contact .ramen-contact-content{gap:12px}
-.hp-identity{display:grid;gap:4px;padding:16px;border:1px solid #d6ae7033;border-radius:16px;background:linear-gradient(135deg,#d6ae7010,#ffffff03)}
-.hp-identity strong{font-size:20px;overflow-wrap:anywhere;color:#ebc98e}
-.hp-services{padding-block:6px}
 .hp-service-notice,.hp-service-live{margin:8px 0;color:#c4b8a7;font-size:12px;line-height:1.6}
-.hp-service-live:empty{display:none}
-.hp-service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.hp-service-action{display:grid;justify-items:start;gap:5px;min-height:88px;padding:12px;border:1px solid #d6ae7030;border-radius:14px;color:#f7f0e7;background:#ffffff05;font:inherit;text-align:start;cursor:pointer;overflow-wrap:anywhere}
-.hp-service-action strong{font-size:13px}
-.hp-service-icon{color:#ebc98e;font-size:22px;line-height:1}
-.hp-service-action[aria-pressed="true"]{border-color:#d6ae70;background:#d6ae7018}
-.hp-service-detail{color:#ebc98e;font-size:11px}
-.hp-service-action:disabled{color:#b7ad9f;cursor:not-allowed;background:#ffffff03}
-.hp-contact-actions{display:grid;gap:8px}
 #hp-undo[hidden],#hp-continue[hidden],#hp-suggestions[hidden],#hp-note-local[hidden]{display:none!important}
 :is(#commerce-drawer,.hp-contact) button:focus-visible{outline:2px solid #ebc98e;outline-offset:3px}
 
-.hp-service-icon{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .hp-history-notes{white-space:pre-wrap;overflow-wrap:anywhere;color:#c4b8a7}
 
 /* Demo hospitality offers and item instructions. */

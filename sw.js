@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r27-lazy-profile`;
+const CACHE_NAME = `${menuCachePrefix}r27-staged-entry`;
 const CORE_ASSETS = [
   "./",
   "./index.html",

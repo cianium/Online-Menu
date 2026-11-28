@@ -1,3 +1,13 @@
+.hp-services{padding-block:6px}
+.hp-service-live:empty{display:none}
+.hp-service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.hp-service-action{display:grid;justify-items:start;gap:5px;min-height:88px;padding:12px;border:1px solid #d6ae7030;border-radius:14px;color:#f7f0e7;background:#ffffff05;font:inherit;text-align:start;cursor:pointer;overflow-wrap:anywhere}
+.hp-service-action strong{font-size:13px}
+.hp-service-icon{color:#ebc98e;font-size:22px;line-height:1}
+.hp-service-action[aria-pressed="true"]{border-color:#d6ae70;background:#d6ae7018}
+.hp-service-detail{color:#ebc98e;font-size:11px}
+.hp-service-action:disabled{color:#b7ad9f;cursor:not-allowed;background:#ffffff03}
+.hp-service-icon{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 /* RAMEN Connect: scoped dark/gold customer dialog. */
 .ramen-contact-dialog.connect-dialog[open]{display:flex;flex-direction:column;width:min(640px,calc(100% - 32px));height:min(760px,calc(100dvh - 32px));max-height:none;max-width:none;overflow:hidden;padding:0;border-radius:24px;background:#090807;color:#f2ece3}
 .connect-dialog .ramen-contact-head{padding:12px 18px;margin:0;border-bottom:1px solid #ffffff20;flex:none;background:#171410}

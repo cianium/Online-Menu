@@ -185,10 +185,10 @@
   }
 
   const contactWords = {
-    fa:{title:"ارتباط با رستوران",close:"بستن",phone:"تماس تلفنی",address:"آدرس",social:"اینستاگرام",missing:"اطلاعات ارتباطی ثبت نشده است.",nav:"ناوبری سریع",demo:"حالت آزمایشی؛ فقط اطلاعات نمونه نمایش داده می‌شود."},
-    en:{title:"Contact the restaurant",close:"Close",phone:"Call",address:"Address",social:"Instagram",missing:"No contact information is configured.",nav:"Quick navigation",demo:"Demo mode; sample information only."},
-    tr:{title:"Restoranla iletişim",close:"Kapat",phone:"Ara",address:"Adres",social:"Instagram",missing:"İletişim bilgileri henüz eklenmedi.",nav:"Hızlı gezinme",demo:"Demo modu; yalnızca örnek bilgiler."},
-    ar:{title:"التواصل مع المطعم",close:"إغلاق",phone:"اتصال",address:"العنوان",social:"إنستغرام",missing:"لم تُضف معلومات التواصل.",nav:"التنقل السريع",demo:"وضع تجريبي؛ بيانات نموذجية فقط."}
+    fa:{title:"ارتباط با رستوران",close:"بستن",phone:"تماس تلفنی",missing:"اطلاعات ارتباطی ثبت نشده است.",nav:"ناوبری سریع",demo:"حالت آزمایشی؛ فقط اطلاعات نمونه نمایش داده می‌شود."},
+    en:{title:"Contact the restaurant",close:"Close",phone:"Call",missing:"No contact information is configured.",nav:"Quick navigation",demo:"Demo mode; sample information only."},
+    tr:{title:"Restoranla iletişim",close:"Kapat",phone:"Ara",missing:"İletişim bilgileri henüz eklenmedi.",nav:"Hızlı gezinme",demo:"Demo modu; yalnızca örnek bilgiler."},
+    ar:{title:"التواصل مع المطعم",close:"إغلاق",phone:"اتصال",missing:"لم تُضف معلومات التواصل.",nav:"التنقل السريع",demo:"وضع تجريبي؛ بيانات نموذجية فقط."}
   };
   const panelWords = {
     fa:{loadError:"بارگذاری این بخش انجام نشد. دوباره تلاش کنید.",profile:"پروفایل",guest:"شما به عنوان مهمان در حال مرور منو هستید. حساب کاربری فعال نیست.",chat:"چت",chatMissing:"سرویس گفت‌وگوی مستقیم هنوز متصل نیست. از راه‌های ارتباطی موجود استفاده کنید.",feedback:"ثبت امتیاز و رضایت",draft:"امتیاز آزمایشی فقط در این مرورگر؛ برای رستوران ارسال نمی‌شود.",unavailable:"ثبت نظر واقعی هنوز فعال نیست.",save:"ذخیره امتیاز محلی",saved:"امتیاز فقط در این مرورگر ذخیره شد.",storageError:"ذخیره محلی ممکن نیست.",rating:"امتیاز",comment:"نظر اختیاری (حداکثر ۵۰۰ نویسه؛ بدون اطلاعات شخصی)",less:"کاهش تعداد",more:"افزایش تعداد",methods:"روش پرداخت"},
