@@ -22,7 +22,7 @@ async function check(name, action) { await action(); results.push(name); console
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
-  await page.goto(base + '/admin/');
+  await page.goto(base + '/admin/?demo-legacy=1');
   await page.locator('#admin-gate').waitFor({state:'visible'});
   await check('Demo admin ID/password gate rejects incorrect credentials and localizes form',async()=>{
     assert.equal(await page.locator('.admin-app').evaluate(n=>n.inert),true);
@@ -43,6 +43,28 @@ async function check(name, action) { await action(); results.push(name); console
     await loginDemoAdmin(page);
   });
   await check('Local demo boot and seed catalog', async () => assert.equal(await page.evaluate(() => state.products.length), 21));
+  await check('R27 shared demo phone entry enrolls staff and returns to admin without real SMS',async()=>{
+    const demoContext=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
+    try{
+      const demoPage=await demoContext.newPage();
+      await demoPage.goto(base+'/admin/');
+      await demoPage.locator('#phone-auth-entry').waitFor({state:'visible'});
+      await loginDemoAdmin(demoPage);
+      assert.equal(await demoPage.evaluate(()=>JSON.parse(localStorage.getItem('ramen_demo_staff_v1')).length),1);
+      await demoPage.evaluate(()=>sessionStorage.removeItem('online_menu_demo_admin_session_v1'));
+      await demoPage.goto(base+'/admin/');
+      const form=demoPage.locator('#phone-auth-entry');
+      await form.locator('[name=phone]').fill('+12025550199');
+      await form.locator('button[type=submit]').click();
+      await form.locator('[name=code]').fill('000000');
+      await form.locator('button[type=submit]').click();
+      await form.locator('[role=alert]').waitFor({state:'visible'});
+      await form.locator('[name=code]').fill('123456');
+      await form.locator('button[type=submit]').click();
+      await demoPage.waitForURL(url=>url.pathname.endsWith('/admin/'));
+      await demoPage.waitForFunction(()=>adminInitialized&&!document.querySelector('.admin-app').inert);
+    }finally{await demoContext.close();}
+  });
   await check('R27 browser Back returns to the previous admin page and dismisses sidebar and product editor',async()=>{
     await page.setViewportSize({width:390,height:844});
     await page.evaluate(()=>navigateTo('dashboard'));

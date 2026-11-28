@@ -144,7 +144,7 @@ async function measure(browser,surface) {
     try {
       const customer=await context.newPage(),admin=await context.newPage();
       await open(customer,'customer');
-      await admin.goto(new URL('admin/',base).href);
+      await admin.goto(new URL('admin/?demo-legacy=1',base).href);
       await admin.locator('#admin-gate').waitFor({state:'visible'});
       for(const lang of locales){
         await admin.locator('#admin-gate-language').selectOption(lang);
@@ -238,6 +238,7 @@ async function measure(browser,surface) {
         const ranking=admin.locator('#revenue-ranking');
         assert.equal(await chartTable.count(),1);
         assert.equal(await ranking.count(),1);
+        if(!await admin.locator('.revenue-more').evaluate(node=>node.open))await admin.locator('.revenue-more > summary').click();
         await chartTable.locator('summary').click();
         assert.equal(await chartTable.evaluate(node=>node.open),true);
         assert.equal(await admin.locator('#revenue-table-body tr').count(),7);

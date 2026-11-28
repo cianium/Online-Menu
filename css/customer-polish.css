@@ -750,3 +750,10 @@ html[dir] .hero-section>.hero-button{grid-row:2;align-self:end;justify-self:cent
 #phone-auth-entry .customer-entry-panel{border-radius:20px;padding:clamp(16px,5vw,28px);max-width:460px}
 #phone-auth-entry input{font-size:16px;min-height:48px}
 #phone-auth-entry .customer-entry-submit{min-height:48px;border-radius:12px}
+
+#phone-auth-entry .customer-entry-panel{background:#1b1b1e;border-color:#ffffff22;box-shadow:0 18px 60px #0007;backdrop-filter:none}
+#phone-auth-entry .customer-entry-panel form{padding:0;border:0;background:none}
+#phone-auth-entry .customer-entry-panel input{background:#242427;color:#f5f3ef;border:1px solid #ffffff30;border-radius:12px}
+#phone-auth-entry .customer-entry-panel input::placeholder{color:#b4b4bc}
+#phone-auth-entry .customer-entry-notice{font-size:12px;color:#f2d49b;line-height:1.65}
+#phone-auth-entry .customer-entry-panel .customer-entry-submit{background:#f2d49b;color:#17110a}

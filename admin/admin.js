@@ -326,7 +326,16 @@ async function bootAdmin() {
             for(const [selector,label] of Object.entries({"#admin-gate-id-label":"شناسه ورود","#admin-gate-eyebrow":"دسترسی آزمایشی مدیریت","#admin-gate-description":"با شناسه و رمز عمومی نمونه وارد شوید؛ این حساب واقعی نیست.","#admin-gate-footer-mode":"فقط داده آزمایشی"})) {
                 document.querySelector(selector).textContent=window.ROMANO_ADMIN_I18N.get(label);
             }
-            if(!demoAdminSignedIn()){setGateOpen(true);return;}
+            if(!demoAdminSignedIn()){
+                // Same sample phone entry as the guest profile. Retain the
+                // explicit legacy demo route for older walkthroughs/QA only.
+                if(new URLSearchParams(location.search).get('demo-legacy')!=='1'){
+                    const destination=new URL('../',location.href);
+                    destination.searchParams.set('login','1');
+                    location.replace(destination.href);return;
+                }
+                setGateOpen(true);return;
+            }
         }
         if (available && (!session?.user || !session?.membership)) {
             if (await window.RomanoAPI.phoneAuthStatus()) {

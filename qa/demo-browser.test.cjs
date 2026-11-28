@@ -243,11 +243,12 @@ const readyCustomer = async page => {
     await customer.locator('#menu-toggle').click();
     await customer.locator('[data-nav-panel=profile]').click();
     await customer.locator('#ramen-contact-dialog').getByRole('button',{name:'Join the demo club'}).click();
-    await entry.waitFor({state:'visible'});
-    await entry.locator('input[name=name]').fill('Sample Customer');
-    await entry.locator('input[name=phone]').fill('+12025550101');
-    await entry.locator('button[type=submit]').click();
-    await entry.waitFor({state:'hidden'});
+    const sharedEntry=customer.locator('#phone-auth-entry');
+    await sharedEntry.locator('input[name=phone]').fill('+12025550101');
+    await sharedEntry.locator('button[type=submit]').click();
+    await sharedEntry.locator('input[name=code]').fill('123456');
+    await sharedEntry.locator('button[type=submit]').click();
+    await sharedEntry.waitFor({state:'hidden'});
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders.length),1);
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.open()),true);
     await entry.locator('input[name=name]').fill('Different sample name');

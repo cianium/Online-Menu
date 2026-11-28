@@ -1,4 +1,4 @@
-/* Shared connected phone sign-in. Never simulates SMS or runs on standalone demo. */
+/* Shared phone entry: server-authorized connected transport and explicitly fictional demo transport. */
 (()=>{
  "use strict";
  const words={
@@ -7,15 +7,76 @@
   tr:{title:"RAMEN’ya hoş geldiniz",phone:"Telefon numarası",name:"Ad soyad",admin:"Yönetici kaydı",staffTitle:"Yönetici kaydı",customerTitle:"Müşteri kaydı",staffIntro:"Telefon numaranızı, adınızı ve verilen erişim anahtarını girin.",backLogin:"Girişe dön",key:"Erişim anahtarı",code:"Doğrulama kodu",next:"Devam et",send:"Doğrulama kodu gönder",verify:"Giriş yap",edit:"Numarayı değiştir",resend:"Kodu yeniden gönder",guest:"Şimdilik menüye göz at",intro:"Telefon numaranızla giriş yapın.",new:"Hesap oluşturmak için adınızı girin.",sent:"Numaranıza gönderilen altı haneli kodu girin.",error:"İşlem tamamlanamadı. Bilgilerinizi kontrol edip tekrar deneyin.",invalid:"Kod yanlış veya süresi dolmuş.",limit:"Çok fazla deneme. Daha sonra tekrar deneyin.",language:"Dil",logout:"Çıkış yap",login:"Giriş / Kayıt",busy:"Kontrol ediliyor…"},
   ar:{title:"مرحبًا بك في رامن",phone:"رقم الهاتف",name:"الاسم الكامل",admin:"تسجيل المدير",staffTitle:"تسجيل المدير",customerTitle:"تسجيل العميل",staffIntro:"أدخل رقم هاتفك واسمك ومفتاح الوصول الممنوح لك.",backLogin:"العودة إلى تسجيل الدخول",key:"مفتاح الوصول",code:"رمز التحقق",next:"متابعة",send:"إرسال رمز التحقق",verify:"تسجيل الدخول",edit:"تغيير الرقم",resend:"إعادة إرسال الرمز",guest:"تصفح القائمة الآن",intro:"سجّل الدخول برقم هاتفك.",new:"أدخل اسمك لإنشاء حساب.",sent:"أدخل الرمز المكوّن من ستة أرقام المرسل إلى هاتفك.",error:"تعذر إتمام الطلب. تحقق من البيانات وحاول مرة أخرى.",invalid:"الرمز غير صحيح أو منتهي الصلاحية.",limit:"محاولات كثيرة. حاول لاحقًا.",language:"اللغة",logout:"تسجيل الخروج",login:"الدخول / التسجيل",busy:"جارٍ التحقق…"}
  };
- const t=k=>(words[window.ROMANO_I18N?.language]||words.fa)[k];
+ const sampleWords={
+  fa:{demoNotice:'نسخه آزمایشی؛ پیامک واقعی ارسال نمی‌شود. فقط نام ساختگی و شماره نمونه +12025550101 تا +12025550199 وارد کنید.',intro:'با شماره نمونه وارد شوید.',staffIntro:'برای ثبت‌نام مدیر از نام و شماره نمونه و کلید RAMEN-DEMO-ACCESS استفاده کنید.',sent:'کد تأیید آزمایشی: 123456. هیچ پیامکی ارسال نشده است.',send:'دریافت کد نمونه',resend:'دریافت مجدد کد نمونه',demoPhone:'فقط شماره‌های نمونه اعلام‌شده پذیرفته می‌شوند.'},
+  en:{demoNotice:'Demo only. No real SMS is sent. Use a fictional name and a sample number from +12025550101 to +12025550199.',intro:'Sign in with a sample phone number.',staffIntro:'Use a fictional name, sample number and the RAMEN-DEMO-ACCESS key.',sent:'Sample verification code: 123456. No SMS was sent.',send:'Get sample code',resend:'Get another sample code',demoPhone:'Use one of the listed sample numbers only.'},
+  tr:{demoNotice:'Yalnızca demo. Gerçek SMS gönderilmez. Kurgusal bir ad ve +12025550101 ile +12025550199 arasında örnek numara kullanın.',intro:'Örnek telefon numaranızla giriş yapın.',staffIntro:'Kurgusal ad, örnek numara ve RAMEN-DEMO-ACCESS anahtarını kullanın.',sent:'Örnek doğrulama kodu: 123456. SMS gönderilmedi.',send:'Örnek kod al',resend:'Yeni örnek kod al',demoPhone:'Yalnızca belirtilen örnek numaraları kullanın.'},
+  ar:{demoNotice:'عرض تجريبي فقط. لا تُرسل رسالة حقيقية. استخدم اسمًا وهميًا ورقمًا من +12025550101 إلى +12025550199.',intro:'سجّل الدخول برقم تجريبي.',staffIntro:'استخدم اسمًا وهميًا ورقمًا تجريبيًا ومفتاح RAMEN-DEMO-ACCESS.',sent:'رمز التحقق التجريبي: 123456. لم تُرسل رسالة.',send:'احصل على رمز تجريبي',resend:'احصل على رمز آخر',demoPhone:'استخدم أحد الأرقام التجريبية المحددة فقط.'}
+ };
+ const language=()=>window.ROMANO_I18N?.language||'fa';
+ const t=k=>(demoAuth?sampleWords[language()]?.[k]:undefined)??(words[language()]||words.fa)[k];
  const digits=value=>value.replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776)).replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632));
  const el=(tag,cls)=>{const n=document.createElement(tag);if(cls)n.className=cls;return n;};
  const label=(tag,key,cls)=>{const n=el(tag,cls);n.dataset.phoneAuthText=key;n.textContent=t(key);return n;};
  const button=(key,cls,action)=>{const n=label('button',key,cls);n.type='button';n.addEventListener('click',action);return n;};
  let available=false,booted=false,session=null,dialog=null,csrf=null,generation=0,timer,opener=null;
+ let demoAuth=false,demoChallenge=null;
+ const sampleStaffKey='ramen_demo_staff_v1',sampleAdminSession='online_menu_demo_admin_session_v1',sampleAccessKey='RAMEN-DEMO-ACCESS';
+ function sampleError(code){return Object.assign(Error(code),{code});}
+ function samplePhone(raw){
+  const p=window.RomanoDemoMembers.phone(raw).replace(/^\+?1(?=20255501\d{2}$)/,'');
+  if(!/^20255501(?:0[1-9]|[1-9]\d)$/.test(p))throw sampleError('DEMO_PHONE');
+  return '+1'+p;
+ }
+ function sampleStaff(){
+  const raw=localStorage.getItem(sampleStaffKey),rows=raw===null?[]:JSON.parse(raw);
+  if(!Array.isArray(rows)||rows.length>99||rows.some(r=>!r||samplePhone(r.phone)!==r.phone||typeof r.name!=='string'||!r.name.trim()||r.name.length>80)||new Set(rows.map(r=>r.phone)).size!==rows.length)throw Error('DEMO_STORAGE');
+  return rows;
+ }
+ function sampleCustomer(phone){
+  return window.RomanoDemoMembers.read(localStorage).find(r=>{try{return samplePhone(r.phone)===phone;}catch{return false;}});
+ }
+ async function sampleRequest(path,body){
+  if(typeof menuDataMode==='undefined'||menuDataMode!=='demo')throw Error('DEMO_DISABLED');
+  const model=window.RomanoDemoMembers;
+  if(path==='/auth/phone/lookup'){
+   const p=samplePhone(body.phone);
+   return {needsName:!sampleStaff().some(r=>r.phone===p)&&!sampleCustomer(p)};
+  }
+  if(path==='/auth/phone/start'||path==='/auth/phone/enroll-admin'){
+   const p=samplePhone(body.phone),staff=sampleStaff().find(r=>r.phone===p),customer=sampleCustomer(p),enrolling=path.endsWith('/enroll-admin');
+   const name=String(body.name||'').normalize('NFKC').trim();
+   if(enrolling&&(staff||customer||body.accessKey!==sampleAccessKey||!name||name.length>80))throw Error('DEMO_ENROLL');
+   if(!enrolling&&!staff&&!customer&&(!name||name.length>80))throw Error('DEMO_NAME');
+   demoChallenge={id:crypto.randomUUID(),phone:p,role:enrolling||staff?'admin':'customer',name:staff?.name||customer?.name||name,enrolling,expires:Date.now()+300000,attempts:0};
+   return {challenge:demoChallenge.id,resendAfter:60};
+  }
+  if(path==='/auth/phone/verify'){
+   const c=demoChallenge;
+   if(!c||c.id!==body.challenge||Date.now()>=c.expires||c.attempts>=5)throw sampleError('PHONE_AUTH_CODE_INVALID');
+   if(body.code!=='123456'){c.attempts++;throw sampleError('PHONE_AUTH_CODE_INVALID');}
+   demoChallenge=null;
+   await model.mutate(()=>{
+    const staff=sampleStaff(),existing=staff.find(r=>r.phone===c.phone),customer=sampleCustomer(c.phone);
+    if(c.role==='admin'){
+     if(customer||(!c.enrolling&&!existing)||(c.enrolling&&existing))throw Error('DEMO_ROLE_CONFLICT');
+     if(c.enrolling)localStorage.setItem(sampleStaffKey,JSON.stringify([...staff,{phone:c.phone,name:c.name}]));
+     model.signOut(sessionStorage);sessionStorage.setItem(sampleAdminSession,'1');
+    }else{
+     if(existing)throw Error('DEMO_ROLE_CONFLICT');
+     model.register(localStorage,sessionStorage,customer?.name||c.name,customer?.phone||c.phone);
+     sessionStorage.removeItem(sampleAdminSession);
+    }
+   });
+   document.dispatchEvent(new CustomEvent('romano:demo-membership-changed'));
+   return {role:c.role,user:{displayName:c.name}};
+  }
+  throw Error('DEMO_ROUTE');
+ }
  function adminDestination(){return new URL('admin/',location.href.split('#')[0].split('?')[0]);}
  function removeLogin(){const url=new URL(location.href);if(url.searchParams.has('login')){url.searchParams.delete('login');history.replaceState(history.state,'',url.pathname+url.search+url.hash);}}
  async function request(path,body){
+  if(demoAuth)return sampleRequest(path,body);
   const post=body!==undefined;
   if(post&&!csrf){const data=await request('/auth/csrf');csrf=data?.csrfToken;if(!csrf)throw Error('CSRF');}
   const response=await fetch('/api/v1'+path,{method:post?'POST':'GET',credentials:'same-origin',cache:'no-store',redirect:'error',signal:AbortSignal.timeout(15000),headers:post?{'Accept':'application/json','Content-Type':'application/json','X-CSRF-Token':csrf}:{Accept:'application/json'},...(post?{body:JSON.stringify(body)}:{})});
@@ -27,7 +88,7 @@
   }
   return payload.data;
  }
- function errorKey(error){return error?.status===429?'limit':error?.code==='PHONE_AUTH_CODE_INVALID'?'invalid':'error';}
+ function errorKey(error){return error?.code==='DEMO_PHONE'?'demoPhone':error?.status===429?'limit':error?.code==='PHONE_AUTH_CODE_INVALID'?'invalid':'error';}
  function labels(){if(!dialog?.open)return;dialog.querySelectorAll('[data-phone-auth-text]').forEach(n=>n.textContent=t(n.dataset.phoneAuthText));const select=dialog.querySelector('select');if(select){select.setAttribute('aria-label',t('language'));select.value=window.ROMANO_I18N.language;}}
  function open(){
   if(!available||dialog?.open)return false;
@@ -41,7 +102,7 @@
   const title=label('h1','title');title.id='phone-auth-title';
   const intro=label('p','intro'),form=el('form'),error=el('p','customer-entry-error');error.setAttribute('role','alert');
   const guest=button('guest','customer-entry-guest',()=>dialog?.close());
-  panel.append(top,title,intro,form,guest);dialog.append(panel);
+  panel.append(top,title,intro);if(demoAuth)panel.append(label('p','demoNotice','customer-entry-notice'));panel.append(form,guest);dialog.append(panel);
   let stage='phone',phone='',registration=null,challenge=null,canResendAt=0,pending=false,staffEnrollment=false;
   const showError=key=>{if(key){error.dataset.phoneAuthText=key;error.textContent=t(key);}else{delete error.dataset.phoneAuthText;error.textContent='';}};
   const field=(key,options)=>{const wrapper=el('label'),input=el('input');Object.assign(input,options);wrapper.append(label('span',key),input);form.append(wrapper);return input;};
@@ -52,12 +113,12 @@
    title.textContent=t(title.dataset.phoneAuthText);
    intro.dataset.phoneAuthText=stage==='phone'?'intro':stage==='name'?'new':stage==='staff'?'staffIntro':'sent';intro.textContent=t(intro.dataset.phoneAuthText);
    let primary,name,key,resend;
-   if(stage==='phone')primary=field('phone',{type:'tel',name:'phone',inputMode:'tel',autocomplete:'tel',dir:'ltr',required:true,maxLength:40,value:phone});
-   if(stage==='name')primary=field('name',{name:'name',autocomplete:'name',dir:'auto',required:true,maxLength:80,value:registration?.name||''});
+   if(stage==='phone')primary=field('phone',{type:'tel',name:'phone',inputMode:'tel',autocomplete:demoAuth?'off':'tel',placeholder:demoAuth?'+12025550101':'',dir:'ltr',required:true,maxLength:40,value:phone});
+   if(stage==='name')primary=field('name',{name:'name',autocomplete:demoAuth?'off':'name',dir:'auto',required:true,maxLength:80,value:registration?.name||''});
    if(stage==='staff'){
-    primary=field('phone',{type:'tel',name:'phone',inputMode:'tel',autocomplete:'tel',dir:'ltr',required:true,maxLength:40,value:phone});
-    name=field('name',{name:'name',autocomplete:'name',dir:'auto',required:true,maxLength:80,value:registration?.name||''});
-    key=field('key',{type:'password',name:'accessKey',autocomplete:'off',dir:'ltr',minLength:43,maxLength:43,required:true});
+    primary=field('phone',{type:'tel',name:'phone',inputMode:'tel',autocomplete:demoAuth?'off':'tel',placeholder:demoAuth?'+12025550101':'',dir:'ltr',required:true,maxLength:40,value:phone});
+    name=field('name',{name:'name',autocomplete:demoAuth?'off':'name',dir:'auto',required:true,maxLength:80,value:registration?.name||''});
+    key=field('key',{type:'password',name:'accessKey',autocomplete:'off',dir:'ltr',minLength:demoAuth?sampleAccessKey.length:43,maxLength:demoAuth?sampleAccessKey.length:43,required:true});
    }
    if(stage==='code')primary=field('code',{name:'code',type:'text',inputMode:'numeric',autocomplete:'one-time-code',dir:'ltr',required:true,maxLength:6});
    const submit=label('button',stage==='phone'?'next':stage==='code'?'verify':'send','customer-entry-submit');submit.type='submit';form.append(submit);
@@ -84,12 +145,23 @@
     if(result.role==='admin')location.assign(adminDestination().href);
    });};
   }
-  dialog.addEventListener('cancel',event=>{if(pending)event.preventDefault();});
-  dialog.addEventListener('close',()=>{generation++;clearTimeout(timer);registration=null;challenge=null;removeLogin();window.RamenOverlayHistory.leave('phone-entry');dialog.remove();dialog=null;if(opener?.isConnected&&!opener.closest('[inert]'))opener.focus({preventScroll:true});});
-  dialog.showModal();window.RamenOverlayHistory.enter('phone-entry',()=>{if(!pending)dialog?.close();},{onBack:()=>pending});render();return true;
+  function backStage(){
+   if(pending)return true;
+   if(stage==='phone')return false;
+   if(stage==='code'){
+    stage=staffEnrollment?'staff':registration?'name':'phone';challenge=null;demoChallenge=null;
+    if(registration?.accessKey)registration={name:registration.name};
+   }else{stage='phone';staffEnrollment=false;challenge=null;registration=null;demoChallenge=null;}
+   render();return true;
+  }
+  dialog.addEventListener('cancel',event=>{if(backStage())event.preventDefault();});
+  dialog.addEventListener('close',()=>{generation++;clearTimeout(timer);registration=null;challenge=null;demoChallenge=null;removeLogin();window.RamenOverlayHistory.leave('phone-entry');dialog.remove();dialog=null;if(opener?.isConnected&&!opener.closest('[inert]'))opener.focus({preventScroll:true});});
+  dialog.showModal();window.RamenOverlayHistory.enter('phone-entry',()=>{if(!pending)dialog?.close();},{onBack:backStage});render();return true;
  }
  async function boot(launch=false){
-  if(booted||window.RomanoPublicAPI?.standalone||typeof menuDataMode==='undefined'||menuDataMode!=='public')return;
+  if(booted||typeof menuDataMode==='undefined')return;
+  if(menuDataMode==='demo'){booted=true;demoAuth=true;available=true;if(launch)open();return;}
+  if(window.RomanoPublicAPI?.standalone||menuDataMode!=='public')return;
   booted=true;
   try{available=(await request('/auth/phone/status'))?.enabled===true;if(!available)return;session=await request('/auth/me');if(launch){if(session?.user){removeLogin();if(session.membership)location.assign(adminDestination().href);}else open();}}
   catch{available=false;}
