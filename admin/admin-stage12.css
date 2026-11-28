@@ -179,3 +179,73 @@ html[dir="rtl"] .sidebar-navigation .nav-item.active {box-shadow:inset -3px 0 0 
 #revenue-top-items{margin:0;padding-inline-start:1.75rem}
 #revenue-top-items li{padding:.4rem .25rem;border-block-end:1px solid var(--admin-line);overflow-wrap:anywhere}
 #revenue-top-items li span{margin-inline-start:.75rem;font-variant-numeric:tabular-nums;font-weight:700}
+
+/* R27: compact RAMEN management home. Reuse the existing design tokens and fonts. */
+.admin-header.admin-header-compact{position:sticky;inset-block-start:0;min-height:64px;background:#18181b;border-block-end:1px solid #ffffff20;box-shadow:0 3px 14px #0004;gap:8px}
+.admin-header-compact .admin-header-brand{color:#f2d49b;font-family:Inter,Vazirmatn,sans-serif;font-weight:800;letter-spacing:.04em}
+.admin-header-compact :is(.admin-header-link,.mobile-menu-button){background:#ffffff08;border:1px solid #ffffff16;color:#f5f3ef}
+.admin-header-compact :is(.admin-header-link,.mobile-menu-button):hover{background:#d4a85320;color:#f2d49b}
+#page-dashboard .ramen-dashboard-heading{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-block:6px 18px}
+#page-dashboard .ramen-dashboard-heading h1{margin:0;font-size:clamp(24px,3vw,32px);line-height:1.3}
+#page-dashboard .welcome-date{font-size:13px;color:#b4b4bc;background:none;border:0;padding:0}
+#page-dashboard :is(.panel,.stat-card,.admin-integrity-panel){background:#1b1b1e;border:1px solid #ffffff15;border-radius:16px;box-shadow:none}
+#page-dashboard .overview-revenue{background:linear-gradient(155deg,#28231b,#1b1b1e 48%);padding:clamp(14px,2vw,24px);border:1px solid #d4a85340;gap:12px}
+#page-dashboard .revenue-heading{padding:0;border:0}
+#page-dashboard .revenue-heading h2{font-size:20px}
+#page-dashboard #revenue-status{font-size:13px;color:#c5c0b6}
+#page-dashboard .revenue-filters{background:transparent;border:0;padding:0;gap:8px}
+#page-dashboard .revenue-filters label{flex:1 1 100px}
+#page-dashboard .revenue-total{margin:0}
+#page-dashboard .revenue-total dt{font-size:13px;color:#c2c1c7}
+#page-dashboard .revenue-total dd{margin:4px 0 0;color:#f2d49b;font-weight:750;font-size:clamp(23px,5.5vw,34px);line-height:1.4;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+#page-dashboard #revenue-range-label{font-size:12px;color:#b4b4bc}
+#page-dashboard .revenue-chart{background:#151518;border-color:#ffffff15;border-radius:12px;box-shadow:none;padding:12px}
+#page-dashboard #revenue-bars{height:clamp(120px,30vw,210px);gap:2px}
+#page-dashboard .revenue-bar{height:100%;min-width:0;position:relative;background:none;box-shadow:none;filter:none;cursor:pointer}
+#page-dashboard .revenue-bar::after{content:"";position:absolute;inset-inline:0;inset-block-end:0;height:var(--bar-height);border-radius:4px 4px 0 0;background:#b98d53}
+#page-dashboard .revenue-bar.is-selected::after{background:#f2d49b}
+#page-dashboard .revenue-kpis{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#page-dashboard .revenue-kpis>div{background:#242427;border:1px solid #ffffff12;border-radius:12px;padding:10px;box-shadow:none}
+#page-dashboard .revenue-kpis>div::before{display:none}
+#page-dashboard .revenue-kpis dt{font-size:13px;line-height:1.5;color:#c4c4cb}
+#page-dashboard .revenue-kpis dd{font-size:clamp(15px,2.1vw,21px);color:#f5f3ef;line-height:1.4}
+#page-dashboard #revenue-previous{font-size:12px;font-weight:400;color:#b4b4bc}
+#revenue-change[data-trend=up]{color:#6ee7b7!important}
+#revenue-change[data-trend=down]{color:#fca5a5!important}
+#page-dashboard .revenue-more{border-block-start:1px solid #ffffff18}
+#page-dashboard .revenue-more>summary{min-height:44px;cursor:pointer;padding:12px 0;color:#f2d49b;font-weight:700}
+#page-dashboard .revenue-more[open]>button{margin-block-end:8px}
+#page-dashboard .ramen-quick-section{margin-block:18px}
+#page-dashboard .ramen-quick-section h2{font-size:18px;margin:0 0 10px}
+#page-dashboard .admin-quick-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0}
+#page-dashboard .quick-action-card{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px;min-height:84px;padding:8px;min-width:0;border-radius:12px;background:#242427;box-shadow:none}
+#page-dashboard .quick-action-card strong{font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+#page-dashboard .quick-action-icon{width:34px;height:34px;font-size:20px}
+#page-dashboard .ramen-review-clear{grid-column:1/-1;color:#6ee7b7;margin:0;padding:8px 0}
+#page-dashboard .stats-grid .stat-card{min-height:82px;padding:12px}
+#page-dashboard .integrity-heading{margin-block-end:8px}
+.admin-footer a{color:#c5c0b6;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.admin-gate.is-open{overflow-y:auto;align-items:flex-start;background:radial-gradient(ellipse at top,#30251a,#101013 70%);padding:20px 16px}
+.admin-gate .admin-gate-panel{margin:auto;width:min(100%,420px);padding:18px 22px 22px;border-radius:22px;background:#1b1b1e;backdrop-filter:none;box-shadow:none;border:1px solid #ffffff20}
+.admin-gate-panel::before,.admin-gate-panel::after,.admin-gate-ambient,.admin-gate-grain{display:none}
+.ramen-gate-top{display:flex;justify-content:flex-end}
+.ramen-language-icon{position:relative;display:grid;place-items:center;width:44px;height:44px;border:1px solid #ffffff25;border-radius:12px;color:#f2d49b}
+.ramen-language-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;pointer-events:none}
+.ramen-language-icon select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.ramen-language-icon:focus-within{outline:2px solid #f2d49b;outline-offset:2px}
+.admin-gate-panel .admin-gate-brand{justify-content:center;margin:0 0 14px}
+.admin-gate-panel .admin-gate-brand-label,.admin-gate-panel .admin-gate-eyebrow::before,.admin-gate-panel .admin-gate-eyebrow::after{display:none}
+.admin-gate-panel .admin-gate-auth{margin-top:18px}
+.admin-gate-panel .admin-gate-field{font-size:14px;color:#d7d6dc;text-align:start}
+.admin-gate-panel .admin-gate-field input{min-height:48px;background:#242427;color:#f5f3ef;border:1px solid #ffffff30;border-radius:12px;font-size:16px}
+.admin-gate-panel .admin-gate-submit{min-height:48px;border-radius:12px;background:#f2d49b;color:#17110a}
+.admin-gate-panel p{font-size:14px;color:#c4c4cb;line-height:1.6}
+.admin-gate-panel .admin-gate-footer{margin-block-start:16px;padding-block-start:10px}
+@media(max-width:600px){
+  #page-dashboard .revenue-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #page-dashboard .revenue-kpis>div:last-child{grid-column:1/-1}
+  #page-dashboard .admin-quick-actions{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #page-dashboard .overview-orders,#page-dashboard .overview-rating{padding:12px}
+}
+@media(max-width:350px){.admin-header.admin-header-compact{gap:4px;padding-inline:6px}.admin-header-compact .header-actions{gap:2px}#page-dashboard .quick-action-card strong{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.admin-gate-panel,.admin-header-compact *,#page-dashboard *{transition:none!important;animation:none!important}}

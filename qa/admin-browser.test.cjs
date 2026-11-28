@@ -117,6 +117,7 @@ async function check(name, action) { await action(); results.push(name); console
       await page.locator('#revenue-bucket').selectOption('6');
       assert.match(await page.locator('#revenue-detail').textContent(),/100 Toman/);
       const downloadPromise=page.waitForEvent('download');
+      await page.locator('.revenue-more > summary').click();
       await page.locator('#revenue-export').click();
       const download=await downloadPromise;
       assert.match(download.suggestedFilename(),/^ramen-sample-orders-IRT-/);
@@ -143,7 +144,7 @@ async function check(name, action) { await action(); results.push(name); console
     for(const lang of ['fa','ar','en','tr']){
       await page.evaluate(l=>ROMANO_ADMIN_I18N.setLanguage(l),lang);
       const header=page.locator('.admin-header');
-      assert.equal(await header.locator('.admin-header-brand').textContent(),'ROMANO');
+      assert.equal(await header.locator('.admin-header-brand').textContent(),'RAMEN');
       assert.equal(await header.locator('#admin-add-product-shortcut,#admin-logout-button').count(),0);
       const controls=header.locator('button,a[href]');
       assert.equal(await controls.count(),4);
@@ -193,9 +194,9 @@ await check('Order filter group accessible name is localized in all four languag
       const expectedBrand = {fa:'مدیریت',en:'Management',tr:'Yönetim',ar:'الإدارة'}[lang];
       assert.equal(await page.locator('.admin-brand-label').textContent().then(value=>value.trim()), expectedBrand);
       assert.equal(await page.locator('.admin-brand').getAttribute('aria-labelledby'), 'admin-brand-name admin-brand-label');
-      assert.equal(await page.locator('.admin-brand-name').textContent().then(value=>value.trim()), 'ROMANO');
-      assert.equal(await page.locator('.admin-footer-brand strong').textContent().then(value=>value.trim()), 'ROMANO');
-      assert.match(await page.title(), /ROMANO|رومانو/);
+      assert.equal(await page.locator('.admin-brand-name').textContent().then(value=>value.trim()), 'RAMEN');
+      assert.equal(await page.locator('.admin-footer-brand strong').textContent().then(value=>value.trim()), 'RAMEN');
+      assert.match(await page.title(), /RAMEN|رامن/);
       for (const width of [1920,1440,1024,768,430,390,375,360,320]) {
         await page.setViewportSize({width,height:900});
         for (const section of ['dashboard','orders','products','categories','settings','loyalty','connect']) {

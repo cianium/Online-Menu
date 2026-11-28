@@ -19,7 +19,7 @@
             ["description", "بدون توضیحات", active.filter(p => !p.description).length],
             ["category", "دسته‌بندی نامعتبر", active.filter(p => !categories.has(p.category)).length]
         ];
-        panel.innerHTML = `<div class="review-heading"><div><span class="panel-eyebrow">${h(t("فقط محصولات فعال"))}</span><h2 id="workspace-review-title">${h(t("موارد نیازمند بررسی"))}</h2><p>${h(t("محصولات فعال را پیش از ارائه به مشتری بررسی کنید."))}</p></div><span class="review-symbol" aria-hidden="true">◈</span></div><div class="review-grid">${checks.map(([key, label, count]) => `<button type="button" class="review-item ${count ? 'needs-attention' : 'is-complete'}" data-review="${key}"><span>${h(t(label))}</span><strong>${number(count)}</strong><small>${h(t("مشاهده موارد"))} <span aria-hidden="true">↗</span></small></button>`).join("")}</div>`;
+        panel.innerHTML = `<div class="review-heading"><div><h2 id="workspace-review-title">${h(t("موارد نیازمند بررسی"))}</h2><p>${h(t("محصولات فعال را پیش از ارائه به مشتری بررسی کنید."))}</p></div><span class="review-symbol" aria-hidden="true">◈</span></div><div class="review-grid">${checks.every(([, ,count]) => count === 0) ? `<p class="ramen-review-clear" role="status">${h(t("موردی نیازمند رسیدگی نیست."))}</p>` : checks.map(([key, label, count]) => `<button type="button" class="review-item ${count ? 'needs-attention' : 'is-complete'}" data-review="${key}"><span>${h(t(label))}</span><strong>${number(count)}</strong><small>${h(t("مشاهده موارد"))} <span aria-hidden="true">↗</span></small></button>`).join("")}</div>`;
     }
 
     function updateSelection() {

@@ -18,11 +18,11 @@
 
     <meta
         name="description"
-        content="پنل مدیریت منوی دیجیتال ROMANO"
+        content="پنل مدیریت منوی دیجیتال RAMEN"
     >
 
     <meta name="robots" content="noindex, nofollow">
-    <title>ROMANO | پنل مدیریت</title>
+    <title>RAMEN | پنل مدیریت</title>
 
     <link rel="stylesheet" href="../css/fonts.css">
 
@@ -83,7 +83,7 @@
             >
 
                 <span class="admin-brand-name" id="admin-brand-name">
-                    ROMANO
+                    RAMEN
                 </span>
 
                 <span class="admin-brand-label" id="admin-brand-label">
@@ -216,7 +216,7 @@
 
         <header class="admin-header admin-header-compact">
             <button class="mobile-menu-button" id="mobile-menu-button" type="button" aria-label="باز کردن منو" aria-controls="sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-            <div class="header-title"><strong class="admin-header-brand" dir="auto">ROMANO</strong><span id="current-page-title" class="sr-only">داشبورد</span></div>
+            <div class="header-title"><strong class="admin-header-brand" dir="auto">RAMEN</strong><span id="current-page-title" class="sr-only">داشبورد</span></div>
             <div class="header-actions">
                 <a class="admin-header-link" href="../index.html" target="_blank" rel="noopener noreferrer" aria-label="پیش‌نمایش منوی مشتری" title="پیش‌نمایش منوی مشتری"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 5h6v6m0-6L10 14M19 13v6H5V5h6"/></svg></a>
                 <button class="admin-header-link" type="button" data-page-target="settings" aria-label="تنظیمات رستوران" title="تنظیمات رستوران"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m10 3 4 0 1 3 3 1 3 3-2 2 2 2-3 3-3 1-1 3h-4l-1-3-3-1-3-3 2-2-2-2 3-3 3-1z"/></svg></button>
@@ -252,38 +252,14 @@
                 aria-labelledby="dashboard-title"
             >
 
-                <div class="page-heading">
-
-                    <div>
-
-                        <span class="page-eyebrow">
-                            نمای کلی
-                        </span>
-
-                        <h1 id="dashboard-title">
-                            داشبورد
-                        </h1>
-
-                        <p>
-                            وضعیت فعلی منوی ROMANO را مدیریت کنید.
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="admin-welcome-strip">
-                    <div>
-                        <span class="welcome-kicker">مرکز مدیریت ROMANO</span>
-                        <p>از اینجا منو، محصولات و اطلاعات نمایشی رستوران را مدیریت کنید.</p>
-                    </div>
-                    <div class="welcome-date" id="admin-current-date" aria-live="off">—</div>
+                <div class="page-heading ramen-dashboard-heading">
+                    <h1 id="dashboard-title">داشبورد</h1>
+                    <time class="welcome-date" id="admin-current-date" data-admin-user-text="true">—</time>
                 </div>
 
                 <section class="admin-overview" aria-label="خلاصه عملیات">
                     <article class="panel overview-revenue" aria-labelledby="revenue-title">
-                        <div class="revenue-heading"><div><h2 id="revenue-title">درآمد</h2><p>مبلغ سفارش‌های نمونه؛ درآمد یا پرداخت واقعی نیست.</p></div><button id="revenue-export" class="secondary-button" type="button" disabled>خروجی CSV</button></div>
+                        <div class="revenue-heading"><h2 id="revenue-title">درآمد</h2></div>
                         <p id="revenue-status" role="status">گزارش درآمد نیازمند تاریخچه پرداخت معتبر است.</p>
                         <div id="revenue-filters" class="revenue-filters" hidden>
                             <label><span>بازه گزارش</span><select id="revenue-period"><option value="1">امروز</option><option value="7">۷ روز اخیر</option><option value="30" selected>۳۰ روز اخیر</option><option value="365">۳۶۵ روز اخیر</option></select></label>
@@ -291,18 +267,32 @@
                         </div>
                         <div id="revenue-content" hidden>
                             <p id="revenue-range-label" dir="auto" data-admin-user-text="true"></p>
-                            <dl class="revenue-kpis"><div><dt>مجموع مبلغ سفارش‌های نمونه</dt><dd id="revenue-total" dir="auto" data-admin-user-text="true"></dd></div><div><dt>تعداد سفارش‌های نمونه</dt><dd id="revenue-count" data-admin-user-text="true"></dd></div><div><dt>میانگین مبلغ سفارش</dt><dd id="revenue-average" dir="auto" data-admin-user-text="true"></dd></div><div><dt>تغییر نسبت به دوره قبل</dt><dd id="revenue-change" dir="ltr" data-admin-user-text="true"></dd><dd id="revenue-previous" data-admin-user-text="true"></dd></div></dl>
-                            <p class="revenue-member-count"><span>مشتریان دارای سفارش نمونه</span> <strong id="revenue-customers" data-admin-user-text="true"></strong></p>
+                            <dl class="revenue-total"><div><dt>مجموع مبلغ سفارش‌های نمونه</dt><dd id="revenue-total" dir="auto" data-admin-user-text="true"></dd></div></dl>
                             <div class="revenue-chart" aria-hidden="true" dir="ltr"><span id="revenue-axis-max" data-admin-user-text="true"></span><div id="revenue-bars"></div><div class="revenue-axis"><span id="revenue-axis-start" data-admin-user-text="true"></span><span id="revenue-axis-end" data-admin-user-text="true"></span></div></div>
+                            <dl class="revenue-kpis"><div><dt>تعداد سفارش‌های نمونه</dt><dd id="revenue-count" data-admin-user-text="true"></dd></div><div><dt>میانگین مبلغ سفارش</dt><dd id="revenue-average" dir="auto" data-admin-user-text="true"></dd></div><div><dt>تغییر نسبت به دوره قبل</dt><dd id="revenue-change" dir="ltr" data-admin-user-text="true"></dd><dd id="revenue-previous" data-admin-user-text="true"></dd></div></dl>
+                            <p class="revenue-member-count"><span>مشتریان دارای سفارش نمونه</span> <strong id="revenue-customers" data-admin-user-text="true"></strong></p>
                             <label class="revenue-detail-label"><span>جزئیات بازه نمودار</span><select id="revenue-bucket" data-admin-user-text="true"></select></label><p id="revenue-detail" data-admin-user-text="true" role="status"></p>
                             <p id="revenue-excluded" data-admin-user-text="true"></p>
+                            <details class="revenue-more"><summary>گزارش کامل</summary><button id="revenue-export" class="secondary-button" type="button" disabled>خروجی CSV</button>
                             <details class="revenue-table" id="revenue-ranking" hidden><summary>پنج قلم پر‌سفارش بر اساس تعداد</summary><ol id="revenue-top-items" data-admin-user-text="true"></ol></details>
-                            <details class="revenue-table"><summary>جدول داده‌های نمودار</summary><div class="revenue-table-scroll" tabindex="0" role="region" aria-label="جدول داده‌های نمودار"><table><thead><tr><th scope="col">بازه گزارش</th><th scope="col">مبلغ سفارش</th><th scope="col">تعداد سفارش‌های نمونه</th><th scope="col">میانگین مبلغ سفارش</th></tr></thead><tbody id="revenue-table-body" data-admin-user-text="true"></tbody></table></div></details>
+                            <details class="revenue-table"><summary>جدول داده‌های نمودار</summary><div class="revenue-table-scroll" tabindex="0" role="region" aria-label="جدول داده‌های نمودار"><table><thead><tr><th scope="col">بازه گزارش</th><th scope="col">مبلغ سفارش</th><th scope="col">تعداد سفارش‌های نمونه</th><th scope="col">میانگین مبلغ سفارش</th></tr></thead><tbody id="revenue-table-body" data-admin-user-text="true"></tbody></table></div></details></details>
                         </div>
                     </article>
                     <article class="panel overview-orders"><h2>سفارش‌های در جریان</h2><strong id="overview-order-count" class="stat-value">—</strong><p id="overview-order-note">داده زنده در دسترس نیست.</p><dl class="overview-order-breakdown" id="overview-order-breakdown" hidden><div><dt>جدید</dt><dd data-order-metric="submitted">—</dd></div><div><dt>در آشپزخانه</dt><dd data-order-metric="preparing">—</dd></div><div><dt>آماده</dt><dd data-order-metric="ready">—</dd></div><div><dt>سرو یا تحویل‌شده</dt><dd data-order-metric="other">—</dd></div></dl><button type="button" class="secondary-button" data-page-target="orders">سفارش‌ها</button></article>
                     <article class="panel overview-rating"><h2>امتیاز رستوران</h2><strong id="overview-rating-value" class="stat-value">—</strong><p id="overview-rating-note">امتیاز تأییدشده در دسترس نیست.</p><p id="overview-rating-comment" data-admin-user-text="true" class="review-comment" hidden></p><div id="overview-rating-actions" hidden><button type="button" class="secondary-button" data-rating-action="approve">تأیید امتیاز آزمایشی</button><button type="button" class="secondary-button" data-rating-action="reject">رد امتیاز آزمایشی</button></div></article>
                 </section>
+                <section class="ramen-quick-section" aria-labelledby="ramen-quick-title">
+                    <h2 id="ramen-quick-title">دسترسی سریع</h2>
+                    <div class="admin-quick-actions" role="group" aria-labelledby="ramen-quick-title">
+                        <button type="button" id="ramen-add-product" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">+</span><strong>محصول جدید</strong></button>
+                        <button type="button" data-page-target="orders" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">▤</span><strong>سفارش‌ها</strong></button>
+                        <button type="button" data-page-target="products" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">▦</span><strong>محصولات</strong></button>
+                        <button type="button" data-page-target="categories" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">▥</span><strong>دسته‌بندی‌ها</strong></button>
+                        <button type="button" data-page-target="connect" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">↔</span><strong>صندوق مکالمات</strong></button>
+                        <button type="button" data-page-target="loyalty" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">♧</span><strong>باشگاه مشتریان</strong></button>
+                    </div>
+                </section>
+
                 <div class="stats-grid">
 
                     <article class="stat-card">
@@ -374,8 +364,8 @@
                 <section id="workspace-review" class="workspace-review panel" aria-labelledby="workspace-review-title"></section>
                 <section class="admin-integrity-panel" aria-labelledby="admin-integrity-title">
                     <div class="integrity-heading">
-                        <div><span class="panel-eyebrow">وضعیت منو</span><h2 id="admin-integrity-title">نمای کلی وضعیت منو</h2></div>
-                        <span class="integrity-note">بر اساس اطلاعات فعلی منو</span>
+                        <h2 id="admin-integrity-title">وضعیت منو</h2>
+                        
                     </div>
                     <div class="integrity-items">
                         <div><span class="integrity-marker" aria-hidden="true"></span><span>محصولات غیرفعال</span><strong id="stat-inactive">—</strong></div>
@@ -383,12 +373,6 @@
                         <div><span class="integrity-marker" aria-hidden="true"></span><span>اطلاعات تماس ثبت‌شده</span><strong id="stat-contact-status">—</strong></div>
                     </div>
                 </section>
-
-                <div class="admin-quick-actions" role="group" aria-label="دسترسی سریع">
-                    <button type="button" data-page-target="products" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">+</span><span><strong>مدیریت محصولات</strong><small>افزودن یا ویرایش آیتم‌های منو</small></span><span class="quick-action-arrow" aria-hidden="true">←</span></button>
-                    <button type="button" data-page-target="categories" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">▤</span><span><strong>دسته‌بندی‌ها</strong><small>مرتب‌سازی ساختار منو</small></span><span class="quick-action-arrow" aria-hidden="true">←</span></button>
-                    <button type="button" data-page-target="settings" class="quick-action-card"><span class="quick-action-icon" aria-hidden="true">⚙</span><span><strong>تنظیمات رستوران</strong><small>اطلاعات و راه‌های ارتباطی</small></span><span class="quick-action-arrow" aria-hidden="true">←</span></button>
-                </div>
 
                 <div class="dashboard-grid">
 
@@ -878,8 +862,8 @@
             <button type="button" data-page="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m10 3 4 0 1 3 3 1 3 3-2 2 2 2-3 3-3 1-1 3h-4l-1-3-3-1-3-3 2-2-2-2 3-3 3-1z"/></svg><span dir="auto">تنظیمات</span></button>
         </nav>
         <footer class="admin-footer">
-            <div class="admin-footer-brand"><strong>ROMANO</strong><span>پنل مدیریت</span></div>
-            <p>مدیریت منوی دیجیتال رستوران</p>
+            <div class="admin-footer-brand"><strong>RAMEN</strong><span>پنل مدیریت</span></div>
+            <a href="https://kiankhayat.me" target="_blank" rel="noopener noreferrer">ساخته‌شده توسط کیان خیاط</a>
             <div class="admin-footer-meta"><span id="admin-storage-mode">نسخه آزمایشی محلی</span></div>
         </footer>
 
@@ -1356,6 +1340,7 @@
         aria-labelledby="admin-gate-title"
     >
 
+        <div class="ramen-gate-top"><label class="ramen-language-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z"/></svg><select id="admin-gate-language" aria-label="تغییر زبان"><option value="fa">فارسی</option><option value="en">English</option><option value="tr">Türkçe</option><option value="ar">العربية</option></select></label></div>
         <div class="admin-gate-brand">
 
             <div class="admin-gate-logo-shell">
@@ -1367,7 +1352,7 @@
             </div>
 
             <div class="admin-gate-wordmark">
-                <span class="admin-gate-brand-name">ROMANO</span>
+                <span class="admin-gate-brand-name">RAMEN</span>
                 <span class="admin-gate-brand-label">پنل مدیریت</span>
             </div>
 
@@ -1403,7 +1388,6 @@
 
             </form>
 
-            <label class="admin-gate-field" for="admin-gate-language"><span>زبان</span><select id="admin-gate-language"><option value="fa">فارسی</option><option value="en">English</option><option value="tr">Türkçe</option><option value="ar">العربية</option></select></label>
             <p id="admin-demo-credentials" hidden>ورود آزمایشی؛ امنیت واقعی نیست. <bdi dir="ltr">demo-admin / Demo-Only-2026</bdi></p>
             <div class="admin-gate-secure-line" id="admin-gate-server-auth" aria-hidden="true">
                 <span class="admin-gate-secure-dot"></span>
@@ -1421,8 +1405,6 @@
         ></p>
 
         <div class="admin-gate-footer">
-            <span>منوی دیجیتال ROMANO</span>
-            <span aria-hidden="true">•</span>
             <span id="admin-gate-footer-mode">فقط کاربران مجاز</span>
         </div>
 

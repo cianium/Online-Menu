@@ -37,7 +37,7 @@
   const brandName=el('strong');brandName.textContent='RAMEN';brand.append(logo,brandName);top.append(brand);
   const select=el('select');select.setAttribute('aria-label',t('language'));
   for(const [value,text] of Object.entries({fa:'فارسی',en:'English',tr:'Türkçe',ar:'العربية'})){const option=el('option');option.value=value;option.textContent=text;select.append(option);}
-  select.value=window.ROMANO_I18N.language;select.addEventListener('change',()=>window.ROMANO_I18N.setLanguage(select.value,false));top.append(select);
+  select.value=window.ROMANO_I18N.language;select.addEventListener('change',()=>window.ROMANO_I18N.setLanguage(select.value,false));const languageControl=el('label','ramen-phone-language');const globe=document.createElementNS('http://www.w3.org/2000/svg','svg');globe.setAttribute('viewBox','0 0 24 24');globe.setAttribute('aria-hidden','true');const circle=document.createElementNS(globe.namespaceURI,'circle');circle.setAttribute('cx','12');circle.setAttribute('cy','12');circle.setAttribute('r','9');const path=document.createElementNS(globe.namespaceURI,'path');path.setAttribute('d','M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z');globe.append(circle,path);languageControl.append(globe,select);top.append(languageControl);
   const title=label('h1','title');title.id='phone-auth-title';
   const intro=label('p','intro'),form=el('form'),error=el('p','customer-entry-error');error.setAttribute('role','alert');
   const guest=button('guest','customer-entry-guest',()=>dialog?.close());
