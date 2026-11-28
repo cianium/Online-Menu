@@ -85,5 +85,29 @@
       }
       }
   }
-  window.RomanoCustomerPanels=Object.freeze({render});
+  function renderDemoProfile(host,member,{model,lang,el,text}){
+  const profileWords={fa:['شماره تلفن','تاریخ عضویت','سفارش‌ها','امتیاز نمونه','پرداخت‌ها','تخفیف‌ها','هیچ پرداخت واقعی ثبت نشده است.','تخفیف فعال نمونه','تخفیف فعالی ندارید.','تخفیف‌های استفاده‌شده'],en:['Phone number','Member since','Orders','Sample points','Payments','Discounts','No real payments recorded.','Active sample discount','No active discount.','Used discounts'],tr:['Telefon numarası','Üyelik tarihi','Siparişler','Örnek puan','Ödemeler','İndirimler','Gerçek ödeme kaydı yok.','Etkin örnek indirim','Etkin indirim yok.','Kullanılan indirimler'],ar:['رقم الهاتف','تاريخ العضوية','الطلبات','نقاط تجريبية','المدفوعات','الخصومات','لا توجد مدفوعات حقيقية مسجلة.','خصم تجريبي نشط','لا يوجد خصم نشط.','الخصومات المستخدمة']};
+  const w=profileWords[lang()]||profileWords.fa,nf=new Intl.NumberFormat(lang());
+  const identity=el('section',undefined,'r27-profile-identity'),avatar=el('span',Array.from(member.name.trim())[0]||'R','r27-profile-avatar');
+  avatar.setAttribute('aria-hidden','true');const identityCopy=el('div'),memberName=el('strong',member.name);memberName.dir='auto';
+  const phone=el('span',member.phone);phone.dir='ltr';phone.setAttribute('aria-label',w[0]+': '+member.phone);
+  identityCopy.append(memberName,phone,el('small',w[1]+' · '+new Date(member.createdAt).toLocaleDateString(lang())));identity.append(avatar,identityCopy);host.append(identity);
+  const stats=el('section',undefined,'r27-profile-stats');
+  for(const [label,value] of [[w[2],member.orders.length],[w[3],model.pointsFor(member)]]){const box=el('div');box.append(el('strong',nf.format(value)),el('small',label));stats.append(box);}host.append(stats);
+  host.append(text('h3','history'));
+  if(!member.orders.length)host.append(text('p','empty','ramen-contact-note'));
+  for(const order of member.orders){
+   const card=el('article',undefined,'ramen-contact-item');
+   card.append(el('small',new Date(order.createdAt).toLocaleDateString(lang())));
+   for(const item of order.items){const itemName=el('span',window.ROMANO_I18N.displayBrand(item.name)+' × '+item.quantity);itemName.dir='auto';card.append(itemName);if(item.note){const note=el('span',item.note,'hp-history-notes');note.dir='auto';card.append(note);}}
+   if(order.notes){const note=el('span',order.notes,'hp-history-notes');note.dir='auto';card.append(note);}
+   card.append(el('strong',order.currency&&window.OnlineMenuMoney?window.OnlineMenuMoney.formatCatalog(order.total,{currency:order.currency,language:lang()}):typeof formatPrice==='function'?formatPrice(order.total):String(order.total)));host.append(card);
+  }
+  host.append(el('h3',w[4]),el('p',w[6],'ramen-contact-note'),el('h3',w[5]));
+  let cfg;try{cfg=model.settings(localStorage);}catch{}
+  if(cfg?.coupon){const offer=el('article',undefined,'ramen-contact-item');offer.append(el('small',w[7]),el('strong',cfg.coupon+' · '+nf.format(cfg.percent)+'%'));host.append(offer);}else host.append(el('p',w[8],'ramen-contact-note'));
+  const used=member.orders.filter(order=>order.offer);
+  if(used.length){host.append(el('h4',w[9]));for(const order of used){const offer=el('article',undefined,'ramen-contact-item');offer.append(el('small',new Date(order.createdAt).toLocaleDateString(lang())),el('strong',order.offer.code+' · '+nf.format(order.offer.percent)+'%'));host.append(offer);}}
+  }
+  window.RomanoCustomerPanels=Object.freeze({render,renderDemoProfile});
 })();

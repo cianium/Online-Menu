@@ -35,7 +35,8 @@
       pending.set(path, job); return job;
     }
     const loadLive = () => asset("js/connect-live.js", () => Boolean(window.RomanoConnectLive));
-    const loadPanels = () => asset("js/customer-panels.js", () => Boolean(window.RomanoCustomerPanels));
+    const loadPanelStyle=()=>asset("css/connect.css",()=>[...document.styleSheets].some(sheet=>sheet.href===new URL("css/connect.css",base).href),true);
+    const loadPanels = () => Promise.all([loadPanelStyle(),asset("js/customer-panels.js", () => Boolean(window.RomanoCustomerPanels))]);
     async function loadEngine() {
       await asset("js/connect-core.js", () => Boolean(window.RomanoConnectCore));
       await asset("js/connect-demo.js", () => Boolean(window.RomanoConnectDemo));

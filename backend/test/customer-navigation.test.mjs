@@ -43,7 +43,8 @@ test('Bottom navigation has the requested physical DOM order and contact remains
  assert.match(js,/document\.createElement\('dialog'\)/);assert.match(js,/dialog\.showModal\(\)/);
  const panels=read('js/customer-panels.js');
  assert.match(js,/panels\.render\(\{panel,content,element,demo,mode,/);
- assert.match(panels,/mode==='public' \|\| mode==='offline'/);assert.match(panels,/if\(demo\)content\.append/);
+ assert.match(js,/\["demo","public","offline"\]\.includes\(menuDataMode\)/);
+ assert.match(panels,/if\(demo&&panel!==/);
  assert.match(css,/prefers-reduced-motion:reduce/);assert.match(css,/--ui-touch:44px/);
 });
 
