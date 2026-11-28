@@ -1,3 +1,4 @@
+const {completeDemoEntry}=require('./demo-entry.cjs');
 /* Start a static preview; set ADMIN_TEST_URL and optionally CHROMIUM_EXECUTABLE_PATH.
    Requires Playwright. Public API responses below are mocked, not a database test. */
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
@@ -316,17 +317,13 @@ async function ready(p){
   const first=await memberContext.newPage();
   await first.goto(base+'/?qr=demo');await ready(first);
   const firstEntry=first.locator('#customer-entry');await firstEntry.waitFor({state:'visible'});
-  await firstEntry.locator('input[name="name"]').fill('Sample Customer');
-  await firstEntry.locator('input[name="phone"]').fill('+12025550140');
-  await firstEntry.locator('button[type="submit"]').click();
+  await completeDemoEntry(firstEntry,'+12025550140','Sample Customer');
   await first.waitForFunction(()=>!document.querySelector('#customer-entry')?.open);
   const memberId=await first.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey));assert.ok(memberId);
   const second=await memberContext.newPage();
   await second.goto(base+'/?qr=demo');await ready(second);
   const secondEntry=second.locator('#customer-entry');await secondEntry.waitFor({state:'visible'});
-  await secondEntry.locator('input[name="name"]').fill(' Sample   Customer ');
-  await secondEntry.locator('input[name="phone"]').fill('+12025550140');
-  await secondEntry.locator('button[type="submit"]').click();
+  await completeDemoEntry(secondEntry,'+12025550140','Sample Customer',{expectName:false});
   await second.waitForFunction(()=>!document.querySelector('#customer-entry')?.open);
   assert.equal(await second.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey)),memberId);
   assert.equal(await secondEntry.locator('[role="alert"]').textContent(),'');
@@ -514,7 +511,7 @@ async function ready(p){
   await p.locator('#commerce-submit').click();
   const entry=p.locator('#customer-entry');
   await entry.waitFor({state:'visible'});
-  assert.equal(await entry.locator('input').count(),2);
+  assert.equal(await entry.locator('input').count(),1);
   await p.screenshot({path:path.join(out,'customer-entry-fa-390.png')});
   await p.keyboard.press('Escape');
   await entry.waitFor({state:'hidden'});

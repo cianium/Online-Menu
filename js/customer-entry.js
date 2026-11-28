@@ -17,10 +17,10 @@
  }
  window.addEventListener('romano:data-updated',loadPhoneEntry);
  const words={
- fa:{eyebrow:'باشگاه مشتریان',title:'ورود به رامن',intro:'نام و شماره تلفن نمونه را وارد کنید.',name:'نام',phone:'شماره تلفن',continue:'ادامه',notice:'نسخه نمایشی؛ فقط اطلاعات ساختگی وارد کنید. داده‌ها در همین مرورگر ذخیره می‌شوند.',error:'نام و شماره نمونه معتبر وارد کنید یا ذخیره مرورگر را بررسی کنید.',active:'برای تغییر پروفایل، ابتدا از پروفایل فعلی خارج شوید.',existing:'این شماره با نام دیگری ثبت شده است. نام قبلی را دقیق وارد کنید.',history:'تاریخچه سفارش‌های نمونه',empty:'هنوز سفارش نمونه‌ای ندارید.',logout:'خروج از پروفایل نمونه',join:'عضویت آزمایشی',order:'ثبت سفارش نمونه',saved:'سفارش نمونه ذخیره شد؛ برای رستوران ارسال نشد.',orderError:'ذخیره سفارش نمونه ممکن نشد.',language:'زبان',guest:'فعلاً فقط منو را ببینید'},
- en:{eyebrow:'Customer club',title:'Enter RAMEN',intro:'Enter a fictional name and phone number.',name:'Name',phone:'Phone number',continue:'Continue',notice:'Demo only. Use fictional details; data stays in this browser.',error:'Enter a valid sample name and phone or check browser storage.',active:'Sign out of the current sample profile before switching.',existing:'This number is registered under a different name. Enter the previous name exactly.',history:'Sample order history',empty:'No sample orders yet.',logout:'Sign out of sample profile',join:'Join the demo club',order:'Save sample order',saved:'Sample order saved; nothing was sent to the restaurant.',orderError:'Could not save the sample order.',language:'Language',guest:'Browse the menu for now'},
- tr:{eyebrow:'Müşteri kulübü',title:'RAMEN’ya giriş',intro:'Kurgusal bir ad ve telefon numarası girin.',name:'Ad',phone:'Telefon numarası',continue:'Devam et',notice:'Yalnızca demo. Kurgusal bilgi kullanın; veriler bu tarayıcıda kalır.',error:'Geçerli örnek ad ve telefon girin veya tarayıcı depolamasını kontrol edin.',active:'Profil değiştirmek için önce mevcut örnek profilden çıkın.',existing:'Bu numara farklı bir adla kayıtlı. Önceki adı tam olarak girin.',history:'Örnek sipariş geçmişi',empty:'Henüz örnek sipariş yok.',logout:'Örnek profilden çık',join:'Demo kulübüne katıl',order:'Örnek siparişi kaydet',saved:'Örnek sipariş kaydedildi; restorana gönderilmedi.',orderError:'Örnek sipariş kaydedilemedi.',language:'Dil',guest:'Şimdilik menüye göz at'},
- ar:{eyebrow:'نادي العملاء',title:'الدخول إلى رامن',intro:'أدخل اسمًا ورقم هاتف وهميين.',name:'الاسم',phone:'رقم الهاتف',continue:'متابعة',notice:'نسخة تجريبية فقط. استخدم بيانات وهمية؛ تبقى البيانات في هذا المتصفح.',error:'أدخل اسمًا ورقمًا تجريبيين صالحين أو تحقق من تخزين المتصفح.',active:'سجّل الخروج من الملف التجريبي الحالي قبل التبديل.',existing:'هذا الرقم مسجل باسم مختلف. أدخل الاسم السابق كما هو.',history:'سجل الطلبات التجريبية',empty:'لا توجد طلبات تجريبية بعد.',logout:'الخروج من الملف التجريبي',join:'الانضمام للنادي التجريبي',order:'حفظ طلب تجريبي',saved:'حُفظ الطلب التجريبي ولم يُرسل للمطعم.',orderError:'تعذر حفظ الطلب التجريبي.',language:'اللغة',guest:'تصفح القائمة الآن'}
+ fa:{eyebrow:'باشگاه مشتریان',title:'ورود به رامن',intro:'شماره تلفن نمونه را وارد کنید.',nameIntro:'نام نمونه را وارد کنید.',codeIntro:'کد نمایشی: ۱۲۳۴۵۶ (پیامکی ارسال نمی‌شود).',code:'کد آزمایشی',edit:'تغییر شماره',badCode:'کد آزمایشی نادرست است.',name:'نام',phone:'شماره تلفن',continue:'ادامه',notice:'نسخه نمایشی؛ فقط اطلاعات ساختگی وارد کنید. داده‌ها در همین مرورگر ذخیره می‌شوند.',error:'نام و شماره نمونه معتبر وارد کنید یا ذخیره مرورگر را بررسی کنید.',active:'برای تغییر پروفایل، ابتدا از پروفایل فعلی خارج شوید.',existing:'این شماره با نام دیگری ثبت شده است. نام قبلی را دقیق وارد کنید.',history:'تاریخچه سفارش‌های نمونه',empty:'هنوز سفارش نمونه‌ای ندارید.',logout:'خروج از پروفایل نمونه',join:'عضویت آزمایشی',order:'ثبت سفارش نمونه',saved:'سفارش نمونه ذخیره شد؛ برای رستوران ارسال نشد.',orderError:'ذخیره سفارش نمونه ممکن نشد.',language:'زبان',guest:'فعلاً فقط منو را ببینید'},
+ en:{eyebrow:'Customer club',title:'Enter RAMEN',intro:'Enter a fictional phone number.',nameIntro:'Enter a fictional name.',codeIntro:'Demo code: 123456 (no SMS is sent).',code:'Demo code',edit:'Change number',badCode:'Incorrect demo code.',name:'Name',phone:'Phone number',continue:'Continue',notice:'Demo only. Use fictional details; data stays in this browser.',error:'Enter a valid sample name and phone or check browser storage.',active:'Sign out of the current sample profile before switching.',existing:'This number is registered under a different name. Enter the previous name exactly.',history:'Sample order history',empty:'No sample orders yet.',logout:'Sign out of sample profile',join:'Join the demo club',order:'Save sample order',saved:'Sample order saved; nothing was sent to the restaurant.',orderError:'Could not save the sample order.',language:'Language',guest:'Browse the menu for now'},
+ tr:{eyebrow:'Müşteri kulübü',title:'RAMEN’ya giriş',intro:'Kurgusal bir telefon numarası girin.',nameIntro:'Kurgusal bir ad girin.',codeIntro:'Demo kodu: 123456 (SMS gönderilmez).',code:'Demo kodu',edit:'Numarayı değiştir',badCode:'Demo kodu yanlış.',name:'Ad',phone:'Telefon numarası',continue:'Devam et',notice:'Yalnızca demo. Kurgusal bilgi kullanın; veriler bu tarayıcıda kalır.',error:'Geçerli örnek ad ve telefon girin veya tarayıcı depolamasını kontrol edin.',active:'Profil değiştirmek için önce mevcut örnek profilden çıkın.',existing:'Bu numara farklı bir adla kayıtlı. Önceki adı tam olarak girin.',history:'Örnek sipariş geçmişi',empty:'Henüz örnek sipariş yok.',logout:'Örnek profilden çık',join:'Demo kulübüne katıl',order:'Örnek siparişi kaydet',saved:'Örnek sipariş kaydedildi; restorana gönderilmedi.',orderError:'Örnek sipariş kaydedilemedi.',language:'Dil',guest:'Şimdilik menüye göz at'},
+ ar:{eyebrow:'نادي العملاء',title:'الدخول إلى رامن',intro:'أدخل رقم هاتف وهميًا.',nameIntro:'أدخل اسمًا وهميًا.',codeIntro:'رمز تجريبي: ١٢٣٤٥٦ (لا ترسل رسالة نصية).',code:'رمز تجريبي',edit:'تغيير الرقم',badCode:'الرمز التجريبي غير صحيح.',name:'الاسم',phone:'رقم الهاتف',continue:'متابعة',notice:'نسخة تجريبية فقط. استخدم بيانات وهمية؛ تبقى البيانات في هذا المتصفح.',error:'أدخل اسمًا ورقمًا تجريبيين صالحين أو تحقق من تخزين المتصفح.',active:'سجّل الخروج من الملف التجريبي الحالي قبل التبديل.',existing:'هذا الرقم مسجل باسم مختلف. أدخل الاسم السابق كما هو.',history:'سجل الطلبات التجريبية',empty:'لا توجد طلبات تجريبية بعد.',logout:'الخروج من الملف التجريبي',join:'الانضمام للنادي التجريبي',order:'حفظ طلب تجريبي',saved:'حُفظ الطلب التجريبي ولم يُرسل للمطعم.',orderError:'تعذر حفظ الطلب التجريبي.',language:'اللغة',guest:'تصفح القائمة الآن'}
  };
  const lang=()=>window.ROMANO_I18N?.language||'fa';
  const t=k=>words[lang()]?.[k]||words.fa[k];
@@ -53,32 +53,40 @@
   for(const [code,label] of Object.entries({fa:'فارسی',en:'English',tr:'Türkçe',ar:'العربية'})){const o=el('option',label);o.value=code;select.append(o);}
   select.value=lang();select.addEventListener('change',()=>window.ROMANO_I18N.setLanguage(select.value,false));top.append(select);
   const title=text('h1','title');title.id='customer-entry-title';
-  const form=el('form'),nameLabel=el('label'),phoneLabel=el('label');
-  const name=el('input');name.name='name';name.dir='auto';name.autocomplete='off';name.required=true;name.maxLength=80;
-  const phone=el('input');phone.name='phone';phone.type='tel';phone.inputMode='tel';phone.autocomplete='off';phone.dir='ltr';phone.required=true;phone.maxLength=32;
-  name.setAttribute('aria-describedby','customer-entry-notice');phone.setAttribute('aria-describedby','customer-entry-notice');
-  nameLabel.append(text('span','name'),name);phoneLabel.append(text('span','phone'),phone);
+  const form=el('form'),intro=text('p','intro'),error=el('p','','customer-entry-error');
+  error.setAttribute('role','alert');
+  let stage='phone',phoneValue='',nameValue='',knownId=null,input;
   const submit=text('button','continue','customer-entry-submit');submit.type='submit';
-  const error=el('p','', 'customer-entry-error');error.setAttribute('role','alert');
-  const guest=text('button','guest','customer-entry-guest');guest.type='button';guest.addEventListener('click',()=>{entered=true;removeMarker();close();});
-  form.append(nameLabel,phoneLabel,submit,error);
-  form.addEventListener('submit',async e=>{
-   e.preventDefault();
-   if(!demo()||pending)return;
-   const nameValue=name.value,phoneValue=phone.value;
-   pending=submit.disabled=guest.disabled=true;
-   delete error.dataset.memberText;
-   error.textContent='';
+  const guest=text('button','guest','customer-entry-guest');guest.type='button';guest.onclick=()=>{entered=true;removeMarker();close();};
+  const edit=text('button','edit','customer-entry-guest');edit.type='button';edit.onclick=()=>{if(!pending){stage='phone';knownId=null;nameValue='';render();}};
+  function fail(key){error.dataset.memberText=key;error.textContent=t(key);}
+  function render(){
+   const label=el('label');input=el('input');input.name=stage;input.required=true;input.autocomplete='off';input.maxLength=stage==='phone'?32:stage==='name'?80:6;input.dir=stage==='name'?'auto':'ltr';input.type=stage==='phone'?'tel':'text';input.inputMode=stage==='phone'?'tel':stage==='code'?'numeric':'text';
+   if(stage==='phone')input.value=phoneValue;
+   input.setAttribute('aria-describedby','customer-entry-notice');label.append(text('span',stage),input);
+   intro.dataset.memberText=stage==='phone'?'intro':stage==='name'?'nameIntro':'codeIntro';intro.textContent=t(intro.dataset.memberText);
+   delete error.dataset.memberText;error.textContent='';edit.hidden=stage==='phone';form.replaceChildren(label,submit,edit,error);if(dialog.open)input.focus();
+  }
+  form.onsubmit=async event=>{
+   event.preventDefault();if(!demo()||pending)return;delete error.dataset.memberText;error.textContent='';
    try{
-    await model.mutate(()=>model.register(localStorage,sessionStorage,nameValue,phoneValue));
+    if(stage==='phone'){
+     phoneValue=model.phone(input.value);if(!/^\+?[0-9]{7,15}$/.test(phoneValue))throw Error('INVALID_INPUT');
+     const member=model.read(localStorage).find(row=>model.phone(row.phone)===phoneValue);knownId=member?.id||null;nameValue=member?.name||'';stage=member?'code':'name';render();return;
+    }
+    if(stage==='name'){nameValue=input.value.trim();if(!nameValue||nameValue.length>80)throw Error('INVALID_INPUT');stage='code';render();return;}
+    if(model.phone(input.value)!=='123456'){fail('badCode');return;}
+    pending=submit.disabled=guest.disabled=edit.disabled=true;
+    await model.mutate(()=>{
+     const member=model.read(localStorage).find(row=>model.phone(row.phone)===phoneValue);
+     if(knownId&&member?.id!==knownId)throw Error('INVALID_INPUT');
+     return model.register(localStorage,sessionStorage,knownId?member.name:nameValue,phoneValue);
+    });
     entered=true;removeMarker();close();announce();
-   }catch(err){
-    const message=err.message==='EXISTING_PROFILE'?'existing':err.message==='ACTIVE_PROFILE'?'active':'error';
-    error.dataset.memberText=message;
-    error.textContent=t(message);
-   }
-   finally{pending=submit.disabled=guest.disabled=false;}
-  });
+   }catch(err){fail(err.message==='EXISTING_PROFILE'?'existing':err.message==='ACTIVE_PROFILE'?'active':'error');}
+   finally{pending=submit.disabled=guest.disabled=edit.disabled=false;}
+  };
+  render();
   const notice=text('p','notice','customer-entry-notice');notice.id='customer-entry-notice';
   panel.append(top,title);
   const branch=window.RomanoDemoBranches?.context();
@@ -86,10 +94,10 @@
     const table=branch.tables.find(row=>row.code===window.RomanoDemoBranches.table);
     if(table)panel.append(el('p',window.ROMANO_I18N.displayBrand(table.name)));
   }
-  panel.append(text('p','intro'),form,notice,guest);
+  panel.append(intro,form,notice,guest);
   dialog.replaceChildren(panel);dialog.showModal();
   window.RamenOverlayHistory.enter("entry",()=>{if(required)entered=true;close();});
-  name.focus();return true;
+  input.focus();return true;
  }
  function renderProfile(host,closePanel){
   if(!demo())return window.RomanoPhoneAuth?.renderProfile(host,closePanel)??false;

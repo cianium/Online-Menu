@@ -71,7 +71,6 @@
 .commerce-item span { font-size:13px; }
 .commerce-quantity { margin-block-start:4px; gap:4px; }
 .commerce-quantity button { width:44px;height:44px;min-width:44px;min-height:44px; }
-.commerce-remove { min-height:44px;min-width:44px;align-self:center; }
 .commerce-options { padding-block:8px; }
 .commerce-note textarea { min-height:54px; max-height:140px; }
 .commerce-pay-method { display:flex; flex-wrap:wrap; margin:10px 0; }
@@ -446,7 +445,6 @@ html[dir] .main-navigation.is-open .navigation-inner {transform:translateX(0)!im
 .commerce-drawer-head h2 {font-size:clamp(22px,4vw,28px);}
 .commerce-item {grid-template-columns:60px minmax(0,1fr) auto;gap:10px;padding:10px;border-color:#ffffff12;background:#ffffff06;}
 .commerce-item-media {inline-size:60px;block-size:60px;}
-.commerce-remove {padding:8px;color:#dcb5a6;text-decoration:underline;text-underline-offset:3px;}
 .commerce-checkout {padding-block-start:12px;box-shadow:0 -16px 28px #090806;}
 .commerce-submit {min-height:52px;border-radius:14px;font-size:14px;}
 #commerce-demo-status:not([hidden]) {padding:10px 12px;font-size:12px;line-height:1.65;}
@@ -460,7 +458,6 @@ html[dir] .main-navigation.is-open .navigation-inner {transform:translateX(0)!im
 @media(max-width:350px) {
   .commerce-item {grid-template-columns:48px minmax(0,1fr);}
   .commerce-item-media {inline-size:48px;block-size:48px;}
-  .commerce-remove {grid-column:2;justify-self:start;}
 }
 
 /* Entry is intentionally concise: one task, one primary action, one quiet escape. */
@@ -609,7 +606,6 @@ html[dir] .hero-overlay {background:linear-gradient(180deg,#080705b0 0%,#0807059
 .hp-line-total{color:#ebc98e;font-size:14px;overflow-wrap:anywhere}
 #commerce-drawer .commerce-quantity{width:max-content;max-width:100%}
 #commerce-drawer .commerce-quantity button{border-radius:12px}
-#commerce-drawer .commerce-remove{font-size:12px;text-decoration:none;border-radius:10px;background:#ffffff05;color:#e0b6a5}
 #commerce-drawer #commerce-demo-status{margin-block:10px 0;font-size:12px;color:#c4b8a7}
 .hp-undo{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border:1px solid #d6ae7040;border-radius:12px;color:#ecd9bc;font-size:13px}
 .hp-undo button,.hp-continue,.hp-suggestion button,.hp-contact-actions button{min-height:44px;border-radius:11px;border:1px solid #d6ae7050;background:#d6ae7010;color:#f1d8b0;font:inherit;cursor:pointer;padding:6px 12px}
@@ -664,7 +660,6 @@ html[dir] .hero-overlay {background:linear-gradient(180deg,#080705b0 0%,#0807059
 #commerce-drawer .commerce-quantity button:disabled{opacity:.4;cursor:default}
 #commerce-drawer .commerce-item.is-zero{border-style:dashed;background:#ffffff02}
 #commerce-drawer .commerce-item.is-zero .hp-line-total{opacity:.6}
-#commerce-drawer .commerce-remove{grid-column:2;justify-self:end;min-height:44px;padding-inline:12px;border:1px solid #bc8b7945}
 #commerce-drawer #hp-continue{flex:0 0 auto;min-height:44px;margin:6px 0 0;background:transparent}
 #commerce-drawer .commerce-checkout{flex:0 0 auto;padding-block-start:8px;box-shadow:none}
 #commerce-drawer .commerce-message:empty{display:none}
