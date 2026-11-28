@@ -898,6 +898,94 @@ async function ready(p){
   assert.equal(await credit.getAttribute('rel'),'noopener noreferrer');
   assert.equal(await p.locator('.commerce-drawer small').textContent(),'RAMEN');
  });
+
+ await check('Unified connected sign-in: new and returning customers, staff invite, OTP failure and role-based destination',async()=>{
+  const authContext=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
+  authContext.on('page',page=>page.on('pageerror',e=>errors.push(String(e))));
+  const fixture={restaurant:{name:'QA Kitchen',tagline:'Cafe',description:'QA only',address:'QA address',currency:'TRY'},categories:[],products:[]};
+  const accounts=new Map(),calls=[];let session=null,challenge=null,serial=0,adminReads=0;
+  const customerPhone='+989123450001',staffPhone='+989123450002',accessKey='x'.repeat(43);
+  await authContext.route('**/api/v1/**',async route=>{
+   const req=route.request(),path=new URL(req.url()).pathname.slice('/api/v1'.length),method=req.method();
+   const body=method==='POST'?req.postDataJSON():null;
+   calls.push({path,method,body});
+   const answer=(data,status=200,code=null)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify({data,error:code?{code,message:'QA mock'}:null})});
+   if(path.startsWith('/public/'))return answer(fixture);
+   if(path==='/auth/me')return answer(session);
+   if(path==='/auth/csrf')return answer({csrfToken:'qa-csrf-token'});
+   if(path==='/auth/phone/status')return answer({enabled:true});
+   if(path.startsWith('/auth/phone/')&&method==='POST'){
+    assert.ok(req.headers()['x-csrf-token'],'CSRF header required');
+    if(path.endsWith('/lookup'))return answer({needsName:!accounts.has(body.phone)});
+    if(path.endsWith('/start')){
+     if(body.accessKey&&!(body.phone===staffPhone&&body.accessKey===accessKey))return answer(null,400,'PHONE_AUTH_INVALID');
+     if(!accounts.has(body.phone)&&!body.name)return answer(null,409,'PHONE_AUTH_NAME_REQUIRED');
+     challenge={id:'qa-challenge-'+(++serial),phone:body.phone,name:body.name,staff:body.accessKey===accessKey};
+     return answer({challenge:challenge.id,expiresIn:300,resendAfter:60});
+    }
+    if(path.endsWith('/verify')){
+     if(!challenge||body.challenge!==challenge.id||body.code!=='123456')return answer(null,401,'PHONE_AUTH_CODE_INVALID');
+     let account=accounts.get(challenge.phone);
+     if(!account){account={user:{id:challenge.phone,displayName:challenge.name},role:challenge.staff?'admin':'customer'};accounts.set(challenge.phone,account);}
+     session={user:account.user,membership:account.role==='admin'?{restaurant_id:'qa',role:'manager'}:null};
+     challenge=null;return answer({...account,csrfToken:'qa-rotated-csrf'});
+    }
+   }
+   if(path==='/auth/logout'){session=null;return answer({loggedOut:true});}
+   if(path==='/admin/data'){adminReads++;return session?.membership?answer(fixture):answer(null,403,'FORBIDDEN');}
+   return answer(null,404,'NOT_FOUND');
+  });
+  try{
+   const page=await authContext.newPage(),root=new URL('/',base).href,entry=page.locator('#phone-auth-entry'),submit=entry.locator('button[type=submit]');
+   await page.goto(root+'?login=1');await ready(page);await entry.waitFor({state:'visible'});
+   for(const lang of ['fa','en','tr','ar']){
+    await entry.locator('select').selectOption(lang);
+    assert.equal(await page.locator('html').getAttribute('dir'),['fa','ar'].includes(lang)?'rtl':'ltr');
+    assert.ok((await entry.locator('h1').innerText()).trim());
+    assert.equal(await entry.locator('input[name=phone]').isVisible(),true);
+    assert.equal(await entry.locator('input[name=name]').count(),0);
+   }
+   await entry.locator('select').selectOption('en');
+   await entry.locator('input[name=phone]').fill(customerPhone);await submit.click();
+   const name=entry.locator('input[name=name]');await name.waitFor({state:'visible'});
+   assert.equal(await entry.locator('input[name=accessKey]').isVisible(),false);
+   assert.equal(await entry.locator('input[name=code]').count(),0);
+   await name.fill('QA Customer');await submit.click();
+   const code=entry.locator('input[name=code]');await code.waitFor({state:'visible'});
+   assert.equal(await entry.getByRole('button',{name:'Resend code'}).isDisabled(),true);
+   await code.fill('000000');await submit.click();await entry.getByRole('alert').waitFor({state:'visible'});
+   assert.equal(await accounts.size,0);
+   await code.fill('۱۲۳۴۵۶');await submit.click();await entry.waitFor({state:'detached'});
+   assert.equal(new URL(page.url()).searchParams.has('login'),false);
+   assert.equal(new URL(page.url()).pathname,'/');
+   assert.equal(session.membership,null);
+   // Simulate a new browser session with the same already-registered number.
+   session=null;await page.goto(root+'?login=1');await ready(page);await entry.waitFor({state:'visible'});
+   await entry.locator('input[name=phone]').fill(customerPhone);await submit.click();await code.waitFor({state:'visible'});
+   assert.equal(await entry.locator('input[name=name]').count(),0);
+   assert.deepEqual(calls.filter(c=>c.path.endsWith('/start')).at(-1).body,{phone:customerPhone});
+   await code.fill('123456');await submit.click();await entry.waitFor({state:'detached'});assert.equal(accounts.size,1);
+   // A customer visiting /admin/ cannot enter the dashboard.
+   await page.goto(new URL('admin/',root).href);await page.waitForURL(url=>url.pathname==='/');
+   assert.equal(adminReads,0);
+   // A signed-out staff member enters through the exact same page.
+   session=null;await page.goto(new URL('admin/',root).href);await page.waitForURL(url=>url.pathname==='/'&&url.searchParams.get('login')==='1');await ready(page);
+   await entry.waitFor({state:'visible'});
+   await entry.locator('input[name=phone]').fill(staffPhone);await submit.click();await name.waitFor({state:'visible'});
+   await name.fill('QA Staff');await entry.locator('input[type=checkbox]').check();
+   const key=entry.locator('input[name=accessKey]');await key.waitFor({state:'visible'});
+   await key.fill('y'.repeat(43));await submit.click();await entry.getByRole('alert').waitFor({state:'visible'});
+   assert.equal(accounts.size,1);
+   await key.fill(accessKey);await submit.click();await code.waitFor({state:'visible'});
+   await code.fill('123456');await submit.click();
+   await page.waitForURL(url=>url.pathname==='/admin/');
+   await page.waitForFunction(()=>typeof adminInitialized!=='undefined'&&adminInitialized&&!document.querySelector('.admin-app').inert);
+   assert.equal(session.membership.role,'manager');assert.ok(adminReads>0);
+   assert.equal(accounts.size,2);
+   assert.ok(calls.filter(c=>c.path.endsWith('/verify')).every(c=>Object.keys(c.body).sort().join(',')==='challenge,code'));
+   assert.ok(!page.url().includes(accessKey));
+  }finally{await authContext.close();}
+ });
  await check('No uncaught browser errors',async()=>assert.deepEqual(errors,[]));
  fs.writeFileSync(path.join(out,'customer-browser-results.json'),JSON.stringify({passed:results.length,cases:results,errors,notes:'Chromium, static preview and mocked public API. Service workers blocked. No real PostgreSQL or production test.'},null,2));
  await browser.close();
