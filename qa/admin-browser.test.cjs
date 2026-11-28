@@ -22,7 +22,7 @@ async function check(name, action) { await action(); results.push(name); console
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
-  await page.goto(base + '/admin/');
+  await page.goto(base + '/admin/?demo-legacy=1');
   await page.locator('#admin-gate').waitFor({state:'visible'});
   await check('Demo admin ID/password gate rejects incorrect credentials and localizes form',async()=>{
     assert.equal(await page.locator('.admin-app').evaluate(n=>n.inert),true);
@@ -43,6 +43,43 @@ async function check(name, action) { await action(); results.push(name); console
     await loginDemoAdmin(page);
   });
   await check('Local demo boot and seed catalog', async () => assert.equal(await page.evaluate(() => state.products.length), 21));
+  await check('R27 shared demo phone entry enrolls staff and returns to admin without real SMS',async()=>{
+    const demoContext=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
+    try{
+      const demoPage=await demoContext.newPage();
+      await demoPage.goto(base+'/admin/');
+      await demoPage.locator('#phone-auth-entry').waitFor({state:'visible'});
+      await loginDemoAdmin(demoPage);
+      assert.equal(await demoPage.evaluate(()=>JSON.parse(localStorage.getItem('ramen_demo_staff_v1')).length),1);
+      await demoPage.evaluate(()=>sessionStorage.removeItem('online_menu_demo_admin_session_v1'));
+      await demoPage.goto(base+'/admin/');
+      const form=demoPage.locator('#phone-auth-entry');
+      await form.locator('[name=phone]').fill('+12025550199');
+      await form.locator('button[type=submit]').click();
+      await form.locator('[name=code]').fill('000000');
+      await form.locator('button[type=submit]').click();
+      await form.locator('[role=alert]').waitFor({state:'visible'});
+      await form.locator('[name=code]').fill('123456');
+      await form.locator('button[type=submit]').click();
+      await demoPage.waitForURL(url=>url.pathname.endsWith('/admin/'));
+      await demoPage.waitForFunction(()=>adminInitialized&&!document.querySelector('.admin-app').inert);
+    }finally{await demoContext.close();}
+  });
+  await check('R27 browser Back returns to the previous admin page and dismisses sidebar and product editor',async()=>{
+    await page.setViewportSize({width:390,height:844});
+    await page.evaluate(()=>navigateTo('dashboard'));
+    await page.locator('#ramen-add-product').click();
+    await page.locator('#product-modal.is-open').waitFor();
+    await page.evaluate(()=>history.back());
+    await page.waitForFunction(()=>!document.querySelector('#product-modal').classList.contains('is-open')&&state.currentPage==='products');
+    await page.evaluate(()=>history.back());
+    await page.waitForFunction(()=>state.currentPage==='dashboard');
+    await page.locator('#mobile-menu-button').click();
+    await page.locator('#sidebar.is-open').waitFor();
+    await page.evaluate(()=>history.back());
+    await page.waitForFunction(()=>!document.querySelector('#sidebar').classList.contains('is-open')&&state.currentPage==='dashboard');
+    await page.setViewportSize({width:1440,height:1000});
+  });
   await check('Connect inbox receives local guest messages, replies, assigns and resolves',async()=>{
     const guest=await context.newPage();
     try{
@@ -97,6 +134,16 @@ async function check(name, action) { await action(); results.push(name); console
       assert.equal(await page.locator('#revenue-bars span').count(),7);
       assert.equal(await page.locator('#revenue-export').isEnabled(),true);
     }
+    await page.locator('#revenue-period').selectOption('custom');
+    const today=await page.evaluate(()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');});
+    await page.locator('#revenue-start').fill(today);
+    await page.locator('#revenue-end').fill(today);
+    assert.equal(await page.locator('#revenue-table-body tr').count(),24);
+    await page.locator('#revenue-end').fill('2000-01-01');
+    assert.equal(await page.locator('#revenue-range-error').isVisible(),true);
+    assert.equal(await page.locator('#revenue-export').isDisabled(),true);
+    await page.locator('#revenue-end').fill(today);
+    assert.equal(await page.locator('#revenue-content').isVisible(),true);
     await page.locator('#revenue-period').selectOption('30');
   });
   await check('Sample revenue populated chart, currency filter, CSV download and no customer identity in export',async()=>{
@@ -117,6 +164,7 @@ async function check(name, action) { await action(); results.push(name); console
       await page.locator('#revenue-bucket').selectOption('6');
       assert.match(await page.locator('#revenue-detail').textContent(),/100 Toman/);
       const downloadPromise=page.waitForEvent('download');
+      await page.locator('.revenue-more > summary').click();
       await page.locator('#revenue-export').click();
       const download=await downloadPromise;
       assert.match(download.suggestedFilename(),/^ramen-sample-orders-IRT-/);
@@ -143,7 +191,7 @@ async function check(name, action) { await action(); results.push(name); console
     for(const lang of ['fa','ar','en','tr']){
       await page.evaluate(l=>ROMANO_ADMIN_I18N.setLanguage(l),lang);
       const header=page.locator('.admin-header');
-      assert.equal(await header.locator('.admin-header-brand').textContent(),'ROMANO');
+      assert.equal(await header.locator('.admin-header-brand').textContent(),'RAMEN');
       assert.equal(await header.locator('#admin-add-product-shortcut,#admin-logout-button').count(),0);
       const controls=header.locator('button,a[href]');
       assert.equal(await controls.count(),4);
@@ -193,9 +241,9 @@ await check('Order filter group accessible name is localized in all four languag
       const expectedBrand = {fa:'مدیریت',en:'Management',tr:'Yönetim',ar:'الإدارة'}[lang];
       assert.equal(await page.locator('.admin-brand-label').textContent().then(value=>value.trim()), expectedBrand);
       assert.equal(await page.locator('.admin-brand').getAttribute('aria-labelledby'), 'admin-brand-name admin-brand-label');
-      assert.equal(await page.locator('.admin-brand-name').textContent().then(value=>value.trim()), 'ROMANO');
-      assert.equal(await page.locator('.admin-footer-brand strong').textContent().then(value=>value.trim()), 'ROMANO');
-      assert.match(await page.title(), /ROMANO|رومانو/);
+      assert.equal(await page.locator('.admin-brand-name').textContent().then(value=>value.trim()), 'RAMEN');
+      assert.equal(await page.locator('.admin-footer-brand strong').textContent().then(value=>value.trim()), 'RAMEN');
+      assert.match(await page.title(), /RAMEN|رامن/);
       for (const width of [1920,1440,1024,768,430,390,375,360,320]) {
         await page.setViewportSize({width,height:900});
         for (const section of ['dashboard','orders','products','categories','settings','loyalty','connect']) {

@@ -38,7 +38,7 @@ async function scan(page, name, lang, width, height) {
       const rgb=s=>{const m=s.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);if(!m)throw Error('Expected opaque RGB: '+s);return m.slice(1).map(Number);};
       const luminance=s=>rgb(s).map(n=>n/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4).reduce((sum,n,i)=>sum+n*[.2126,.7152,.0722][i],0);
       const bg=luminance(getComputedStyle(panel).backgroundColor);
-      return [...panel.querySelectorAll('.admin-footer-brand span, .admin-footer-brand strong, p, #admin-storage-mode')].map(el=>{
+      return [...panel.querySelectorAll('.admin-footer-brand span, .admin-footer-brand strong, p a, #admin-storage-mode')].map(el=>{
         const style=getComputedStyle(el),fg=luminance(style.color);
         return {text:el.textContent.trim(),fontPx:parseFloat(style.fontSize),ratio:(Math.max(bg,fg)+.05)/(Math.min(bg,fg)+.05)};
       });
@@ -144,7 +144,7 @@ async function measure(browser,surface) {
     try {
       const customer=await context.newPage(),admin=await context.newPage();
       await open(customer,'customer');
-      await admin.goto(new URL('admin/',base).href);
+      await admin.goto(new URL('admin/?demo-legacy=1',base).href);
       await admin.locator('#admin-gate').waitFor({state:'visible'});
       for(const lang of locales){
         await admin.locator('#admin-gate-language').selectOption(lang);
@@ -233,11 +233,15 @@ async function measure(browser,surface) {
         await admin.evaluate(l=>ROMANO_ADMIN_I18N.setLanguage(l),lang);
         await admin.locator('#revenue-period').selectOption('7');
         await admin.setViewportSize({width:390,height:844});
-        await admin.locator('.overview-revenue').scrollIntoViewIfNeeded();
+        // Align a fixed-size heading rather than the entire expandable report;
+        // the latter can be taller than the mobile viewport and change on locale switch.
+        await admin.evaluate(async()=>{await document.fonts.ready;document.getElementById('revenue-title').scrollIntoView({block:'start',behavior:'instant'});});
+        assert.equal(await admin.locator('.overview-revenue').isVisible(),true);
         const chartTable=admin.locator('details.revenue-table').filter({has:admin.locator('#revenue-table-body')});
         const ranking=admin.locator('#revenue-ranking');
         assert.equal(await chartTable.count(),1);
         assert.equal(await ranking.count(),1);
+        if(!await admin.locator('.revenue-more').evaluate(node=>node.open))await admin.locator('.revenue-more > summary').click();
         await chartTable.locator('summary').click();
         assert.equal(await chartTable.evaluate(node=>node.open),true);
         assert.equal(await admin.locator('#revenue-table-body tr').count(),7);

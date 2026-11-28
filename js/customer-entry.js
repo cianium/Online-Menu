@@ -4,15 +4,21 @@
  const model=window.RomanoDemoMembers;
  const entryUrl=new URL(document.currentScript.src),initialQuery=new URLSearchParams(location.search);
  const phoneLaunch=initialQuery.get('login')==='1'||(initialQuery.has('qr')&&initialQuery.get('qr')!=='demo');
- let phoneLoading=false;
- function loadPhoneEntry(){
-  if(phoneLoading||menuDataMode!=='public'||window.RomanoPublicAPI.standalone)return;
+ let phoneLoading=false,phoneRequested=false;
+ function loadPhoneEntry(launch=false){
+  if(launch===true)phoneRequested=true;
+  const isDemo=typeof menuDataMode!=='undefined'&&menuDataMode==='demo';
+  const requested=phoneRequested||(isDemo?initialQuery.get('login')==='1':phoneLaunch);
+  if(isDemo&&!requested)return;
+  if(!isDemo&&(menuDataMode!=='public'||window.RomanoPublicAPI.standalone))return;
+  if(window.RomanoPhoneAuth){if(launch===true)window.RomanoPhoneAuth.open();return;}
+  if(phoneLoading)return;
   phoneLoading=true;
   const script=document.createElement('script'),url=new URL('phone-auth.js',entryUrl);
   if(entryUrl.searchParams.has('v'))url.searchParams.set('v',entryUrl.searchParams.get('v'));
   script.src=url.href;
-  script.onload=()=>window.RomanoPhoneAuth?.boot(phoneLaunch);
-  script.onerror=()=>{phoneLoading=false;script.remove();};
+  script.onload=()=>window.RomanoPhoneAuth?.boot(requested||phoneRequested);
+  script.onerror=()=>{phoneLoading=false;script.remove();if(isDemo&&phoneRequested)open();};
   document.head.append(script);
  }
  window.addEventListener('romano:data-updated',loadPhoneEntry);
@@ -94,7 +100,7 @@
  function renderProfile(host,closePanel){
   if(!demo())return window.RomanoPhoneAuth?.renderProfile(host,closePanel)??false;
   const member=current();
-  if(!member){const button=text('button','join','feedback-save');button.type='button';button.addEventListener('click',()=>{closePanel();open();});host.append(text('p','notice','ramen-contact-note'),button);return true;}
+  if(!member){const button=text('button','join','feedback-save');button.type='button';button.addEventListener('click',()=>{closePanel();loadPhoneEntry(true);});host.append(text('p','notice','ramen-contact-note'),button);return true;}
   const memberName=el('strong',member.name);memberName.dir='auto';host.append(memberName);
   const points=model.pointsFor(member);
   if(points)host.append(el('p',({fa:'امتیاز نمونه',en:'Sample points',tr:'Örnek puan',ar:'نقاط تجريبية'}[lang()]||'')+': '+new Intl.NumberFormat(lang()).format(points)));

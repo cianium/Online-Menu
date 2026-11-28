@@ -17,15 +17,27 @@
     return result;
   }
   function currencies(rows){return [...new Set(rows.filter(o=>validCurrency(o.currency)).map(o=>o.currency))].sort();}
-  function report(rows,currency,days,now=new Date()){
-    if(!periods.includes(days)||!validCurrency(currency)||!Number.isFinite(now.getTime()))throw Error('INVALID_FILTER');
-    const end=ordinal(now),start=end-days+1,previousStart=start-days;
+  function parseDay(value){
+    if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))throw Error('INVALID_FILTER');
+    const n=Date.parse(value+'T00:00:00Z')/DAY;
+    if(!Number.isInteger(n)||key(n)!==value)throw Error('INVALID_FILTER');
+    return n;
+  }
+  function report(rows,currency,period,now=new Date()){
+    if(!validCurrency(currency)||!Number.isFinite(now.getTime()))throw Error('INVALID_FILTER');
+    const custom=period!==null&&typeof period==='object';
+    if(!custom&&!periods.includes(period))throw Error('INVALID_FILTER');
+    const end=custom?parseDay(period.end):ordinal(now);
+    const start=custom?parseDay(period.start):end-period+1;
+    const days=end-start+1;
+    if(days<1||days>365||end>ordinal(now))throw Error('INVALID_FILTER');
+    const hourly=days===1,monthly=custom?days>31:days===365,previousStart=start-days;
     const buckets=[],lookup=new Map();
-    if(days===1){
+    if(hourly){
       for(let h=0;h<24;h++)buckets.push({start:key(end),end:key(end),hour:h,total:0,count:0});
     }else{
       for(let n=start;n<=end;n++){
-        const date=key(n),group=days===365?date.slice(0,7):date;
+        const date=key(n),group=monthly?date.slice(0,7):date;
         if(!lookup.has(group)){const b={start:date,end:date,hour:null,total:0,count:0};lookup.set(group,b);buckets.push(b);}
         lookup.get(group).end=date;
       }
@@ -39,7 +51,7 @@
       if(o.currency!==currency){otherCurrencyCount++;continue;}
       const amount=Math.round(o.total*SCALE);
       if(n<start){previousTotal+=amount;previousCount++;continue;}
-      const b=days===1?buckets[date.getHours()]:lookup.get(days===365?dayKey(date).slice(0,7):dayKey(date));
+      const b=hourly?buckets[date.getHours()]:lookup.get(monthly?dayKey(date).slice(0,7):dayKey(date));
       if(Number.isInteger(o.memberIndex))customers.add(o.memberIndex);
       for(const item of o.items||[]){
         quantities.set(item.name,(quantities.get(item.name)||0)+item.quantity);

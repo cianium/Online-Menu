@@ -64,7 +64,7 @@ check(read("js/app.js").includes("getSafeExternalUrl"), "Customer external URL s
 check(read("admin/rv4-admin-plus.js").includes('payload.schema !== "romano.menu-backup"'), "Backup restore is not strict-schema validated.");
 check(read("manifest.webmanifest").includes('"display": "standalone"'), "PWA manifest is incomplete.");
 check(read("manifest.webmanifest").includes('"short_name": "RAMEN"'), "Customer PWA must use RAMEN.");
-check(read("admin/index.html").includes("<title>ROMANO | پنل مدیریت</title>"), "Admin HTML title must use the localized default.");
+check(read("admin/index.html").includes("<title>RAMEN | پنل مدیریت</title>"), "Admin HTML title must use the localized default.");
 check(!/>\s*(?:OVERVIEW|ROMANO · CONTROL CENTER|MENU HEALTH|MENU MANAGEMENT|MENU STRUCTURE|RESTAURANT CONFIGURATION|SECURE SERVER AUTHENTICATION|ROMANO DIGITAL MENU|AUTHORIZED USERS ONLY)\s*</.test(read("admin/index.html")), "Admin HTML still contains untranslated English section labels.");
 check(read("admin/index.html").includes('data-admin-i18n-aria-label="فیلتر وضعیت سفارش"') && adminI18n.includes('"فیلتر وضعیت سفارش": ["Order status filters", "Sipariş durumu filtreleri", "تصفية حالة الطلب"]'), "Order filter group accessible name must be localized in all four languages.");
 check(!/>\s*(?:Badge|بدون Badge|رستوران CONFIGURATION|Merchant ID)\s*</.test(read("admin/index.html")), "Admin HTML still contains mixed-language field labels.");

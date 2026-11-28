@@ -326,7 +326,16 @@ async function bootAdmin() {
             for(const [selector,label] of Object.entries({"#admin-gate-id-label":"شناسه ورود","#admin-gate-eyebrow":"دسترسی آزمایشی مدیریت","#admin-gate-description":"با شناسه و رمز عمومی نمونه وارد شوید؛ این حساب واقعی نیست.","#admin-gate-footer-mode":"فقط داده آزمایشی"})) {
                 document.querySelector(selector).textContent=window.ROMANO_ADMIN_I18N.get(label);
             }
-            if(!demoAdminSignedIn()){setGateOpen(true);return;}
+            if(!demoAdminSignedIn()){
+                // Same sample phone entry as the guest profile. Retain the
+                // explicit legacy demo route for older walkthroughs/QA only.
+                if(new URLSearchParams(location.search).get('demo-legacy')!=='1'){
+                    const destination=new URL('../',location.href);
+                    destination.searchParams.set('login','1');
+                    location.replace(destination.href);return;
+                }
+                setGateOpen(true);return;
+            }
         }
         if (available && (!session?.user || !session?.membership)) {
             if (await window.RomanoAPI.phoneAuthStatus()) {
@@ -362,6 +371,7 @@ async function initializeAdmin() {
     }
 
     initializeNavigation();
+    initializeAdminHistory();
 
     initializeSidebar();
 
@@ -564,7 +574,7 @@ async function syncRemoteSnapshot(snapshot = {}) {
     const payload = {
         // "replace": the admin state is authoritative, so deleted items are deleted on the server too.
         mode: "replace",
-        restaurant: (() => { const r = snapshot.restaurant || state.restaurant || {}; return { name: r.name || "ROMANO", tagline: r.tagline || "", description: r.description || "", phone: r.phone || "", address: r.address || "", instagram: r.instagram === "#" ? "" : (r.instagram || ""), currency: r.currency || undefined, ...withTranslations(r) }; })(),
+        restaurant: (() => { const r = snapshot.restaurant || state.restaurant || {}; return { name: r.name || "RAMEN", tagline: r.tagline || "", description: r.description || "", phone: r.phone || "", address: r.address || "", instagram: r.instagram === "#" ? "" : (r.instagram || ""), currency: r.currency || undefined, ...withTranslations(r) }; })(),
         categories,
         products
     };
@@ -626,7 +636,96 @@ function renderAll() {
    NAVIGATION
 ========================================================= */
 
+// History entries belong only to this document. The first dashboard entry is
+// not trapped, so Back at the actual root retains normal browser behavior.
+const adminHistoryPages = new Set(["dashboard","orders","products","categories","settings","loyalty","connect"]);
+const adminHistoryScroll = new Map();
+let adminHistorySequence = 0, adminHistoryCurrent = null, adminHistoryBusy = false;
+function adminHistoryEntry(page, overlay=null, item=null) {
+    return {ramenAdmin:true,page,overlay,item,key:Date.now()+"-"+(++adminHistorySequence)};
+}
+function initializeAdminHistory() {
+    const previous = history.state;
+    const page = previous?.ramenAdmin && adminHistoryPages.has(previous.page) ? previous.page : "dashboard";
+    adminHistoryCurrent = previous?.ramenAdmin && previous.key
+        ? {...previous,page,overlay:null,item:null,idle:Boolean(previous.overlay||previous.idle)}
+        : adminHistoryEntry(page);
+    history.replaceState(adminHistoryCurrent,"");
+    history.scrollRestoration = "manual";
+    if (page !== state.currentPage) navigateTo(page,true);
+    window.addEventListener("popstate",handleAdminPop);
+}
+function rememberAdminScroll() {
+    if(adminHistoryCurrent) adminHistoryScroll.set(adminHistoryCurrent.key,window.scrollY);
+}
+function recordAdminPage(page) {
+    if(!adminHistoryCurrent||adminHistoryBusy)return;
+    rememberAdminScroll();
+    const entry=adminHistoryEntry(page);
+    // Selecting a destination from the sidebar consumes its transient entry.
+    if(adminHistoryCurrent.overlay==="sidebar"||adminHistoryCurrent.idle) history.replaceState(entry,"");
+    else history.pushState(entry,"");
+    adminHistoryCurrent=entry;
+}
+function enterAdminOverlay(overlay,item=null) {
+    if(!adminHistoryCurrent||adminHistoryBusy||adminHistoryCurrent.overlay)return;
+    rememberAdminScroll();
+    const entry={...adminHistoryEntry(state.currentPage,overlay,item),baseKey:adminHistoryCurrent.idle?adminHistoryCurrent.baseKey:adminHistoryCurrent.key};
+    if(adminHistoryCurrent.idle)history.replaceState(entry,"");
+    else history.pushState(entry,"");
+    adminHistoryCurrent=entry;
+}
+function leaveAdminOverlay(overlay) {
+    if(adminHistoryBusy||adminHistoryCurrent?.overlay!==overlay)return;
+    // Explicit closes must be synchronous: an immediate next click must not
+    // race a browser history traversal. Reuse this slot on the next action.
+    adminHistoryCurrent={...adminHistoryCurrent,overlay:null,item:null,idle:true};
+    history.replaceState(adminHistoryCurrent,"");
+}
+async function handleAdminPop(event) {
+    const destination=event.state;
+    if(adminHistoryBusy||!destination?.ramenAdmin||!adminHistoryPages.has(destination.page))return;
+    adminHistoryBusy=true;
+    const previous=adminHistoryCurrent;
+    rememberAdminScroll();
+    try {
+        if(previous?.idle&&destination.key===previous.baseKey&&destination.page===previous.page){
+            adminHistoryCurrent=destination;history.back();return;
+        }
+        if(previous?.overlay==="product" && DOM.productModal.classList.contains("is-open")) await closeProductModal();
+        if(previous?.overlay==="category" && DOM.categoryModal.classList.contains("is-open")) await closeCategoryModal();
+        if(previous?.overlay==="sidebar") closeSidebar();
+        if(DOM.productModal.classList.contains("is-open")||DOM.categoryModal.classList.contains("is-open")){
+            // A dirty-form confirmation was declined or a save is in progress.
+            history.pushState(previous,"");return;
+        }
+        if(state.currentPage==="settings" && destination.page!=="settings" && DOM.settingsForm?.classList.contains("is-dirty")){
+            if(saveInProgress||!(await window.RomanoConfirm("تغییرات ذخیره‌نشده کنار گذاشته شود؟"))){
+                history.pushState(previous,"");return;
+            }
+            renderSettings();
+        }
+        adminHistoryCurrent=destination;
+        navigateTo(destination.page,true);
+        if(destination.overlay==="sidebar")openSidebar();
+        if(destination.overlay==="product"&&(!destination.item||state.products.some(p=>p.id===destination.item)))openProductModal(destination.item);
+        if(destination.overlay==="category"&&(!destination.item||state.categories.some(c=>c.id===destination.item)))openCategoryModal(destination.item);
+        if(destination.overlay && !DOM.sidebar.classList.contains("is-open") && !DOM.productModal.classList.contains("is-open") && !DOM.categoryModal.classList.contains("is-open")){
+            adminHistoryCurrent={...destination,overlay:null,item:null,idle:true};history.replaceState(adminHistoryCurrent,"");
+        }
+        requestAnimationFrame(()=>window.scrollTo(0,adminHistoryScroll.get(destination.key)||0));
+    } finally {adminHistoryBusy=false;}
+}
+
 function initializeNavigation() {
+    document.querySelector("#ramen-add-product")?.addEventListener("click",()=>{navigateTo("products");openProductModal();});
+    document.querySelector("#ramen-tables-shortcut")?.addEventListener("click",()=>{
+        navigateTo("settings");
+        requestAnimationFrame(()=>{
+            const panel=document.querySelector("#demo-tables");
+            if(panel?.getClientRects().length){panel.scrollIntoView({block:"start"});panel.querySelector("input,button,select")?.focus({preventScroll:true});}
+        });
+    });
 
     DOM.navItems.forEach(
         item => {
@@ -654,7 +753,8 @@ function initializeNavigation() {
 
                 button.addEventListener(
                     "click",
-                    () => {
+                    event => {
+                        if(button.matches("a[href]")) event.preventDefault();
 
                         navigateTo(
                             button.dataset.pageTarget
@@ -669,7 +769,8 @@ function initializeNavigation() {
 }
 
 
-function navigateTo(page) {
+function navigateTo(page, fromHistory = false) {
+    if(adminHistoryBusy&&!fromHistory)return;
 
     const validPages = [
 
@@ -690,6 +791,7 @@ function navigateTo(page) {
 
 
     const changedPage = state.currentPage !== page;
+    if (changedPage && !fromHistory) recordAdminPage(page);
     state.currentPage =
         page;
 
@@ -821,6 +923,7 @@ function openSidebar() {
     DOM.sidebar.setAttribute("aria-modal", "true");
     document.querySelector(".admin-main").inert = true;
     DOM.sidebarClose?.focus();
+    enterAdminOverlay("sidebar");
 
 }
 
@@ -847,6 +950,7 @@ function closeSidebar() {
     const target = sidebarPreviousFocus;
     sidebarPreviousFocus = null;
     requestAnimationFrame(() => target?.focus?.());
+    leaveAdminOverlay("sidebar");
 
 }
 
@@ -1538,6 +1642,7 @@ function openProductModal(productId = null) {
     );
 
     requestAnimationFrame(() => DOM.productModal.querySelector("[data-close-modal]")?.focus());
+    enterAdminOverlay("product",productId);
 
     document.body.style.overflow =
         "hidden";
@@ -1573,6 +1678,7 @@ async function closeProductModal(force = false) {
 
     document.body.style.overflow =
         "";
+    leaveAdminOverlay("product");
 
 }
 
@@ -2043,6 +2149,7 @@ function openCategoryModal(categoryId = null) {
     );
 
     requestAnimationFrame(() => DOM.categoryModal.querySelector("[data-close-category-modal]")?.focus());
+    enterAdminOverlay("category",categoryId);
 
     document.body.style.overflow =
         "hidden";
@@ -2078,6 +2185,7 @@ async function closeCategoryModal(force = false) {
 
     document.body.style.overflow =
         "";
+    leaveAdminOverlay("category");
 
 }
 
