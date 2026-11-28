@@ -249,3 +249,7 @@ html[dir="rtl"] .sidebar-navigation .nav-item.active {box-shadow:inset -3px 0 0 
 }
 @media(max-width:350px){.admin-header.admin-header-compact{gap:4px;padding-inline:6px}.admin-header-compact .header-actions{gap:2px}#page-dashboard .quick-action-card strong{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.admin-gate-panel,.admin-header-compact *,#page-dashboard *{transition:none!important;animation:none!important}}
+
+#page-dashboard #ramen-tables-shortcut{min-width:0}
+#demo-tables{scroll-margin-block-start:80px}
+@media(min-width:1000px){#page-dashboard .admin-quick-actions{grid-template-columns:repeat(4,minmax(0,1fr))}}

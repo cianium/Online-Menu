@@ -9,6 +9,7 @@
     const LANGS = ["fa", "en", "tr", "ar"];
 
     const T = {
+      "مدیریت میزها": ["Manage tables","Masaları yönet","إدارة الطاولات"],
       "گزارش کامل": ["Full report","Tam rapor","التقرير الكامل"],
       "ساخته‌شده توسط کیان خیاط": ["Made by Kian Khayat","Kian Khayat tarafından yapıldı","صنعه كيان خياط"],
       "موردی نیازمند رسیدگی نیست.": ["No issues need attention.","İncelenecek sorun yok.","لا توجد مشكلات تتطلب الانتباه."],

@@ -45,7 +45,7 @@
       $('revenue-ranking').hidden=!report.topItems.length;
       $('revenue-average').textContent=money(report.average,report.currency);
       $('revenue-change').dataset.trend=report.change===null?'neutral':report.change>0?'up':report.change<0?'down':'neutral';
-    $('revenue-change').textContent=report.change===null?'—':new Intl.NumberFormat(lang(),{style:'percent',maximumFractionDigits:1,signDisplay:'exceptZero'}).format(report.change/100);
+      $('revenue-change').textContent=report.change===null?'—':new Intl.NumberFormat(lang(),{style:'percent',maximumFractionDigits:1,signDisplay:'exceptZero'}).format(report.change/100);
       $('revenue-previous').textContent=t('دوره قبل')+': '+money(report.previousTotal,report.currency)+' ('+dateLabel(report.previousStart)+' – '+dateLabel(report.previousEnd)+')';
       $('revenue-range-label').textContent=dateLabel(report.start)+' – '+dateLabel(report.end);
       $('revenue-excluded').textContent=(report.legacyCount?t('سفارش‌های قدیمی بدون واحد پول از گزارش حذف شده‌اند.')+' '+n(report.legacyCount)+' ':'')+(report.otherCurrencyCount?t('سفارش‌های با واحد پول دیگر جداگانه گزارش می‌شوند.')+' '+n(report.otherCurrencyCount):'');

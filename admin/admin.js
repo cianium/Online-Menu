@@ -638,7 +638,9 @@ function adminHistoryEntry(page, overlay=null, item=null) {
 function initializeAdminHistory() {
     const previous = history.state;
     const page = previous?.ramenAdmin && adminHistoryPages.has(previous.page) ? previous.page : "dashboard";
-    adminHistoryCurrent = adminHistoryEntry(page);
+    adminHistoryCurrent = previous?.ramenAdmin && previous.key
+        ? {...previous,page,overlay:null,item:null,idle:Boolean(previous.overlay||previous.idle)}
+        : adminHistoryEntry(page);
     history.replaceState(adminHistoryCurrent,"");
     history.scrollRestoration = "manual";
     if (page !== state.currentPage) navigateTo(page,true);
@@ -652,19 +654,24 @@ function recordAdminPage(page) {
     rememberAdminScroll();
     const entry=adminHistoryEntry(page);
     // Selecting a destination from the sidebar consumes its transient entry.
-    if(adminHistoryCurrent.overlay==="sidebar") history.replaceState(entry,"");
+    if(adminHistoryCurrent.overlay==="sidebar"||adminHistoryCurrent.idle) history.replaceState(entry,"");
     else history.pushState(entry,"");
     adminHistoryCurrent=entry;
 }
 function enterAdminOverlay(overlay,item=null) {
     if(!adminHistoryCurrent||adminHistoryBusy||adminHistoryCurrent.overlay)return;
     rememberAdminScroll();
-    const entry=adminHistoryEntry(state.currentPage,overlay,item);
-    history.pushState(entry,"");adminHistoryCurrent=entry;
+    const entry={...adminHistoryEntry(state.currentPage,overlay,item),baseKey:adminHistoryCurrent.idle?adminHistoryCurrent.baseKey:adminHistoryCurrent.key};
+    if(adminHistoryCurrent.idle)history.replaceState(entry,"");
+    else history.pushState(entry,"");
+    adminHistoryCurrent=entry;
 }
 function leaveAdminOverlay(overlay) {
     if(adminHistoryBusy||adminHistoryCurrent?.overlay!==overlay)return;
-    history.back();
+    // Explicit closes must be synchronous: an immediate next click must not
+    // race a browser history traversal. Reuse this slot on the next action.
+    adminHistoryCurrent={...adminHistoryCurrent,overlay:null,item:null,idle:true};
+    history.replaceState(adminHistoryCurrent,"");
 }
 async function handleAdminPop(event) {
     const destination=event.state;
@@ -673,6 +680,9 @@ async function handleAdminPop(event) {
     const previous=adminHistoryCurrent;
     rememberAdminScroll();
     try {
+        if(previous?.idle&&destination.key===previous.baseKey&&destination.page===previous.page){
+            adminHistoryCurrent=destination;history.back();return;
+        }
         if(previous?.overlay==="product" && DOM.productModal.classList.contains("is-open")) await closeProductModal();
         if(previous?.overlay==="category" && DOM.categoryModal.classList.contains("is-open")) await closeCategoryModal();
         if(previous?.overlay==="sidebar") closeSidebar();
@@ -680,21 +690,33 @@ async function handleAdminPop(event) {
             // A dirty-form confirmation was declined or a save is in progress.
             history.pushState(previous,"");return;
         }
-        if(state.currentPage==="settings" && destination.page!=="settings" && DOM.settingsForm?.classList.contains("is-dirty") &&
-           !window.confirm("تغییرات ذخیره‌نشده کنار گذاشته شود؟")){
-            history.pushState(previous,"");return;
+        if(state.currentPage==="settings" && destination.page!=="settings" && DOM.settingsForm?.classList.contains("is-dirty")){
+            if(saveInProgress||!(await window.RomanoConfirm("تغییرات ذخیره‌نشده کنار گذاشته شود؟"))){
+                history.pushState(previous,"");return;
+            }
+            renderSettings();
         }
         adminHistoryCurrent=destination;
         navigateTo(destination.page,true);
         if(destination.overlay==="sidebar")openSidebar();
         if(destination.overlay==="product"&&(!destination.item||state.products.some(p=>p.id===destination.item)))openProductModal(destination.item);
         if(destination.overlay==="category"&&(!destination.item||state.categories.some(c=>c.id===destination.item)))openCategoryModal(destination.item);
+        if(destination.overlay && !DOM.sidebar.classList.contains("is-open") && !DOM.productModal.classList.contains("is-open") && !DOM.categoryModal.classList.contains("is-open")){
+            adminHistoryCurrent={...destination,overlay:null,item:null,idle:true};history.replaceState(adminHistoryCurrent,"");
+        }
         requestAnimationFrame(()=>window.scrollTo(0,adminHistoryScroll.get(destination.key)||0));
     } finally {adminHistoryBusy=false;}
 }
 
 function initializeNavigation() {
     document.querySelector("#ramen-add-product")?.addEventListener("click",()=>{navigateTo("products");openProductModal();});
+    document.querySelector("#ramen-tables-shortcut")?.addEventListener("click",()=>{
+        navigateTo("settings");
+        requestAnimationFrame(()=>{
+            const panel=document.querySelector("#demo-tables");
+            if(panel?.getClientRects().length){panel.scrollIntoView({block:"start"});panel.querySelector("input,button,select")?.focus({preventScroll:true});}
+        });
+    });
 
     DOM.navItems.forEach(
         item => {
@@ -739,6 +761,7 @@ function initializeNavigation() {
 
 
 function navigateTo(page, fromHistory = false) {
+    if(adminHistoryBusy&&!fromHistory)return;
 
     const validPages = [
 

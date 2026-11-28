@@ -38,7 +38,7 @@ async function scan(page, name, lang, width, height) {
       const rgb=s=>{const m=s.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);if(!m)throw Error('Expected opaque RGB: '+s);return m.slice(1).map(Number);};
       const luminance=s=>rgb(s).map(n=>n/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4).reduce((sum,n,i)=>sum+n*[.2126,.7152,.0722][i],0);
       const bg=luminance(getComputedStyle(panel).backgroundColor);
-      return [...panel.querySelectorAll('.admin-footer-brand span, .admin-footer-brand strong, p, #admin-storage-mode')].map(el=>{
+      return [...panel.querySelectorAll('.admin-footer-brand span, .admin-footer-brand strong, p a, #admin-storage-mode')].map(el=>{
         const style=getComputedStyle(el),fg=luminance(style.color);
         return {text:el.textContent.trim(),fontPx:parseFloat(style.fontSize),ratio:(Math.max(bg,fg)+.05)/(Math.min(bg,fg)+.05)};
       });

@@ -43,6 +43,21 @@ async function check(name, action) { await action(); results.push(name); console
     await loginDemoAdmin(page);
   });
   await check('Local demo boot and seed catalog', async () => assert.equal(await page.evaluate(() => state.products.length), 21));
+  await check('R27 browser Back returns to the previous admin page and dismisses sidebar and product editor',async()=>{
+    await page.setViewportSize({width:390,height:844});
+    await page.evaluate(()=>navigateTo('dashboard'));
+    await page.locator('#ramen-add-product').click();
+    await page.locator('#product-modal.is-open').waitFor();
+    await page.evaluate(()=>history.back());
+    await page.waitForFunction(()=>!document.querySelector('#product-modal').classList.contains('is-open')&&state.currentPage==='products');
+    await page.evaluate(()=>history.back());
+    await page.waitForFunction(()=>state.currentPage==='dashboard');
+    await page.locator('#mobile-menu-button').click();
+    await page.locator('#sidebar.is-open').waitFor();
+    await page.evaluate(()=>history.back());
+    await page.waitForFunction(()=>!document.querySelector('#sidebar').classList.contains('is-open')&&state.currentPage==='dashboard');
+    await page.setViewportSize({width:1440,height:1000});
+  });
   await check('Connect inbox receives local guest messages, replies, assigns and resolves',async()=>{
     const guest=await context.newPage();
     try{
