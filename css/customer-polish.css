@@ -608,7 +608,7 @@ html[dir] .hero-overlay {background:linear-gradient(180deg,#080705b0 0%,#0807059
 #commerce-drawer .commerce-quantity button{border-radius:12px}
 #commerce-drawer #commerce-demo-status{margin-block:10px 0;font-size:12px;color:#c4b8a7}
 .hp-undo{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border:1px solid #d6ae7040;border-radius:12px;color:#ecd9bc;font-size:13px}
-.hp-undo button,.hp-continue,.hp-suggestion button,.hp-contact-actions button{min-height:44px;border-radius:11px;border:1px solid #d6ae7050;background:#d6ae7010;color:#f1d8b0;font:inherit;cursor:pointer;padding:6px 12px}
+.hp-undo button,.hp-continue,.hp-suggestion button{min-height:44px;border-radius:11px;border:1px solid #d6ae7050;background:#d6ae7010;color:#f1d8b0;font:inherit;cursor:pointer;padding:6px 12px}
 .hp-suggestions h3,.hp-services h3{font-size:15px;color:#f7f0e7;margin:0 0 10px}
 .hp-suggestion-grid{display:grid;grid-auto-flow:column;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:inline proximity}
 .hp-suggestion{display:grid;align-content:space-between;min-width:0;border:1px solid #d6ae7025;background:#ffffff05;scroll-snap-align:start;font-size:12px;overflow-wrap:anywhere}
@@ -616,9 +616,8 @@ html[dir] .hero-overlay {background:linear-gradient(180deg,#080705b0 0%,#0807059
 .hp-suggestion button{font-size:12px}
 #commerce-drawer .commerce-note{margin-block:8px 14px}
 #commerce-drawer .commerce-note textarea{border-color:#d6ae7030}
-.hp-service-notice,.hp-service-live{margin:8px 0;color:#c4b8a7;font-size:12px;line-height:1.6}
 #hp-undo[hidden],#hp-continue[hidden],#hp-suggestions[hidden],#hp-note-local[hidden]{display:none!important}
-:is(#commerce-drawer,.hp-contact) button:focus-visible{outline:2px solid #ebc98e;outline-offset:3px}
+:is(#commerce-drawer) button:focus-visible{outline:2px solid #ebc98e;outline-offset:3px}
 
 .hp-history-notes{white-space:pre-wrap;overflow-wrap:anywhere;color:#c4b8a7}
 

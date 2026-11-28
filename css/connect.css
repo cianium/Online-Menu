@@ -1,3 +1,4 @@
+.hp-service-notice,.hp-service-live{margin:8px 0;color:#c4b8a7;font-size:12px;line-height:1.6}
 .hp-services{padding-block:6px}
 .hp-service-live:empty{display:none}
 .hp-service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}

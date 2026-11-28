@@ -52,6 +52,10 @@
       });
       section.addEventListener("hp-request-updated",refresh);
       refresh();grid.append(button);
+      if(!compact&&panel==='waiter'&&kind==='waiter'&&enabled&&(!displayed||displayed.state==='completed')){
+        // Direct waiter action: submit once after the dialog is attached. Reopening an active request never cancels it.
+        requestAnimationFrame(()=>{if(panelActive()&&section.isConnected&&!button.disabled&&button.getAttribute('aria-pressed')==='false')button.click();});
+      }
     }
     section.dataset.requestKey=key;
     if(!compact||!enabled)section.append(status);section.append(grid,live);content.append(section);
