@@ -127,10 +127,10 @@
   }
 
   const navTranslations={
-    fa:{home:"خانه",menu:"منو",featured:"ویژه‌ها",contact:"ارتباط",cart:"سبد"},
-    en:{home:"Home",menu:"Menu",featured:"Featured",contact:"Contact",cart:"Cart"},
-    tr:{home:"Ana Sayfa",menu:"Menü",featured:"Öne çıkanlar",contact:"İletişim",cart:"Sepet"},
-    ar:{home:"الرئيسية",menu:"القائمة",featured:"المميز",contact:"اتصل بنا",cart:"السلة"}
+    fa:{home:"خانه",menu:"منو",featured:"ویژه‌ها",contact:"چت",cart:"سبد"},
+    en:{home:"Home",menu:"Menu",featured:"Featured",contact:"Chat",cart:"Cart"},
+    tr:{home:"Ana Sayfa",menu:"Menü",featured:"Öne çıkanlar",contact:"Sohbet",cart:"Sepet"},
+    ar:{home:"الرئيسية",menu:"القائمة",featured:"المميز",contact:"محادثة",cart:"السلة"}
   };
   function updateCustomerNavigation() {
     const words=navTranslations[lang()] || navTranslations.fa;
@@ -198,10 +198,10 @@
   const panelText = () => panelWords[lang()] || panelWords.fa;
   // All new customer-facing copy is localized; no demo action reaches restaurant staff.
   const hospitality = {
-    fa:{services:"خدمات مهمان",quick:"خدمات میز",waiter:"فراخوان گارسون",bill:"درخواست صورتحساب",water:"درخواست آب",napkin:"درخواست دستمال",local:"درخواست‌ها فقط در این مرورگر شبیه‌سازی می‌شوند و به پرسنل ارسال نمی‌شوند.",unconnected:"خدمات آنلاین میز هنوز فعال نیست.",selectTable:"برای خدمات میز، QR معتبر میز را باز کنید.",request:"درخواست آزمایشی ثبت شد",cancel:"لغو درخواست",review:"ثبت نظر و امتیاز",copy:"کپی آدرس",copied:"آدرس کپی شد",copyFailed:"کپی ممکن نشد؛ آدرس را دستی انتخاب کنید.",suggest:"سفارش خود را کامل کنید",unit:"قیمت واحد",undo:"بازگرداندن",removed:"محصول حذف شد",continue:"ادامه انتخاب",join:"ورود برای تکمیل سفارش",items:"آیتم",summary:"خلاصه سفارش",branch:"شعبه",unknown:"میز مشخص نشده",noteLocal:"فقط توضیحات ساختگی وارد کنید.",demo:"نسخه آزمایشی؛ سفارش ارسال نمی‌شود."},
-    en:{services:"Guest services",quick:"Table services",waiter:"Call waiter",bill:"Request bill",water:"Request water",napkin:"Request napkins",local:"Requests are simulated in this browser only; nothing is sent to staff.",unconnected:"Online table services are not enabled.",selectTable:"Open a valid table QR to use table services.",request:"Sample request saved",cancel:"Cancel request",review:"Rating & feedback",copy:"Copy address",copied:"Address copied",copyFailed:"Could not copy. Select the address manually.",suggest:"Complete your order",unit:"Unit price",undo:"Undo",removed:"Item removed",continue:"Continue browsing",join:"Sign in to complete order",items:"items",summary:"Order summary",branch:"Branch",unknown:"No table selected",noteLocal:"Use fictional notes only.",demo:"Demo only; orders are not sent."},
+    fa:{services:"خدمات مهمان",quick:"خدمات میز",waiter:"فراخوان گارسون",bill:"درخواست صورتحساب",water:"درخواست آب",napkin:"درخواست دستمال",local:"درخواست‌ها فقط در این مرورگر شبیه‌سازی می‌شوند و به پرسنل ارسال نمی‌شوند.",unconnected:"خدمات آنلاین میز هنوز فعال نیست.",selectTable:"برای خدمات میز، QR معتبر میز را باز کنید.",request:"درخواست آزمایشی ثبت شد",cancel:"لغو درخواست",review:"ثبت نظر و امتیاز",copy:"کپی آدرس",copied:"آدرس کپی شد",copyFailed:"کپی ممکن نشد؛ آدرس را دستی انتخاب کنید.",suggest:"سفارش خود را کامل کنید",unit:"قیمت واحد",undo:"بازگرداندن",removed:"محصول حذف شد",continue:"بازگشت به منو",join:"ورود برای تکمیل سفارش",items:"آیتم",summary:"خلاصه سفارش",branch:"شعبه",unknown:"میز مشخص نشده",noteLocal:"فقط توضیحات ساختگی وارد کنید.",demo:"نسخه آزمایشی؛ سفارش ارسال نمی‌شود."},
+    en:{services:"Guest services",quick:"Table services",waiter:"Call waiter",bill:"Request bill",water:"Request water",napkin:"Request napkins",local:"Requests are simulated in this browser only; nothing is sent to staff.",unconnected:"Online table services are not enabled.",selectTable:"Open a valid table QR to use table services.",request:"Sample request saved",cancel:"Cancel request",review:"Rating & feedback",copy:"Copy address",copied:"Address copied",copyFailed:"Could not copy. Select the address manually.",suggest:"Complete your order",unit:"Unit price",undo:"Undo",removed:"Item removed",continue:"Back to menu",join:"Sign in to complete order",items:"items",summary:"Order summary",branch:"Branch",unknown:"No table selected",noteLocal:"Use fictional notes only.",demo:"Demo only; orders are not sent."},
     tr:{services:"Misafir hizmetleri",quick:"Masa hizmetleri",waiter:"Garson çağır",bill:"Hesap iste",water:"Su iste",napkin:"Peçete iste",local:"İstekler yalnızca bu tarayıcıda simüle edilir; personele gönderilmez.",unconnected:"Çevrimiçi masa hizmetleri etkin değil.",selectTable:"Masa hizmetleri için geçerli masa QR kodunu açın.",request:"Örnek istek kaydedildi",cancel:"İsteği iptal et",review:"Puan ve geri bildirim",copy:"Adresi kopyala",copied:"Adres kopyalandı",copyFailed:"Kopyalanamadı. Adresi elle seçin.",suggest:"Siparişinizi tamamlayın",unit:"Birim fiyat",undo:"Geri al",removed:"Ürün kaldırıldı",continue:"Menüye dön",join:"Siparişi tamamlamak için giriş yap",items:"ürün",summary:"Sipariş özeti",branch:"Şube",unknown:"Masa seçilmedi",noteLocal:"Yalnızca kurgusal not yazın.",demo:"Demo; siparişler gönderilmez."},
-    ar:{services:"خدمات الضيوف",quick:"خدمات الطاولة",waiter:"استدعاء النادل",bill:"طلب الفاتورة",water:"طلب الماء",napkin:"طلب المناديل",local:"تُحاكى الطلبات في هذا المتصفح فقط ولا تُرسل للموظفين.",unconnected:"خدمات الطاولة عبر الإنترنت غير مفعلة.",selectTable:"افتح رمز QR صالحًا للطاولة لاستخدام الخدمات.",request:"حُفظ الطلب التجريبي",cancel:"إلغاء الطلب",review:"التقييم والملاحظات",copy:"نسخ العنوان",copied:"تم نسخ العنوان",copyFailed:"تعذر النسخ. حدد العنوان يدويًا.",suggest:"أكمل طلبك",unit:"سعر الوحدة",undo:"تراجع",removed:"تم حذف المنتج",continue:"متابعة التصفح",join:"سجّل الدخول لإكمال الطلب",items:"عناصر",summary:"ملخص الطلب",branch:"الفرع",unknown:"لم تُحدد طاولة",noteLocal:"اكتب ملاحظات وهمية فقط.",demo:"نسخة تجريبية؛ لا تُرسل الطلبات."}
+    ar:{services:"خدمات الضيوف",quick:"خدمات الطاولة",waiter:"استدعاء النادل",bill:"طلب الفاتورة",water:"طلب الماء",napkin:"طلب المناديل",local:"تُحاكى الطلبات في هذا المتصفح فقط ولا تُرسل للموظفين.",unconnected:"خدمات الطاولة عبر الإنترنت غير مفعلة.",selectTable:"افتح رمز QR صالحًا للطاولة لاستخدام الخدمات.",request:"حُفظ الطلب التجريبي",cancel:"إلغاء الطلب",review:"التقييم والملاحظات",copy:"نسخ العنوان",copied:"تم نسخ العنوان",copyFailed:"تعذر النسخ. حدد العنوان يدويًا.",suggest:"أكمل طلبك",unit:"سعر الوحدة",undo:"تراجع",removed:"تم حذف المنتج",continue:"العودة إلى القائمة",join:"سجّل الدخول لإكمال الطلب",items:"عناصر",summary:"ملخص الطلب",branch:"الفرع",unknown:"لم تُحدد طاولة",noteLocal:"اكتب ملاحظات وهمية فقط.",demo:"نسخة تجريبية؛ لا تُرسل الطلبات."}
   };
   const h = key => hospitality[lang()]?.[key] || hospitality.fa[key];
   let lastRemoved = null;
@@ -227,7 +227,7 @@
   }
   function contextLabel() {
     const context=guestContext();
-    return context.table ? t("table")+" "+context.table : h("unknown");
+    return context.table ? (/^(?:میز|Table|Masa|طاولة)\b/i.test(context.table)||/^(?:میز|طاولة)\s/.test(context.table)?context.table:t("table")+" "+context.table) : "";
   }
   function renderSuggestions() {
     const host=document.querySelector("#hp-suggestions");if(!host)return;
@@ -335,6 +335,7 @@
       const mode=typeof menuDataMode !== 'undefined' ? menuDataMode : 'loading';
       const demo=mode==='demo';
       dialog.classList.toggle('hp-contact',panel==='contact');
+      dialog.classList.toggle('r27-profile-page',panel==='profile');
       dialog.classList.toggle('connect-dialog',panel==='chat'&&Boolean(chat&&window.RomanoCustomerPanels));
       const panels=window.RomanoCustomerPanels;
       if(panels&&(panel!=='chat'||chat)){
@@ -365,6 +366,7 @@
     document.addEventListener('romano:open-customer-panel',event=>{
       const panel=event.detail?.panel;
       if(panel==='cart')openDrawer();
+      else if(panel==='profile'&&isDemo()&&!window.RomanoCustomerEntry?.current()){window.RomanoCustomerEntry.open(false,()=>{if(window.RomanoCustomerEntry.current())openPanel('profile',document.querySelector('#menu-toggle'));});}
       else if(['contact','chat','profile','feedback','waiter'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
     });
     dialog.addEventListener('close',()=>{panelRevision++;window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');window.RomanoCustomerChat?.suspend();if(origin?.isConnected&&!origin.closest('[inert]'))origin.focus({preventScroll:true});origin=null;activePanel=null;});
@@ -424,7 +426,7 @@
     document.querySelector("#commerce-cart-bar").addEventListener("click", openDrawer);
     document.querySelectorAll("[data-commerce-close]").forEach((button) => button.addEventListener("click", closeDrawer));
     document.querySelector("#commerce-submit").addEventListener("click", submitOrder);
-    document.querySelector("#hp-continue").addEventListener("click",closeDrawer);
+    document.querySelector("#hp-continue").addEventListener("click",()=>{closeDrawer();navigateCustomerView("menu");});
     document.querySelector("#hp-code").addEventListener("input",event=>{couponCode=event.target.value;});
     document.querySelector("#hp-apply").addEventListener("click",()=>{
       if(submitting)return;
@@ -589,8 +591,13 @@
     document.querySelector("#hp-discount-value").textContent=savings?money(savings):"";
     const points=document.querySelector("#hp-points");
     points.hidden=!cfg?.points;points.textContent=cfg?.points?x(4)+": +"+new Intl.NumberFormat(lang()).format(cfg.points):"";
-    document.querySelector("#commerce-title").textContent=t("cart")+(amount?" · "+new Intl.NumberFormat(lang()).format(amount):"");
-    document.querySelector("#hp-cart-context").textContent=contextLabel();
+    const member=window.RomanoCustomerEntry?.current()||window.RomanoPhoneAuth?.customer();
+    const memberName=member?.name||member?.displayName;
+    const cartTitles={fa:["سبد خرید شما","سبد خرید "],en:["Your cart","Cart — "],tr:["Sepetiniz","Sepet — "],ar:["سلة مشترياتك","سلة مشتريات "]};
+    const titleWords=cartTitles[lang()]||cartTitles.fa;
+    const title=document.querySelector("#commerce-title");title.replaceChildren(document.createTextNode(memberName?titleWords[1]:titleWords[0]));
+    if(memberName){const name=document.createElement("bdi");name.textContent=memberName;title.append(name);}
+    const context=document.querySelector("#hp-cart-context");context.textContent=contextLabel();context.hidden=!context.textContent;
     document.querySelector("#hp-undo").hidden=!lastRemoved || !product(lastRemoved.id);
     document.querySelector("#hp-undo-button").disabled=submitting;
     document.querySelector("#hp-continue").disabled=submitting;
@@ -610,9 +617,8 @@
       return `<article class="commerce-item${quantity===0?' is-zero':''}" data-cart-row="${safe(id)}">
         <div class="commerce-item-media"><span class="image-fallback" aria-hidden="true">${safe(getImageFallbackLabel(view.name))}</span>${src ? `<img src="${safe(src)}" alt="" width="64" height="64" decoding="async">` : ""}</div>
         <div class="hp-item-copy"><h3>${safe(view.name)}</h3><span class="hp-unit">${safe(h("unit"))}: ${safe(money(item.price))}</span><strong class="hp-line-total">${safe(money(item.price * quantity))}</strong>
-          <div class="commerce-quantity" aria-label="${safe(view.name)}"><button type="button" data-cart-change="-1" data-product-id="${safe(id)}" aria-label="${safe(panelText().less)}: ${safe(view.name)}" ${submitting||quantity===0?"disabled":""}>−</button><b>${quantity}</b><button type="button" data-cart-change="1" data-product-id="${safe(id)}" aria-label="${safe(panelText().more)}: ${safe(view.name)}" ${submitting||quantity>=99?"disabled":""}>+</button></div>
+          <div class="commerce-quantity" aria-label="${safe(view.name)}"><button type="button" ${quantity===0?'data-cart-remove class="cart-trash"':'data-cart-change="-1"'} data-product-id="${safe(id)}" aria-label="${safe(quantity===0?t("remove"):panelText().less)}: ${safe(view.name)}" ${submitting?"disabled":""}>${quantity===0?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7m4-7v7"/></svg>':'−'}</button><b>${quantity}</b><button type="button" data-cart-change="1" data-product-id="${safe(id)}" aria-label="${safe(panelText().more)}: ${safe(view.name)}" ${submitting||quantity>=99?"disabled":""}>+</button></div>
         </div>
-        ${quantity===0?`<button class="commerce-remove" type="button" data-cart-remove data-product-id="${safe(id)}" aria-label="${safe(t("remove"))}: ${safe(view.name)}" ${submitting?"disabled":""}>${safe(t("remove"))}</button>`:""}
       </article>`;
     }).join("");
     host.innerHTML = rows || `<p class="commerce-empty">${safe(t("empty"))}</p>`;
@@ -631,9 +637,10 @@
     const submit = document.querySelector("#commerce-submit");
     submit.disabled = amount === 0 || submitting;
     const entry=window.RomanoCustomerEntry;
-    submit.textContent = submitting ? t("sending") : isDemo() ? (entry.current()?entry.t("order"):h("join")) : t("checkout");
+    submit.textContent = submitting ? t("sending") : ({fa:"پرداخت",en:"Payment",tr:"Ödeme",ar:"الدفع"}[lang()]||"Payment");
     renderStatus();
     renderSession();
+    renderModalQuantity();
   }
 
   function renderPaymentMethods() {
@@ -710,7 +717,26 @@
       if(actions)actions.before(modalAdd);else modalContent.append(modalAdd);
       modalAdd.addEventListener("click", () => { if (window.RomanoActiveProduct?.id) add(window.RomanoActiveProduct.id); });
     }
-    if (modalAdd) modalAdd.textContent = `+ ${t("add")}`;
+    if(modalAdd)renderModalQuantity();
+  }
+  function renderModalQuantity(){
+    const addButton=document.querySelector(".commerce-modal-add"),id=window.RomanoActiveProduct?.id;
+    if(!addButton)return;
+    addButton.textContent="+ "+t("add");
+    let control=document.querySelector(".modal-cart-quantity");
+    if(!control){
+      control=document.createElement("div");control.className="modal-cart-quantity commerce-quantity";control.hidden=true;
+      const minus=document.createElement("button"),value=document.createElement("b"),plus=document.createElement("button");
+      minus.type=plus.type="button";minus.textContent="−";plus.textContent="+";
+      minus.onclick=()=>{const current=window.RomanoActiveProduct?.id;if(current)change(current,-1);};
+      plus.onclick=()=>{const current=window.RomanoActiveProduct?.id;if(current)add(current);};
+      control.append(minus,value,plus);addButton.after(control);
+    }
+    const amount=id?cart[id]||0:0, item=id?product(id):null;
+    addButton.hidden=amount>0;addButton.disabled=!item||submitting;
+    control.hidden=!amount;control.querySelector("b").textContent=new Intl.NumberFormat(lang()).format(amount);
+    const [minus,plus]=control.querySelectorAll("button");minus.setAttribute("aria-label",panelText().less);plus.setAttribute("aria-label",panelText().more);
+    minus.disabled=submitting;plus.disabled=submitting||amount>=99;
   }
 
   async function openQrSession() {
@@ -919,6 +945,7 @@
     document.addEventListener("romano:product-opened", enhanceProducts);
     window.addEventListener("romano:data-updated", () => { reconcileCart(); enhanceProducts(); render();renderHeroRating(); });
     document.addEventListener("romano:demo-membership-changed",render);
+    document.addEventListener("romano:customer-auth-changed",render);
     document.addEventListener("romano:language-changed",renderHeroRating);
     window.addEventListener("storage", event => {
       if(event.key===null||event.key===window.RomanoDemoReview.key(tenant()))renderHeroRating();

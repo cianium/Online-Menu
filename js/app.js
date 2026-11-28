@@ -1638,32 +1638,15 @@ function openProductModal(productId, opener = null) {
 
     if (DOM.modalMeta) {
 
-        const metaParts = [];
-
-
-        if (product.rating) {
-
-            metaParts.push(
-                window.ROMANO_I18N?.ui?.("rating", parseRatingValue(product.rating)) || ("امتیاز " + parseRatingValue(product.rating) + " از ۵")
-            );
-
+        DOM.modalMeta.replaceChildren();
+        if(product.rating){
+            const rating=document.createElement("span");rating.className="r27-modal-rating";
+            const score=Math.max(0,Math.min(5,parseRatingValue(product.rating)||0));
+            rating.textContent="★".repeat(Math.round(score))+"☆".repeat(5-Math.round(score));
+            rating.setAttribute("role","img");rating.setAttribute("aria-label",window.ROMANO_I18N.ui("rating",score));DOM.modalMeta.append(rating);
         }
-
-
-        if (product.price > 0) {
-
-            metaParts.push(
-                formatPrice(product.price)
-            );
-
-        }
-
-
-        DOM.modalMeta.textContent =
-            metaParts.join("  ·  ");
-
+        if(product.price>0){const price=document.createElement("strong");price.className="r27-modal-price";price.textContent=formatPrice(product.price);DOM.modalMeta.append(price);}
     }
-
 
     DOM.productModal.classList.add(
         "is-open"
@@ -2682,8 +2665,10 @@ window.addEventListener("storage", event => {
         const labelShare = actions.querySelector("[data-rv4-share]");
         const labelCopy = actions.querySelector("[data-rv4-copy]");
         const applyActionLabels = () => {
-            labelShare.textContent = window.ROMANO_I18N?.ui?.("share") || "اشتراک‌گذاری";
-            labelCopy.textContent = window.ROMANO_I18N?.ui?.("copyLink") || "کپی لینک";
+            labelShare.setAttribute("aria-label",window.ROMANO_I18N?.ui?.("share") || "اشتراک‌گذاری");
+            labelCopy.setAttribute("aria-label",window.ROMANO_I18N?.ui?.("copyLink") || "کپی لینک");
+            labelShare.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 12 10-6M7 12l10 6"/><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="5" r="2.5"/><circle cx="19" cy="19" r="2.5"/></svg>';
+            labelCopy.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>';
         };
         applyActionLabels();
         document.addEventListener("romano:language-changed", applyActionLabels);
@@ -2750,7 +2735,7 @@ window.addEventListener("storage", event => {
             const language = window.ROMANO_I18N.language;
             const message = copied ? window.ROMANO_I18N.ui("copied") : copyFailure[language] || copyFailure.en;
             status.textContent = message;
-            labelCopy.textContent = message;
+            labelCopy.setAttribute("aria-label",message);
             copyTimer = setTimeout(resetCopyFeedback, 2200);
         }
 

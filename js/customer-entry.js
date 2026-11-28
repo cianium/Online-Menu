@@ -95,9 +95,14 @@
   if(!demo())return window.RomanoPhoneAuth?.renderProfile(host,closePanel)??false;
   const member=current();
   if(!member){const button=text('button','join','feedback-save');button.type='button';button.addEventListener('click',()=>{closePanel();open();});host.append(text('p','notice','ramen-contact-note'),button);return true;}
-  const memberName=el('strong',member.name);memberName.dir='auto';host.append(memberName);
-  const points=model.pointsFor(member);
-  if(points)host.append(el('p',({fa:'امتیاز نمونه',en:'Sample points',tr:'Örnek puan',ar:'نقاط تجريبية'}[lang()]||'')+': '+new Intl.NumberFormat(lang()).format(points)));
+  const profileWords={fa:['شماره تلفن','تاریخ عضویت','سفارش‌ها','امتیاز نمونه','پرداخت‌ها','تخفیف‌ها','هیچ پرداخت واقعی ثبت نشده است.','تخفیف فعال نمونه','تخفیف فعالی ندارید.','تخفیف‌های استفاده‌شده'],en:['Phone number','Member since','Orders','Sample points','Payments','Discounts','No real payments recorded.','Active sample discount','No active discount.','Used discounts'],tr:['Telefon numarası','Üyelik tarihi','Siparişler','Örnek puan','Ödemeler','İndirimler','Gerçek ödeme kaydı yok.','Etkin örnek indirim','Etkin indirim yok.','Kullanılan indirimler'],ar:['رقم الهاتف','تاريخ العضوية','الطلبات','نقاط تجريبية','المدفوعات','الخصومات','لا توجد مدفوعات حقيقية مسجلة.','خصم تجريبي نشط','لا يوجد خصم نشط.','الخصومات المستخدمة']};
+  const w=profileWords[lang()]||profileWords.fa,nf=new Intl.NumberFormat(lang());
+  const identity=el('section',undefined,'r27-profile-identity'),avatar=el('span',Array.from(member.name.trim())[0]||'R','r27-profile-avatar');
+  avatar.setAttribute('aria-hidden','true');const identityCopy=el('div'),memberName=el('strong',member.name);memberName.dir='auto';
+  const phone=el('span',member.phone);phone.dir='ltr';phone.setAttribute('aria-label',w[0]+': '+member.phone);
+  identityCopy.append(memberName,phone,el('small',w[1]+' · '+new Date(member.createdAt).toLocaleDateString(lang())));identity.append(avatar,identityCopy);host.append(identity);
+  const stats=el('section',undefined,'r27-profile-stats');
+  for(const [label,value] of [[w[2],member.orders.length],[w[3],model.pointsFor(member)]]){const box=el('div');box.append(el('strong',nf.format(value)),el('small',label));stats.append(box);}host.append(stats);
   host.append(text('h3','history'));
   if(!member.orders.length)host.append(text('p','empty','ramen-contact-note'));
   for(const order of member.orders){
@@ -107,6 +112,11 @@
    if(order.notes){const note=el('span',order.notes,'hp-history-notes');note.dir='auto';card.append(note);}
    card.append(el('strong',order.currency&&window.OnlineMenuMoney?window.OnlineMenuMoney.formatCatalog(order.total,{currency:order.currency,language:lang()}):typeof formatPrice==='function'?formatPrice(order.total):String(order.total)));host.append(card);
   }
+  host.append(el('h3',w[4]),el('p',w[6],'ramen-contact-note'),el('h3',w[5]));
+  let cfg;try{cfg=model.settings(localStorage);}catch{}
+  if(cfg?.coupon){const offer=el('article',undefined,'ramen-contact-item');offer.append(el('small',w[7]),el('strong',cfg.coupon+' · '+nf.format(cfg.percent)+'%'));host.append(offer);}else host.append(el('p',w[8],'ramen-contact-note'));
+  const used=member.orders.filter(order=>order.offer);
+  if(used.length){host.append(el('h4',w[9]));for(const order of used){const offer=el('article',undefined,'ramen-contact-item');offer.append(el('small',new Date(order.createdAt).toLocaleDateString(lang())),el('strong',order.offer.code+' · '+nf.format(order.offer.percent)+'%'));host.append(offer);}}
   const logout=text('button','logout','feedback-save');logout.type='button';logout.addEventListener('click',()=>{try{model.signOut(sessionStorage);}catch{}closePanel();announce();});host.append(logout);return true;
  }
  function scan(){if(demo()&&qr()&&!entered){if(current()){removeMarker();entered=true;}else open(true);}}
