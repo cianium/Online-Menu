@@ -137,11 +137,12 @@ test('Named action collections have group semantics; the Instagram placeholder n
 });
 
 
-test('Telephone numbers are isolated left-to-right in footer and contact dialog',()=>{
+test('Telephone number remains isolated in footer; chat uses the validated dial destination',()=>{
  assert.match(read('index.html'),/data-restaurant-phone dir="ltr"/);
  const panels=read('js/customer-panels.js');
- assert.match(panels,/if\(direction\)valueNode.dir=direction/);
- assert.match(panels,/appendInfo\(words.phone,[^\n]*null,'ltr'\)/);
+ assert.match(panels,/phoneUrl:restaurantDialUrl\(\)/);
+ assert.match(read('js/commerce.js'),/function restaurantDialUrl\(\)/);
+ assert.doesNotMatch(read('js/connect-customer.js'),/node\("select",null,"connect-language"\)/);
  assert.match(read('css/interaction-system.css'),/span\[dir="ltr"\] \{ unicode-bidi:isolate/);
 });
 

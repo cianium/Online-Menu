@@ -649,7 +649,6 @@
     }
     const submit = document.querySelector("#commerce-submit");
     submit.disabled = amount === 0 || submitting;
-    const entry=window.RomanoCustomerEntry;
     submit.textContent = submitting ? t("sending") : ({fa:"پرداخت",en:"Payment",tr:"Ödeme",ar:"الدفع"}[lang()]||"Payment");
     renderStatus();
     renderSession();

@@ -79,3 +79,5 @@
 .connect-dialog .connect-service-compact .hp-service-notice,.connect-dialog .connect-service-compact .hp-service-live{max-width:180px;flex:0 0 180px;align-self:center}
 .connect-reset{min-height:44px;font-size:11px}.connect-dialog .ramen-contact-head .ramen-contact-close{width:44px;height:44px}
 @media(max-height:520px){.connect-call{inset-block-start:calc(100% - 148px)}.connect-bottom{max-height:56dvh}}
+
+.connect-conversation{position:relative;display:flex;flex:1;min-height:0;min-width:0;flex-direction:column}.connect-call{inset-block-start:auto;inset-block-end:12px;inset-inline-end:16px}.connect-timeline{flex:1}.connect-compose-footer{padding-inline:8px}

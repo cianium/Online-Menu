@@ -1,0 +1,9 @@
+# R27 customer experience candidate
+Scope: seven customer-side requests, no new checkout page, no deployment. Source baseline R26 main 0ea59c2905057a48efa6667a465b6105bc9c3d6f.
+- Cart: inline trash replaces decrement at zero, undo remains, menu route preserves state, localized customer/table header, payment CTA. Existing order submission and coupon behavior retained; no new checkout/payment implementation.
+- Profile: full-screen mobile dialog, local sample identity and membership date, order history, configured sample offers and applied discounts, no fabricated payment records. Guest opens existing registration directly. Connected profile still has limited identity data, no server-backed order/payment history.
+- Chat: compact composer and icon-only send, shared language, no redundant guest-services panel. Local service chips still use the existing table-scoped request queue and staff acceptance/completion. Live quick messages are text messages via existing verified chat, not a dedicated service/SMS delivery guarantee.
+- Dial: validated configured restaurant number, bundled fictional default excluded; no automatic calls. 
+- Product details: card-like visual treatment, localized rating accessible name and price, small share/copy actions, existing favorite control, quantity synchronized with cart.
+## Release blockers and limitations
+No real SMS, notification delivery or production service queue has been tested or activated. The current hosted Supabase project lacks the required baseline schema; a separate server migration and delivery integration are needed. No actual payment records are invented. Demo sign-in is still the R26 explicitly fictional name/phone flow, not OTP; connected OTP is opt-in. Checkout excluded by owner. All four locales and browser regressions must be verified before merge.

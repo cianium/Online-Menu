@@ -232,7 +232,7 @@ const customerChat=function customerChat(core,copy,engine,root){
     const foot=node("div",null,"connect-compose-footer"),count=node("span",null,"connect-count"),send=node("button",null,"connect-send");send.type="submit";send.setAttribute("aria-label",w.send);send.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 19 9-19 9 4-9-4-9Z"/><path d="M7 12h15"/></svg>';count.dir="ltr";
     const messageLength=()=>Array.from(input.value.trim()).length;
     const valid=()=>enabled&&!busy&&messageLength()>0&&messageLength()<=core.maxText;
-    function update(){count.textContent=messageLength()+" / "+core.maxText;input.disabled=!enabled||busy;send.disabled=!valid();for(const c of chips.children)c.disabled=!enabled||busy;reset.disabled=busy;retry.disabled=busy;}
+    function update(){count.textContent=messageLength()+" / "+core.maxText;input.disabled=!enabled||busy;send.disabled=!valid();for(const c of chips.querySelectorAll("button:not(.hp-service-action)"))c.disabled=!enabled||busy;reset.disabled=busy;retry.disabled=busy;}
     function display(data){
       const v=data.conversation?.version??0;
       if(v<lastVersion)return;
@@ -285,7 +285,7 @@ const customerChat=function customerChat(core,copy,engine,root){
     foot.append(count);form.append(input,send);
     const retry=btn(w.retry,"connect-secondary",()=>refresh());retry.hidden=true;
     const reset=btn(w.newChat,"connect-reset",()=>{if(!eligible||busy)return;if((draft||timeline.querySelector(".connect-message"))&&!root.confirm(w.confirm))return;try{engine.newConversation();}catch(error){showError(error);return;}draft="";pending=null;render(host,options);});
-    reset.hidden=!eligible||liveMode;if(typeof onServices==="function"&&!liveMode)onServices(chips);bottom.append(quick,status,form,foot,retry,reset);host.append(head,timeline,call,bottom);update();
+    reset.hidden=!eligible||liveMode;if(typeof onServices==="function"&&!liveMode)onServices(chips);bottom.append(quick,status,form,foot,retry,reset);const conversation=node("div",null,"connect-conversation");conversation.append(timeline,call);host.append(head,conversation,bottom);update();
     if(eligible){
       if(liveMode){
         const poll=liveClient.createPoller(refresh,{interval:5000,maxDelay:30000,visible:()=>current()&&doc.visibilityState!=="hidden"});
