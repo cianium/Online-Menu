@@ -25,7 +25,8 @@ assert.ok(['127.0.0.1','localhost'].includes(base.hostname)&&base.protocol==='ht
      else if(p==='/auth/me')data=session;
      else if(p==='/auth/csrf')data={csrfToken:'qa-csrf'};
      else if(p==='/auth/phone/lookup')data={needsName:!registered};
-     else if(p==='/auth/phone/start'){
+     else if(p==='/auth/phone/start'||p==='/auth/phone/enroll-admin'){
+      assert.equal(p,admin&&!registered?'/auth/phone/enroll-admin':'/auth/phone/start');
       assert.ok(body.phone);
       assert.equal(Boolean(body.name),!registered);
       assert.equal(Boolean(body.accessKey),admin&&!registered);
@@ -58,12 +59,18 @@ assert.ok(['127.0.0.1','localhost'].includes(base.hostname)&&base.protocol==='ht
     await form.locator('button[type=submit]').click();
     if(!registered){
      const name=form.locator('input[name=name]');await name.waitFor({state:'visible'});await name.fill('Sample Name');
-     if(admin){await form.locator('input[type=checkbox]').check();await form.locator('input[name=accessKey]').fill('qa-only-invitation');}
-     else assert.equal(await form.locator('input[name=accessKey]').isVisible(),false);
+     if(admin){
+      assert.equal(await form.locator('input[name=accessKey]').count(),0);
+      await form.getByRole('button',{name:'Admin registration',exact:true}).click();
+      assert.equal(await form.locator('h1').innerText(),'Admin registration');
+      assert.equal(await phone.inputValue(),'09123456789');
+      await name.fill('Sample Name');
+      const key=form.locator('input[name=accessKey]');assert.equal(await key.getAttribute('required'),'');await key.fill('x'.repeat(43));
+     }else assert.equal(await form.locator('input[name=accessKey]').count(),0);
      await form.locator('button[type=submit]').click();
     }
     const otp=form.locator('input[name=code]');await otp.waitFor({state:'visible'});await otp.fill('۱۲۳۴۵۶');
-    assert.equal(await form.locator('input[name=name]').count(),0);
+    assert.equal(await form.locator('input[name=name],input[name=accessKey]').count(),0);
     await form.locator('button[type=submit]').click();
     if(admin)await page.waitForURL(url=>url.pathname==='/admin/');
     else{await form.waitFor({state:'detached'});assert.equal(new URL(page.url()).pathname,'/');assert.equal(new URL(page.url()).searchParams.has('login'),false);}
