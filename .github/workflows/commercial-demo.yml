@@ -47,7 +47,7 @@ jobs:
             import {execFileSync} from "node:child_process";
             const v=JSON.parse(readFileSync(process.argv[1],"utf8"));
             const git=(...args)=>execFileSync("git",args,{encoding:"utf8"}).trim();
-            assert.equal(v.milestone,"R26");
+            assert.equal(v.milestone,"R27");
             assert.equal(v.channel,"candidate");
             assert.equal(v.mode,"standalone-sample-only");
             assert.equal(v.sourceCommit,git("rev-parse","HEAD"));

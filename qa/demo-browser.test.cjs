@@ -1,3 +1,4 @@
+const {completeDemoEntry}=require('./demo-entry.cjs');
 const {loginDemoAdmin}=require('./demo-admin-login.cjs');
 /* Standalone demo integration: no remote API or third-party network is allowed. */
 const assert = require('node:assert/strict');
@@ -170,7 +171,7 @@ const readyCustomer = async page => {
     await customer.goto(new URL('./?qr=demo',base).href);await readyCustomer(customer);
     const entry=customer.locator('#customer-entry');
     await entry.waitFor({state:'visible'});
-    assert.equal(await entry.locator('input').count(),2);
+    assert.equal(await entry.locator('input').count(),1);
     assert.equal(await entry.locator('input[type=password]').count(),0);
     await customer.keyboard.press('Escape');assert.equal(await entry.isVisible(),true);
     for(const lang of ['fa','ar','tr','en']){
@@ -179,13 +180,16 @@ const readyCustomer = async page => {
       await customer.setViewportSize({width:320,height:844});
       assert.ok(await entry.evaluate(d=>d.scrollWidth<=d.clientWidth+1));
     }
-    await entry.locator('input[name=name]').fill('Sample Customer');
     await entry.locator('input[name=phone]').fill('abc');
     await entry.locator('button[type=submit]').click();
     await entry.locator('[role=alert]').waitFor({state:'visible'});
     await entry.locator('input[name=phone]').fill('+12025550101');
     await entry.locator('button[type=submit]').click();
-    await entry.waitFor({state:'hidden'});
+    await entry.locator('input[name=name]').fill('Sample Customer');await entry.locator('button[type=submit]').click();
+    await entry.locator('input[name=code]').fill('000000');await entry.locator('button[type=submit]').click();
+    await entry.locator('[role=alert][data-member-text=badCode]').waitFor({state:'visible'});
+    assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current()),null);
+    await entry.locator('input[name=code]').fill('123456');await entry.locator('button[type=submit]').click();await entry.waitFor({state:'hidden'});
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().name),'Sample Customer');
     assert.equal(await customer.evaluate(()=>new URL(location.href).searchParams.has('qr')),false);
     await admin.evaluate(()=>{ROMANO_ADMIN_I18N.setLanguage('en');navigateTo('loyalty');});
@@ -236,35 +240,26 @@ const readyCustomer = async page => {
     const historyHeading=profileDialog.getByRole('heading',{name:'Sample order history',exact:true});
     await historyHeading.waitFor({state:'visible'});
     assert.equal(await profileDialog.locator('article.ramen-contact-item').count(),1);
+    assert.equal(await profileDialog.locator('.r27-profile-identity strong').textContent(),'Sample Customer');
+    assert.equal(await profileDialog.locator('.r27-profile-identity span[dir=ltr]').textContent(),'+12025550101');
+    assert.equal(await profileDialog.getByRole('heading',{name:'Payments',exact:true}).count(),1);
+    assert.equal(await profileDialog.getByRole('heading',{name:'Discounts',exact:true}).count(),1);
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders.length),1);
     await customer.unroute(panelPattern);
     await profileDialog.getByRole('button',{name:'Sign out of sample profile'}).click();
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current()),null);
     await customer.locator('#menu-toggle').click();
     await customer.locator('[data-nav-panel=profile]').click();
-    await customer.locator('#ramen-contact-dialog').getByRole('button',{name:'Join the demo club'}).click();
     await entry.waitFor({state:'visible'});
-    await entry.locator('input[name=name]').fill('Sample Customer');
-    await entry.locator('input[name=phone]').fill('+12025550101');
-    await entry.locator('button[type=submit]').click();
-    await entry.waitFor({state:'hidden'});
+    await completeDemoEntry(entry,'+12025550101','Sample Customer',{expectName:false});
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current().orders.length),1);
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.open()),true);
-    await entry.locator('input[name=name]').fill('Different sample name');
-    await entry.locator('input[name=phone]').fill('+12025550101');
-    await entry.locator('button[type=submit]').click();
-    await entry.locator('[role=alert][data-member-text=existing]').waitFor({state:'visible'});
+    await completeDemoEntry(entry,'+12025550101','Sample Customer',{expectName:false});
     assert.equal(await customer.evaluate(()=>RomanoCustomerEntry.current()?.orders.length),1);
-    await entry.locator('input[name=name]').fill('Sample Customer');
-    await entry.locator('button[type=submit]').click();
-    await entry.waitFor({state:'hidden'});
     const other=await context.newPage();
     await other.goto(new URL('./?qr=demo',base).href);await readyCustomer(other);
     const otherEntry=other.locator('#customer-entry');
-    await otherEntry.locator('input[name=name]').fill('Sample Customer');
-    await otherEntry.locator('input[name=phone]').fill('+12025550101');
-    await otherEntry.locator('button[type=submit]').click();
-    await otherEntry.waitFor({state:'hidden'});
+    await completeDemoEntry(otherEntry,'+12025550101','Sample Customer',{expectName:false});
     assert.equal(await other.evaluate(()=>RomanoCustomerEntry.current()?.name),'Sample Customer');
     assert.equal(await other.evaluate(()=>RomanoCustomerEntry.current()?.orders.length),1);
     assert.equal(
@@ -276,13 +271,7 @@ const readyCustomer = async page => {
     const registrants=await Promise.all([context.newPage(),context.newPage()]);
     try {
       await Promise.all(registrants.map(page=>page.goto(new URL('./?qr=demo',base).href)));
-      await Promise.all(registrants.map(async(page,index)=>{
-        const form=page.locator('#customer-entry form');
-        await form.locator('[name="name"]').fill('Synthetic profile '+index);
-        await form.locator('[name="phone"]').fill('+1202555011'+index);
-      }));
-      await Promise.all(registrants.map(page=>page.locator('#customer-entry button[type=submit]').click()));
-      await Promise.all(registrants.map(page=>page.locator('#customer-entry').waitFor({state:'hidden'})));
+      await Promise.all(registrants.map((page,index)=>completeDemoEntry(page.locator('#customer-entry'),'+1202555011'+index,'Synthetic profile '+index)));
       assert.equal(await admin.evaluate(()=>RomanoDemoMembers.read(localStorage).length),3);
     } finally {await Promise.all(registrants.map(page=>page.close()));}
     console.log('PASS: concurrent sample registration retains both profiles');
@@ -324,22 +313,20 @@ const readyCustomer = async page => {
       await customer.goto(link);await readyCustomer(customer);
       const entry=customer.locator('#customer-entry');
       assert.match(await entry.innerText(),/Window table/);
-      await entry.locator('[name=name]').fill('Table Member');
-      await entry.locator('[name=phone]').fill('+12025550997');
-      await entry.locator('button[type=submit]').click();
-      await entry.waitFor({state:'hidden'});
+      await completeDemoEntry(entry,'+12025550997','Table Member');
       await customer.setViewportSize({width:390,height:844});
-      await customer.locator('[data-ramen-nav="contact"]').click();
+      await customer.locator('#menu-toggle').click();await customer.locator('#navigation-service-toggle').click();
+      await customer.locator('[data-nav-panel=waiter]').click();
       const guestPanel=customer.locator('#ramen-contact-dialog');
-      await guestPanel.waitFor({state:'visible'});
-      await guestPanel.locator('[data-connect-contact]').click();
-      const service=guestPanel.locator('.hp-service-action').first();
-      assert.equal(await service.isEnabled(),true);
-      await service.click();
-      await customer.waitForFunction(()=>document.querySelector('.hp-service-action').getAttribute('aria-pressed')==='true');
+      await customer.waitForFunction(()=>RomanoDemoMembers.requests(localStorage,'T1').waiter==='pending');
       await guestPanel.locator('.ramen-contact-close').click();
       await customer.locator('[data-ramen-nav="contact"]').click();
-      await guestPanel.locator('[data-connect-contact]').click();
+      await guestPanel.waitFor({state:'visible'});
+      const service=guestPanel.locator('.hp-service-action').first();
+      assert.equal(await service.isEnabled(),true);
+      assert.equal(await service.getAttribute('aria-pressed'),'true');
+      await guestPanel.locator('.ramen-contact-close').click();
+      await customer.locator('[data-ramen-nav="contact"]').click();
       assert.equal(await service.getAttribute('aria-pressed'),'true');
       await service.click();
       await customer.waitForFunction(()=>document.querySelector('.hp-service-action').getAttribute('aria-pressed')==='false');

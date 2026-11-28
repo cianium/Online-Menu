@@ -43,7 +43,8 @@ test('Bottom navigation has the requested physical DOM order and contact remains
  assert.match(js,/document\.createElement\('dialog'\)/);assert.match(js,/dialog\.showModal\(\)/);
  const panels=read('js/customer-panels.js');
  assert.match(js,/panels\.render\(\{panel,content,element,demo,mode,/);
- assert.match(panels,/mode==='public' \|\| mode==='offline'/);assert.match(panels,/if\(demo\)content\.append/);
+ assert.match(js,/\["demo","public","offline"\]\.includes\(menuDataMode\)/);
+ assert.match(panels,/if\(demo&&panel!==/);
  assert.match(css,/prefers-reduced-motion:reduce/);assert.match(css,/--ui-touch:44px/);
 });
 
@@ -137,11 +138,12 @@ test('Named action collections have group semantics; the Instagram placeholder n
 });
 
 
-test('Telephone numbers are isolated left-to-right in footer and contact dialog',()=>{
+test('Telephone number remains isolated in footer; chat uses the validated dial destination',()=>{
  assert.match(read('index.html'),/data-restaurant-phone dir="ltr"/);
  const panels=read('js/customer-panels.js');
- assert.match(panels,/if\(direction\)valueNode.dir=direction/);
- assert.match(panels,/appendInfo\(words.phone,[^\n]*null,'ltr'\)/);
+ assert.match(panels,/phoneUrl:restaurantDialUrl\(\)/);
+ assert.match(read('js/commerce.js'),/function restaurantDialUrl\(\)/);
+ assert.doesNotMatch(read('js/connect-customer.js'),/node\("select",null,"connect-language"\)/);
  assert.match(read('css/interaction-system.css'),/span\[dir="ltr"\] \{ unicode-bidi:isolate/);
 });
 

@@ -80,7 +80,7 @@
     if(stage==='staff'){phone=digits(primary.value.trim());registration={name:name.value.trim(),accessKey:key.value.trim()};await start();render();return;}
     const result=await request('/auth/phone/verify',{challenge,code:digits(primary.value)});
     if(!result?.user||!['admin','customer'].includes(result.role))throw Error('INVALID_RESPONSE');
-    csrf=result.csrfToken||null;session={user:result.user,role:result.role};challenge=null;registration=null;removeLogin();dialog.close();
+    csrf=result.csrfToken||null;session={user:result.user,role:result.role};challenge=null;registration=null;removeLogin();dialog.close();document.dispatchEvent(new CustomEvent('romano:customer-auth-changed'));
     if(result.role==='admin')location.assign(adminDestination().href);
    });};
   }
@@ -91,15 +91,21 @@
  async function boot(launch=false){
   if(booted||window.RomanoPublicAPI?.standalone||typeof menuDataMode==='undefined'||menuDataMode!=='public')return;
   booted=true;
-  try{available=(await request('/auth/phone/status'))?.enabled===true;if(!available)return;session=await request('/auth/me');if(launch){if(session?.user){removeLogin();if(session.membership)location.assign(adminDestination().href);}else open();}}
+  try{available=(await request('/auth/phone/status'))?.enabled===true;if(!available)return;session=await request('/auth/me');document.dispatchEvent(new CustomEvent('romano:customer-auth-changed'));if(launch){if(session?.user){removeLogin();if(session.membership)location.assign(adminDestination().href);}else open();}}
   catch{available=false;}
  }
  function renderProfile(host,closePanel){
   if(!available)return false;
   if(!session?.user){host.append(button('login','feedback-save',()=>{closePanel();open();}));return true;}
-  const name=el('strong');name.dir='auto';name.textContent=session.user.displayName||'';host.append(name);
-  const logout=button('logout','feedback-save',async()=>{logout.disabled=true;try{await request('/auth/logout',{});csrf=null;session=null;closePanel();}catch{logout.disabled=false;const error=label('p','error');error.setAttribute('role','alert');host.append(error);}});host.append(logout);return true;
+  const language=window.ROMANO_I18N.language;
+  const name=el('strong');name.dir='auto';name.textContent=session.user.displayName||'';
+  const identity=el('section','r27-profile-identity'),copy=el('div');copy.append(name);
+  if(session.user.phone){const phone=el('span');phone.dir='ltr';phone.textContent=session.user.phone;copy.append(phone);}
+  if(session.user.createdAt){const date=new Date(session.user.createdAt);if(Number.isFinite(date.getTime())){const joined=el('small');joined.textContent=({fa:'تاریخ عضویت',en:'Member since',tr:'Üyelik tarihi',ar:'تاريخ العضوية'}[language]||'Member since')+' · '+date.toLocaleDateString(language);copy.append(joined);}}
+  identity.append(copy);host.append(identity);
+  const history=el('p','ramen-contact-note');history.textContent=({fa:'تاریخچه سفارش و پرداخت آنلاین هنوز متصل نیست.',en:'Online order and payment history is not connected yet.',tr:'Çevrimiçi sipariş ve ödeme geçmişi henüz bağlı değil.',ar:'سجل الطلبات والمدفوعات عبر الإنترنت غير متصل بعد.'}[language]);host.append(history);
+  const logout=button('logout','feedback-save',async()=>{logout.disabled=true;try{await request('/auth/logout',{});csrf=null;session=null;closePanel();document.dispatchEvent(new CustomEvent('romano:customer-auth-changed'));}catch{logout.disabled=false;const error=label('p','error');error.setAttribute('role','alert');host.append(error);}});host.append(logout);return true;
  }
  document.addEventListener('romano:language-changed',labels);
- window.RomanoPhoneAuth=Object.freeze({boot,open,renderProfile});
+ window.RomanoPhoneAuth=Object.freeze({boot,open,renderProfile,customer:()=>session?.user&&!session.membership&&session.role!=='admin'?session.user:null});
 })();

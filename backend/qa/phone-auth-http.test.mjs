@@ -59,7 +59,12 @@ test('Connected phone entry: OTP, invite and authorization boundaries',async()=>
   const verified=await customer.post(route('verify'),{challenge:start.data.challenge,code:codeFor(phone)});
   assert.equal(verified.status,200);assert.equal(verified.data.role,'customer');
   assert.ok([].concat(verified.headers['set-cookie']).some(v=>v.startsWith('romano_session=')&&/HttpOnly/i.test(v)));
-  assert.equal((await customer.get('/auth/me')).data.membership,null);
+  const profile=(await customer.get('/auth/me')).data;
+  assert.equal(profile.membership,null);
+  assert.equal(profile.user.phone,phone);
+  assert.ok(Number.isFinite(Date.parse(profile.user.createdAt)));
+  assert.equal(verified.data.user.phone,phone);
+  assert.ok(Number.isFinite(Date.parse(verified.data.user.createdAt)));
   assert.equal((await customer.get('/admin/data')).status,403);
   assert.equal((await customer.post(route('verify'),{challenge:start.data.challenge,code:codeFor(phone)})).status,401);
   assert.equal((await customer.post('/auth/logout',{})).status,200);

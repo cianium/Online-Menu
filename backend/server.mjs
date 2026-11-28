@@ -224,7 +224,7 @@ async function getSession(request) {
   let session = null;
   if (token) {
     const result = await db(
-      `select s.id, s.user_id, s.csrf_hash, u.email, u.display_name
+      `select s.id, s.user_id, s.csrf_hash, u.email, u.display_name, u.phone, u.created_at
          from sessions s join users u on u.id = s.user_id
         where s.session_hash = $1 and s.expires_at > now() and u.active = true`, [sha256(token)]);
     session = result.rows[0] || null;
@@ -636,7 +636,7 @@ async function routes(api) {
     if (!session) return reply.send(ok(null, request.id));
     const memberships = await listMemberships(session.user_id);
     return reply.send(ok({
-      user: { id: session.user_id, email: session.email, displayName: session.display_name },
+      user: { id: session.user_id, email: session.email, displayName: session.display_name, phone:session.phone, createdAt:session.created_at },
       memberships: memberships.map(item => ({ restaurantId: item.restaurant_id, role: item.role, slug: item.slug, name: item.name })),
       membership: memberships[0] || null
     }, request.id));

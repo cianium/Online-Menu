@@ -108,7 +108,7 @@ export function registerPhoneAuth(api,{config,db,transaction,issueSession,delive
         await client.query('update phone_auth_challenges set attempts=attempts+1 where digest=$1',[digest]);
         return {error:'code'};
       }
-      let user=(await client.query('select id,email,display_name,active from users where phone=$1 for update',[row.phone])).rows[0];
+      let user=(await client.query('select id,email,display_name,active,phone,created_at from users where phone=$1 for update',[row.phone])).rows[0];
       // An account created since this challenge started must not be elevated or renamed.
       if(user&&(!user.active||row.invite_digest||row.display_name))return {error:'code'};
       if(!user){
@@ -118,7 +118,7 @@ export function registerPhoneAuth(api,{config,db,transaction,issueSession,delive
           invitation=(await client.query('select restaurant_id from phone_auth_invites where digest=$1 and phone=$2 and consumed_at is null and expires_at>now() for update',[row.invite_digest,row.phone])).rows[0];
           if(!invitation)return {error:'code'};
         }
-        user=(await client.query('insert into users(phone,display_name) values($1,$2) returning id,email,display_name,active',[row.phone,row.display_name])).rows[0];
+        user=(await client.query('insert into users(phone,display_name) values($1,$2) returning id,email,display_name,active,phone,created_at',[row.phone,row.display_name])).rows[0];
         if(invitation){
           await client.query("insert into restaurant_memberships(restaurant_id,user_id,role) values($1,$2,'manager')",[invitation.restaurant_id,user.id]);
           await client.query('update phone_auth_invites set consumed_at=now() where digest=$1',[row.invite_digest]);
@@ -132,6 +132,6 @@ export function registerPhoneAuth(api,{config,db,transaction,issueSession,delive
     if(result.error==='rate')throw limited();
     if(result.error)throw badCode();
     result.session.setCookies(reply);
-    return response({user:{id:result.user.id,displayName:result.user.display_name},role:result.role,csrfToken:result.session.csrf},request);
+    return response({user:{id:result.user.id,displayName:result.user.display_name,phone:result.user.phone,createdAt:result.user.created_at},role:result.role,csrfToken:result.session.csrf},request);
   });
 }

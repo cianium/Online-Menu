@@ -1,3 +1,4 @@
+const {completeDemoEntry}=require('./demo-entry.cjs');
 /* Start a static preview; set ADMIN_TEST_URL and optionally CHROMIUM_EXECUTABLE_PATH.
    Requires Playwright. Public API responses below are mocked, not a database test. */
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
@@ -45,8 +46,9 @@ async function ready(p){
     assert.equal(await p.locator('.footer-address').getAttribute('dir'),'auto');
     const trigger=p.locator('[data-ramen-nav="contact"]');await trigger.focus();await trigger.press('Space');
     const dialog=p.locator('#ramen-contact-dialog');await dialog.waitFor({state:'visible'});
-    await dialog.locator('[data-connect-contact]').click();
-    assert.equal(await dialog.locator('.ramen-contact-item > span[dir="auto"]').textContent(),expected,lang+' contact address');
+    await dialog.locator('#connect-message-input').waitFor({state:'visible'});
+    assert.equal(await dialog.locator('[data-connect-contact],.ramen-contact-item,.connect-language').count(),0);
+    assert.equal(await dialog.locator('.connect-call').count(),1);
     await p.keyboard.press('Escape');await p.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open);
     await p.locator('#menu-toggle').click();
     assert.equal(await p.locator('.navigation-footer-meta,.navigation-menu-cta').count(),0);
@@ -130,24 +132,16 @@ async function ready(p){
    assert.ok((await dialog.locator('h2').innerText()).trim());
    await dialog.locator('#connect-message-input').waitFor({state:'visible'});
    assert.equal(await dialog.evaluate(d=>d.classList.contains('connect-dialog')),true);
-   for(const selector of ['.connect-timeline','.connect-chips','.connect-bottom','.connect-service-compact .hp-service-grid'])assert.equal(await dialog.locator(selector).getAttribute('tabindex'),'0');
+   for(const selector of ['.connect-timeline','.connect-chips','.connect-bottom'])assert.equal(await dialog.locator(selector).getAttribute('tabindex'),'0');
    await p.waitForFunction(()=>Boolean(document.querySelector('#connect-message-input'))&&!document.querySelector('#connect-message-input').disabled);
-   await dialog.locator('[data-connect-contact]').click();
+   assert.equal(await dialog.locator('[data-connect-contact],.connect-language,.ramen-contact-item').count(),0);
    assert.equal(await dialog.locator('.hp-service-action').count(),4);
    assert.equal(await dialog.locator('.hp-service-action:disabled').count(),4,'no table context must not simulate requests');
    assert.equal(await dialog.locator('a[href^="tel:"]').count(),0,'sample phone must not initiate a call');
-   assert.equal(await dialog.locator('.ramen-contact-item > span[dir="ltr"]').count(),1);
-   assert.equal(await dialog.locator('.ramen-contact-item > span[dir="ltr"]').evaluate(n=>getComputedStyle(n).direction),'ltr');
+   assert.equal(await dialog.locator('.connect-call').isDisabled(),true);
    assert.equal(await p.locator('[data-restaurant-phone]').evaluate(n=>getComputedStyle(n).direction),'ltr');
-   const historyLength=await p.evaluate(()=>history.length);
-   await dialog.evaluate(d=>{d.dataset.qaClosed='false';d.addEventListener('close',()=>{d.dataset.qaClosed='true';},{once:true});});
-   await dialog.locator('[data-contact-feedback]').click();
-   await dialog.locator('.feedback-comment textarea').waitFor({state:'visible'});
-   assert.equal(await dialog.getAttribute('data-qa-closed'),'false','panel replacement must not close the dialog');
-   assert.equal(await p.evaluate(()=>history.length),historyLength,'panel replacement must not push another history entry');
-   assert.equal(await trigger.getAttribute('aria-expanded'),'true');
-   assert.equal(await dialog.locator('.feedback-comment textarea').getAttribute('dir'),'auto');
-   await p.screenshot({path:path.join(out,'customer-feedback-'+lang+'-390.png')});
+   assert.equal(await dialog.locator('[data-contact-feedback]').count(),0);
+   assert.equal(await dialog.locator('.connect-compose .connect-send svg').count(),1);
    await p.keyboard.press('Escape');
    await p.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open && document.querySelector('[data-ramen-nav="contact"]').getAttribute('aria-expanded')==='false');
    assert.equal(await trigger.evaluate(n=>document.activeElement===n),true);
@@ -235,12 +229,11 @@ async function ready(p){
    assert.ok(categoryBounds && categoryBounds.height>0);
    assert.equal(await nav.locator('[data-nav-panel="profile"]').getAttribute('aria-label')!==null,true);
    await nav.locator('[data-nav-panel="profile"]').click();
-   const dialog=p.locator('#ramen-contact-dialog');await dialog.waitFor({state:'visible'});
-   assert.equal(await nav.getAttribute('aria-hidden'),'true');
-   await dialog.locator('[data-panel-state="ready"]').waitFor({state:'visible'});
-   assert.equal(await dialog.locator('input[type="password"]').count(),0);
-   await p.screenshot({path:path.join(out,'customer-profile-'+lang+'-390.png')});
-   await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
+   const dialog=p.locator('#ramen-contact-dialog'),entry=p.locator('#customer-entry');
+   await entry.waitFor({state:'visible'});assert.equal(await nav.getAttribute('aria-hidden'),'true');
+   assert.equal(await entry.locator('input[type="password"]').count(),0);
+   await p.screenshot({path:path.join(out,'customer-profile-entry-'+lang+'-390.png')});
+   await p.keyboard.press('Escape');await entry.waitFor({state:'hidden'});
    await p.locator('#menu-toggle').click();await nav.locator('[data-nav-panel="feedback"]').click();
    await dialog.waitFor({state:'visible'});
    await dialog.locator('input[name="demo-rating"][value="4"]').check();
@@ -270,10 +263,11 @@ async function ready(p){
    await p.waitForFunction(()=>document.querySelector('.connect-bubble:last-of-type')?.textContent==='<b>Demo chat</b>'||Array.from(document.querySelectorAll('.connect-bubble')).at(-1)?.textContent==='<b>Demo chat</b>');
    assert.equal(await dialog.locator('.connect-bubble').last().textContent(),'<b>Demo chat</b>');
    assert.equal(await dialog.locator('.connect-bubble b').count(),0);
-   await dialog.locator('.connect-language').selectOption(lang==='en'?'fa':'en');
+   assert.equal(await dialog.locator('.connect-language').count(),0);
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang==='en'?'fa':'en');
    await p.waitForFunction(()=>Array.from(document.querySelectorAll('.connect-bubble')).at(-1)?.textContent==='<b>Demo chat</b>');
    assert.equal(await dialog.locator('.connect-bubble').last().textContent(),'<b>Demo chat</b>');
-   await dialog.locator('.connect-language').selectOption(lang);
+   await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
    await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
   }
   await p.evaluate(()=>{localStorage.removeItem('online_menu_demo_rating:romano');localStorage.removeItem('online_menu_demo_review_v2:romano');ROMANO_I18N.setLanguage('fa',false);});
@@ -323,17 +317,13 @@ async function ready(p){
   const first=await memberContext.newPage();
   await first.goto(base+'/?qr=demo');await ready(first);
   const firstEntry=first.locator('#customer-entry');await firstEntry.waitFor({state:'visible'});
-  await firstEntry.locator('input[name="name"]').fill('Sample Customer');
-  await firstEntry.locator('input[name="phone"]').fill('+12025550140');
-  await firstEntry.locator('button[type="submit"]').click();
+  await completeDemoEntry(firstEntry,'+12025550140','Sample Customer');
   await first.waitForFunction(()=>!document.querySelector('#customer-entry')?.open);
   const memberId=await first.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey));assert.ok(memberId);
   const second=await memberContext.newPage();
   await second.goto(base+'/?qr=demo');await ready(second);
   const secondEntry=second.locator('#customer-entry');await secondEntry.waitFor({state:'visible'});
-  await secondEntry.locator('input[name="name"]').fill(' Sample   Customer ');
-  await secondEntry.locator('input[name="phone"]').fill('+12025550140');
-  await secondEntry.locator('button[type="submit"]').click();
+  await completeDemoEntry(secondEntry,'+12025550140','Sample Customer',{expectName:false});
   await second.waitForFunction(()=>!document.querySelector('#customer-entry')?.open);
   assert.equal(await second.evaluate(()=>sessionStorage.getItem(RomanoDemoMembers.activeKey)),memberId);
   assert.equal(await secondEntry.locator('[role="alert"]').textContent(),'');
@@ -467,12 +457,12 @@ async function ready(p){
     await copy.click();
     await p.waitForFunction(()=>Boolean(window.__qaCopied));
     assert.match(await p.evaluate(()=>window.__qaCopied),/#product-/);
-    await p.waitForFunction(()=>document.querySelector('[data-rv4-copy]').textContent===ROMANO_I18N.ui('copied'));
+    await p.waitForFunction(()=>document.querySelector('[data-rv4-copy]').getAttribute('aria-label')===ROMANO_I18N.ui('copied'));
     assert.equal(await copy.evaluate(n=>document.activeElement===n),true);
     assert.equal(await p.locator('#product-modal textarea[readonly]').count(),0);
     await p.evaluate(()=>{document.execCommand=()=>{throw Error('unavailable')};});
     await copy.click();
-    await p.waitForFunction(message=>document.querySelector('[data-rv4-copy]').textContent===message,failure[lang]);
+    await p.waitForFunction(message=>document.querySelector('[data-rv4-copy]').getAttribute('aria-label')===message,failure[lang]);
     assert.equal(await p.locator('#product-modal textarea[readonly]').count(),0);
    }finally{
     await p.evaluate(()=>{delete navigator.clipboard;delete document.execCommand;delete window.__qaCopied;});
@@ -486,6 +476,8 @@ async function ready(p){
   assert.equal(await p.locator('.commerce-items .commerce-empty').isVisible(),true);
   assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
   await p.locator('#hp-continue').click();
+  assert.equal(new URL(p.url()).hash,'#menu');
+  assert.equal(await p.locator('#hp-cart-context').isHidden(),true);
   const add=cards.first().locator('.commerce-card-add');assert.equal(await add.isVisible(),true);await add.click();
   assert.equal(await p.locator('#commerce-checkout').isVisible(),true);
   assert.equal(await p.locator('#r17-cart-feedback').getAttribute('data-state'),'added');
@@ -519,7 +511,7 @@ async function ready(p){
   await p.locator('#commerce-submit').click();
   const entry=p.locator('#customer-entry');
   await entry.waitFor({state:'visible'});
-  assert.equal(await entry.locator('input').count(),2);
+  assert.equal(await entry.locator('input').count(),1);
   await p.screenshot({path:path.join(out,'customer-entry-fa-390.png')});
   await p.keyboard.press('Escape');
   await entry.waitFor({state:'hidden'});
@@ -529,6 +521,7 @@ async function ready(p){
   await minus.click();assert.equal(await p.locator('[data-cart-remove]').count(),0);
   await minus.click();assert.equal(await p.locator('.commerce-quantity b').textContent(),'0');
   assert.equal(await p.locator('#commerce-checkout').isVisible(),false);
+  assert.equal(await p.locator('.commerce-quantity [data-cart-remove] svg').count(),1);
   assert.equal(await p.locator('[data-cart-remove]').isVisible(),true);
   await p.locator('[data-cart-change="1"]').click();
   assert.equal(await p.locator('[data-cart-remove]').count(),0);
@@ -672,7 +665,7 @@ async function ready(p){
    const heroMeta={fa:'کافه و رستوران',en:'Cafe & Restaurant',tr:'Kafe & Restoran',ar:'مقهى ومطعم'}[lang];
    assert.equal((await p.locator('.hero-eyebrow').textContent()).trim(),heroMeta);
    assert.equal(await p.locator('.hero-eyebrow').evaluate(n=>getComputedStyle(n,'::before').content),'none','No decorative line in '+lang);
-   const labels={fa:{home:'خانه',menu:'منو',featured:'ویژه‌ها',contact:'ارتباط',cart:'سبد',cartAria:'سبد سفارش',menuEyebrow:'منوی رستوران',categories:'انتخاب شما',featuredTitle:'انتخاب ویژه.',story:'ساده نیست خاص است'},en:{home:'Home',menu:'Menu',featured:'Featured',contact:'Contact',cart:'Cart',cartAria:'Your order',menuEyebrow:'RESTAURANT MENU',categories:'Your Choice',featuredTitle:'Featured Selection.',story:'It is not ordinary.'},tr:{home:'Ana Sayfa',menu:'Menü',featured:'Öne çıkanlar',contact:'İletişim',cart:'Sepet',cartAria:'Siparişiniz',menuEyebrow:'RESTORAN MENÜSÜ',categories:'Sizin Seçiminiz',featuredTitle:'Özel Seçim.',story:'Sıradan değil özel.'},ar:{home:'الرئيسية',menu:'القائمة',featured:'المميز',contact:'اتصل بنا',cart:'السلة',cartAria:'طلبك',menuEyebrow:'قائمة المطعم',categories:'اختيارك',featuredTitle:'اختيار مميز.',story:'الأمر ليس عاديًا.'}}[lang];
+   const labels={fa:{home:'خانه',menu:'منو',featured:'ویژه‌ها',contact:'چت',cart:'سبد',cartAria:'سبد سفارش',menuEyebrow:'منوی رستوران',categories:'انتخاب شما',featuredTitle:'انتخاب ویژه.',story:'ساده نیست خاص است'},en:{home:'Home',menu:'Menu',featured:'Featured',contact:'Chat',cart:'Cart',cartAria:'Your order',menuEyebrow:'RESTAURANT MENU',categories:'Your Choice',featuredTitle:'Featured Selection.',story:'It is not ordinary.'},tr:{home:'Ana Sayfa',menu:'Menü',featured:'Öne çıkanlar',contact:'Sohbet',cart:'Sepet',cartAria:'Siparişiniz',menuEyebrow:'RESTORAN MENÜSÜ',categories:'Sizin Seçiminiz',featuredTitle:'Özel Seçim.',story:'Sıradan değil özel.'},ar:{home:'الرئيسية',menu:'القائمة',featured:'المميز',contact:'محادثة',cart:'السلة',cartAria:'طلبك',menuEyebrow:'قائمة المطعم',categories:'اختيارك',featuredTitle:'اختيار مميز.',story:'الأمر ليس عاديًا.'}}[lang];
    for(const key of ['home','menu','featured','contact','cart']) assert.equal(await p.locator('[data-ramen-label="'+key+'"]').textContent(),labels[key]);
    const normalizedText=selector=>p.locator(selector).innerText().then(value=>value.replace(/\s+/g,' ').trim());
    assert.equal(await p.locator('#site-header #menu-browser-eyebrow,#site-header #menu-result-count,#site-header #menu-data-status,#site-header [data-browse-category="all"]').count(),0);

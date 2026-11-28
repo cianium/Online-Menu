@@ -183,13 +183,9 @@ async function measure(browser,surface) {
         assert.equal(await contact.getAttribute('aria-controls'),'ramen-contact-dialog');
         await customer.locator('#connect-message-input').waitFor({state:'visible'});
         await scan(customer,'customer-chat',lang,390,844);
-        await customer.locator('[data-connect-contact]').click();
-        const footerPhone=customer.locator('[data-restaurant-phone]');
-        const phone=customer.locator('#ramen-contact-dialog .ramen-contact-item > span[dir="ltr"]');
-        assert.equal(await phone.count(),1);
-        assert.equal(await phone.textContent(),(await footerPhone.textContent()).trim());
-        for(const node of [phone,footerPhone]) assert.equal(await node.evaluate(el=>getComputedStyle(el).direction),'ltr');
-        await scan(customer,'customer-contact',lang,390,844);
+        assert.equal(await customer.locator('.connect-language,[data-connect-contact]').count(),0);
+        assert.equal(await customer.locator('.connect-call').count(),1);
+        assert.equal(await customer.locator('[data-restaurant-phone]').evaluate(el=>getComputedStyle(el).direction),'ltr');
         await customer.keyboard.press('Escape');
         await customer.waitForFunction(()=>!document.querySelector('#ramen-contact-dialog').open && document.querySelector('[data-ramen-nav="contact"]').getAttribute('aria-expanded')==='false');
         assert.equal(await contact.getAttribute('aria-controls'),null);
@@ -269,7 +265,7 @@ async function measure(browser,surface) {
     } finally {await context.close();}
     for(const surface of ['customer','admin']) await measure(browser,surface);
     assert.deepEqual(report.errors,[],'Unexpected JavaScript errors during audit');
-    assert.equal(report.findings.length,57); // 49 existing scans + 4 locales × 2 catalog widths
+    assert.equal(report.findings.length,53); // Removed obsolete contact sheet (4 scans).
     assert.equal(report.findings.filter(s=>s.name==='customer-menu').length,8);
     assert.equal(report.lab.length,2);
     const severe=report.findings.flatMap(s=>s.violations.filter(v=>['critical','serious'].includes(v.impact)).map(v=>({surface:s.name,lang:s.lang,width:s.width,id:v.id})));
