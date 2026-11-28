@@ -101,3 +101,14 @@
 .r27-profile-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.r27-profile-stats>div{display:grid;gap:4px;border:1px solid #ffffff20;border-radius:14px;padding:12px}.r27-profile-stats strong{color:#edcc92;font-size:20px}
 
 @media(max-width:720px){.r27-profile-page[open]{width:100%;height:100dvh;border-radius:0;border:0}}
+
+/* Feedback and account history are loaded only when a customer panel opens. */
+.feedback-rating { display:flex; flex-wrap:wrap; gap:8px; border:0; padding:0; }
+.feedback-rating legend { margin-block-end:8px; }
+.feedback-rating label { display:flex; align-items:center; justify-content:center; gap:6px; min-width:44px; min-height:44px; padding:6px; border:1px solid #ffffff24; border-radius:8px; }
+.feedback-rating input { accent-color:#d6ae70; }
+.feedback-save:disabled { opacity:.5; cursor:not-allowed; }
+.feedback-comment { display:grid; gap:8px; font-size:14px; }
+.feedback-comment textarea { width:100%; min-width:0; resize:vertical; border:1px solid #ffffff30; border-radius:10px; background:#171510; color:inherit; padding:10px; font:inherit; }
+.feedback-comment textarea:focus-visible { outline:2px solid #d6ae70; outline-offset:2px; }
+.hp-history-notes{white-space:pre-wrap;overflow-wrap:anywhere;color:#c4b8a7}

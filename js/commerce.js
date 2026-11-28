@@ -209,7 +209,7 @@
   let orderNotes = "";
   const zeroItems=new Set();
   let couponCode="",appliedCoupon="";
-  const extra={fa:["تخفیف نمونه","کد تخفیف","اعمال","کد نامعتبر یا بدون تخفیف","امتیاز نمونه","یادداشت محصول / حساسیت غذایی","پذیرفته شد","انجام شد","ساعات کاری","مسیریابی","واتس‌اپ","حذف تخفیف"],en:["Sample discount","Promo code","Apply","Invalid code or no discount","Sample points","Item note / food allergy","Accepted","Completed","Opening hours","Directions","WhatsApp","Remove discount"],tr:["Örnek indirim","İndirim kodu","Uygula","Geçersiz kod veya indirim yok","Örnek puan","Ürün notu / gıda alerjisi","Kabul edildi","Tamamlandı","Çalışma saatleri","Yol tarifi","WhatsApp","İndirimi kaldır"],ar:["خصم تجريبي","رمز الخصم","تطبيق","رمز غير صالح أو لا يوجد خصم","نقاط تجريبية","ملاحظة المنتج / حساسية غذائية","تم القبول","مكتمل","ساعات العمل","الاتجاهات","واتساب","إزالة الخصم"]};
+  const extra={"fa":["تخفیف نمونه","کد تخفیف","اعمال","کد نامعتبر یا بدون تخفیف","امتیاز نمونه","","پذیرفته شد","انجام شد","","","","حذف تخفیف"],"en":["Sample discount","Promo code","Apply","Invalid code or no discount","Sample points","","Accepted","Completed","","","","Remove discount"],"tr":["Örnek indirim","İndirim kodu","Uygula","Geçersiz kod veya indirim yok","Örnek puan","","Kabul edildi","Tamamlandı","","","","İndirimi kaldır"],"ar":["خصم تجريبي","رمز الخصم","تطبيق","رمز غير صالح أو لا يوجد خصم","نقاط تجريبية","","تم القبول","مكتمل","","","","إزالة الخصم"]};
   const x=i=>(extra[lang()]||extra.fa)[i];
   const bundleText=()=>({fa:"پیشنهاد ترکیبی",en:"Bundle offer",tr:"Kombinasyon teklifi",ar:"عرض المجموعة"}[lang()]||"Bundle offer");
   const subtotalText=()=>({fa:"جمع محصولات",en:"Subtotal",tr:"Ara toplam",ar:"المجموع الفرعي"}[lang()]||"Subtotal");

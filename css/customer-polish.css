@@ -40,11 +40,6 @@
 .navigation-contact-actions button,.feedback-save { min-height:44px; border:1px solid #d6ae7050; background:#d6ae7010; color:#e6c995; border-radius:10px; font:inherit; font-size:13px; padding:8px; cursor:pointer; }
 .navigation-contact-actions [data-nav-panel="feedback"] { background:#d6ae70; color:#21190f; font-weight:700; }
 
-.feedback-rating { display:flex; flex-wrap:wrap; gap:8px; border:0; padding:0; }
-.feedback-rating legend { margin-block-end:8px; }
-.feedback-rating label { display:flex; align-items:center; justify-content:center; gap:6px; min-width:44px; min-height:44px; padding:6px; border:1px solid #ffffff24; border-radius:8px; }
-.feedback-rating input { accent-color:#d6ae70; }
-.feedback-save:disabled { opacity:.5; cursor:not-allowed; }
 @media (max-height:500px) { .main-navigation .navigation-inner { overflow-y:auto; grid-template-rows:auto minmax(120px,1fr) auto; gap:8px; } .navigation-categories { max-height:45dvh; } }
 
 /* Consolidated footer. Keep contact fragments backward compatible. */
@@ -90,9 +85,6 @@ html[dir="ltr"] .main-navigation.is-open .navigation-inner { transform:translate
 .navigation-cart-count[hidden] { display:none; }
 .site-footer [data-restaurant-phone]:not([href]),.site-footer [data-restaurant-instagram]:not([href]) { cursor:default; }
 
-.feedback-comment { display:grid; gap:8px; font-size:14px; }
-.feedback-comment textarea { width:100%; min-width:0; resize:vertical; border:1px solid #ffffff30; border-radius:10px; background:#171510; color:inherit; padding:10px; font:inherit; }
-.feedback-comment textarea:focus-visible { outline:2px solid #d6ae70; outline-offset:2px; }
 
 
 /* Living brand: restrained motion, stronger feedback, no layout shifts. */
@@ -619,7 +611,6 @@ html[dir] .hero-overlay {background:linear-gradient(180deg,#080705b0 0%,#0807059
 #hp-undo[hidden],#hp-continue[hidden],#hp-suggestions[hidden],#hp-note-local[hidden]{display:none!important}
 :is(#commerce-drawer) button:focus-visible{outline:2px solid #ebc98e;outline-offset:3px}
 
-.hp-history-notes{white-space:pre-wrap;overflow-wrap:anywhere;color:#c4b8a7}
 
 /* Demo hospitality offers and item instructions. */
 .hp-code-row input{width:100%;min-width:0;min-height:44px;border:1px solid #d6ae7035;border-radius:10px;padding:8px;color:#f7f0e7;background:#100e0c;font:inherit}.hp-code-row{display:flex;gap:8px}.hp-code-row button{min-height:44px;border-radius:10px;border:1px solid #d6ae7050;background:#d6ae7010;color:#f1d8b0;padding:8px 12px;font:inherit}#hp-offer{display:grid;gap:6px;color:#c4b8a7;font-size:13px;padding-block:8px}#hp-offer[hidden],#hp-discount[hidden],#hp-points[hidden]{display:none!important}#hp-coupon-status{margin:0}#hp-coupon-status:empty{display:none}#hp-discount strong{color:#b6d1af}
