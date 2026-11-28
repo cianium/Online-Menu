@@ -62,3 +62,20 @@
 .connect-order-local{font-size:11px;line-height:1.4;color:#c4b8a7;margin:5px 0 0}
 .connect-order-local[hidden]{display:none}
 @media(max-height:650px){.connect-dialog .connect-service-compact .hp-service-icon{display:none}.connect-dialog .connect-service-compact .hp-service-action{min-height:44px}.connect-dialog .connect-service-compact .hp-service-notice{max-height:none}.connect-dialog .connect-bottom{max-height:62dvh;overflow:auto}}
+
+/* R27 — messaging-first layout with one compact composer and a floating dial action. */
+.connect-content{position:relative}.connect-top{padding-block:9px}.connect-badge{font-size:10px}.connect-notice{font-size:11px;margin-block-start:5px}
+.connect-timeline{background:radial-gradient(ellipse at 50% 0,#d6ae7008,transparent 65%);padding-block-end:68px}
+.connect-call{position:absolute;inset-inline-end:16px;inset-block-start:calc(100% - 200px);z-index:2;width:44px;height:44px;display:grid;place-items:center;border-radius:50%;border:1px solid #d6ae7060;background:#292117;color:#f2d29a;box-shadow:0 5px 18px #0006;text-decoration:none}
+.connect-call svg,.connect-send svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+.connect-call:disabled{opacity:.5;cursor:not-allowed}.connect-bottom{position:relative;max-height:45dvh;padding-block-start:7px}
+.connect-compose{display:flex;align-items:flex-end;gap:8px;border:1px solid #ffffff28;background:#211d18;border-radius:28px;padding:4px;margin-block-start:8px}
+.connect-input{flex:1;border:0;background:transparent;resize:none;min-height:44px;max-height:100px;border-radius:24px;padding:10px 12px}
+.connect-send{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;padding:0;border-radius:50%}
+.connect-compose-footer{justify-content:flex-end;min-height:0}.connect-count{font-size:10px}
+.connect-quick-label{font-size:11px}.connect-chips{align-items:flex-start;gap:6px;scrollbar-width:thin}.connect-chip{border-radius:999px;min-height:44px;max-width:240px;white-space:nowrap}
+.connect-dialog .connect-service-compact{display:contents}.connect-dialog .connect-service-compact .hp-service-grid{display:contents}
+.connect-dialog .connect-service-compact .hp-service-action{display:flex;flex-direction:row;align-items:center;gap:4px;max-width:none;border-radius:999px;padding:7px 10px}
+.connect-dialog .connect-service-compact .hp-service-notice,.connect-dialog .connect-service-compact .hp-service-live{max-width:180px;flex:0 0 180px;align-self:center}
+.connect-reset{min-height:44px;font-size:11px}.connect-dialog .ramen-contact-head .ramen-contact-close{width:44px;height:44px}
+@media(max-height:520px){.connect-call{inset-block-start:calc(100% - 148px)}.connect-bottom{max-height:56dvh}}

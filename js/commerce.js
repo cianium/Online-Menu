@@ -225,6 +225,19 @@
     }
     return {table:window.ROMANO_I18N.displayBrand(tableSession?.table?.name || tableSession?.table?.code || ""),code:""};
   }
+  function restaurantDialUrl(){
+    const raw=String(restaurantConfig?.phone||"").trim();
+    if(!/^[+\d\s().-]{5,25}$/.test(raw))return "";
+    const number=raw.replace(/[^+\d]/g,"");
+    // The bundled fictitious number must never launch a call.
+    if(!/^\+?[1-9]\d{6,14}$/.test(number)&&!/^0\d{7,14}$/.test(number))return "";
+    if(isDemo()&&/^(?:\+98|0)31[0]+$/.test(number))return "";
+    return ["demo","public","offline"].includes(menuDataMode)?"tel:"+number:"";
+  }
+  function dialRestaurant(){
+    const url=restaurantDialUrl();if(url)location.href=url;
+    else announce((contactWords[lang()]||contactWords.fa).missing);
+  }
   function contextLabel() {
     const context=guestContext();
     return context.table ? (/^(?:میز|Table|Masa|طاولة)\b/i.test(context.table)||/^(?:میز|طاولة)\s/.test(context.table)?context.table:t("table")+" "+context.table) : "";
@@ -295,7 +308,7 @@
     nav.hidden=false;
     nav.setAttribute("aria-label",[words[0],percent,detail].join(" · "));
     document.querySelector("#navigation-service-toggle").setAttribute("aria-label",h("services"));
-    document.querySelector('[data-nav-panel="contact"]').textContent=(contactWords[lang()]||contactWords.fa).phone;
+    const call=document.querySelector('[data-nav-panel="contact"]');call.textContent=(contactWords[lang()]||contactWords.fa).phone;call.disabled=!restaurantDialUrl();
     document.querySelector('[data-nav-panel="waiter"]').textContent=h("waiter");
   }
   function initializeContactPanel() {
@@ -327,26 +340,25 @@
       const header=element('header',null,'ramen-contact-head');
       const labels=panelText();
       const chat=window.RomanoCustomerChat;
-      const heading=element('h2',panel==='chat'&&chat?chat.words(lang()).title:panel==='contact'?h('services'):panel==='waiter'?h('waiter'):labels[panel]||words.title);heading.id='ramen-contact-title';
+      const heading=element('h2',panel==='chat'&&chat?chat.words(lang()).title:panel==='waiter'?h('waiter'):labels[panel]||words.title);heading.id='ramen-contact-title';
       const dismiss=element('button',undefined,'ramen-contact-close');dismiss.type='button';dismiss.setAttribute('aria-label',words.close);dismiss.addEventListener('click',close);
       const closeGlyph=element('span','×');closeGlyph.setAttribute('aria-hidden','true');dismiss.append(closeGlyph);
       header.append(heading,dismiss);
       const content=element('div',null,'ramen-contact-content');
       const mode=typeof menuDataMode !== 'undefined' ? menuDataMode : 'loading';
       const demo=mode==='demo';
-      dialog.classList.toggle('hp-contact',panel==='contact');
       dialog.classList.toggle('r27-profile-page',panel==='profile');
       dialog.classList.toggle('connect-dialog',panel==='chat'&&Boolean(chat&&window.RomanoCustomerPanels));
       const panels=window.RomanoCustomerPanels;
       if(panels&&(panel!=='chat'||chat)){
         content.dataset.panelState='ready';
-        panels.render({panel,content,element,demo,mode,labels,words,chat,profileId,lang,h,x,panelText,guestContext,contextLabel,config,tenant,renderHeroRating,close,openPanel,origin,dialog,isDemo});
+        panels.render({panel,content,element,demo,mode,labels,words,chat,profileId,lang,h,x,panelText,guestContext,contextLabel,config,tenant,renderHeroRating,close,openPanel,origin,dialog,isDemo,restaurantDialUrl});
       }else{
         content.dataset.panelState='loading';
         const loading=element('p',({fa:'در حال بارگذاری…',en:'Loading…',tr:'Yükleniyor…',ar:'جارٍ التحميل…'})[lang()],'ramen-contact-note');loading.setAttribute('role','status');
         const retry=element('button',t('retry'),'feedback-save');retry.type='button';retry.hidden=true;
         retry.addEventListener('click',()=>openPanel(panel,origin,true));content.append(loading,retry);
-        if(panel==='chat'){const contactButton=element('button',words.phone,'feedback-save');contactButton.type='button';contactButton.addEventListener('click',()=>openPanel('contact',origin,true));content.append(contactButton);}
+        if(panel==='chat'&&restaurantDialUrl()){const contactButton=element('a',words.phone,'feedback-save');contactButton.href=restaurantDialUrl();content.append(contactButton);}
         const load=panel==='chat'?Promise.all([connectAssets.loadPanels(),connectAssets.loadChat()]):connectAssets.loadPanels();
         load.then(()=>{
           if(dialog.open&&activePanel===panel&&revision===panelRevision)openPanel(panel,origin,true);
@@ -357,7 +369,7 @@
       dialog.replaceChildren(header,content);
       if(!wasOpen){dialog.showModal();window.RamenOverlayHistory.enter('contact',close);document.body.classList.add('ramen-contact-open');}
       if(origin===trigger){trigger.setAttribute('aria-controls',dialog.id);trigger.setAttribute('aria-expanded','true');}
-      const focusTarget=restoreLanguage?content.querySelector('.connect-language')||dismiss:dismiss;
+      const focusTarget=dismiss;
       focusTarget.focus({preventScroll:true});
     };
     document.querySelector("#hero-rating")?.addEventListener("click",event=>openPanel("feedback",event.currentTarget));
@@ -366,11 +378,12 @@
     document.addEventListener('romano:open-customer-panel',event=>{
       const panel=event.detail?.panel;
       if(panel==='cart')openDrawer();
+      else if(panel==='contact')dialRestaurant();
       else if(panel==='profile'&&isDemo()&&!window.RomanoCustomerEntry?.current()){window.RomanoCustomerEntry.open(false,()=>{if(window.RomanoCustomerEntry.current())openPanel('profile',document.querySelector('#menu-toggle'));});}
-      else if(['contact','chat','profile','feedback','waiter'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
+      else if(['chat','profile','feedback','waiter'].includes(panel))openPanel(panel,document.querySelector('#menu-toggle'));
     });
     dialog.addEventListener('close',()=>{panelRevision++;window.RamenOverlayHistory.leave('contact');document.body.classList.remove('ramen-contact-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');window.RomanoCustomerChat?.suspend();if(origin?.isConnected&&!origin.closest('[inert]'))origin.focus({preventScroll:true});origin=null;activePanel=null;});
-    document.addEventListener('romano:language-changed',()=>{if(dialog.open&&activePanel==='chat'){const restore=document.activeElement?.classList.contains('connect-language');openPanel('chat',origin,true,restore);}else close();updateLabel();});
+    document.addEventListener('romano:language-changed',()=>{if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);else close();updateLabel();});
     document.addEventListener('romano:connect-session-changed',()=>{window.RomanoCustomerChat?.clear();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
     document.addEventListener('romano:demo-membership-changed',()=>{const next=profileId();if(next===connectProfile)return;connectProfile=next;connectAssets.forgetGuest();if(dialog.open&&activePanel==='chat')openPanel('chat',origin,true);});
     let lastPanelMode=typeof menuDataMode==='undefined'?'loading':menuDataMode;
@@ -725,7 +738,7 @@
     addButton.textContent="+ "+t("add");
     let control=document.querySelector(".modal-cart-quantity");
     if(!control){
-      control=document.createElement("div");control.className="modal-cart-quantity commerce-quantity";control.hidden=true;
+      control=document.createElement("div");control.className="modal-cart-quantity";control.hidden=true;
       const minus=document.createElement("button"),value=document.createElement("b"),plus=document.createElement("button");
       minus.type=plus.type="button";minus.textContent="−";plus.textContent="+";
       minus.onclick=()=>{const current=window.RomanoActiveProduct?.id;if(current)change(current,-1);};

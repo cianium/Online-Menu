@@ -757,3 +757,6 @@ html[dir] .hero-section>.hero-button{grid-row:2;align-self:end;justify-self:cent
 .product-modal .modal-image-wrapper{border-radius:18px;overflow:hidden;margin:8px;}.product-modal .modal-content{gap:10px}
 @media(max-width:720px){.r27-profile-page[open]{width:100%;height:100dvh;border-radius:0;border:0}.product-modal .modal-image-wrapper{max-block-size:34dvh;aspect-ratio:16/10;margin:8px 8px 0}.product-modal .modal-title{font-size:clamp(22px,6vw,30px)}}
 @media(prefers-reduced-motion:no-preference){.cart-trash{animation:customer-enter .16s ease-out}}
+
+.modal-cart-quantity{display:flex;align-items:center;gap:10px}.modal-cart-quantity button{border:1px solid #ffffff26;border-radius:12px;color:#f2ece3;background:#ffffff08;font:inherit}.modal-cart-quantity b{font-size:16px}
+#navigation-service-options button{display:flex;align-items:center;min-height:44px;gap:8px;padding:8px 12px}#navigation-service-options button:disabled{opacity:.5;cursor:not-allowed}
