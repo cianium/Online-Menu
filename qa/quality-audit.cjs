@@ -233,7 +233,10 @@ async function measure(browser,surface) {
         await admin.evaluate(l=>ROMANO_ADMIN_I18N.setLanguage(l),lang);
         await admin.locator('#revenue-period').selectOption('7');
         await admin.setViewportSize({width:390,height:844});
-        await admin.locator('.overview-revenue').scrollIntoViewIfNeeded();
+        // Align a fixed-size heading rather than the entire expandable report;
+        // the latter can be taller than the mobile viewport and change on locale switch.
+        await admin.evaluate(async()=>{await document.fonts.ready;document.getElementById('revenue-title').scrollIntoView({block:'start',behavior:'instant'});});
+        assert.equal(await admin.locator('.overview-revenue').isVisible(),true);
         const chartTable=admin.locator('details.revenue-table').filter({has:admin.locator('#revenue-table-body')});
         const ranking=admin.locator('#revenue-ranking');
         assert.equal(await chartTable.count(),1);

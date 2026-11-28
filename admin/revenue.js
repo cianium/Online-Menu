@@ -25,15 +25,26 @@
     $('revenue-detail').textContent=b?periodLabel(b)+' · '+money(b.total,latest.currency)+' · '+t('تعداد سفارش‌های نمونه')+': '+n(b.count):'';
     [...$('revenue-bars').children].forEach((node,i)=>node.classList.toggle('is-selected',i===Number($('revenue-bucket').value)));
   }
+  const localDay=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+  function syncRange(){
+    const custom=$('revenue-period').value==='custom',start=$('revenue-start'),end=$('revenue-end'),today=localDay(new Date());
+    $('revenue-custom-range').hidden=!custom;
+    start.max=today;end.max=today;
+    if(custom&&!start.value){const d=new Date();d.setDate(d.getDate()-29);start.value=localDay(d);}
+    if(custom&&!end.value)end.value=today;
+    $('revenue-range-error').textContent='';
+    return custom?{start:start.value,end:end.value}:Number($('revenue-period').value);
+  }
   function render(){
     if(!local()){clear('گزارش درآمد نیازمند تاریخچه پرداخت معتبر است.');return;}
+    const period=syncRange();
     try{
       const rows=model.orders(members.read(localStorage));
       const codes=model.currencies(rows),currency=$('revenue-currency'),selected=currency.value;
       if(!codes.length)codes.push('IRT');
       currency.replaceChildren(...codes.map(c=>{const o=el('option',c==='IRT'?t('تومان'):c);o.value=c;return o;}));
       currency.value=codes.includes(selected)?selected:codes[0];
-      const report=model.report(rows,currency.value,Number($('revenue-period').value));latest=report;$('revenue-export').disabled=false;
+      const report=model.report(rows,currency.value,period);latest=report;$('revenue-export').disabled=false;
       $('revenue-content').hidden=false;$('revenue-filters').hidden=false;
       $('revenue-status').textContent=t(report.count?'مبلغ سفارش‌های نمونه؛ درآمد یا پرداخت واقعی نیست.':'در این بازه سفارش نمونه‌ای ثبت نشده است.');
       $('revenue-total').textContent=money(report.total,report.currency);
@@ -62,7 +73,12 @@
       }
       bucket.value=previous!==''&&Number(previous)<report.buckets.length?previous:String(report.buckets.length-1);
       detail();
-    }catch{clear('خواندن داده محلی ممکن نیست.');}
+    }catch(error){
+      if(error.message==='INVALID_FILTER'){
+        latest=null;$('revenue-content').hidden=true;$('revenue-export').disabled=true;$('revenue-filters').hidden=false;
+        $('revenue-range-error').textContent=t('بازه معتبر حداکثر ۳۶۵ روز و تا امروز را انتخاب کنید.');
+      }else clear('خواندن داده محلی ممکن نیست.');
+    }
   }
   function download(){
     if(!local()||!latest)return;
@@ -72,6 +88,7 @@
   function init(){
     $('revenue-period').addEventListener('change',()=>{$('revenue-bucket').value='';render();});
     $('revenue-currency').addEventListener('change',render);
+    for(const id of ['revenue-start','revenue-end'])$(id).addEventListener('change',()=>{$('revenue-bucket').value='';render();});
     $('revenue-bucket').addEventListener('change',detail);
     $('revenue-bars').addEventListener('click',event=>{
       const bar=event.target.closest('.revenue-bar');

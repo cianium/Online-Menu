@@ -55,3 +55,10 @@ test('Counts distinct ordering customers and ranks recorded item quantities insi
  assert.deepEqual(result.topItems,[['Tea',4],['Soup',3]]);
  assert.doesNotMatch(model.csv(result),/Tea|Soup/);
 });
+
+ test('Custom Gregorian dates include both endpoints and compare an equal preceding period',()=>{
+ const r=model.report([order('a',24,30),order('b',25,50),order('c',26,100),order('d',23,20)],'IRT',{start:'2026-11-24',end:'2026-11-25'},now);
+ assert.equal(r.total,80);assert.equal(r.count,2);assert.equal(r.previousTotal,20);assert.equal(r.previousStart,'2026-11-22');assert.equal(r.buckets.length,2);
+ const single=model.report([order('e',24,30)],'IRT',{start:'2026-11-24',end:'2026-11-24'},now);assert.equal(single.buckets[10].total,30);
+ for(const range of [{start:'2026-02-30',end:'2026-03-03'},{start:'2026-11-25',end:'2026-11-24'},{start:'2025-01-01',end:'2026-11-26'},{start:'2026-11-26',end:'2026-11-27'}])assert.throws(()=>model.report([],'IRT',range,now),/INVALID_FILTER/);
+ });

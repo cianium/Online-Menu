@@ -253,3 +253,12 @@ html[dir="rtl"] .sidebar-navigation .nav-item.active {box-shadow:inset -3px 0 0 
 #page-dashboard #ramen-tables-shortcut{min-width:0}
 #demo-tables{scroll-margin-block-start:80px}
 @media(min-width:1000px){#page-dashboard .admin-quick-actions{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* Explicit date bounds and deterministic scrolling for the revenue view. */
+#revenue-custom-range:not([hidden]){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;flex:1 1 100%;min-width:0}
+#revenue-custom-range input{min-height:44px;width:100%;min-width:0;box-sizing:border-box;font:inherit;font-size:16px;padding:8px;border-radius:10px;border:1px solid var(--admin-line-strong);background:#242427;color:#f5f3ef;color-scheme:dark}
+#revenue-range-error{grid-column:1/-1;color:#fca5a5!important}
+#revenue-range-error:empty{display:none}
+#revenue-title{scroll-margin-block-start:84px}
+@media(max-width:360px){#revenue-custom-range:not([hidden]){grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}}

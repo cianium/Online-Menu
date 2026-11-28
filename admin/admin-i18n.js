@@ -9,6 +9,10 @@
     const LANGS = ["fa", "en", "tr", "ar"];
 
     const T = {
+      "بازه سفارشی": ["Custom range","Özel tarih aralığı","نطاق مخصص"],
+      "تاریخ شروع (میلادی)": ["Start date (Gregorian)","Başlangıç tarihi (Miladi)","تاريخ البدء (ميلادي)"],
+      "تاریخ پایان (میلادی)": ["End date (Gregorian)","Bitiş tarihi (Miladi)","تاريخ الانتهاء (ميلادي)"],
+      "بازه معتبر حداکثر ۳۶۵ روز و تا امروز را انتخاب کنید.": ["Choose a valid range of up to 365 days ending no later than today.","Bugünü aşmayan en fazla 365 günlük geçerli bir aralık seçin.","اختر نطاقًا صالحًا لا يتجاوز 365 يومًا وينتهي اليوم أو قبله."],
       "مدیریت میزها": ["Manage tables","Masaları yönet","إدارة الطاولات"],
       "گزارش کامل": ["Full report","Tam rapor","التقرير الكامل"],
       "ساخته‌شده توسط کیان خیاط": ["Made by Kian Khayat","Kian Khayat tarafından yapıldı","صنعه كيان خياط"],

@@ -262,8 +262,9 @@
                         <div class="revenue-heading"><h2 id="revenue-title">درآمد</h2></div>
                         <p id="revenue-status" role="status">گزارش درآمد نیازمند تاریخچه پرداخت معتبر است.</p>
                         <div id="revenue-filters" class="revenue-filters" hidden>
-                            <label><span>بازه گزارش</span><select id="revenue-period"><option value="1">امروز</option><option value="7">۷ روز اخیر</option><option value="30" selected>۳۰ روز اخیر</option><option value="365">۳۶۵ روز اخیر</option></select></label>
+                            <label><span>بازه گزارش</span><select id="revenue-period"><option value="1">امروز</option><option value="7">۷ روز اخیر</option><option value="30" selected>۳۰ روز اخیر</option><option value="365">۳۶۵ روز اخیر</option><option value="custom">بازه سفارشی</option></select></label>
                             <label><span>واحد پول</span><select id="revenue-currency"></select></label>
+                            <div id="revenue-custom-range" hidden><label><span>تاریخ شروع (میلادی)</span><input id="revenue-start" type="date" dir="ltr"></label><label><span>تاریخ پایان (میلادی)</span><input id="revenue-end" type="date" dir="ltr"></label><p id="revenue-range-error" role="alert" data-admin-user-text="true"></p></div>
                         </div>
                         <div id="revenue-content" hidden>
                             <p id="revenue-range-label" dir="auto" data-admin-user-text="true"></p>

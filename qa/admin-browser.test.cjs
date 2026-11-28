@@ -134,6 +134,16 @@ async function check(name, action) { await action(); results.push(name); console
       assert.equal(await page.locator('#revenue-bars span').count(),7);
       assert.equal(await page.locator('#revenue-export').isEnabled(),true);
     }
+    await page.locator('#revenue-period').selectOption('custom');
+    const today=await page.evaluate(()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');});
+    await page.locator('#revenue-start').fill(today);
+    await page.locator('#revenue-end').fill(today);
+    assert.equal(await page.locator('#revenue-table-body tr').count(),24);
+    await page.locator('#revenue-end').fill('2000-01-01');
+    assert.equal(await page.locator('#revenue-range-error').isVisible(),true);
+    assert.equal(await page.locator('#revenue-export').isDisabled(),true);
+    await page.locator('#revenue-end').fill(today);
+    assert.equal(await page.locator('#revenue-content').isVisible(),true);
     await page.locator('#revenue-period').selectOption('30');
   });
   await check('Sample revenue populated chart, currency filter, CSV download and no customer identity in export',async()=>{

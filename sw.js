@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r26-phone-auth-lazy`;
+const CACHE_NAME = `${menuCachePrefix}r27-admin-experience`;
 const CORE_ASSETS = [
   "./",
   "./index.html",
