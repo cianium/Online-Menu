@@ -76,7 +76,12 @@ test('Connected phone entry: OTP, invite and authorization boundaries',async()=>
   assert.equal((await admin.post(route('enroll-admin'),{phone:staffPhone,name:'No key'})).status,400);
   assert.equal((await admin.post(route('start'),{phone:staffPhone,name:'Wrong route',accessKey:key})).status,400);
   assert.equal((await admin.post(route('enroll-admin'),{phone:'+989123450003',name:'Wrong target',accessKey:key})).status,400);
-  assert.equal((await admin.post(route('enroll-admin'),{phone,name:'Existing customer',accessKey:key})).status,400);
+  // Use an independent already-registered identity, outside the previous login cooldown.
+  const existingPhone='+989123450006';
+  await pool.query('insert into users(phone,display_name) values($1,$2)',[existingPhone,'Existing customer']);
+  const existingKey=await invite(existingPhone);
+  assert.equal((await admin.post(route('enroll-admin'),{phone:existingPhone,name:'Existing customer',accessKey:existingKey})).status,400);
+  assert.equal((await pool.query('select count(*)::int as count from restaurant_memberships where user_id=(select id from users where phone=$1)',[existingPhone])).rows[0].count,0);
   const staff=await admin.post(route('enroll-admin'),{phone:staffPhone,name:'Sample Staff',accessKey:key});assert.equal(staff.status,200);
   assert.equal(await account(staffPhone),undefined);
   assert.equal((await pool.query('select consumed_at from phone_auth_invites where digest=$1',[sha256(key)])).rows[0].consumed_at,null);
