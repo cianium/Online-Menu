@@ -30,5 +30,5 @@ test('Disabled phone routes do not call database, provider or issue a session',a
  const forbidden=()=>{throw Error('unexpected external action');};
  registerPhoneAuth(api,{config:{enabled:false},db:forbidden,transaction:forbidden,issueSession:forbidden,deliver:forbidden});
  assert.deepEqual(await routes.get('/auth/phone/status')(),{data:{enabled:false},error:null});
- for(const path of ['lookup','start','verify'])await assert.rejects(routes.get('/auth/phone/'+path)({}),e=>e.apiCode==='PHONE_AUTH_UNAVAILABLE');
+ for(const path of ['lookup','start','enroll-admin','verify'])await assert.rejects(routes.get('/auth/phone/'+path)({}),e=>e.apiCode==='PHONE_AUTH_UNAVAILABLE');
 });

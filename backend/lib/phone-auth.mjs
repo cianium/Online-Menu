@@ -55,10 +55,10 @@ export function registerPhoneAuth(api,{config,db,transaction,issueSession,delive
     // The requested phone-first UX discloses registration existence, never role or account data.
     return response({needsName:!user},request);
   });
-  api.post('/auth/phone/start',{bodyLimit:4096,config:{rateLimit:{max:10,timeWindow:'10 minutes'}}},async(request)=>{
+  const begin=staffEnrollment=>async(request)=>{
     enabled();const phone=phoneOf(request),name=normalizeName(request.body?.name);
     const invite=request.body?.accessKey;
-    if(invite!==undefined&&invite!==''&&(typeof invite!=='string'||!tokenPattern.test(invite)))throw invalid();
+    if(staffEnrollment ? (typeof invite!=='string'||!tokenPattern.test(invite)||!name) : invite!==undefined)throw invalid();
     const inviteHash=invite?sha256(invite):null;
     const challenge=randomToken(32),digest=sha256(challenge),code=String(randomInt(0,1000000)).padStart(6,'0');
     const result=await transaction(async client=>{
@@ -70,7 +70,7 @@ export function registerPhoneAuth(api,{config,db,transaction,issueSession,delive
       if(recent)return 'rate';
       const existing=(await client.query('select id,active from users where phone=$1',[phone])).rows[0];
       if(existing&&!existing.active)return 'invalid';
-      if(existing&&inviteHash)return 'invalid'; // no self-service upgrade of a customer account
+      if(existing&&staffEnrollment)return 'invalid'; // no self-service upgrade of a customer account
       if(!existing&&!name)return 'name';
       if(inviteHash){
         const valid=(await client.query('select 1 from phone_auth_invites where digest=$1 and phone=$2 and consumed_at is null and expires_at>now()',[inviteHash,phone])).rows[0];
@@ -88,7 +88,10 @@ export function registerPhoneAuth(api,{config,db,transaction,issueSession,delive
       throw httpError(503,'Could not send verification code.','PHONE_AUTH_SEND_FAILED');
     }
     return response({challenge,expiresIn:300,resendAfter:60},request);
-  });
+  };
+  const startOptions=()=>({bodyLimit:4096,config:{rateLimit:{max:10,timeWindow:'10 minutes'}}});
+  api.post('/auth/phone/start',startOptions(),begin(false));
+  api.post('/auth/phone/enroll-admin',startOptions(),begin(true));
   api.post('/auth/phone/verify',{bodyLimit:2048,config:{rateLimit:{max:20,timeWindow:'10 minutes'}}},async(request,reply)=>{
     enabled();
     const challenge=request.body?.challenge,code=request.body?.code;

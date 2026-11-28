@@ -73,8 +73,11 @@ test('Connected phone entry: OTP, invite and authorization boundaries',async()=>
   assert.equal((await returning.post(route('verify'),{challenge:login.data.challenge,code:codeFor(phone)})).data.user.id,verified.data.user.id);
   // Invitation is bound to the intended phone, consumed only after OTP.
   const admin=browser(),staffPhone='+989123450002',key=await invite(staffPhone);await admin.init();
-  assert.equal((await admin.post(route('start'),{phone:'+989123450003',name:'Wrong target',accessKey:key})).status,400);
-  const staff=await admin.post(route('start'),{phone:staffPhone,name:'Sample Staff',accessKey:key});assert.equal(staff.status,200);
+  assert.equal((await admin.post(route('enroll-admin'),{phone:staffPhone,name:'No key'})).status,400);
+  assert.equal((await admin.post(route('start'),{phone:staffPhone,name:'Wrong route',accessKey:key})).status,400);
+  assert.equal((await admin.post(route('enroll-admin'),{phone:'+989123450003',name:'Wrong target',accessKey:key})).status,400);
+  assert.equal((await admin.post(route('enroll-admin'),{phone,name:'Existing customer',accessKey:key})).status,400);
+  const staff=await admin.post(route('enroll-admin'),{phone:staffPhone,name:'Sample Staff',accessKey:key});assert.equal(staff.status,200);
   assert.equal(await account(staffPhone),undefined);
   assert.equal((await pool.query('select consumed_at from phone_auth_invites where digest=$1',[sha256(key)])).rows[0].consumed_at,null);
   const authenticated=await admin.post(route('verify'),{challenge:staff.data.challenge,code:codeFor(staffPhone)});
@@ -83,6 +86,13 @@ test('Connected phone entry: OTP, invite and authorization boundaries',async()=>
   assert.equal((await admin.get('/admin/data')).status,200);
   assert.ok((await pool.query('select consumed_at from phone_auth_invites where digest=$1',[sha256(key)])).rows[0].consumed_at);
   assert.equal((await admin.post(route('verify'),{challenge:staff.data.challenge,code:codeFor(staffPhone)})).status,401);
+  // Returning staff uses exactly the same login route as a customer, without a key.
+  await pool.query("update phone_auth_challenges set created_at=now()-interval '61 seconds' where phone=$1",[staffPhone]);
+  const staffLogin=browser();await staffLogin.init();
+  assert.deepEqual((await staffLogin.post(route('lookup'),{phone:staffPhone})).data,{needsName:false});
+  const staffAgain=await staffLogin.post(route('start'),{phone:staffPhone});assert.equal(staffAgain.status,200);
+  const staffVerified=await staffLogin.post(route('verify'),{challenge:staffAgain.data.challenge,code:codeFor(staffPhone)});
+  assert.equal(staffVerified.data.role,'admin');assert.equal(staffVerified.data.user.id,authenticated.data.user.id);
   // Failed delivery cannot create a user or return a challenge.
   const failed=browser();await failed.init();rejectDelivery=true;
   const failedPhone='+989123450004';

@@ -917,7 +917,9 @@ async function ready(p){
    if(path.startsWith('/auth/phone/')&&method==='POST'){
     assert.ok(req.headers()['x-csrf-token'],'CSRF header required');
     if(path.endsWith('/lookup'))return answer({needsName:!accounts.has(body.phone)});
-    if(path.endsWith('/start')){
+    if(path.endsWith('/start')||path.endsWith('/enroll-admin')){
+     if(path.endsWith('/enroll-admin')&&(!body.accessKey||!body.name))return answer(null,400,'PHONE_AUTH_INVALID');
+     if(path.endsWith('/start')&&Object.hasOwn(body,'accessKey'))return answer(null,400,'PHONE_AUTH_INVALID');
      if(body.accessKey&&!(body.phone===staffPhone&&body.accessKey===accessKey))return answer(null,400,'PHONE_AUTH_INVALID');
      if(!accounts.has(body.phone)&&!body.name)return answer(null,409,'PHONE_AUTH_NAME_REQUIRED');
      challenge={id:'qa-challenge-'+(++serial),phone:body.phone,name:body.name,staff:body.accessKey===accessKey};
@@ -948,7 +950,7 @@ async function ready(p){
    await entry.locator('select').selectOption('en');
    await entry.locator('input[name=phone]').fill(customerPhone);await submit.click();
    const name=entry.locator('input[name=name]');await name.waitFor({state:'visible'});
-   assert.equal(await entry.locator('input[name=accessKey]').isVisible(),false);
+   assert.equal(await entry.locator('input[name=accessKey]').count(),0);
    assert.equal(await entry.locator('input[name=code]').count(),0);
    await name.fill('QA Customer');await submit.click();
    const code=entry.locator('input[name=code]');await code.waitFor({state:'visible'});
@@ -971,9 +973,11 @@ async function ready(p){
    // A signed-out staff member enters through the exact same page.
    session=null;await page.goto(new URL('admin/',root).href);await page.waitForURL(url=>url.pathname==='/'&&url.searchParams.get('login')==='1');await ready(page);
    await entry.waitFor({state:'visible'});
-   await entry.locator('input[name=phone]').fill(staffPhone);await submit.click();await name.waitFor({state:'visible'});
-   await name.fill('QA Staff');await entry.locator('input[type=checkbox]').check();
+   await entry.getByRole('button',{name:'Admin registration',exact:true}).click();
+   assert.equal(await entry.locator('h1').innerText(),'Admin registration');
+   await entry.locator('input[name=phone]').fill(staffPhone);await name.fill('QA Staff');
    const key=entry.locator('input[name=accessKey]');await key.waitFor({state:'visible'});
+   assert.equal(await key.getAttribute('required'),'');
    await key.fill('y'.repeat(43));await submit.click();await entry.getByRole('alert').waitFor({state:'visible'});
    assert.equal(accounts.size,1);
    await key.fill(accessKey);await submit.click();await code.waitFor({state:'visible'});
@@ -982,6 +986,12 @@ async function ready(p){
    await page.waitForFunction(()=>typeof adminInitialized!=='undefined'&&adminInitialized&&!document.querySelector('.admin-app').inert);
    assert.equal(session.membership.role,'manager');assert.ok(adminReads>0);
    assert.equal(accounts.size,2);
+   assert.ok(calls.some(c=>c.path.endsWith('/enroll-admin')&&c.body.accessKey===accessKey));
+   session=null;await page.goto(root+'?login=1');await ready(page);await entry.waitFor({state:'visible'});
+   await entry.locator('input[name=phone]').fill(staffPhone);await submit.click();await code.waitFor({state:'visible'});
+   assert.equal(await entry.locator('input[name=accessKey]').count(),0);
+   assert.deepEqual(calls.filter(c=>c.path.endsWith('/start')).at(-1).body,{phone:staffPhone});
+   await code.fill('123456');await submit.click();await page.waitForURL(url=>url.pathname==='/admin/');
    assert.ok(calls.filter(c=>c.path.endsWith('/verify')).every(c=>Object.keys(c.body).sort().join(',')==='challenge,code'));
    assert.ok(!page.url().includes(accessKey));
   }finally{await authContext.close();}
