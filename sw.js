@@ -1,5 +1,5 @@
 importScripts("./js/sw-cache.js");
-const CACHE_NAME = `${menuCachePrefix}r25-security-cache`;
+const CACHE_NAME = `${menuCachePrefix}r26-phone-auth-lazy`;
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -29,6 +29,7 @@ const CORE_ASSETS = [
   "./js/customer-panels.js",
   "./js/demo-review.js",
   "./js/demo-members.js",
+  "./js/phone-auth.js",
   "./js/customer-entry.js",
   "./assets/images/logo/brand-mark-144.webp",
   "./assets/images/hero/hero.jpg"

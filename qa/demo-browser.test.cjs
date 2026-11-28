@@ -34,6 +34,13 @@ const readyCustomer = async page => {
     assert.equal(await customer.evaluate(() => menuDataMode), 'demo');
     const cards = customer.locator('#menu .product-card');
     assert.equal(await cards.count(), 21);
+    assert.equal(await customer.locator('#menu').isVisible(),false);
+    await customer.locator('.hero-button').click();
+    await customer.locator('#menu').waitFor({state:'visible'});
+    assert.equal(await customer.locator('#home').isVisible(),false);
+    assert.equal(await customer.locator('#menu h1').count(),1);
+    await customer.evaluate(()=>navigateCustomerView("home"));
+    assert.equal(await customer.locator('#menu').isVisible(),false);
     await admin.goto(new URL('admin/',base).href);
     await loginDemoAdmin(admin);
     assert.equal(await admin.locator('#admin-mode-banner').isVisible(), true);
@@ -92,10 +99,13 @@ const readyCustomer = async page => {
       assert.ok(rect && rect.height>=44 && rect.x>=-1 && rect.x+rect.width<=321,lang+' footer reflow/touch target');
     }
     await customer.setViewportSize({width:1440,height:900});
+    await customer.locator('.hero-button').click();
+    await customer.locator('#menu').waitFor({state:'visible'});
     const image=customer.locator('#menu .product-card .product-image-wrapper img').first();
     const duration=()=>image.evaluate(el=>getComputedStyle(el).transitionDuration);
     assert.equal(await duration(),'0s');
     await customer.emulateMedia({reducedMotion:'no-preference'});
+    await customer.waitForFunction(()=>!matchMedia('(prefers-reduced-motion: reduce)').matches&&[...document.querySelectorAll('#menu .product-card .product-image-wrapper img')].some(n=>getComputedStyle(n).transitionDuration.split(',').some(v=>parseFloat(v)>0)));
     assert.ok((await duration()).split(',').some(v=>parseFloat(v)>0),'normal motion enabled');
     await customer.emulateMedia({reducedMotion:'reduce'});
     assert.equal(await duration(),'0s');

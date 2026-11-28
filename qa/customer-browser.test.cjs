@@ -68,13 +68,19 @@ async function ready(p){
    assert.equal(await p.locator('.hero-button-icon').count(),0);
    assert.equal(await rating.locator('.hero-stars span').count(),5);
    assert.equal(await rating.locator('.is-filled').count(),0);
-   assert.equal(await rating.locator('#hero-satisfaction').textContent(),'—');
+   assert.equal(await rating.locator('.hero-stars').textContent(),'☆☆☆☆☆');
+    assert.equal(await rating.locator('.hero-rating-copy,.hero-rating-detail').count(),0);
+    assert.ok(await rating.getAttribute('aria-label'));
+    assert.equal(await rating.evaluate(n=>getComputedStyle(n).backgroundColor),'rgba(0, 0, 0, 0)');
+    assert.equal(await rating.evaluate(n=>getComputedStyle(n).borderTopWidth),'0px');
+    assert.equal(await p.locator('#navigation-rating .hero-stars').textContent(),'☆☆☆☆☆');
+    assert.equal(await p.locator('#navigation-rating .hero-rating-copy,#navigation-rating .hero-rating-detail').count(),0);
    const geometry=await p.evaluate(()=>{const c=document.querySelector('.hero-content').getBoundingClientRect(),b=document.querySelector('.hero-button').getBoundingClientRect(),h=document.querySelector('.hero-section').getBoundingClientRect();return {content:c.bottom,button:b.top,end:b.bottom,hero:h.bottom};});
    assert.ok(geometry.button>=geometry.content-1&&geometry.end<=geometry.hero+1);
   }
   await p.evaluate(()=>{const model=RomanoDemoReview;const review=model.submit(localStorage,'romano',4,'Sample review','qa-hero-rating');model.moderate(localStorage,'romano',review,'approved');window.dispatchEvent(new StorageEvent('storage',{key:model.key('romano')}));});
   assert.equal(await rating.locator('.is-filled').count(),4);assert.equal(await p.locator('#navigation-rating .is-filled').count(),4);
-  assert.equal(await rating.locator('#hero-satisfaction').textContent(),await p.evaluate(()=>new Intl.NumberFormat(ROMANO_I18N.language,{style:'percent'}).format(.8)));
+  assert.ok((await rating.getAttribute('aria-label')).includes(await p.evaluate(()=>new Intl.NumberFormat(ROMANO_I18N.language,{style:'percent'}).format(.8))));
   await rating.click();await p.locator('#ramen-contact-dialog').waitFor({state:'visible'});await p.keyboard.press('Escape');
   await p.evaluate(()=>{localStorage.removeItem(RomanoDemoReview.key('romano'));window.dispatchEvent(new StorageEvent('storage',{key:RomanoDemoReview.key('romano')}));ROMANO_I18N.setLanguage('fa',false);});
   assert.equal(await rating.locator('.is-filled').count(),0);
@@ -150,16 +156,59 @@ async function ready(p){
   await p.evaluate(()=>ROMANO_I18N.setLanguage('fa',false));
   await p.setViewportSize({width:390,height:844});
  });
- await check('Bottom navigation follows native section anchors and manual scrolling',async()=>{
-  const featured=p.locator('[data-ramen-nav="featured"]');
-  await featured.click();
-  await p.waitForFunction(()=>document.querySelector('[data-ramen-nav="featured"]').getAttribute('aria-current')==='location');
-  assert.equal(await p.evaluate(()=>location.hash),'#featured');
-  await p.evaluate(()=>document.getElementById('menu').scrollIntoView({behavior:'instant'}));
-  await p.waitForFunction(()=>document.querySelector('[data-ramen-nav="menu"]').getAttribute('aria-current')==='location');
-  await p.evaluate(()=>{history.replaceState(null,'',location.pathname+location.search);window.scrollTo({top:0,behavior:'instant'});});
- });
- await check('Category-first hamburger, guest profile and local-only rating in four languages',async()=>{
+ await check('Dedicated catalog entry, home, featured, Back and reload preserve one session in four languages',async()=>{
+   for(const lang of ['fa','ar','en','tr']){
+    await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
+    await p.locator('[data-ramen-nav="home"]').click();
+    assert.equal(await p.locator('#menu').isVisible(),false);
+    assert.equal(await p.locator('#home').isVisible(),true);
+    const original=await p.evaluate(()=>location.search);
+    await p.locator('.hero-button').click();
+    assert.equal(await p.evaluate(()=>location.hash),'#menu');
+    assert.equal(await p.locator('#home').isVisible(),false);
+    assert.equal(await p.locator('#featured').isVisible(),false);
+    assert.equal(await p.locator('#menu').isVisible(),true);
+    assert.equal(await cards.count(),21);
+    assert.equal(await p.evaluate(()=>location.search),original);
+    assert.equal(await p.locator('html').getAttribute('lang'),lang);
+    await p.waitForFunction(()=>document.querySelector('[data-ramen-nav="menu"]').getAttribute('aria-current')==='location');
+    await p.goBack();await p.locator('#home').waitFor({state:'visible'});
+    await p.locator('[data-ramen-nav="menu"]').click();await p.locator('#menu').waitFor({state:'visible'});
+    await p.reload();await ready(p);await p.locator('#menu').waitFor({state:'visible'});
+    await p.locator('[data-ramen-nav="featured"]').click();await p.locator('#featured').waitFor({state:'visible'});
+    assert.equal(await p.evaluate(()=>location.hash),'#featured');
+    assert.equal(await p.locator('#menu').isVisible(),false);
+   }
+   await p.locator('[data-ramen-nav="home"]').click();
+  });
+  await check('Header and hamburger categories enter the catalog and preserve a favorite across views',async()=>{
+   const category=p.locator('#rv4-category-rail [data-browse-category]').first();
+   const id=await category.getAttribute('data-browse-category');
+   await category.click();
+   await p.locator('#menu').waitFor({state:'visible'});
+   assert.ok(await cards.count()>0);
+   assert.equal(await cards.evaluateAll((nodes,id)=>nodes.every(n=>getProductById(n.dataset.productId).category===id),id),true);
+   const productId=await cards.first().getAttribute('data-product-id');
+   await cards.first().locator('[data-favorite-product]').click();
+   await p.locator('[data-ramen-nav="home"]').click();
+   assert.equal(await p.locator('#menu').isVisible(),false);
+   await p.locator('#menu-toggle').click();
+   const shortcut=p.locator('#main-navigation a[data-category-link="true"][href^="#category-"]').first();
+   await shortcut.waitFor({state:'visible'});
+   const categoryId=(await shortcut.getAttribute('href')).slice('#category-'.length);
+   await shortcut.click();
+   await p.locator('#menu').waitFor({state:'visible'});
+   assert.ok(await cards.count()>0);
+   assert.equal(await cards.evaluateAll((nodes,id)=>nodes.every(n=>getProductById(n.dataset.productId).category===id),categoryId),true);
+   await p.locator('[data-ramen-nav="home"]').click();
+   await p.locator('[data-ramen-nav="menu"]').click();
+   assert.equal(await cards.count(),21);
+   const favorite=p.locator('#menu .product-card[data-product-id="'+productId+'"] [data-favorite-product]');
+   assert.equal(await favorite.getAttribute('aria-pressed'),'true');
+   await favorite.click();
+   await p.locator('[data-ramen-nav="home"]').click();
+  });
+  await check('Category-first hamburger, guest profile and local-only rating in four languages',async()=>{
   for(const lang of ['fa','ar','en','tr']){
    await p.evaluate(l=>ROMANO_I18N.setLanguage(l,false),lang);
    await p.setViewportSize({width:390,height:844});
@@ -341,7 +390,8 @@ async function ready(p){
    assert.ok(atLeastCssPixels(await buttons.first().evaluate(node=>node.getBoundingClientRect().height),44),lang+' category filter touch target');
   }
  });
- await check('Compact full-bleed product card matches the premium reference and remains accessible',async()=>{
+ await p.evaluate(()=>navigateCustomerView("menu"));
+  await check('Compact full-bleed product card matches the premium reference and remains accessible',async()=>{
   const card=cards.first(),button=card.locator('.product-card-button'),favorite=card.locator('[data-favorite-product]');
   await card.evaluate(node=>node.scrollIntoView({block:'start',behavior:'instant'}));
   assert.ok((await button.textContent()).trim());assert.equal(await button.isVisible(),true);
@@ -557,7 +607,9 @@ async function ready(p){
     assert.equal(await p.locator('#menu-search-panel').isVisible(),false);
     assert.equal(await p.locator('#menu-filter-panel').isVisible(),false);
     for(const trigger of [searchToggle,filterToggle]){const r=await trigger.boundingBox();assert.ok(r&&atLeastCssPixels(r.width,44)&&atLeastCssPixels(r.height,44),JSON.stringify({lang,width,id:await trigger.getAttribute("id"),rect:r}));assert.ok(await trigger.getAttribute('aria-label'));}
-    await p.evaluate(()=>window.scrollBy({top:260,behavior:'instant'}));
+    const sizes=await p.locator('#rv4-category-rail button').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().height));
+     assert.ok(sizes.length&&sizes.every(h=>Math.abs(h-44)<0.01),'Category rail touch targets match header');
+     await p.evaluate(()=>window.scrollBy({top:260,behavior:'instant'}));
     const pinned=await p.evaluate(()=>{const header=document.querySelector('.site-header'),h=header.getBoundingClientRect(),bar=header.querySelector('.menu-browser').getBoundingClientRect();return{gap:bar.bottom-h.bottom,height:bar.height}});
     assert.ok(Math.abs(pinned.gap)<=2,JSON.stringify({lang,width,pinned}));assert.ok(pinned.height<180);
     const grid=await cards.first().evaluate(n=>{const rail=n.parentElement,style=getComputedStyle(rail);return {flow:style.gridAutoFlow,overflow:style.overflowX,scroll:rail.scrollWidth,client:rail.clientWidth,card:n.getBoundingClientRect().width};});
@@ -580,7 +632,7 @@ async function ready(p){
  });
  await check('Category shortcut restores results even after a conflicting search',async()=>{
   await openSearch();await p.locator('#rv4-menu-search').fill('no-product-xyz');assert.equal(await cards.count(),0);
-  await p.keyboard.press('Escape');await p.locator('#categories-grid .category-card').first().click();
+  await p.keyboard.press('Escape');await p.evaluate(()=>navigateCustomerView("home"));await p.locator('#categories-grid .category-card').first().click();
   assert.equal(await cards.count(),3);assert.equal(await p.locator('#rv4-menu-search').inputValue(),'');
   await resetFilters();assert.equal(await cards.count(),21);
  });
@@ -609,7 +661,7 @@ async function ready(p){
  });
  await check('Four languages at nine widths from 320 to 1920px: direction, overflow and modal',async()=>{
   for(const lang of ['en','tr','ar','fa'])for(const width of [320,360,375,390,430,768,1024,1440,1920]){
-   await p.setViewportSize({width,height:900});await p.evaluate(lang=>ROMANO_I18N.setLanguage(lang),lang);
+   await p.setViewportSize({width,height:900});await p.evaluate(lang=>{ROMANO_I18N.setLanguage(lang);navigateCustomerView("home",{focus:false});},lang);
    assert.equal(await p.locator('html').getAttribute('dir'),['fa','ar'].includes(lang)?'rtl':'ltr');
    const expectedFont=['fa','ar'].includes(lang)?'Vazirmatn':'Inter';
    const expectedDisplay=['fa','ar'].includes(lang)?'Vazirmatn':'Playfair Display';
@@ -657,14 +709,15 @@ async function ready(p){
    }
    assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${lang}/${width}`);
    assert.ok(await p.locator('#rv4-menu-search').getAttribute('placeholder'));
-   const bounds=await cards.evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().width));assert.ok(bounds.every(w=>w>125),`Readable card widths ${lang}/${width}: ${bounds}`);
+   await p.evaluate(()=>navigateCustomerView("menu",{focus:false}));
+    const bounds=await cards.evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().width));assert.ok(bounds.every(w=>w>125),`Readable card widths ${lang}/${width}: ${bounds}`);
    await cards.first().locator('.product-card-button').click();assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await p.keyboard.press('Escape');
   }
   for(const [lang,width]of [['fa',390],['en',1440],['ar',390],['tr',390]]){
    await p.setViewportSize({width,height:1000});await p.evaluate(l=>ROMANO_I18N.setLanguage(l),lang);
-   await p.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));await p.waitForTimeout(150);
+   await p.evaluate(()=>navigateCustomerView("home",{focus:false}));await p.waitForTimeout(150);
    await p.screenshot({path:path.join(out,`customer-hero-${lang}-${width}.png`)});
-   await p.evaluate(()=>window.scrollTo({top:document.querySelector('#menu').getBoundingClientRect().top+scrollY-85,behavior:'instant'}));await p.waitForTimeout(200);
+   await p.evaluate(()=>navigateCustomerView("menu",{focus:false}));await p.waitForTimeout(200);
    await p.screenshot({path:path.join(out,`customer-menu-${lang}-${width}.png`)});
    if((lang==='fa'&&width===390)||(lang==='en'&&width===1440)){
     await cards.first().locator('.product-card-button').click();await p.locator('.product-modal').waitFor({state:'visible'});await p.waitForTimeout(250);
@@ -722,7 +775,7 @@ async function ready(p){
  });
  await check('Blocked storage still permits browsing and session favorites',async()=>{
   const c=await browser.newContext({serviceWorkers:'block'});await c.addInitScript(()=>{Storage.prototype.getItem=()=>{throw Error('blocked')};Storage.prototype.setItem=()=>{throw Error('blocked')}});
-  const s=await c.newPage();s.on('pageerror',e=>errors.push(String(e)));await s.goto(base);await ready(s);assert.equal(await s.locator('#menu .product-card').count(),21);
+  const s=await c.newPage();s.on('pageerror',e=>errors.push(String(e)));await s.goto(base);await ready(s);await s.locator('.hero-button').click();await s.locator('#menu').waitFor({state:'visible'});assert.equal(await s.locator('#menu .product-card').count(),21);
   await s.locator('#menu .product-card [data-favorite-product]').first().click();assert.equal(await s.locator('#menu .product-card [data-favorite-product]').first().getAttribute('aria-pressed'),'true');await c.close();
  });
  await check('Mobile back-to-top control stays clear of bottom navigation',async()=>{
@@ -777,6 +830,7 @@ async function ready(p){
   }
  });
  await check('Hero and consolidated footer stay localized and direction-aware',async()=>{
+  await p.evaluate(()=>navigateCustomerView("home",{focus:false}));
   const expected={
    fa:{tagline:'کافه و رستوران',footerBrand:'کافه و رستوران',contact:'ارتباط با ما',follow:'ما را دنبال کنید',powered:'قدرت‌گرفته از RAMEN',story:'ساده نیست خاص است',contactTitle:'منتظر شما هستیم.'},
    en:{tagline:'Cafe & Restaurant',footerBrand:'Cafe & Restaurant',contact:'Contact',follow:'Follow us',powered:'Powered by RAMEN',story:'It is not ordinary.',contactTitle:'We are waiting for you.'},
@@ -843,6 +897,104 @@ async function ready(p){
   assert.equal(await credit.count(),1);
   assert.equal(await credit.getAttribute('rel'),'noopener noreferrer');
   assert.equal(await p.locator('.commerce-drawer small').textContent(),'RAMEN');
+ });
+
+ await check('Unified connected sign-in: new and returning customers, staff invite, OTP failure and role-based destination',async()=>{
+  const authContext=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
+  authContext.on('page',page=>page.on('pageerror',e=>errors.push(String(e))));
+  const fixture={restaurant:{name:'QA Kitchen',tagline:'Cafe',description:'QA only',address:'QA address',currency:'TRY'},categories:[],products:[]};
+  const accounts=new Map(),calls=[];let session=null,challenge=null,serial=0,adminReads=0;
+  const customerPhone='+989123450001',staffPhone='+989123450002',accessKey='x'.repeat(43);
+  await authContext.route('**/api/v1/**',async route=>{
+   const req=route.request(),path=new URL(req.url()).pathname.slice('/api/v1'.length),method=req.method();
+   const body=method==='POST'?req.postDataJSON():null;
+   calls.push({path,method,body});
+   const answer=(data,status=200,code=null)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify({data,error:code?{code,message:'QA mock'}:null})});
+   if(path.startsWith('/public/'))return answer(fixture);
+   if(path==='/auth/me')return answer(session);
+   if(path==='/auth/csrf')return answer({csrfToken:'qa-csrf-token'});
+   if(path==='/auth/phone/status')return answer({enabled:true});
+   if(path.startsWith('/auth/phone/')&&method==='POST'){
+    assert.ok(req.headers()['x-csrf-token'],'CSRF header required');
+    if(path.endsWith('/lookup'))return answer({needsName:!accounts.has(body.phone)});
+    if(path.endsWith('/start')||path.endsWith('/enroll-admin')){
+     if(path.endsWith('/enroll-admin')&&(!body.accessKey||!body.name))return answer(null,400,'PHONE_AUTH_INVALID');
+     if(path.endsWith('/start')&&Object.hasOwn(body,'accessKey'))return answer(null,400,'PHONE_AUTH_INVALID');
+     if(body.accessKey&&!(body.phone===staffPhone&&body.accessKey===accessKey))return answer(null,400,'PHONE_AUTH_INVALID');
+     if(!accounts.has(body.phone)&&!body.name)return answer(null,409,'PHONE_AUTH_NAME_REQUIRED');
+     challenge={id:'qa-challenge-'+(++serial),phone:body.phone,name:body.name,staff:body.accessKey===accessKey};
+     return answer({challenge:challenge.id,expiresIn:300,resendAfter:60});
+    }
+    if(path.endsWith('/verify')){
+     if(!challenge||body.challenge!==challenge.id||body.code!=='123456')return answer(null,401,'PHONE_AUTH_CODE_INVALID');
+     let account=accounts.get(challenge.phone);
+     if(!account){account={user:{id:challenge.phone,displayName:challenge.name},role:challenge.staff?'admin':'customer'};accounts.set(challenge.phone,account);}
+     session={user:account.user,membership:account.role==='admin'?{restaurant_id:'qa',role:'manager'}:null};
+     challenge=null;return answer({...account,csrfToken:'qa-rotated-csrf'});
+    }
+   }
+   if(path==='/auth/logout'){session=null;return answer({loggedOut:true});}
+   if(path==='/admin/data'){adminReads++;return session?.membership?answer(fixture):answer(null,403,'FORBIDDEN');}
+   return answer(null,404,'NOT_FOUND');
+  });
+  try{
+   const page=await authContext.newPage(),root=new URL('/',base).href,entry=page.locator('#phone-auth-entry'),submit=entry.locator('button[type=submit]');
+   await page.goto(root+'?login=1');await ready(page);await entry.waitFor({state:'visible'});
+   for(const lang of ['fa','en','tr','ar']){
+    await entry.locator('select').selectOption(lang);
+    assert.equal(await page.locator('html').getAttribute('dir'),['fa','ar'].includes(lang)?'rtl':'ltr');
+    assert.ok((await entry.locator('h1').innerText()).trim());
+    assert.equal(await entry.locator('input[name=phone]').isVisible(),true);
+    assert.equal(await entry.locator('input[name=name]').count(),0);
+   }
+   await entry.locator('select').selectOption('en');
+   await entry.locator('input[name=phone]').fill(customerPhone);await submit.click();
+   const name=entry.locator('input[name=name]');await name.waitFor({state:'visible'});
+   assert.equal(await entry.locator('input[name=accessKey]').count(),0);
+   assert.equal(await entry.locator('input[name=code]').count(),0);
+   await name.fill('QA Customer');await submit.click();
+   const code=entry.locator('input[name=code]');await code.waitFor({state:'visible'});
+   assert.equal(await entry.getByRole('button',{name:'Resend code'}).isDisabled(),true);
+   await code.fill('000000');await submit.click();await entry.getByRole('alert').waitFor({state:'visible'});
+   assert.equal(await accounts.size,0);
+   await code.fill('۱۲۳۴۵۶');await submit.click();await entry.waitFor({state:'detached'});
+   assert.equal(new URL(page.url()).searchParams.has('login'),false);
+   assert.equal(new URL(page.url()).pathname,'/');
+   assert.equal(session.membership,null);
+   // Simulate a new browser session with the same already-registered number.
+   session=null;await page.goto(root+'?login=1');await ready(page);await entry.waitFor({state:'visible'});
+   await entry.locator('input[name=phone]').fill(customerPhone);await submit.click();await code.waitFor({state:'visible'});
+   assert.equal(await entry.locator('input[name=name]').count(),0);
+   assert.deepEqual(calls.filter(c=>c.path.endsWith('/start')).at(-1).body,{phone:customerPhone});
+   await code.fill('123456');await submit.click();await entry.waitFor({state:'detached'});assert.equal(accounts.size,1);
+   // A customer visiting /admin/ cannot enter the dashboard.
+   await page.goto(new URL('admin/',root).href);await page.waitForURL(url=>url.pathname==='/');
+   assert.equal(adminReads,0);
+   // A signed-out staff member enters through the exact same page.
+   session=null;await page.goto(new URL('admin/',root).href);await page.waitForURL(url=>url.pathname==='/'&&url.searchParams.get('login')==='1');await ready(page);
+   await entry.waitFor({state:'visible'});
+   await entry.getByRole('button',{name:'Admin registration',exact:true}).click();
+   assert.equal(await entry.locator('h1').innerText(),'Admin registration');
+   await entry.locator('input[name=phone]').fill(staffPhone);await name.fill('QA Staff');
+   const key=entry.locator('input[name=accessKey]');await key.waitFor({state:'visible'});
+   assert.equal(await key.getAttribute('required'),'');
+   await key.fill('y'.repeat(43));await submit.click();await entry.getByRole('alert').waitFor({state:'visible'});
+   assert.equal(accounts.size,1);
+   await key.fill(accessKey);await submit.click();await code.waitFor({state:'visible'});
+   await code.fill('123456');await submit.click();
+   await page.waitForURL(url=>url.pathname==='/admin/');
+   await page.waitForFunction(()=>typeof adminInitialized!=='undefined'&&adminInitialized&&!document.querySelector('.admin-app').inert);
+   assert.equal(session.membership.role,'manager');assert.ok(adminReads>0);
+   assert.equal(accounts.size,2);
+   assert.ok(calls.some(c=>c.path.endsWith('/enroll-admin')&&c.body.accessKey===accessKey));
+   session=null;await page.goto(root+'?login=1');await ready(page);await entry.waitFor({state:'visible'});
+   await entry.locator('input[name=phone]').fill(staffPhone);await submit.click();await code.waitFor({state:'visible'});
+   assert.equal(await entry.locator('input[name=accessKey]').count(),0);
+   assert.deepEqual(calls.filter(c=>c.path.endsWith('/start')).at(-1).body,{phone:staffPhone});
+   await code.fill('123456');await submit.click();await page.waitForURL(url=>url.pathname==='/admin/');
+   assert.ok(calls.filter(c=>c.path.endsWith('/verify')).every(c=>Object.keys(c.body).sort().join(',')==='challenge,code'));
+   assert.ok(!page.url().includes(accessKey));
+  }finally{await authContext.close();}
  });
  await check('No uncaught browser errors',async()=>assert.deepEqual(errors,[]));
  fs.writeFileSync(path.join(out,'customer-browser-results.json'),JSON.stringify({passed:results.length,cases:results,errors,notes:'Chromium, static preview and mocked public API. Service workers blocked. No real PostgreSQL or production test.'},null,2));

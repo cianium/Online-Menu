@@ -7,6 +7,7 @@ on:
       - "css/**"
       - "js/**"
       - "qa/customer-browser.test.cjs"
+      - "qa/phone-entry-browser.test.cjs"
       - "qa/demo-server.mjs"
       - "qa/demo-browser.test.cjs"
       - "qa/export-demo.mjs"
@@ -55,6 +56,11 @@ jobs:
           ADMIN_TEST_URL: http://127.0.0.1:8765
         run: |
           CHROMIUM_EXECUTABLE_PATH="$(node -p "require('playwright').chromium.executablePath()")" npm run qa:customer
+      - name: Verify connected shared phone entry with mocked API
+        if: ${{ !cancelled() && steps.demo_server.outcome == 'success' }}
+        env:
+          ADMIN_TEST_URL: http://127.0.0.1:8765
+        run: node qa/phone-entry-browser.test.cjs
       - name: Run standalone cross-tab browser integration
         if: ${{ !cancelled() && steps.demo_server.outcome == 'success' }}
         env:

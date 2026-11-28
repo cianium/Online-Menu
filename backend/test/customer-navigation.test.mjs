@@ -74,7 +74,7 @@ test('Catalog disclosures and sticky layout retain accessible controls, horizont
 
 test('Category shortcuts reset conflicting filters and all featured dishes share the renderer',()=>{
  const app=read('js/app.js'),browser=read('js/menu-experience.js');
- assert.match(app,/selectCategory\(categoryId, true\)/);assert.match(app,/selectCategory\(id, true\)/);
+ assert.match(app,/selectCategory\(categoryId, true\)/);assert.match(app,/scrollToCategory\(id\)/);
  assert.match(browser,/if\(reset\) \{query='';order='menu';onlyFavorites=false/);
  assert.match(app,/const railProducts = featured;/);assert.doesNotMatch(read('index.html'),/id="signature-dish"/);assert.match(app,/railProducts\.forEach\(/);
 });
@@ -209,4 +209,14 @@ test('Customer overlay history reuses dismissed slots and native Back closes act
  api.enter('product',()=>{closed++;api.leave('product');},{url:'/menu?restaurant=demo#product-a',baseUrl:'/menu?restaurant=demo#menu'});
  assert.equal(location.hash,'#product-a');api.leave('product','/menu?restaurant=demo#menu');assert.equal(location.hash,'#menu');assert.equal(queued,false);
  api.enter('browse',()=>{closed++;api.leave('browse');});api.enter('navigation',()=>{closed++;api.leave('navigation');});assert.equal(index,1);assert.equal(closed,2);history.back();flush();assert.equal(closed,3);
+});
+
+test('Dedicated menu route preserves the session and unboxed accessible ratings',()=>{
+ const app=read('js/app.js'),html=read('index.html'),css=read('css/customer-polish.css'),commerce=read('js/commerce.js');
+ assert.match(app,/history\.pushState\(state,"",location\.pathname\+location\.search\+hash\)/);
+ assert.match(app,/menu\.hidden = view !== "menu"/);
+ assert.match(app,/window\.addEventListener\("popstate",syncRoute\)/);
+ assert.doesNotMatch(html,/hero-satisfaction|hero-rating-copy|hero-rating-detail/);
+ assert.match(commerce,/node\.setAttribute\("aria-label",\[words\[0\],percent,detail,h\("review"\)\]/);
+ assert.match(css,/block-size:44px;min-block-size:44px;max-block-size:44px/);
 });

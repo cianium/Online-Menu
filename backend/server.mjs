@@ -20,6 +20,8 @@ import { parseImageDataUrl, randomImageName } from './lib/media.mjs';
 import { resolveField, sanitizeIncomingTranslations, translationsToMap, hashFields } from './lib/translations.mjs';
 import { createTranslator } from './lib/translator.mjs';
 import { createAutoTranslation } from './lib/auto-translate.mjs';
+import { phoneAuthConfig, registerPhoneAuth } from './lib/phone-auth.mjs';
+const phoneAuth = phoneAuthConfig(process.env);
 
 assertProductionConfig(process.env);
 
@@ -204,7 +206,10 @@ function sendError(error, request, reply) {
     status = error.statusCode; code = 'REQUEST_ERROR'; message = error.message;
   }
 
-  if (status >= 500) request.log.error(error); else request.log.info({ code, status }, 'request rejected');
+  if (status >= 500) {
+    if (/\/auth\/phone\//.test(request.url)) request.log.error({code,status},'phone authentication failed');
+    else request.log.error(error);
+  } else request.log.info({ code, status }, 'request rejected');
   const details = isValidation ? error.issues?.map(issue => ({ path: issue.path, message: issue.message })) : undefined;
   reply.code(status).send({ ...fail(code, message, request.id), ...(details ? { details } : {}) });
 }
@@ -572,6 +577,16 @@ async function routes(api) {
 
   /* --- auth --- */
 
+  registerPhoneAuth(api,{config:phoneAuth,db,transaction:inTransaction,issueSession:async(client,user,request)=>{
+    const token=randomToken(32),csrf=randomToken(24);
+    const previous=request.cookies[SESSION_COOKIE];
+    if(previous)await client.query('delete from sessions where session_hash=$1',[sha256(previous)]);
+    await client.query('delete from sessions where expires_at<=now()');
+    await client.query('delete from sessions where id in (select id from sessions where user_id=$1 order by created_at desc offset $2)',[user.id,MAX_SESSIONS_PER_USER-1]);
+    await client.query('insert into sessions(user_id,session_hash,csrf_hash,expires_at) values($1,$2,$3,$4)',[user.id,sha256(token),sha256(csrf),new Date(Date.now()+SESSION_TTL*1000)]);
+    return {csrf,setCookies(reply){reply.setCookie(SESSION_COOKIE,token,{...cookieBase,maxAge:SESSION_TTL});reply.setCookie(CSRF_COOKIE,csrf,{...csrfCookieBase,maxAge:SESSION_TTL});}};
+  }});
+
   api.get('/auth/csrf', async (request, reply) => {
     let token = request.cookies[CSRF_COOKIE];
     const session = await getSession(request);
@@ -585,6 +600,7 @@ async function routes(api) {
   });
 
   api.post('/auth/login', { config: { rateLimit: { max: 8, timeWindow: '10 minutes' } } }, async (request, reply) => {
+    if(phoneAuth.enabled&&!phoneAuth.allowLegacyPassword)throw httpError(410,'Use phone verification to sign in.','PHONE_AUTH_REQUIRED');
     const input = loginSchema.parse(request.body);
     const result = await db('select id, email, display_name, password_hash, active from users where lower(email) = lower($1)', [input.email]);
     const user = result.rows[0];

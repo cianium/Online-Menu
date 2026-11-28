@@ -169,6 +169,9 @@ async function measure(browser,surface) {
           await scan(customer,'customer',lang,width,height);
           await scan(admin,'admin-dashboard',lang,width,height);
         }
+        await customer.evaluate(()=>navigateCustomerView("menu",{focus:false}));
+        for(const [width,height] of [[390,844],[1440,900]])await scan(customer,'customer-menu',lang,width,height);
+        await customer.evaluate(()=>navigateCustomerView("home",{focus:false}));
         await customer.setViewportSize({width:390,height:844});
         const contact=customer.locator('[data-ramen-nav="contact"]');
         assert.equal(await contact.getAttribute('role'),'button');
@@ -195,7 +198,7 @@ async function measure(browser,surface) {
         await admin.locator('.connect-inbox-toolbar').waitFor({state:'visible'});
         for(const [width,height] of [[390,844],[1440,900]])await scan(admin,'admin-connect',lang,width,height);
       }
-      await customer.evaluate(()=>ROMANO_I18N.setLanguage('en',false));
+      await customer.evaluate(()=>{ROMANO_I18N.setLanguage('en',false);navigateCustomerView("menu",{focus:false});});
       for(const width of [390,1440]){
         await customer.setViewportSize({width,height:844});
         await customer.locator('#menu .menu-category-products').first().scrollIntoViewIfNeeded();
@@ -266,7 +269,8 @@ async function measure(browser,surface) {
     } finally {await context.close();}
     for(const surface of ['customer','admin']) await measure(browser,surface);
     assert.deepEqual(report.errors,[],'Unexpected JavaScript errors during audit');
-    assert.equal(report.findings.length,49);
+    assert.equal(report.findings.length,57); // 49 existing scans + 4 locales × 2 catalog widths
+    assert.equal(report.findings.filter(s=>s.name==='customer-menu').length,8);
     assert.equal(report.lab.length,2);
     const severe=report.findings.flatMap(s=>s.violations.filter(v=>['critical','serious'].includes(v.impact)).map(v=>({surface:s.name,lang:s.lang,width:s.width,id:v.id})));
     console.log('QUALITY SUMMARY '+JSON.stringify({scans:report.findings.length,severe:severe.length,violations:report.findings.reduce((n,s)=>n+s.violations.length,0)}));
