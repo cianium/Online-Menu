@@ -2,6 +2,20 @@
 (()=>{
  "use strict";
  const model=window.RomanoDemoMembers;
+ const entryUrl=new URL(document.currentScript.src),initialQuery=new URLSearchParams(location.search);
+ const phoneLaunch=initialQuery.get('login')==='1'||(initialQuery.has('qr')&&initialQuery.get('qr')!=='demo');
+ let phoneLoading=false;
+ function loadPhoneEntry(){
+  if(phoneLoading||menuDataMode!=='public'||window.RomanoPublicAPI.standalone)return;
+  phoneLoading=true;
+  const script=document.createElement('script'),url=new URL('phone-auth.js',entryUrl);
+  if(entryUrl.searchParams.has('v'))url.searchParams.set('v',entryUrl.searchParams.get('v'));
+  script.src=url.href;
+  script.onload=()=>window.RomanoPhoneAuth?.boot(phoneLaunch);
+  script.onerror=()=>{phoneLoading=false;script.remove();};
+  document.head.append(script);
+ }
+ window.addEventListener('romano:data-updated',loadPhoneEntry);
  const words={
  fa:{eyebrow:'باشگاه مشتریان',title:'ورود به رامن',intro:'نام و شماره تلفن نمونه را وارد کنید.',name:'نام',phone:'شماره تلفن',continue:'ادامه',notice:'نسخه نمایشی؛ فقط اطلاعات ساختگی وارد کنید. داده‌ها در همین مرورگر ذخیره می‌شوند.',error:'نام و شماره نمونه معتبر وارد کنید یا ذخیره مرورگر را بررسی کنید.',active:'برای تغییر پروفایل، ابتدا از پروفایل فعلی خارج شوید.',existing:'این شماره با نام دیگری ثبت شده است. نام قبلی را دقیق وارد کنید.',history:'تاریخچه سفارش‌های نمونه',empty:'هنوز سفارش نمونه‌ای ندارید.',logout:'خروج از پروفایل نمونه',join:'عضویت آزمایشی',order:'ثبت سفارش نمونه',saved:'سفارش نمونه ذخیره شد؛ برای رستوران ارسال نشد.',orderError:'ذخیره سفارش نمونه ممکن نشد.',language:'زبان',guest:'فعلاً فقط منو را ببینید'},
  en:{eyebrow:'Customer club',title:'Enter RAMEN',intro:'Enter a fictional name and phone number.',name:'Name',phone:'Phone number',continue:'Continue',notice:'Demo only. Use fictional details; data stays in this browser.',error:'Enter a valid sample name and phone or check browser storage.',active:'Sign out of the current sample profile before switching.',existing:'This number is registered under a different name. Enter the previous name exactly.',history:'Sample order history',empty:'No sample orders yet.',logout:'Sign out of sample profile',join:'Join the demo club',order:'Save sample order',saved:'Sample order saved; nothing was sent to the restaurant.',orderError:'Could not save the sample order.',language:'Language',guest:'Browse the menu for now'},
@@ -78,7 +92,7 @@
   name.focus();return true;
  }
  function renderProfile(host,closePanel){
-  if(!demo())return false;
+  if(!demo())return window.RomanoPhoneAuth?.renderProfile(host,closePanel)??false;
   const member=current();
   if(!member){const button=text('button','join','feedback-save');button.type='button';button.addEventListener('click',()=>{closePanel();open();});host.append(text('p','notice','ramen-contact-note'),button);return true;}
   const memberName=el('strong',member.name);memberName.dir='auto';host.append(memberName);

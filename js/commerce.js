@@ -169,7 +169,7 @@
     const sync = () => {
       scheduled = false;
       const offset = (document.getElementById('site-header')?.getBoundingClientRect().bottom || 0) + 32;
-      const ordered = sections.map(item => ({...item, top:item.section.getBoundingClientRect().top})).sort((a,b)=>a.top-b.top);
+      const ordered = sections.filter(item => !item.section.hidden).map(item => ({...item, top:item.section.getBoundingClientRect().top})).sort((a,b)=>a.top-b.top);
       const active = ordered.filter(item => item.top <= offset).at(-1) || ordered[0];
       if (active) activate(active.link);
     };
@@ -177,6 +177,7 @@
     window.addEventListener('scroll', schedule, {passive:true});
     window.addEventListener('resize', schedule, {passive:true});
     window.addEventListener('romano:data-updated', schedule);
+    window.addEventListener('romano:customer-view-changed', schedule);
     schedule();
     initializeContactPanel();
     updateCustomerNavigation();
@@ -287,10 +288,7 @@
     node.disabled=!isDemo();
     node.querySelectorAll(".hero-stars > span").forEach((star,index)=>{const filled=score!==null&&index<score;star.textContent=filled?"★":"☆";star.classList.toggle("is-filled",filled);});
     const percent=score===null?"—":new Intl.NumberFormat(lang(),{style:"percent",maximumFractionDigits:0}).format(score/5);
-    node.querySelector("#hero-satisfaction").textContent=percent;
-    node.querySelector("#hero-rating-label").textContent=words[0];
     const detail=score!==null?words[2]:isDemo()?words[1]:words[3];
-    node.querySelector("#hero-rating-detail").textContent=detail;
     node.setAttribute("aria-label",[words[0],percent,detail,h("review")].join(" · "));
     const nav=document.querySelector("#navigation-rating");
     nav.replaceChildren(...[...node.children].map(child=>{const copy=child.cloneNode(true);copy.removeAttribute("id");copy.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));return copy;}));

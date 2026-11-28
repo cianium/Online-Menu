@@ -179,7 +179,7 @@
         controls.querySelector('.menu-icon-actions').append(search);
         const accessibleHeading = document.createElement('div');
         accessibleHeading.className = 'sr-only';
-        accessibleHeading.innerHTML = '<h2 id="browse-title"></h2><span id="menu-result-count" role="status" aria-live="polite"></span><p id="browse-hint"></p>';
+        accessibleHeading.innerHTML = '<h1 id="browse-title"></h1><span id="menu-result-count" role="status" aria-live="polite"></span><p id="browse-hint"></p>';
         section.prepend(accessibleHeading);
         // Keep the data-mode disclosure compact and adjacent to the browse controls.
         const status=document.createElement('div');status.id='menu-data-status';status.className='menu-data-status';status.setAttribute('role','status');status.innerHTML='<span></span><button type="button"></button>';section.prepend(status);
@@ -196,7 +196,10 @@
         };
         if('ResizeObserver' in window){const observer=new ResizeObserver(measure);observer.observe(controls);const header=document.querySelector('.site-header');if(header)observer.observe(header);}
         window.addEventListener('resize',measure,{passive:true});measure();
-        for(const id of ['search','filter']) byId(`menu-${id}-toggle`).addEventListener('click',()=>setPanel(openPanel===id?null:id,openPanel===id));
+        for(const id of ['search','filter']) byId(`menu-${id}-toggle`).addEventListener('click',()=>{
+            if(customerView!=="menu")navigateCustomerView("menu",{focus:false});
+            setPanel(openPanel===id?null:id,openPanel===id);
+        });
         header.addEventListener('keydown',event=>{if(event.key==='Escape'&&openPanel){event.preventDefault();event.stopPropagation();setPanel(null,true);}});
         document.addEventListener('click',event=>{if(openPanel&&!header.contains(event.target))setPanel(null,header.contains(document.activeElement));});
         const searchInput=controls.querySelector('#rv4-menu-search');
@@ -212,7 +215,7 @@
         controls.querySelector('#menu-sort').addEventListener('change',event=>{order=event.target.value;redraw();});
         controls.querySelector('#menu-favorites-toggle').addEventListener('click',()=>{onlyFavorites=!onlyFavorites;redraw();});
         controls.querySelector('#menu-reset').addEventListener('click',()=>{query='';category='all';onlyFavorites=false;order='menu';controls.querySelector('input').value='';redraw();setPanel(null,true);});
-        controls.querySelector('#rv4-category-rail').addEventListener('click',event=>{const button=event.target.closest('[data-browse-category]');if(!button)return;setPanel(null);selectCategory(category===button.dataset.browseCategory?'all':button.dataset.browseCategory);button.focus({preventScroll:true});section.scrollIntoView({behavior:'auto',block:'start'});});
+        controls.querySelector('#rv4-category-rail').addEventListener('click',event=>{const button=event.target.closest('[data-browse-category]');if(!button)return;const entering=customerView!=="menu";setPanel(null);navigateCustomerView("menu",{focus:false,scroll:false});selectCategory(!entering&&category===button.dataset.browseCategory?'all':button.dataset.browseCategory,entering);button.focus({preventScroll:true});section.scrollIntoView({behavior:'instant',block:'start'});});
         status.querySelector('button').addEventListener('click',()=>location.reload());
         document.addEventListener('click',event=>{
             const button=event.target.closest('[data-favorite-product]');if(!button)return;
@@ -233,8 +236,8 @@
         document.addEventListener('romano:language-changed',refreshLabels);
         window.addEventListener('romano:data-updated',()=>{searchIndex=new WeakMap();refreshLabels();renderMenuCategories();});
         window.addEventListener('storage',event=>{if(event.key===key()||event.key===null){readFavorites();redraw();}});
-        document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.closest('input,textarea,select,[contenteditable]')&&!DOM.body.classList.contains('modal-open')&&!DOM.body.classList.contains('commerce-open')&&!document.querySelector('dialog[open]')){event.preventDefault();section.scrollIntoView({behavior:'auto',block:'start'});setPanel('search');}});
+        document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.closest('input,textarea,select,[contenteditable]')&&!DOM.body.classList.contains('modal-open')&&!DOM.body.classList.contains('commerce-open')&&!document.querySelector('dialog[open]')){event.preventDefault();if(customerView!=="menu")navigateCustomerView("menu",{focus:false});section.scrollIntoView({behavior:'instant',block:'start'});setPanel('search');}});
         refreshLabels();
     }
-    window.RomanoMenuExperience=Object.freeze({init,matches,sort,favoriteButton,selectCategory});
+    window.RomanoMenuExperience=Object.freeze({init,matches,sort,favoriteButton,selectCategory,closePanel:()=>{if(openPanel)setPanel(null);}});
 })();
